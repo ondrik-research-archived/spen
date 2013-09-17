@@ -149,7 +149,7 @@ void noll_entl_fprint(FILE* f) {
 	noll_form_fprint(f, noll_prob->pform);
 	fflush(f);
 	fprintf(f, "\nFormulae 0: ");
-	for (int i = 0; i < noll_vector_size(noll_prob->nform); i++) {
+	for (size_t i = 0; i < noll_vector_size(noll_prob->nform); i++) {
 		fprintf(f, "\n\\/ (0-%d): ", i);
 		noll_form_fprint(f, noll_vector_at(noll_prob->nform,i));
 	}

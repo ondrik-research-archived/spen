@@ -424,7 +424,7 @@ int noll_form_array_is_unsat(noll_form_array* phi1_phiN) {
 	assert (phi1_phiN != NULL);
 
 	/* all formulae shall be unsat */
-	for (int i = 0; i < noll_vector_size(phi1_phiN); i++)
+	for (size_t i = 0; i < noll_vector_size(phi1_phiN); i++)
 		if (noll_vector_at(phi1_phiN,i)->kind != NOLL_FORM_UNSAT)
 			return 0;
 	return 1;
@@ -434,7 +434,7 @@ int noll_form_array_is_valid(noll_form_array* phi1_phiN) {
 	assert (phi1_phiN != NULL);
 
 	/* one formula shall be valid */
-	for (int i = 0; i < noll_vector_size(phi1_phiN); i++)
+	for (size_t i = 0; i < noll_vector_size(phi1_phiN); i++)
 		if (noll_vector_at(phi1_phiN,i)->kind == NOLL_FORM_VALID)
 			return 1;
 	return 0;

@@ -176,7 +176,7 @@ NOLL_VECTOR_DECLARE (noll_form_array, noll_form_t*)
 /* Constructors/destructors */
 /* ====================================================================== */
 
-noll_form_t* noll_form_new();
+noll_form_t* noll_form_new(void);
 noll_pure_t* noll_pure_new(uint_t size);
 noll_space_t* noll_space_new(void);
 noll_share_array* noll_share_new(void);

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include "noll_form.h"
 #include "noll_graph.h"
+#include "noll2sat.h"
 
 
 /* ====================================================================== */
@@ -89,11 +90,11 @@ void noll_entl_free(void);
 /* Getters */
 /* ====================================================================== */
 
-noll_form_t* noll_entl_get_pform();
+noll_form_t* noll_entl_get_pform(void);
 /* Get positive formula */
-noll_form_t* noll_entl_get_nform_last();
+noll_form_t* noll_entl_get_nform_last(void);
 /* Get last negative formulae */
-noll_form_array* noll_entl_get_nform();
+noll_form_array* noll_entl_get_nform(void);
 /* Get all the set of negative formulae */
 
 /* ====================================================================== */
