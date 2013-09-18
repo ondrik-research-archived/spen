@@ -1,4 +1,4 @@
-EXEC      = minisat
+EXEC      = minisat_inc
 DEPDIR    = mtl utils
 
 MROOT=..
