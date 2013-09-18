@@ -103,7 +103,7 @@ noll_form_array* noll_entl_get_nform(void);
 
 void noll_entl_set_fname(char* fname);
 /* Set source file information */
-void noll_entl_set_cmd(char* fname);
+void noll_entl_set_cmd(noll_form_kind_t pb);
 
 /* ====================================================================== */
 /* Printers */

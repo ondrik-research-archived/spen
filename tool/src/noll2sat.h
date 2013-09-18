@@ -129,14 +129,20 @@ extern noll_sat_t* pabstr; // abstraction of the positive formula
 extern noll_sat_t* nabstr; // abstraction of the negative formula
 
 /* ====================================================================== */
+/* Constructors/destructors */
+/* ====================================================================== */
+
+noll_sat_t* noll_sat_new(noll_form_t* phi);
+/* Build a boolean abstraction for the given formula */
+void noll_sat_free(noll_sat_t* a);
+/* Free a boolean abstraction */
+
+/* ====================================================================== */
 /* Collect information for boolean abstraction */
 /* ====================================================================== */
 
 noll_sat_t* noll2sat_fill_bvar(noll_form_t* form, char* fname);
 /* writes the boolean variables and fill sat informations */
-
-void noll2sat_free(noll_sat_t* fsat);
-/* free the memory used by the boolean abstraction */
 
 /* ====================================================================== */
 /* Printing the boolean abstraction */

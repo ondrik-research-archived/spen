@@ -35,6 +35,64 @@ NOLL_VECTOR_DEFINE(noll_sat_in_array, noll_sat_in_t*);
 NOLL_VECTOR_DEFINE(noll_sat_array, noll_sat_t*);
 
 /* ====================================================================== */
+/* Constructors/destructors */
+/* ====================================================================== */
+
+/**
+ * Build a boolean abstraction for phi
+ */
+noll_sat_t* noll_sat_new(noll_form_t* phi) {
+	noll_sat_t* phi_s = (noll_sat_t*) malloc(sizeof(noll_sat_t));
+
+	phi_s->form = phi;
+	return phi_s;
+}
+
+/**
+ * Free the boolean abstraction
+ */
+void noll_sat_free(noll_sat_t* fsat) {
+	if (fsat == NULL)
+		return;
+
+	fsat->fname = NULL;
+	if (fsat->file != NULL)
+		fclose(fsat->file);
+
+	if (fsat->finfo != NULL) {
+		if (fsat->finfo->used_lvar != NULL)
+			free(fsat->finfo->used_lvar);
+		if (fsat->finfo->used_svar != NULL)
+			free(fsat->finfo->used_svar);
+		if (fsat->finfo->used_flds != NULL)
+			free(fsat->finfo->used_flds);
+		if (fsat->finfo->used_pred != NULL)
+			free(fsat->finfo->used_pred);
+		free(fsat->finfo);
+		fsat->finfo = NULL;
+	}
+
+	if (fsat->var_pure != NULL) {
+		for (uint_t i = 0; i < noll_vector_size(fsat->form->lvars); i++) {
+			if (fsat->var_pure[i] != NULL)
+				free(fsat->var_pure[i]);
+			fsat->var_pure[i] = NULL;
+		}
+		free(fsat->var_pure);
+		fsat->var_pure = NULL;
+	}
+
+	fsat->form = NULL;
+	noll_sat_space_array_delete(fsat->var_pto);
+	noll_sat_space_array_delete(fsat->var_pred);
+	noll_sat_space_array_delete(fsat->var_apto);
+	noll_sat_in_array_delete(fsat->var_inset);
+
+	free(fsat);
+}
+
+
+/* ====================================================================== */
 /* Arrays of space forms */
 /* ====================================================================== */
 
@@ -607,46 +665,6 @@ noll_sat_t* noll2sat_fill_bvar(noll_form_t* form, char* fname) {
 #endif
 
 	return res;
-}
-
-void noll2sat_free(noll_sat_t* fsat) {
-	if (fsat == NULL)
-		return;
-
-	fsat->fname = NULL;
-	if (fsat->file != NULL)
-		fclose(fsat->file);
-
-	if (fsat->finfo != NULL) {
-		if (fsat->finfo->used_lvar != NULL)
-			free(fsat->finfo->used_lvar);
-		if (fsat->finfo->used_svar != NULL)
-			free(fsat->finfo->used_svar);
-		if (fsat->finfo->used_flds != NULL)
-			free(fsat->finfo->used_flds);
-		if (fsat->finfo->used_pred != NULL)
-			free(fsat->finfo->used_pred);
-		free(fsat->finfo);
-		fsat->finfo = NULL;
-	}
-
-	if (fsat->var_pure != NULL) {
-		for (uint_t i = 0; i < noll_vector_size(fsat->form->lvars); i++) {
-			if (fsat->var_pure[i] != NULL)
-				free(fsat->var_pure[i]);
-			fsat->var_pure[i] = NULL;
-		}
-		free(fsat->var_pure);
-		fsat->var_pure = NULL;
-	}
-
-	fsat->form = NULL;
-	noll_sat_space_array_delete(fsat->var_pto);
-	noll_sat_space_array_delete(fsat->var_pred);
-	noll_sat_space_array_delete(fsat->var_apto);
-	noll_sat_in_array_delete(fsat->var_inset);
-
-	free(fsat);
 }
 
 /* ====================================================================== */
@@ -2390,7 +2408,7 @@ noll_sat_t* noll2sat_normalize(noll_form_t* form, char* fname, bool incr,
 #ifndef NDEBUG
 		fprintf(stdout, "+++++++++++The formula is unsatisfiable+++++++++++++\n");
 #endif
-		noll2sat_free(fsat);
+		noll_sat_free(fsat);
 		return NULL;
 	}
 
@@ -2403,7 +2421,7 @@ noll_sat_t* noll2sat_normalize(noll_form_t* form, char* fname, bool incr,
 		nol2sat_normalize_iter(fsat);
 
 	if (destructive == true || form->kind == NOLL_FORM_UNSAT) {
-		noll2sat_free(fsat);
+		noll_sat_free(fsat);
 		noll_form_free(form);
 		free(fname);
 		return NULL;

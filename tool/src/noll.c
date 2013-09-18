@@ -63,7 +63,7 @@ void noll_init() {
 	noll_field_init();
 	// TODO: remove noll_vars_init();
 	noll_pred_init();
-	noll_form_init();
+	noll_entl_init();
 }
 
 /* ======================================================================
@@ -612,7 +612,7 @@ int noll_assert(noll_context_t* ctx, noll_exp_t* term) {
  */
 int noll_check(noll_context_t * ctx) {
 	noll_entl_set_cmd(NOLL_FORM_SAT);
-	return noll_entail_solve();
+	return noll_entl_solve();
 }
 
 /* ======================================================================

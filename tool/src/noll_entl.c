@@ -24,8 +24,12 @@
  * Defines the problem for the decision procedure.
  */
 
+#include <sys/time.h>
 #include <stdio.h>
 #include "noll_entl.h"
+#include "noll2bool.h" // for old normalization call
+#include "noll2graph.h"
+#include "noll_hom.h"
 
 /* ====================================================================== */
 /* Globals */
@@ -67,15 +71,15 @@ void noll_entl_free_aux(void) {
 		noll_prob->pabstr = NULL;
 	}
 	if (noll_prob->nabstr != NULL) {
-		noll_abstr_array_free(noll_prob->nabstr);
+		noll_sat_array_delete(noll_prob->nabstr);
 		noll_prob->nabstr = NULL;
 	}
 	if (noll_prob->pgraph != NULL) {
-		noll_sat_free(noll_prob->pgraph);
+		noll_graph_free(noll_prob->pgraph);
 		noll_prob->pgraph = NULL;
 	}
 	if (noll_prob->ngraph != NULL) {
-		noll_abstr_array_free(noll_prob->ngraph);
+		noll_graph_array_delete(noll_prob->ngraph);
 		noll_prob->ngraph = NULL;
 	}
 }
@@ -92,7 +96,7 @@ void noll_entl_free(void) {
 		noll_prob->pform = NULL;
 	}
 	if (noll_prob->nform != NULL) {
-		noll_form_array_free(noll_prob->nform);
+		noll_form_array_delete(noll_prob->nform);
 		noll_prob->nform = NULL;
 	}
 	noll_entl_free_aux();
@@ -125,6 +129,10 @@ noll_form_array* noll_entl_get_nform() {
 void noll_entl_set_fname(char* fname) {
 	noll_prob->smt_fname = fname;
 }
+void noll_entl_set_cmd(noll_form_kind_t pb) {
+	noll_prob->cmd = pb;
+}
+
 
 /* ====================================================================== */
 /* Printers */
@@ -150,7 +158,7 @@ void noll_entl_fprint(FILE* f) {
 	fflush(f);
 	fprintf(f, "\nFormulae 0: ");
 	for (size_t i = 0; i < noll_vector_size(noll_prob->nform); i++) {
-		fprintf(f, "\n\\/ (0-%d): ", i);
+		fprintf(f, "\n\\/ (0-%zu): ", i);
 		noll_form_fprint(f, noll_vector_at(noll_prob->nform,i));
 	}
 	fflush(stdout);
@@ -408,7 +416,7 @@ int noll_share_check(noll_var_array* lvars, noll_var_array* svars,
 int noll_entl_normalize() {
 
 	noll_form_t* pform = noll_entl_get_pform();
-	noll_form_array* nform = noll_entl_get_nform_all();
+	noll_form_array* nform = noll_entl_get_nform();
 
 	if (pform) {
 		noll_prob->pabstr = NULL;
@@ -428,13 +436,13 @@ int noll_entl_normalize() {
 	if (nform) {
 		// store the computed boolean abstractions
 		noll_prob->nabstr = noll_sat_array_new();
-		noll_sat_array_resize(noll_vector_size(nform));
+		noll_sat_array_resize(noll_prob->nabstr, noll_vector_size(nform));
 		// go through negative formulae
-		for (int i = 0; i < noll_vector_size(nform); i++) {
+		for (size_t i = 0; i < noll_vector_size(nform); i++) {
 			noll_form_t* nform_i = noll_vector_at(nform,i);
 			noll_sat_t* nform_i_abstr = NULL;
 #ifndef NDEBUG
-			fprintf (stdout, "\t\t(nform_%d): begin normalize\n", i);
+			fprintf (stdout, "\t\t(nform_%zu): begin normalize\n", i);
 			fflush(stdout);
 #endif
 			if (tosat_old == true)
@@ -443,7 +451,7 @@ int noll_entl_normalize() {
 				nform_i_abstr = noll2sat_normalize(nform_i, "n-out.txt", true,
 						false);
 #ifndef NDEBUG
-			fprintf (stdout, "\t\t(nform_%d): end normalize\n", i);
+			fprintf (stdout, "\t\t(nform_%zu): end normalize\n", i);
 			noll_form_fprint (stdout, nform_i);
 			fflush(stdout);
 #endif
@@ -467,7 +475,7 @@ int noll_entl_normalize() {
 int noll_entl_to_graph(void) {
 
 	noll_form_t* pform = noll_prob->pform;
-	noll_form_array* nform = noll_entl_get_nform_all();
+	noll_form_array* nform = noll_entl_get_nform();
 
 #ifndef NDEBUG
 	fprintf (stdout, "*** check-sat: translate to graphs ...\n");
@@ -490,16 +498,16 @@ int noll_entl_to_graph(void) {
 	if (nform) {
 		// store the computed boolean abstractions
 		noll_prob->ngraph = noll_graph_array_new();
-		noll_graph_array_resize(noll_vector_size(nform));
+		noll_graph_array_resize(noll_prob->ngraph, noll_vector_size(nform));
 		// go through negative formulae
-		for (int i = 0; i < noll_vector_size(nform); i++) {
+		for (size_t i = 0; i < noll_vector_size(nform); i++) {
 			noll_form_t* nform_i = noll_vector_at(nform,i);
 			noll_graph_t* nform_i_graph = noll_graph_of_form(nform_i);
-			noll_vector_at(noll_prob->nabstr,i) = nform_i_graph;
+			noll_vector_at(noll_prob->ngraph,i) = nform_i_graph;
 #ifndef NDEBUG
-			fprintf (stdout, "\n*****neg_graph: file dot_right_graph_%d\n",i);
+			fprintf (stdout, "\n*****neg_graph: file dot_right_graph_%zu\n",i);
 			char[20] fname = "\0";
-			sprintf(fname, "dot_right_graph_%d", i);
+			sprintf(fname, "dot_right_graph_%zu", i);
 			noll_graph_fprint_dot (fname, nform_i_graph);
 			fflush (stdout);
 #endif
