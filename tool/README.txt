@@ -41,3 +41,21 @@ Installation
    - move the 'nolldp' binary to a known executable path
 
 
+libVATA
+=======
+
+libVATA is provided as a Git submodule fetchning a specific revision of the library from Github.
+
+1) Download with
+
+  $ git submodule init
+  $ git submodule update
+
+2) Compile with
+
+  $ cd libvata
+  $ make release
+       - or '$ make debug' for a debug version
+       - or '$ MAKE="make -j" make release' (or debug) for faster compilation (on a multicore machine)
+
+3) See the examples in libvata/examples
