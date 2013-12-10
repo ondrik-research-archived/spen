@@ -4,7 +4,7 @@ CC = gcc
 FLEX = flex
 BISON = bison
 CFLAGS = -std=c99 -pedantic -g -Wall
-LDFLAGS = -g -lgmp -lgmpxx -lstdc++ 
+LDFLAGS = -g -lm -lgmp -lgmpxx -lstdc++ 
 
 OBJECTS = smtlib2bisonparser.o \
 	  smtlib2flexlexer.o \
