@@ -3,8 +3,9 @@ YICES_DIR = /usr/local/yices-1.0.29
 CC = gcc
 FLEX = flex
 BISON = bison
-CFLAGS = -std=c99 -pedantic -g -Wall
+CFLAGS = -std=c99 -pedantic -g -Wall -fPIC
 LDFLAGS = -g -lgmp -lgmpxx -lstdc++ 
+SHARED = $(CC) -shared
 
 OBJECTS = smtlib2bisonparser.o \
 	  smtlib2flexlexer.o \
@@ -20,34 +21,33 @@ OBJECTS = smtlib2bisonparser.o \
 YICES_OBJECTS = smtlib2yices.o \
 	        yicesmain.o
 
-#all: libsmtlib2parser.a smtlib2yices
+GCCVERSIONGTEQ46 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 4.6)
+
+ifeq "$(GCCVERSIONGTEQ46)" "0"
+BISON_SRC = smtlib2bisonparser.orig.y 
+endif
+
 all: libsmtlib2parser.a
 
 clean:
 	rm -f $(OBJECTS) $(YICES_OBJECTS) libsmtlib2parser.a smtlib2yices smtlib2bisonparser.c smtlib2bisonparser.h smtlib2flexlexer.c smtlib2flexlexer.h
 
 
-smtlib2yices: libsmtlib2parser.a $(YICES_OBJECTS)
-	$(CC) $(YICES_OBJECTS) libsmtlib2parser.a $(YICES_DIR)/lib/libyices.a $(LDFLAGS) -o $@
-
-smtlib2yices.o: smtlib2yices.c
-	$(CC) $(CFLAGS) -I$(YICES_DIR)/include -c -o $@ $<
-yicesmain.o: yicesmain.c
-	$(CC) $(CFLAGS) -I$(YICES_DIR)/include -c -o $@ $<
-
-
 libsmtlib2parser.a: $(OBJECTS)
 	ar rc $@ $(OBJECTS)
 	ranlib $@
 
+libsmtlib2parser.so: $(OBJECTS)
+	$(SHARED) $(LDFLAGS) $(SHARED_LIBS) -o $@ $^
 
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 
-smtlib2bisonparser.c: smtlib2bisonparser.y smtlib2flexlexer.c
+smtlib2bisonparser.c: $(BISON_SRC) smtlib2flexlexer.c
 	$(BISON) -o $@ $<
 
 smtlib2flexlexer.c: smtlib2flexlexer.l
+	echo $(SYST)
 	$(FLEX) --header-file="smtlib2flexlexer.h" -o $@ $<

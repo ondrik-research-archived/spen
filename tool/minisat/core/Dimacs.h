@@ -25,6 +25,20 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
    http://www.tcs.hut.fi/~swiering/icnf
  */
 
+/* This file includes modifications for handling the iCNF format
+
+   Modifications (c) Siert Wieringa 2010-2011
+   
+   http://www.tcs.hut.fi/~swiering/icnf
+ */
+
+/* This file includes modifications for handling the iCNF format
+
+   Modifications (c) Siert Wieringa 2010-2011
+   
+   http://www.tcs.hut.fi/~swiering/icnf
+ */
+
 #ifndef Minisat_Dimacs_h
 #define Minisat_Dimacs_h
 
