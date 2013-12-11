@@ -82,6 +82,7 @@ typedef enum {
 	NOLL_F_SELOC,
 	NOLL_F_TOBOOL,
 	NOLL_F_TOSPACE,
+	NOLL_F_ZPLUS,
 	NOLL_F_OTHER
 /* NOT TO BE USED */
 } noll_expkind_t;
@@ -202,6 +203,7 @@ noll_exp_t* noll_mk_seloc(noll_context_t* ctx, noll_exp_t** args, uint_t size);
 noll_exp_t* noll_mk_tobool(noll_context_t* ctx, noll_exp_t** args, uint_t size);
 noll_exp_t
 * noll_mk_tospace(noll_context_t* ctx, noll_exp_t** args, uint_t size);
+noll_exp_t* noll_mk_zplus(noll_context_t* ctx, noll_exp_t** args, uint_t size);
 
 /* ====================================================================== */
 /* Typechecking */

@@ -103,6 +103,7 @@ SMTLIB2_NOLL_DECLHANDLER (leloc);
 SMTLIB2_NOLL_DECLHANDLER (seloc);
 SMTLIB2_NOLL_DECLHANDLER (tobool);
 SMTLIB2_NOLL_DECLHANDLER (tospace);
+SMTLIB2_NOLL_DECLHANDLER (zplus);
 
 #define SMTLIB2_NOLL_SETHANDLER(tp, s, name) \
     smtlib2_term_parser_set_handler(tp, s, smtlib2_noll_parser_mk_ ## name)
@@ -173,6 +174,7 @@ smtlib2_noll_parser_new(void) {
 	SMTLIB2_NOLL_SETHANDLER (tp, "seloc", seloc);
 	SMTLIB2_NOLL_SETHANDLER (tp, "tobool", tobool);
 	SMTLIB2_NOLL_SETHANDLER (tp, "tospace", tospace);
+	SMTLIB2_NOLL_SETHANDLER (tp, "zplus", zplus);
 
 	/* Initialize the logic pre-defined sorts */
 	smtlib2_hashtable_set(ret->sorts_, (intptr_t) smtlib2_strdup("Bool"),
@@ -743,3 +745,10 @@ SMTLIB2_NOLL_DECLHANDLER (tospace) {
 			(noll_exp_t **) (smtlib2_vector_array (args)),
 			smtlib2_vector_size (args));
 }
+
+SMTLIB2_NOLL_DECLHANDLER (zplus) {
+	return noll_mk_zplus(noll_ctx (ctx),
+			(noll_exp_t **) (smtlib2_vector_array (args)),
+			smtlib2_vector_size (args));
+}
+

@@ -1,23 +1,23 @@
 /**************************************************************************/
-/*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012-2013                                               */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
+/* */
+/* NOLL decision procedure                                               */
+/* */
+/* Copyright (C) 2012-2013                                               */
+/* LIAFA (University of Paris Diderot and CNRS)                        */
+/* */
+/* */
+/* you can redistribute it and/or modify it under the terms of the GNU   */
+/* Lesser General Public License as published by the Free Software       */
+/* Foundation, version 3.                                                */
+/* */
+/* It is distributed in the hope that it will be useful,                 */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/* GNU Lesser General Public License for more details.                   */
+/* */
+/* See the GNU Lesser General Public License version 3.                  */
+/* for more details (enclosed in the file LICENSE).                      */
+/* */
 /**************************************************************************/
 
 /** Additional definitions needed to parse NOLL files
@@ -25,56 +25,63 @@
 
 #include "noll.h"
 
-/* ======================================================================
+/*
+ * ======================================================================
  * Messages
- * ====================================================================== */
+ * ======================================================================
+ */
 
-void noll_error(int level, const char* fun, const char* msg) {
+void noll_error(int level, const char *fun, const char *msg) {
 	fprintf(stderr, "NOLL-DP Error of level %d in %s: %s.\n", level, fun, msg);
 	if (level == 0)
-		// terminate
+		//terminate
 		exit(0);
 }
 
-void noll_error_args(int level, const char* fun, uint_t size) {
+void noll_error_args(int level, const char *fun, uint_t size) {
 	fprintf(stderr,
 			"NOLL-DP Error of level %d in %s: bad number (%d) of arguments.\n",
 			level, fun, size);
 	if (level == 0)
-		// terminate
+		//terminate
 		exit(0);
 }
 
-void noll_error_id(int level, char* fun, const char* name) {
+void noll_error_id(int level, char *fun, const char *name) {
 	fprintf(stderr,
 			"NOLL-DP Error of level %d in %s: identifier %s not declared.\n",
 			level, fun, name);
 	if (level == 0)
-		// terminate
+		//terminate
 		exit(0);
 }
 
-/* ======================================================================
+/*
+ * ======================================================================
  * Globals
- * ====================================================================== */
+ * ======================================================================
+ */
 
 void noll_init() {
 	noll_record_init();
 	noll_field_init();
-	// TODO: remove noll_vars_init();
+	//TODO:remove noll_vars_init();
 	noll_pred_init();
 	noll_entl_init();
 }
 
-/* ======================================================================
+/*
+ * ======================================================================
  * Context
- * ====================================================================== */
+ * ======================================================================
+ */
 
-noll_context_t*
+noll_context_t *
 noll_mk_context(void) {
-	noll_context_t* r = (noll_context_t*) malloc(sizeof(struct noll_context_t));
+	noll_context_t *r = (noll_context_t *) malloc(
+			sizeof(struct noll_context_t));
 #ifndef NDEBUG
-	printf ("noll_mk_context reset qstack\n");
+	printf("noll_mk_context reset qstack\n");
 #endif
 	r->lvar_stack = noll_uint_array_new();
 	noll_uint_array_push(r->lvar_stack, 0);
@@ -83,20 +90,22 @@ noll_mk_context(void) {
 	noll_uint_array_push(r->svar_stack, 0);
 	r->svar_env = noll_var_array_new();
 	r->pname = NULL;
-	noll_init(); // make global variables
+	noll_init();
+	//make global   variables
 	return r;
 }
 
 /**
  * Destroy context data at the end of parsing.
  */
-void noll_del_context(noll_context_t* ctx) {
-	// ctx->l_env is in general in use
+void noll_del_context(noll_context_t * ctx) {
+	//ctx->l_env is in general in use
 	noll_uint_array_delete(ctx->lvar_stack);
 	noll_var_array_delete(ctx->lvar_env);
 	noll_uint_array_delete(ctx->svar_stack);
 	noll_var_array_delete(ctx->svar_env);
-	free(ctx->pname); // not in use, usually
+	free(ctx->pname);
+	//not in use, usually
 	free(ctx);
 }
 
@@ -104,30 +113,33 @@ void noll_del_context(noll_context_t* ctx) {
  * Unlink context variables at the end of define-fun.
  * It is called before noll_pop_quant
  */
-void noll_pop_context(noll_context_t* ctx) {
+void noll_pop_context(noll_context_t * ctx) {
 #ifndef NDEBUG
-	fprintf (stdout, "noll_pop_context start\n");
-	fflush (stdout);
+	fprintf(stdout, "noll_pop_context start\n");
+	fflush(stdout);
 #endif
-	// the entries for exists and parameters
-	// will be deleted after that by noll_pop_quant
-	// no global variables added
-	assert (noll_vector_at(ctx->lvar_stack, 0) == 0);
-	assert (noll_vector_at(ctx->svar_stack, 0) == 0);
-	// the location array is reused in the function, thus only forget it
+	/*
+	 * the entries for exists and parameters will be deleted after that
+	 * by noll_pop_quant no global variables added
+	 */
+	assert(noll_vector_at(ctx->lvar_stack, 0) == 0);
+	assert(noll_vector_at(ctx->svar_stack, 0) == 0);
+	//the location array is reused in the function, thus only forget it
 	ctx->lvar_env = noll_var_array_new();
-	// unset the predicate name is allocated
+	//unset the predicate name is allocated
 	ctx->pname = NULL;
 }
 
-/* ====================================================================== 
+/*
+ * ======================================================================
  * Logic
- * ====================================================================== */
+ * ======================================================================
+ */
 
 /** Checks that the logic is supported.
  * @return 1 if the logic is correct, 0 otherwise
  */
-int noll_set_logic(noll_context_t* ctx, const char* logic) {
+int noll_set_logic(noll_context_t * ctx, const char *logic) {
 	if (!strcmp(logic, "QF_NOLL")) {
 		noll_error(0, "set-logic", "unknown logic");
 		return 0;
@@ -135,41 +147,43 @@ int noll_set_logic(noll_context_t* ctx, const char* logic) {
 	return 1;
 }
 
-/* ====================================================================== 
+/*
+ * ======================================================================
  * Commands
- * ====================================================================== */
+ * ======================================================================
+ */
 
 /**
  * Declare a variable or a field.
  * assert: The name is not yet used and not predefined.
  */
 noll_type_t *
-noll_mk_fun_decl(noll_context_t* ctx, const char* name, noll_type_t* rty) {
+noll_mk_fun_decl(noll_context_t * ctx, const char *name, noll_type_t * rty) {
 	switch (rty->kind) {
 	case NOLL_TYP_RECORD: {
-		// variable declaration
+		//variable declaration
 		// register it in the array of variables
 		noll_var_register(ctx->lvar_env, name, rty, NOLL_SCOPE_GLOBAL);
 		if (rty != NULL)
-			noll_vector_at(ctx->lvar_stack,0) += 1;
+			noll_vector_at(ctx->lvar_stack, 0) += 1;
 		return rty;
 	}
 	case NOLL_TYP_SETLOC: {
-		// variable declaration
+		//variable declaration
 		// register it in the array of variables
 		noll_var_register(ctx->svar_env, name, rty, NOLL_SCOPE_GLOBAL);
 		if (rty != NULL)
-			noll_vector_at(ctx->svar_stack,0) += 1;
+			noll_vector_at(ctx->svar_stack, 0) += 1;
 		return rty;
 	}
 	case NOLL_TYP_FIELD: {
-		// field declaration
+		//field declaration
 		// register it in the array of fields
 		noll_field_register(name, rty);
 		return rty;
 	}
 	default:
-		// error, return NULL below
+		//error, return NULL below
 		break;
 	}
 	return NULL;
@@ -177,7 +191,7 @@ noll_mk_fun_decl(noll_context_t* ctx, const char* name, noll_type_t* rty) {
 
 /**
  * Define a predicate.
- * 
+ *
  * @param ctx   contains the parameters and local variables
  * @param name  name of the predicate
  * @param npar  number of parameters in the local context, first npar
@@ -185,26 +199,29 @@ noll_mk_fun_decl(noll_context_t* ctx, const char* name, noll_type_t* rty) {
  * @param def   the term defining the predicate
  * @return  the identifier of the predicate defined or UNDEFINED_ID
  */
-uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
-		noll_type_t* rety, noll_exp_t * def) {
-	// assert: name is unique
+uint_t noll_mk_fun_def(noll_context_t * ctx, const char *name, uint_t npar,
+		noll_type_t * rety, noll_exp_t * def) {
+	/* assert:name is unique */
 	if (strcmp(ctx->pname, name)) {
-		// name does not correspond to this predicate definition
+		//name does not correspond to this predicate definition
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Incorrect predicate name in ", name);
 		return UNDEFINED_ID;
 	}
-	// assert: no global variables shall be defined
-	//         before the predicate definition, since
-	//         no global context is kept for the definition
-	//         of the predicate
-	if (noll_vector_at(ctx->lvar_stack,0) != 0) {
+	/*
+	 * assert:no global variables shall be defined before the predicate
+	 * definition, since no global context is kept for the definition of
+	 * the predicate
+	 */
+	if (noll_vector_at(ctx->lvar_stack, 0) != 0) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Global variables declared before ", name);
 		return UNDEFINED_ID;
 	}
-	// assert: number of parameters is at least 2 and
-	//         exactly the ctx->lvar_stack[1]
+	/*
+	 * assert:                number of parameters is at least 2 and
+	 * exactly the ctx->lvar_stack[1]
+	 */
 	if (noll_vector_size(ctx->lvar_stack) <= 1) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Empty set of parameters in ", name);
@@ -221,14 +238,16 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 		noll_error(1, "Incorrect number of parameters in ", name);
 		return UNDEFINED_ID;
 	}
-	// assert: rety sort shall be Space
+	/* assert:rety sort shall be Space */
 	if (rety == NULL || rety->kind != NOLL_TYP_SPACE) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Incorrect result type (!= Space) ", name);
 		return UNDEFINED_ID;
 	}
-	// Check the syntax of predicates and builds the predicate definition
-	// cond 0: all the parameters are of record type
+	/*
+	 * Check the syntax of predicates and builds the predicate definition
+	 */
+	/* cond 0:	all the parameters are of record type */
 	for (uint_t i = 0; i < npar; i++) {
 		if (noll_var_record(ctx->lvar_env, i) == UNDEFINED_ID) {
 			noll_error(1, "Building predicate definition ", name);
@@ -236,118 +255,65 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 			return UNDEFINED_ID;
 		}
 	}
-	// cond 1: the first two or four parameters are of the same sort,
-	//         the sort of the predicate, the other parameters have a different sort
+	/*
+	 * cond 1:the first two or four parameters are of the same sort, the
+	 * sort of the predicate, the other parameters have a different sort
+	 */
 	uint_t pred_ty = noll_var_record(ctx->lvar_env, 0);
 	uint_t nrec_p = 1;
 	while (nrec_p < npar && noll_var_record(ctx->lvar_env, nrec_p) == pred_ty)
 		nrec_p++;
 	if (nrec_p != 2 && nrec_p != 4) {
 		char str[10];
-		snprintf (str, 10, "%d", nrec_p);
+		snprintf(str, 10, "%d", nrec_p);
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Incorrect number of recursive parameters (!= 2 or 4) ",
 				str);
 		return UNDEFINED_ID;
 	}
-	// nrec_p is the first parameter of type different from pred_ty
+	/* nrec_p is the first parameter of type different from pred_ty */
 	for (uint_t i = nrec_p; i < npar; i++) {
 		if (noll_var_record(ctx->lvar_env, i) == pred_ty) {
 			char str[10];
-			snprintf (str, 10, "%d", i);
+			snprintf(str, 10, "%d", i);
 			noll_error(1, "Building predicate definition ", name);
 			noll_error(1, "Incorrect type of parameter ", str);
 			return UNDEFINED_ID;
 		}
 	}
 
-	// cond 2: the def has the form (tospace (or (<1 or 2 equals>) (exists etc)))
+	/* cond 2:the def has the form(tospace(exists etc))) */
 	if (def->discr != NOLL_F_TOSPACE || def->size != 1) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "First operator is not tospace ", "");
 		return UNDEFINED_ID;
 	}
-	if (def->args == NULL || def->args[0]->discr != NOLL_F_OR
-			|| def->args[0]->size != 2) {
+	if (def->args == NULL || def->args[0]->discr != NOLL_F_EXISTS) {
 		noll_error(1, "Building predicate definition ", name);
-		noll_error(1, "Second operator is not or ", "");
+		noll_error(1, "Second operator is not exists ", "");
 		return UNDEFINED_ID;
 	}
-	noll_exp_t* fequals = def->args[0]->args[0];
-	noll_exp_t* fexists = def->args[0]->args[1];
+	noll_exp_t *fexists = def->args[0];
 
-	// cond 3: <1 or 2 equals> are between the first two or four parameters
-	if (fequals == NULL || (fequals->discr != NOLL_F_EQ && nrec_p == 2)
-			|| (fequals->discr != NOLL_F_AND && nrec_p == 4)) {
-		noll_error(1, "Building predicate definition ", name);
-		noll_error(1, "Base case not well defined ", "(number of equalities)");
-		return UNDEFINED_ID;
-	}
-	if (fequals->discr == NOLL_F_EQ) {
-		// the two variables are the first parameters
-		uint_t v1 = UNDEFINED_ID;
-		uint_t v2 = UNDEFINED_ID;
-		if (fequals->args[0]->discr == NOLL_F_LVAR)
-			v1 = fequals->args[0]->p.sid;
-		if (fequals->args[1]->discr == NOLL_F_LVAR)
-			v2 = fequals->args[1]->p.sid;
-		if ((v1 != 0 || v2 != 1) && (v1 != 1 || v2 != 0)) {
-			noll_error(1, "Building predicate definition ", name);
-			noll_error(1, "Base case not well defined ",
-					"(equalities on bad variables)");
-			return UNDEFINED_ID;
-		}
-		// else, nothing, the predicate can be built
-	} else { // only two equalities between variables 1 = 3 and 2 = 4
-		// the length of and node shall be two and elements shall be equalities
-		if (fequals->size != 2 || fequals->args[0]->discr != NOLL_F_EQ
-				|| fequals->args[1]->discr != NOLL_F_EQ) {
-			noll_error(1, "Building predicate definition ", name);
-			noll_error(1, "Base case not well defined ",
-					"(and without two equalities)");
-			return UNDEFINED_ID;
-		}
-		// check that variables used are the first four variables
-		noll_exp_t* eq1 = fequals->args[0];
-		noll_exp_t* eq2 = fequals->args[1];
-
-		// the two variables are the first parameters
-		uint_t eq11 =
-				(eq1->args[0]->discr == NOLL_F_LVAR) ? eq1->args[0]->p.sid
-						: UNDEFINED_ID;
-		uint_t eq12 =
-				(eq1->args[1]->discr == NOLL_F_LVAR) ? eq1->args[1]->p.sid
-						: UNDEFINED_ID;
-		uint_t eq21 =
-				(eq2->args[0]->discr == NOLL_F_LVAR) ? eq2->args[0]->p.sid
-						: UNDEFINED_ID;
-		uint_t eq22 =
-				(eq2->args[1]->discr == NOLL_F_LVAR) ? eq2->args[1]->p.sid
-						: UNDEFINED_ID;
-		// TODO: write the test correctly
-		if (((eq11 != 0) || (eq12 != 2) || (eq21 != 1) || (eq22 != 3))
-				&& ((eq11 != 2) || (eq12 != 0) || (eq21 != 3) || (eq22 != 1))) {
-			noll_error(1, "Building predicate definition ", name);
-			noll_error(1, "Base case not well defined ",
-					"(and with equalities on bad variables)");
-			return UNDEFINED_ID;
-		}
-		// else, predicate can be built for this case
-	}
-	// cond 4: the <exists> defines variables such that
-	// - only one variable of the recursive type pred_ty
-	// - the other variables are of type typinf the fields of pred_ty
-	// Notice: qarr == ctx->l_env and
-	//         npar == fexists->p.quant.start
-	noll_var_array* qarr = fexists->p.quant.lvars;
+	/*
+	 * cond 3: < exists > defines variables such that
+	 *
+	 *	-only one variable of the recursive type pred_ty
+	 *
+	 *	-the other variables are of type typinf the fields of pred_ty
+	 */
+	/*
+	 * Notice: qarr == ctx->l_env and npar == fexists->p.quant.start
+	 */
+	noll_var_array *qarr = fexists->p.quant.lvars;
 	if (qarr == NULL || npar != fexists->p.quant.lstart) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Exists without variables ", "");
 		return UNDEFINED_ID;
 	}
 	uint_t uid = 0;
-	for (uint_t i = fexists->p.quant.lstart; i < noll_vector_size (qarr); i++) {
-		noll_var_t* vi = noll_vector_at (qarr, i);
+	for (uint_t i = fexists->p.quant.lstart; i < noll_vector_size(qarr); i++) {
+		noll_var_t *vi = noll_vector_at(qarr, i);
 		if (vi) {
 			uint_t vi_ty = noll_var_record(qarr, i);
 			if (vi_ty == UNDEFINED_ID) {
@@ -364,7 +330,7 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 				} else
 					uid = i;
 			}
-			// TODO: check the types of the other variables
+			//TODO:	check the types of the other variables
 		}
 	}
 	if (uid == 0) {
@@ -373,44 +339,59 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 				"inside the list segment");
 		return UNDEFINED_ID;
 	}
-	// cond 5: the formula in exists starts by (tobool (ssep (pto ...) (...) (recursive call))
-	noll_exp_t* qform = fexists->args[0];
-	if (qform->discr != NOLL_F_TOBOOL || qform->size != 1 || qform->args
-			== NULL || qform->args[0]->discr != NOLL_F_SSEP
+	/*
+	 * cond 5: the formula in exists starts by (tobool(ssep(pto...) (...)
+	 * (recursive call))
+	 */
+	noll_exp_t *qform = fexists->args[0];
+	if (qform->discr != NOLL_F_TOBOOL || qform->size != 1 || qform->args == NULL
+			|| qform->args[0]->discr != NOLL_F_SSEP
 			|| qform->args[0]->size < 2) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Formula inside exists ", "is not (tobool (ssep ...))");
 		return UNDEFINED_ID;
 	}
-	// goes through the arguments of ssep and builds two separation formulas
-	noll_exp_t* sepform = qform->args[0];
+	/*
+	 * goes through the arguments of ssep and builds two spatial formulas
+	 * - one for pto - one for nesting
+	 */
+	noll_exp_t *sepform = qform->args[0];
 	if (sepform->size < 2) {
 		noll_error(1, "Building predicate definition ", name);
 		noll_error(1, "Formula inside exists ",
 				"shall have at least two subformulas");
 		return UNDEFINED_ID;
 	}
-	noll_space_t* sigma_0 = NULL;
-	noll_space_t* sigma_1 = NULL;
-	// the size of sigma_1 is the size of sepform - 2 (sigma_0 and recursive call)
+	noll_space_t *sigma_0 = NULL;
+	noll_space_t *sigma_1 = NULL;
+	/*
+	 * Notice: the size of sigma_1 is the size of sepform - 2 (sigma_0
+	 * and the recursive call are removed)
+	 */
+	/*
+	 * TODO: store the recursive call for dll
+	 */
 	if (sepform->size > 2) {
-		sigma_1 = (noll_space_t*) malloc(sizeof(noll_space_t));
+		sigma_1 = (noll_space_t *) malloc(sizeof(noll_space_t));
 		sigma_1->kind = NOLL_SPACE_SSEP;
 		sigma_1->m.sep = noll_space_array_new();
 		noll_space_array_reserve(sigma_1->m.sep, (sepform->size - 2));
 	}
 	uint_t rec_call = 0;
 	for (uint_t i = 0; i < sepform->size; i++) {
-		noll_exp_t* si = sepform->args[i];
+		noll_exp_t *si = sepform->args[i];
 		switch (si->discr) {
 		case NOLL_F_PTO: {
-			// may be pto from in or from a variable != in and u
-			noll_space_t* pto = noll_mk_form_pto(ctx, si);
-			// add to sigma_0 or sigma_1
+			/*
+			 * may be pto from in or from a variable !=
+			 * in and u
+			 */
+			noll_space_t *pto = noll_mk_form_pto(ctx, si);
+			//add to sigma_0 or sigma_1
 			if (pto->m.pto.sid == 0) {
-				// 0 is the index of the "in" parameter
+				//0 is the index of the "in" parameter
 				if (sigma_0 != NULL) {
-					// TODO: error message
+					//TODO:	error message
 					printf(
 							"Error: NOLL predicate definition `%s' not correct.\n",
 							name);
@@ -424,12 +405,23 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 				noll_space_array_push(sigma_1->m.sep, pto);
 			break;
 		}
-		case NOLL_F_PRED: {
-			// predicate call
-			if (si->p.sid == UNDEFINED_ID) {
-				// it is a recursive call
+		case NOLL_F_ZPLUS: {
+			/*
+			 * before the recursive call of the predicate
+			 * specifies the basic case
+			 */
+			if (si->size != 1) {
+				noll_error(1, "Building predicate definition ", name);
+				noll_error(1, "Base case not well defined ",
+						"(too much arguments for zplus)");
+				return UNDEFINED_ID;
+			}
+			noll_exp_t *fpred = si->args[0];
+			/* check the predicate call */
+			if (fpred->p.sid == UNDEFINED_ID) {
+				/* it is a recursive call */
 				if (rec_call >= 1) {
-					// TODO: error message
+					/* TODO: error message */
 					printf(
 							"Error: NOLL predicate definition `%s' not correct.\n",
 							name);
@@ -439,14 +431,18 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 					return UNDEFINED_ID;
 				}
 				rec_call++;
-				// check that parameters are the same except
-				// the first one (nrec_p==2) or two (nrec_p==4)
+				/*
+				 * check that parameters are the same
+				 * except the first one(nrec_p == 2)
+				 * or two(nrec_p == 4)
+				 */
 				if (nrec_p == 2) {
-					if ((si->size < 2) || (si->size != npar) || (si->size
-							!= noll_vector_at(ctx->lvar_stack,1)) || (si->args
-							== NULL) || (si->args[0] == NULL)
-							|| (si->args[0]->discr != NOLL_F_LVAR)) {
-						// TODO: error message
+					if ((fpred->size < 2) || (fpred->size != npar)
+							|| (fpred->size
+									!= noll_vector_at(ctx->lvar_stack, 1))
+							|| (fpred->args == NULL) || (fpred->args[0] == NULL)
+							|| (fpred->args[0]->discr != NOLL_F_LVAR)) {
+						//TODO:	error message
 						printf(
 								"Error: NOLL predicate definition `%s' not correct.\n",
 								name);
@@ -457,10 +453,10 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 						noll_space_free(sigma_1);
 						return UNDEFINED_ID;
 					}
-					uint_t p0 = si->args[0]->p.sid;
-					if ((p0 == UNDEFINED_ID) || (noll_var_record(ctx->lvar_env,
-							p0) != pred_ty)) {
-						// TODO: error message
+					uint_t p0 = fpred->args[0]->p.sid;
+					if ((p0 == UNDEFINED_ID)
+							|| (noll_var_record(ctx->lvar_env, p0) != pred_ty)) {
+						//TODO:	error message
 						printf(
 								"Error: NOLL predicate definition `%s' not correct.\n",
 								name);
@@ -471,14 +467,20 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 						noll_space_free(sigma_1);
 						return UNDEFINED_ID;
 					}
-					// else, this parameter is ok, check for equality the remainder parameters
-				} else // nrec_p == 4
+					/*
+					 * else, this parameter is
+					 * ok, check for equality the
+					 * remainder parameters
+					 */
+				} else
+				//nrec_p == 4
 				{
-					if (si->size < 2 || si->size != nrec_p || si->args == NULL
-							|| si->args[0] == NULL || si->args[1] == NULL
-							|| si->args[0]->discr != NOLL_F_LVAR
-							|| si->args[1]->discr != NOLL_F_LVAR) {
-						// TODO: error message
+					if (fpred->size < 2 || fpred->size != nrec_p
+							|| fpred->args == NULL || fpred->args[0] == NULL
+							|| fpred->args[1] == NULL
+							|| fpred->args[0]->discr != NOLL_F_LVAR
+							|| fpred->args[1]->discr != NOLL_F_LVAR) {
+						//TODO:	error message
 						printf(
 								"Error: NOLL predicate definition `%s' not correct.\n",
 								name);
@@ -489,13 +491,13 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 						noll_space_free(sigma_1);
 						return UNDEFINED_ID;
 					}
-					uint_t p0 = si->args[0]->p.sid;
-					uint_t p1 = si->args[1]->p.sid;
+					uint_t p0 = fpred->args[0]->p.sid;
+					uint_t p1 = fpred->args[1]->p.sid;
 					if (p0 == UNDEFINED_ID || p1 == UNDEFINED_ID
 							|| noll_var_record(ctx->lvar_env, p0) != pred_ty
 							|| noll_var_record(ctx->lvar_env, p1) != pred_ty
 							|| p1 != 0) {
-						// TODO: error message
+						//TODO:	error message
 						printf(
 								"Error: NOLL predicate definition `%s' not correct.\n",
 								name);
@@ -506,102 +508,135 @@ uint_t noll_mk_fun_def(noll_context_t* ctx, const char* name, uint_t npar,
 						noll_space_free(sigma_1);
 						return UNDEFINED_ID;
 					}
-					// else, these parameters are ok, check for equality the remainder parameters
+					/*
+					 * else, these parameters are
+					 * ok, check for equality the
+					 * remainder parameters
+					 */
 				}
-				// check that the remainder of parameters are equal to the formal ones
+				/*
+				 * check that the remainder of
+				 * parameters are equal to the formal
+				 * ones
+				 */
 				uint_t i = (nrec_p == 2) ? 1 : 2;
 				for (; i < npar; i++)
-					if (si->args[i]->discr != NOLL_F_LVAR
-							|| ((noll_vector_at (ctx->lvar_env, i))->vid
-									!= si->args[i]->p.sid)) {
-						// TODO: error message
+					if (fpred->args[i]->discr != NOLL_F_LVAR
+							|| ((noll_vector_at(ctx->lvar_env, i))->vid
+									!= fpred->args[i]->p.sid)) {
+						//TODO:	error message
 						printf(
 								"Error: NOLL predicate definition `%s' not correct.\n",
 								name);
 						printf(
 								"\t Recursive call to `%s' with bad (%d last) parameters (%d != %d).\n",
 								name, i,
-								(noll_vector_at (ctx->lvar_env, i))->vid,
-								si->args[i]->p.sid);
+								(noll_vector_at(ctx->lvar_env, i))->vid,
+								fpred->args[i]->p.sid);
 						noll_space_free(sigma_0);
 						noll_space_free(sigma_1);
 						return UNDEFINED_ID;
 					}
 			} else {
-				// predicate call not recursive
-				noll_space_t* pcall = noll_mk_form_pred(ctx, si);
-				// put this call into sigma_1
-				noll_space_array_push(sigma_1->m.sep, pcall);
+				printf("Error: NOLL predicate definition `%s' not correct.\n",
+						name);
+				printf(
+						"\t Predicate call `%s' in `zplus' is not a recursive call.\n",
+						name);
+				noll_space_free(sigma_0);
+				noll_space_free(sigma_1);
+				return UNDEFINED_ID;
 			}
+			break;
+		}
+		case NOLL_F_PRED: {
+			//predicate call not recursive
+			if (si->p.sid == UNDEFINED_ID) {
+				noll_error(1, "Building predicate definition ", name);
+				noll_error(1, "Base case not well defined ",
+						"(absence of disjunct)");
+				return UNDEFINED_ID;
+			}
+			noll_space_t *pcall = noll_mk_form_pred(ctx, si);
+			//put this call into sigma_1
+			noll_space_array_push(sigma_1->m.sep, pcall);
 			break;
 		}
 		default:
 			break;
-		} // end switch
-	} // end for
-	// last checks sigma_0 is not null
+		} //end switch
+	} /* end for */
+	/* last: checks sigma_0 is not null */
 	if (sigma_0 == NULL) {
-		// TODO: error message
+		//TODO:	error message
 		printf("Error: NOLL predicate definition `%s' not correct.\n", name);
 		printf("\t Not points-to part.\n");
 		noll_space_free(sigma_0);
 		noll_space_free(sigma_1);
 		return UNDEFINED_ID;
 	}
-
-	// build the record for this predicate definition and register it
-	noll_pred_binding_t* pdef = (noll_pred_binding_t*) malloc(
+	/*
+	 * build the record for this predicate definition and register it
+	 */
+	noll_pred_binding_t *pdef = (noll_pred_binding_t *) malloc(
 			sizeof(noll_pred_binding_t));
 	pdef->pargs = (nrec_p == 2) ? 0 : 1;
 	pdef->fargs = npar;
 	pdef->vars = ctx->lvar_env;
 	pdef->sigma_0 = sigma_0;
 	pdef->sigma_1 = sigma_1;
-	// register predicate;
+	//register      predicate;
 	return noll_pred_register(name, pdef);
 }
 
-int noll_assert(noll_context_t* ctx, noll_exp_t* term) {
-	// check that the formula is not null
+int noll_assert(noll_context_t * ctx, noll_exp_t * term) {
+	//check that the formula is not null
 	if (!term) {
 		noll_error(1, "noll_assert", "null formula");
 		return 0;
 	}
-	// if the local environment is not empty, signal it
+	/* if the local environment is not empty, signal it */
 	if ((noll_vector_size(ctx->lvar_stack) > 1)
 			|| (noll_vector_size(ctx->svar_stack) > 1)) {
 		noll_error(1, "noll_assert", "non empty local environment");
 		return 0;
 	}
-	// typecheck the formula and do simplifications, iff needed
-	noll_exp_t* form = noll_exp_typecheck(ctx, term);
+	/* typecheck the formula and do simplifications, iff needed */
+	noll_exp_t *form = noll_exp_typecheck(ctx, term);
 	if (form == NULL) {
 		noll_error(1, "noll_assert", "typechecking error");
 		return 0;
 	}
-	// translate into a formula and
-	// fill the positive or negative formulae depending on the first operator
+	/* translate into a formula and
+	 * fill the positive or negative formulae depending on the first operator
+	 */
 	if (form->discr == NOLL_F_NOT)
-		noll_exp_push(ctx, form->args[0], 0); // push in negative
+		noll_exp_push(ctx, form->args[0], 0);
+	//push in negative
 	else
-		noll_exp_push(ctx, form, 1); // push in positive
+		noll_exp_push(ctx, form, 1);
+	//push in positive
 
-	// ctx->*vars have been copied in formulae
+	// ctx->* vars have been copied in formulae
 	// refill the context with the global variables
-	noll_var_array* arr = ctx->lvar_env; // this array is in the formulae
-	uint_t size = noll_vector_at(ctx->lvar_stack,0);
+	noll_var_array * arr = ctx->lvar_env;
+	//this array is in the formulae
+	uint_t size = noll_vector_at(ctx->lvar_stack, 0);
 	ctx->lvar_env = noll_var_array_new();
 	if (size > 0)
 		noll_var_array_reserve(ctx->lvar_env, size);
 	for (uint_t i = 0; i < size; i++)
-		noll_var_array_push(ctx->lvar_env, noll_var_copy(noll_vector_at(arr,i)));
-	arr = ctx->svar_env; // this array is in the formulae
-	size = noll_vector_at(ctx->svar_stack,0);
+		noll_var_array_push(ctx->lvar_env,
+				noll_var_copy(noll_vector_at(arr, i)));
+	arr = ctx->svar_env;
+	//this array is in the formulae
+	size = noll_vector_at(ctx->svar_stack, 0);
 	ctx->svar_env = noll_var_array_new();
 	if (size > 0)
 		noll_var_array_reserve(ctx->svar_env, size);
 	for (uint_t i = 0; i < size; i++)
-		noll_var_array_push(ctx->svar_env, noll_var_copy(noll_vector_at(arr,i)));
+		noll_var_array_push(ctx->svar_env,
+				noll_var_copy(noll_vector_at(arr, i)));
 
 	return 1;
 }
@@ -615,49 +650,54 @@ int noll_check(noll_context_t * ctx) {
 	return noll_entl_solve();
 }
 
-/* ======================================================================
+/*
+ * ===================================
+ * ===================================
  * Terms
- * ====================================================================== */
+ * ===================================
+ * ===================================
+ *
+ */
 
 /** Adds the variable to the topmost local array in the context,
  * depending of this type.
  */
-void noll_push_var(noll_context_t* ctx, const char* name, noll_type_t* vty) {
+void noll_push_var(noll_context_t * ctx, const char *name, noll_type_t * vty) {
 	if (!ctx)
 		return;
 	if (vty->kind == NOLL_TYP_RECORD) {
-		assert (ctx->lvar_env != NULL);
-		noll_var_t* v = noll_var_new(name, vty, NOLL_SCOPE_LOCAL);
+		assert(ctx->lvar_env != NULL);
+		noll_var_t *v = noll_var_new(name, vty, NOLL_SCOPE_LOCAL);
 		noll_var_array_push(ctx->lvar_env, v);
-		v->vid = noll_vector_size (ctx->lvar_env) - 1;
-		// update the number of elements in the top of the stack
-		uint_t top_stack = noll_vector_size (ctx->lvar_stack) - 1;
+		v->vid = noll_vector_size(ctx->lvar_env) - 1;
+		//update the number of elements in the top of the stack
+		uint_t top_stack = noll_vector_size(ctx->lvar_stack) - 1;
 		noll_vector_at(ctx->lvar_stack, top_stack) += 1;
 	} else if (vty->kind == NOLL_TYP_SETLOC) {
-		assert (ctx->svar_env != NULL);
-		noll_var_t* v = noll_var_new(name, vty, NOLL_SCOPE_LOCAL);
+		assert(ctx->svar_env != NULL);
+		noll_var_t *v = noll_var_new(name, vty, NOLL_SCOPE_LOCAL);
 		noll_var_array_push(ctx->svar_env, v);
-		v->vid = noll_vector_size (ctx->svar_env) - 1;
-		// update the number of elements in the top of the stack
-		uint_t top_stack = noll_vector_size (ctx->svar_stack) - 1;
+		v->vid = noll_vector_size(ctx->svar_env) - 1;
+		//update the number of elements in the top of the stack
+		uint_t top_stack = noll_vector_size(ctx->svar_stack) - 1;
 		noll_vector_at(ctx->svar_stack, top_stack) += 1;
 	} else
-		assert (0);
+		assert(0);
 }
 
 int noll_push_quant(noll_context_t * ctx) {
 #ifndef NDEBUG
-	fprintf (stdout, "push_quant start lvar_stack=[");
+	fprintf(stdout, "push_quant start lvar_stack=[");
 	for (uint_t i = 0; i < noll_vector_size(ctx->lvar_stack); i++)
-	fprintf (stdout, "%d,", noll_vector_at(ctx->lvar_stack,i));
-	fprintf (stdout, "]\n");
+	fprintf(stdout, "%d,", noll_vector_at(ctx->lvar_stack, i));
+	fprintf(stdout, "]\n");
 
-	fprintf (stdout, "\t\tsvar_stack=[");
+	fprintf(stdout, "\t\tsvar_stack=[");
 	for (uint_t i = 0; i < noll_vector_size(ctx->svar_stack); i++)
-	fprintf (stdout, "%d,", noll_vector_at(ctx->svar_stack,i));
-	fprintf (stdout, "]\n");
+	fprintf(stdout, "%d,", noll_vector_at(ctx->svar_stack, i));
+	fprintf(stdout, "]\n");
 #endif
-	// the NOLL supports only 2 levels of nesting and only inside define-fun
+	//the NOLL supports only 2 levels of nesting and only inside define - fun
 	if (noll_vector_size(ctx->lvar_stack) >= 3) {
 		noll_error(0, "noll_push_quant", "too much nesting");
 		return 0;
@@ -669,15 +709,15 @@ int noll_push_quant(noll_context_t * ctx) {
 
 int noll_pop_quant(noll_context_t * ctx) {
 #ifndef NDEBUG
-	fprintf (stdout, "pop_quant start lvar_stack=[");
+	fprintf(stdout, "pop_quant start lvar_stack=[");
 	for (uint_t i = 0; i < noll_vector_size(ctx->lvar_stack); i++)
-	fprintf (stdout, "%d,", noll_vector_at(ctx->lvar_stack,i));
-	fprintf (stdout, "]\n");
+	fprintf(stdout, "%d,", noll_vector_at(ctx->lvar_stack, i));
+	fprintf(stdout, "]\n");
 
-	fprintf (stdout, "\t\tsvar_stack=[");
+	fprintf(stdout, "\t\tsvar_stack=[");
 	for (uint_t i = 0; i < noll_vector_size(ctx->svar_stack); i++)
-	fprintf (stdout, "%d,", noll_vector_at(ctx->svar_stack,i));
-	fprintf (stdout, "]\n");
+	fprintf(stdout, "%d,", noll_vector_at(ctx->svar_stack, i));
+	fprintf(stdout, "]\n");
 #endif
 	if (noll_vector_size(ctx->lvar_stack) <= 1) {
 		noll_error(0, "noll_pop_quant", "too much pops");
@@ -688,15 +728,15 @@ int noll_pop_quant(noll_context_t * ctx) {
 	return 1;
 }
 
-noll_exp_t*
-noll_mk_op(noll_expkind_t f, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_op(noll_expkind_t f, noll_exp_t ** args, uint_t size) {
 	uint_t i;
-	noll_exp_t* res = (noll_exp_t*) malloc(sizeof(struct noll_exp_t));
+	noll_exp_t *res = (noll_exp_t *) malloc(sizeof(struct noll_exp_t));
 	res->discr = f;
 	res->size = size;
 	res->args = NULL;
 	if (size) {
-		res->args = (noll_exp_t**) malloc(size * sizeof(noll_exp_t*));
+		res->args = (noll_exp_t **) malloc(size * sizeof(noll_exp_t *));
 		for (i = 0; i < size; i++)
 			res->args[i] = args[i];
 	}
@@ -708,41 +748,41 @@ noll_mk_op(noll_expkind_t f, noll_exp_t** args, uint_t size) {
  * - either for predicate definition
  * - either at the top-most of a NOLL formula
  */
-noll_exp_t*
-noll_mk_exists(noll_context_t* ctx, noll_exp_t* term) {
-	// the exist variables are at the end of the stack,
-	// i.e. top of ctx->*var_stack element,
-	// in ctx->*_env
+noll_exp_t *
+noll_mk_exists(noll_context_t * ctx, noll_exp_t * term) {
+	//the exist variables are at the end of the stack,
+	//i.e.top of ctx->* var_stack element,
+	//in ctx->* _env
 
 	uint_t nb_exists_lvar = noll_vector_last(ctx->lvar_stack);
 	uint_t nb_exists_svar = noll_vector_last(ctx->svar_stack);
 
 #ifndef NDEBUG
-	fprintf (stdout, "mk_exists start lvar_stack=[");
+	fprintf(stdout, "mk_exists start lvar_stack=[");
 	for (uint_t i = 0; i < noll_vector_size(ctx->lvar_stack); i++)
-	fprintf (stdout, "%d,", noll_vector_at(ctx->lvar_stack,i));
-	fprintf (stdout, "]\n");
-	fprintf (stdout, "mk_exists exists lvar=[");
+	fprintf(stdout, "%d,", noll_vector_at(ctx->lvar_stack, i));
+	fprintf(stdout, "]\n");
+	fprintf(stdout, "mk_exists exists lvar=[");
 	for (uint_t i = nb_exists_lvar; i > 0; i--) {
-		noll_var_t* vi = noll_vector_at(ctx->lvar_env,
+		noll_var_t *vi = noll_vector_at(ctx->lvar_env,
 				noll_vector_size(ctx->lvar_env) - i);
-		fprintf (stdout, "%s,", vi->vname);
+		fprintf(stdout, "%s,", vi->vname);
 	}
-	fprintf (stdout, "]\n");
+	fprintf(stdout, "]\n");
 
-	fprintf (stdout, "mk_exists start svar_stack=[");
+	fprintf(stdout, "mk_exists start svar_stack=[");
 	for (uint_t i = 0; i < noll_vector_size(ctx->svar_stack); i++)
-	fprintf (stdout, "%d,", noll_vector_at(ctx->svar_stack,i));
-	fprintf (stdout, "]\n");
-	fprintf (stdout, "mk_exists exists svar=[");
+	fprintf(stdout, "%d,", noll_vector_at(ctx->svar_stack, i));
+	fprintf(stdout, "]\n");
+	fprintf(stdout, "mk_exists exists svar=[");
 	for (uint_t i = nb_exists_svar; i > 0; i--) {
-		noll_var_t* vi = noll_vector_at(ctx->svar_env,
+		noll_var_t *vi = noll_vector_at(ctx->svar_env,
 				noll_vector_size(ctx->svar_env) - i);
-		fprintf (stdout, "%s,", vi->vname);
+		fprintf(stdout, "%s,", vi->vname);
 	}
-	fprintf (stdout, "]\n");
+	fprintf(stdout, "]\n");
 #endif
-	noll_exp_t* res = noll_mk_op(NOLL_F_EXISTS, &term, 1);
+	noll_exp_t *res = noll_mk_op(NOLL_F_EXISTS, &term, 1);
 	res->p.quant.lvars = ctx->lvar_env;
 	res->p.quant.lstart = noll_vector_size(ctx->lvar_env) - nb_exists_lvar;
 	res->p.quant.lend = noll_vector_size(ctx->lvar_env);
@@ -761,11 +801,11 @@ noll_mk_exists(noll_context_t* ctx, noll_exp_t* term) {
  * @param size length of the array above
  * @return the term built
  */
-noll_exp_t*
-noll_mk_app(noll_context_t* ctx, const char* name, noll_exp_t** args,
+noll_exp_t *
+noll_mk_app(noll_context_t * ctx, const char *name, noll_exp_t ** args,
 		uint_t size) {
 	if (size == 0) {
-		// is null-ary symbols (true, false, emp, junk) or variable
+		//is null - ary symbols(true, false, emp, junk) or variable
 		if (strcmp(name, "true") == 0)
 			return noll_mk_true(ctx);
 		if (strcmp(name, "false") == 0)
@@ -776,31 +816,31 @@ noll_mk_app(noll_context_t* ctx, const char* name, noll_exp_t** args,
 			return noll_mk_junk(ctx);
 		return noll_mk_symbol(ctx, name);
 	}
-	// is a predicate call (name args)
+	//is a predicate call(name args)
 	return noll_mk_pred(ctx, name, args, size);
 }
 
 /** Build a term from this variable or field.
  */
-noll_exp_t*
-noll_mk_symbol(noll_context_t* ctx, const char* name) {
-	assert (ctx && name);
-	noll_exp_t* ret = NULL;
+noll_exp_t *
+noll_mk_symbol(noll_context_t * ctx, const char *name) {
+	assert(ctx && name);
+	noll_exp_t *ret = NULL;
 	uint_t sid = UNDEFINED_ID;
-	noll_type_t* typ = NULL;
+	noll_type_t *typ = NULL;
 #ifndef NDEBUG
-	// fprintf (stdout, "mk_symbol: start %s\n", name);
-	// fflush (stdout);
+	//fprintf(stdout, "mk_symbol: start %s\n", name);
+	//fflush(stdout);
 #endif
-	// search the variable environment
-	// - search in the location env
-	assert (ctx->lvar_env != NULL);
+	//search the variable environment
+	// -search in the location env
+	assert(ctx->lvar_env != NULL);
 	sid = noll_var_array_find_local(ctx->lvar_env, name);
 	if (sid != UNDEFINED_ID)
 		typ = (noll_vector_at(ctx->lvar_env, sid))->vty;
 	else {
-		// search in the set of location env
-		assert (ctx->svar_env != NULL);
+		//search in the set of location env
+		assert(ctx->svar_env != NULL);
 		sid = noll_var_array_find_local(ctx->svar_env, name);
 
 		if (sid != UNDEFINED_ID)
@@ -815,14 +855,13 @@ noll_mk_symbol(noll_context_t* ctx, const char* name) {
 			ret->p.sid = sid;
 		}
 #ifndef NDEBUG
-		// fprintf (stdout, "mk_symbol: local %s (id %d)\n", name, ret->p.sid);
+		//fprintf(stdout, "mk_symbol: local %s (id %d)\n", name, ret->p.sid);
 #endif
 		return ret;
 	}
-
-	// else, it shall be a field
+	/* else, it shall be a field */
 	if (name[0] == '?') {
-		// fields cannot start with ?
+		//fields cannot start with ?
 		noll_error_id(1, "noll_mk_symbol", name);
 		return NULL;
 	}
@@ -832,58 +871,61 @@ noll_mk_symbol(noll_context_t* ctx, const char* name) {
 		ret->p.sid = sid;
 		return ret;
 	}
-	// else error
+	/* else error */
 	noll_error_id(1, "noll_mk_symbol", name);
 	return NULL;
 }
 
-noll_exp_t*
-noll_mk_pred(noll_context_t* ctx, const char* name, noll_exp_t** args,
+noll_exp_t *
+noll_mk_pred(noll_context_t * ctx, const char *name, noll_exp_t ** args,
 		uint_t size) {
-	assert (name != NULL);
-	assert (args != NULL);
+	assert(name != NULL);
+	assert(args != NULL);
 	if (size < 2) {
-		char* msg = strdup(name);
+		char *msg = strdup(name);
 		noll_error_args(1, msg, size);
 		free(msg);
 		return NULL;
 	}
-	// search the predicate name
+	//search the predicate name
 	uint_t pid = noll_pred_array_find(name);
 	if (pid == UNDEFINED_ID) {
-		// it is maybe a recursive definition
+		//it is maybe a recursive definition
 		if (ctx->pname != NULL) {
-			// but the second recursive call, not good
+			//but the second recursive call, not good
 			noll_error_id(1, "noll_mk_pred", name);
 			return NULL;
 		} else if (noll_vector_size(ctx->lvar_stack) >= 3)
-			// a predicate definition, fill pname
+			//a predicate definition, fill pname
 			ctx->pname = strdup(name);
 	}
-	// typechecking is done afterwards, build the expression
-	noll_exp_t* res = noll_mk_op(NOLL_F_PRED, args, size);
+	//typechecking is done afterwards, build the expression
+	noll_exp_t * res = noll_mk_op(NOLL_F_PRED, args, size);
 	res->p.sid = pid;
 	return res;
 }
 
 noll_exp_t *
 noll_mk_true(noll_context_t * ctx) {
-	noll_exp_t* res = (noll_exp_t*) malloc(sizeof(struct noll_exp_t));
+	noll_exp_t *res = (noll_exp_t *) malloc(sizeof(struct noll_exp_t));
 	res->discr = NOLL_F_TRUE;
 	return res;
 }
 
 noll_exp_t *
 noll_mk_false(noll_context_t * ctx) {
-	noll_exp_t* res = (noll_exp_t*) malloc(sizeof(struct noll_exp_t));
+	noll_exp_t *res = (noll_exp_t *) malloc(sizeof(struct noll_exp_t));
 	res->discr = NOLL_F_FALSE;
 	return res;
 }
 
 noll_exp_t *
-noll_mk_and(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_mk_and(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size <= 0)
-		/* 0 arguments is false */
+		/*
+		 * 0 arguments is
+		 * false
+		 */
 		return noll_mk_false(ctx);
 	else if (size == 1)
 		return args[0];
@@ -891,20 +933,23 @@ noll_mk_and(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
 }
 
 noll_exp_t *
-noll_mk_or(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_mk_or(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size <= 0)
-		/* 0 arguments is true */
+		/*
+		 * 0 arguments is
+		 * true
+		 */
 		return noll_mk_true(ctx);
 	else if (size == 1)
 		return args[0];
 	return noll_mk_op(NOLL_F_OR, args, size);
 }
 
-noll_exp_t*
-noll_mk_not(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_not(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 1)
 		noll_error_args(1, "noll_mk_not", size);
-	noll_exp_t* e = args[0];
+	noll_exp_t *e = args[0];
 	if (e->discr == NOLL_F_INLOC) {
 		e->discr = NOLL_F_NILOC;
 		return e;
@@ -915,139 +960,154 @@ noll_mk_not(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
 		return noll_mk_op(NOLL_F_NOT, args, size);
 }
 
-noll_exp_t*
-noll_mk_eq(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_eq(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_eq", size);
 	return noll_mk_op(NOLL_F_EQ, args, size);
 }
 
-noll_exp_t*
-noll_mk_distinct(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_distinct(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_distinct", size);
 	return noll_mk_op(NOLL_F_DISTINCT, args, size);
 }
 
-noll_exp_t*
-noll_mk_emp(noll_context_t* ctx) {
-	noll_exp_t* res = (noll_exp_t*) malloc(sizeof(struct noll_exp_t));
+noll_exp_t *
+noll_mk_emp(noll_context_t * ctx) {
+	noll_exp_t *res = (noll_exp_t *) malloc(sizeof(struct noll_exp_t));
 	res->discr = NOLL_F_EMP;
 	return res;
 }
 
-noll_exp_t*
-noll_mk_junk(noll_context_t* ctx) {
-	noll_exp_t* res = (noll_exp_t*) malloc(sizeof(struct noll_exp_t));
+noll_exp_t *
+noll_mk_junk(noll_context_t * ctx) {
+	noll_exp_t *res = (noll_exp_t *) malloc(sizeof(struct noll_exp_t));
 	res->discr = NOLL_F_JUNK;
 	return res;
 }
 
-noll_exp_t*
-noll_mk_wsep(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_wsep(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size < 2)
 		noll_error_args(1, "noll_mk_wsep", size);
 	return noll_mk_op(NOLL_F_WSEP, args, size);
 }
 
-noll_exp_t*
-noll_mk_ssep(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_ssep(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size < 2)
 		noll_error_args(1, "noll_mk_ssep", size);
 	return noll_mk_op(NOLL_F_SSEP, args, size);
 }
 
-noll_exp_t*
-noll_mk_pto(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_pto(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_pto", size);
 	return noll_mk_op(NOLL_F_PTO, args, size);
 }
 
-noll_exp_t*
-noll_mk_ref(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_ref(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size < 2)
 		noll_error_args(1, "noll_mksref", size);
 	return noll_mk_op(NOLL_F_REF, args, size);
 }
 
-noll_exp_t*
-noll_mk_sref(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_sref(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size < 2)
 		noll_error_args(1, "noll_mk_sref", size);
 	return noll_mk_op(NOLL_F_SREF, args, size);
 }
 
-noll_exp_t*
-noll_mk_index(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_index(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_index", size);
 	return noll_mk_op(NOLL_F_INDEX, args, size);
 }
 
-noll_exp_t*
-noll_mk_sloc(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_sloc(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 1)
 		noll_error_args(1, "noll_mk_sloc", size);
 	return noll_mk_op(NOLL_F_SLOC, args, size);
 }
 
-noll_exp_t*
-noll_mk_unloc(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_unloc(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size < 2)
 		noll_error_args(1, "noll_mk_unloc", size);
 	return noll_mk_op(NOLL_F_UNLOC, args, size);
 }
 
-noll_exp_t*
-noll_mk_inloc(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_inloc(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_inloc", size);
 	return noll_mk_op(NOLL_F_INLOC, args, size);
 }
 
-noll_exp_t*
-noll_mk_eqloc(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_eqloc(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_eqloc", size);
 	return noll_mk_op(NOLL_F_EQLOC, args, size);
 }
 
-noll_exp_t*
-noll_mk_leloc(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_leloc(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_leloc", size);
 	return noll_mk_op(NOLL_F_LELOC, args, size);
 }
 
-noll_exp_t*
-noll_mk_seloc(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_seloc(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 2)
 		noll_error_args(1, "noll_mk_seloc", size);
 	return noll_mk_op(NOLL_F_SELOC, args, size);
 }
 
-noll_exp_t*
-noll_mk_tobool(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_tobool(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 1)
 		noll_error_args(1, "noll_mk_tobool", size);
 	return noll_mk_op(NOLL_F_TOBOOL, args, size);
 }
 
-noll_exp_t*
-noll_mk_tospace(noll_context_t* ctx, noll_exp_t** args, uint_t size) {
+noll_exp_t *
+noll_mk_tospace(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
 	if (size != 1)
 		noll_error_args(1, "noll_mk_tospace", size);
 	return noll_mk_op(NOLL_F_TOSPACE, args, size);
 }
 
-/* ====================================================================== */
+noll_exp_t *
+noll_mk_zplus(noll_context_t * ctx, noll_exp_t ** args, uint_t size) {
+	if (size != 1)
+		noll_error_args(1, "noll_mk_zplus", size);
+	return noll_mk_op(NOLL_F_ZPLUS, args, size);
+}
+
+/*
+ * ===================================
+ * ===================================
+ *
+ */
 /* Printing */
 
-/* ====================================================================== */
+/*
+ * ===================================
+ * ===================================
+ *
+ */
 
-void noll_exp_printf(FILE* f, noll_context_t* ctx, noll_exp_t* e) {
-	assert (f);
+void noll_exp_printf(FILE * f, noll_context_t * ctx, noll_exp_t * e) {
+	assert(f);
 	if (!e) {
 		fprintf(f, "null\n");
 		return;
@@ -1062,13 +1122,13 @@ void noll_exp_printf(FILE* f, noll_context_t* ctx, noll_exp_t* e) {
 		return;
 	}
 	case NOLL_F_LVAR: {
-		fprintf(f, " %s ", noll_var_name(ctx->lvar_env, e->p.sid,
-				NOLL_TYP_RECORD));
+		fprintf(f, " %s ",
+				noll_var_name(ctx->lvar_env, e->p.sid, NOLL_TYP_RECORD));
 		return;
 	}
 	case NOLL_F_SVAR: {
-		fprintf(f, " %s ", noll_var_name(ctx->svar_env, e->p.sid,
-				NOLL_TYP_SETLOC));
+		fprintf(f, " %s ",
+				noll_var_name(ctx->svar_env, e->p.sid, NOLL_TYP_SETLOC));
 		return;
 	}
 	case NOLL_F_FIELD: {
@@ -1102,12 +1162,12 @@ void noll_exp_printf(FILE* f, noll_context_t* ctx, noll_exp_t* e) {
 	case NOLL_F_EXISTS: {
 		fprintf(f, " (exists (");
 		for (uint_t i = e->p.quant.lstart; i < e->p.quant.lend; i++) {
-			noll_var_t* vi = noll_vector_at(e->p.quant.lvars, i);
-			fprintf(f, " (%s %s) ", vi->vname, noll_record_name(
-					noll_var_record(e->p.quant.lvars, i)));
+			noll_var_t *vi = noll_vector_at(e->p.quant.lvars, i);
+			fprintf(f, " (%s %s) ", vi->vname,
+					noll_record_name(noll_var_record(e->p.quant.lvars, i)));
 		}
 		for (uint_t i = e->p.quant.sstart; i < e->p.quant.send; i++) {
-			noll_var_t* vi = noll_vector_at(e->p.quant.svars, i);
+			noll_var_t *vi = noll_vector_at(e->p.quant.svars, i);
 			fprintf(f, " (%s SetLoc) ", vi->vname);
 		}
 		fprintf(f, " )\n\t");
@@ -1185,6 +1245,10 @@ void noll_exp_printf(FILE* f, noll_context_t* ctx, noll_exp_t* e) {
 		fprintf(f, " (tospace \n\t");
 		break;
 	}
+	case NOLL_F_ZPLUS: {
+		fprintf(f, " (zplus \n\t");
+		break;
+	}
 	default: {
 		fprintf(f, " (unknown \n\t");
 		break;
@@ -1200,34 +1264,43 @@ void noll_exp_printf(FILE* f, noll_context_t* ctx, noll_exp_t* e) {
 	fprintf(f, " )\n");
 }
 
-/* ====================================================================== */
+/*
+ * ===================================
+ * ===================================
+ *
+ */
 /* Typechecking */
 
-/* ====================================================================== */
+/*
+ * ===================================
+ * ===================================
+ *
+ */
 
 /**
  * Typechecks an AND formula in the local environment env.
  */
-noll_exp_t*
-noll_exp_typecheck_and(noll_context_t* ctx, noll_exp_t* e) {
+noll_exp_t *
+noll_exp_typecheck_and(noll_context_t * ctx, noll_exp_t * e) {
 	if (!e)
 		return e;
 
-	// top formulas shall be linked by and or tobool, expected type bool
-	assert ((e->discr == NOLL_F_AND) || (e->discr == NOLL_F_TOBOOL));
-	return e; // TODO
+	//top formulas shall be linked by and or tobool, expected type bool
+	assert((e->discr == NOLL_F_AND) || (e->discr == NOLL_F_TOBOOL));
+	//TODO
+	return e;
 }
 
 /**
  * Typechecks an EXISTS formula.
  */
-noll_exp_t*
-noll_exp_typecheck_exists(noll_context_t* ctx, noll_exp_t* e) {
+noll_exp_t *
+noll_exp_typecheck_exists(noll_context_t * ctx, noll_exp_t * e) {
 	if (!e)
 		return e;
 	if (e->discr == NOLL_F_EXISTS) {
-		// top formula shall non empty, expected type bool
-		assert (e->size == 1);
+		//top formula shall non be empty, expected type bool
+		assert(e->size == 1);
 		e->args[0] = noll_exp_typecheck_and(ctx, e->args[0]);
 		if (!e->args[0])
 			return NULL;
@@ -1242,8 +1315,8 @@ noll_exp_typecheck_exists(noll_context_t* ctx, noll_exp_t* e) {
  * @param e    formula to be typechecked
  * @return the new (simplified) formula
  */
-noll_exp_t*
-noll_exp_typecheck(noll_context_t* ctx, noll_exp_t* e) {
+noll_exp_t *
+noll_exp_typecheck(noll_context_t * ctx, noll_exp_t * e) {
 	if (!e)
 		return e;
 
@@ -1252,17 +1325,19 @@ noll_exp_typecheck(noll_context_t* ctx, noll_exp_t* e) {
 	case NOLL_F_FALSE:
 		return e;
 	case NOLL_F_NOT: {
-		assert (e->size == 1);
-		noll_exp_t* se = noll_exp_typecheck_exists(ctx, e->args[0]);
+		assert(e->size == 1);
+		noll_exp_t *se = noll_exp_typecheck_exists(ctx, e->args[0]);
 		if (se == NULL)
 			return NULL;
 		e->args[0] = se;
 		return e;
 	}
+	case NOLL_F_TOBOOL:
 	case NOLL_F_AND:
 		return noll_exp_typecheck_and(ctx, e);
 	case NOLL_F_IMPLIES: {
-		assert (e->size == 2); // done in mk_implies
+		assert(e->size == 2);
+		//done in mk_implies
 		e->args[0] = noll_exp_typecheck_exists(ctx, e->args[0]);
 		e->args[1] = noll_exp_typecheck_exists(ctx, e->args[1]);
 		if (!e->args[0] || !e->args[1])
@@ -1279,26 +1354,35 @@ noll_exp_typecheck(noll_context_t* ctx, noll_exp_t* e) {
 	}
 }
 
-/* ====================================================================== */
+/*
+ * ===================================
+ * ===================================
+ *
+ */
 /* Translation to formula */
 
-/* ====================================================================== */
+/*
+ * ===================================
+ * ===================================
+ *
+ */
 
-void noll_exp_push_pure(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
-	assert (e);
+void noll_exp_push_pure(noll_context_t * ctx, noll_exp_t * e,
+		noll_form_t * form) {
+	assert(e);
 
 	if (form->pure == NULL)
 		form->pure = noll_pure_new(noll_vector_size(form->lvars));
 	switch (e->discr) {
 	case NOLL_F_EQ: {
-		// the variables implied in the equality
+		//the variables implied in the equality
 		uint_t v1 = e->args[0]->p.sid;
 		uint_t v2 = e->args[1]->p.sid;
 		noll_pure_add_eq(form, v1, v2);
 		break;
 	}
 	case NOLL_F_DISTINCT: {
-		// the variables implied in the equality
+		//the variables implied in the equality
 		uint_t v1 = e->args[0]->p.sid;
 		uint_t v2 = e->args[1]->p.sid;
 		noll_pure_add_neq(form, v1, v2);
@@ -1314,10 +1398,10 @@ void noll_exp_push_pure(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
  * @param f the AST of the points-to formula
  * @return the space formula or NULL of error
  */
-noll_space_t*
-noll_mk_form_junk(noll_exp_t* f) {
-	assert (f && f->discr == NOLL_F_JUNK);
-	noll_space_t* sigma = (noll_space_t*) malloc(sizeof(noll_space_t));
+noll_space_t *
+noll_mk_form_junk(noll_exp_t * f) {
+	assert(f && f->discr == NOLL_F_JUNK);
+	noll_space_t *sigma = (noll_space_t *) malloc(sizeof(noll_space_t));
 	sigma->kind = NOLL_SPACE_JUNK;
 	sigma->is_precise = false;
 	return sigma;
@@ -1329,18 +1413,19 @@ noll_mk_form_junk(noll_exp_t* f) {
  * @param f the AST of the points-to formula
  * @return the space formula or NULL of error
  */
-noll_space_t*
-noll_mk_form_pto(noll_context_t* ctx, noll_exp_t* f) {
-	assert (f && f->discr == NOLL_F_PTO && f->size == 2);
-	noll_exp_t* v = f->args[0];
-	noll_exp_t** fv = NULL;
+noll_space_t *
+noll_mk_form_pto(noll_context_t * ctx, noll_exp_t * f) {
+	assert(f && f->discr == NOLL_F_PTO && f->size == 2);
+	noll_exp_t *v = f->args[0];
+	noll_exp_t **fv = NULL;
 	uint_t fv_size = 1;
-	noll_space_t* sigma = (noll_space_t*) malloc(sizeof(noll_space_t));
+	noll_space_t *sigma = (noll_space_t *) malloc(sizeof(noll_space_t));
 	sigma->kind = NOLL_SPACE_PTO;
 	sigma->is_precise = true;
 
 	if (v->discr == NOLL_F_LVAR)
-		sigma->m.pto.sid = v->p.sid; // is in context
+		sigma->m.pto.sid = v->p.sid;
+	//is in context
 
 	// fill the set of locations from fv which may be ref or sref
 	if (f->args[1]->discr == NOLL_F_REF) {
@@ -1361,30 +1446,30 @@ noll_mk_form_pto(noll_context_t* ctx, noll_exp_t* f) {
 	noll_uid_array_reserve(sigma->m.pto.fields, fv_size);
 	uint_t i;
 	for (i = 0; i < fv_size; i++) {
-		assert (fv[i]->discr == NOLL_F_REF && fv[i]->size == 2);
+		assert(fv[i]->discr == NOLL_F_REF && fv[i]->size == 2);
 		uint_t dest = UNDEFINED_ID;
 		if (fv[i]->args[1]->discr == NOLL_F_LVAR)
 			dest = fv[i]->args[1]->p.sid;
 		else
 			assert(0);
-		assert (fv[i]->args[0]->discr == NOLL_F_FIELD);
+		assert(fv[i]->args[0]->discr == NOLL_F_FIELD);
 		uint_t fld = fv[i]->args[0]->p.sid;
-		assert (dest != UNDEFINED_ID && fld != UNDEFINED_ID);
-		// because the term has been built
+		assert(dest != UNDEFINED_ID && fld != UNDEFINED_ID);
+		//because the term has been built
 		noll_uid_array_push(sigma->m.pto.dest, dest);
 		noll_uid_array_push(sigma->m.pto.fields, fld);
 	}
 	return sigma;
 }
 
-noll_space_t*
-noll_mk_form_pred(noll_context_t* ctx, noll_exp_t* e) {
-	assert (e && e->discr == NOLL_F_PRED && e->size >= 2);
-	// check that the type of actual arguments is correct
-	noll_uid_array* actuals = noll_uid_array_new();
+noll_space_t *
+noll_mk_form_pred(noll_context_t * ctx, noll_exp_t * e) {
+	assert(e && e->discr == NOLL_F_PRED && e->size >= 2);
+	//check that the type of actual arguments is correct
+	noll_uid_array * actuals = noll_uid_array_new();
 	noll_uid_array_reserve(actuals, e->size);
-	uint_t* actuals_ty = (uint_t*) malloc(e->size * sizeof(uint_t));
-	char* pname = noll_pred_name(e->p.sid);
+	uint_t *actuals_ty = (uint_t *) malloc(e->size * sizeof(uint_t));
+	char *pname = noll_pred_name(e->p.sid);
 	uint_t i;
 	for (i = 0; i < e->size; i++) {
 		if (e->args[i]->discr != NOLL_F_LVAR || e->args[i]->size != 0) {
@@ -1401,28 +1486,28 @@ noll_mk_form_pred(noll_context_t* ctx, noll_exp_t* e) {
 	uint_t pid = noll_pred_typecheck_call(e->p.sid, actuals_ty, e->size);
 	free(actuals_ty);
 
-	// generate the corresponding space formula
-	noll_space_t* pcall = (noll_space_t*) malloc(sizeof(noll_space_t));
+	//generate the corresponding space formula
+	noll_space_t * pcall = (noll_space_t *) malloc(sizeof(noll_space_t));
 	pcall->kind = NOLL_SPACE_LS;
 	pcall->is_precise = true;
 	pcall->m.ls.pid = pid;
 	pcall->m.ls.args = actuals;
 	pcall->m.ls.sid = UNDEFINED_ID;
-	// pcall->m.ls.sid is set in INDEX
+	//pcall->m.ls.sid is set in INDEX
 
 	return pcall;
 }
 
-noll_space_t*
-noll_mk_form_index(noll_context_t* ctx, noll_exp_t* e) {
-	noll_space_t* ret = NULL;
-	assert (e && e->discr == NOLL_F_INDEX);
-	// there are two arguments only
+noll_space_t *
+noll_mk_form_index(noll_context_t * ctx, noll_exp_t * e) {
+	noll_space_t *ret = NULL;
+	assert(e && e->discr == NOLL_F_INDEX);
+	//there are two arguments only
 	if (e->size != 2) {
 		noll_error(1, "Index expression", "bad number of arguments");
 		return ret;
 	}
-	// first argument is a variable, get its id
+	//first argument is a variable, get its id
 	uint_t sid = UNDEFINED_ID;
 	if (e->args[0]->discr == NOLL_F_SVAR)
 		sid = e->args[0]->p.sid;
@@ -1430,60 +1515,60 @@ noll_mk_form_index(noll_context_t* ctx, noll_exp_t* e) {
 		noll_error(1, "Index expression", "bad variable argument");
 		return ret;
 	}
-	// generate the second argument which shall be a predicate call
+	//generate the second argument which shall be a predicate call
 	if (e->args[1]->discr != NOLL_F_PRED) {
 		noll_error(1, "Index expression", "bad predicate argument");
 		return ret;
 	}
 	ret = noll_mk_form_pred(ctx, e->args[1]);
 	if (ret != NULL) {
-		// if no error, bound sid to the predicate call
+		/* if no error, bound sid to the predicate call */
 		ret->m.ls.sid = sid;
 	}
 	return ret;
 }
 
-noll_space_t*
-noll_mk_form_sep(noll_context_t* ctx, noll_exp_t* e) {
-	noll_space_t* ret = NULL;
-	assert (e && (e->discr == NOLL_F_SSEP || e->discr == NOLL_F_WSEP));
+noll_space_t *
+noll_mk_form_sep(noll_context_t * ctx, noll_exp_t * e) {
+	noll_space_t *ret = NULL;
+	assert(e && (e->discr == NOLL_F_SSEP || e->discr == NOLL_F_WSEP));
 
-	// allocate the space formula
-	ret = (noll_space_t*) malloc(sizeof(noll_space_t));
+	//allocate the space formula
+	ret = (noll_space_t *) malloc(sizeof(noll_space_t));
 	ret->kind = (e->discr == NOLL_F_SSEP) ? NOLL_SPACE_SSEP : NOLL_SPACE_WSEP;
 	ret->is_precise = true;
 	ret->m.sep = noll_space_array_new();
-	// reserve at least the number of arguments here
+	//reserve at least the number of arguments here
 	noll_space_array_reserve(ret->m.sep, e->size);
 	for (uint_t i = 0; i < e->size; i++) {
-		noll_space_t* ei = noll_exp_push_space(ctx, e->args[i]);
+		noll_space_t *ei = noll_exp_push_space(ctx, e->args[i]);
 		if (ei == NULL)
 			continue;
-		// is_precise attribute is propagated to parents
+		//is_precise attribute is propagated to parents
 		if (ei->is_precise == false)
 			ret->is_precise = false;
 		if (ei->kind == ret->kind) {
-			// same separation operator, remove the intermediary node
-			for (uint_t j = 0; j < noll_vector_size (ei->m.sep); j++) {
-				noll_space_t* eij = noll_vector_at (ei->m.sep, j);
+			//same separation operator, remove the intermediary node
+			for (uint_t j = 0; j < noll_vector_size(ei->m.sep); j++) {
+				noll_space_t *eij = noll_vector_at(ei->m.sep, j);
 				noll_space_array_push(ret->m.sep, eij);
-				noll_vector_at (ei->m.sep, j) = NULL;
+				noll_vector_at(ei->m.sep, j) = NULL;
 			}
 			noll_space_array_delete(ei->m.sep);
 			free(ei);
 		} else {
-			// different operator, push the formula as arguments
+			//different operator, push the formula as arguments
 			noll_space_array_push(ret->m.sep, ei);
 		}
 	}
 	return ret;
 }
 
-noll_space_t*
-noll_exp_push_space(noll_context_t* ctx, noll_exp_t* e) {
-	assert (e);
+noll_space_t *
+noll_exp_push_space(noll_context_t * ctx, noll_exp_t * e) {
+	assert(e);
 
-	noll_space_t* ret = NULL;
+	noll_space_t *ret = NULL;
 	switch (e->discr) {
 	case NOLL_F_EMP:
 		/* nothing */
@@ -1516,35 +1601,37 @@ noll_exp_push_space(noll_context_t* ctx, noll_exp_t* e) {
 	return ret;
 }
 
-void noll_exp_push_sterm(noll_exp_t* e, noll_sterm_array* a) {
-	assert (e);
-	if (!(e->discr == NOLL_F_SLOC || e->discr == NOLL_F_UNLOC || e->discr
-			== NOLL_F_SELOC || e->discr == NOLL_F_SVAR)) {
-		noll_error(1, "noll_exp_push_sterm", "not a term for sets of locations");
+void noll_exp_push_sterm(noll_exp_t * e, noll_sterm_array * a) {
+	assert(e);
+	if (!(e->discr == NOLL_F_SLOC || e->discr == NOLL_F_UNLOC
+			|| e->discr == NOLL_F_SELOC || e->discr == NOLL_F_SVAR)) {
+		noll_error(1, "noll_exp_push_sterm",
+				"not a term for sets of locations");
 		return;
 	}
 	switch (e->discr) {
 	case NOLL_F_SLOC: {
-		assert (e->args[0] && e->args[0]->discr == NOLL_F_LVAR);
-		noll_sterm_t* tv = noll_sterm_new_var(e->args[0]->p.sid,
+		assert(e->args[0] && e->args[0]->discr == NOLL_F_LVAR);
+		noll_sterm_t *tv = noll_sterm_new_var(e->args[0]->p.sid,
 				NOLL_STERM_LVAR);
 		noll_sterm_array_push(a, tv);
 		break;
 	}
 	case NOLL_F_SVAR: {
-		noll_sterm_t* tv = noll_sterm_new_var(e->p.sid, NOLL_STERM_SVAR);
+		noll_sterm_t *tv = noll_sterm_new_var(e->p.sid, NOLL_STERM_SVAR);
 		noll_sterm_array_push(a, tv);
 		break;
 	}
 	case NOLL_F_SELOC: {
-		assert (e->args[0] && e->args[0]->discr == NOLL_F_SVAR);
-		assert (e->args[1] && e->args[1]->discr == NOLL_F_LVAR);
-		noll_sterm_t* tv = noll_sterm_new_prj(e->args[0]->p.sid,
+		assert(e->args[0] && e->args[0]->discr == NOLL_F_SVAR);
+		assert(e->args[1] && e->args[1]->discr == NOLL_F_LVAR);
+		noll_sterm_t *tv = noll_sterm_new_prj(e->args[0]->p.sid,
 				e->args[1]->p.sid);
 		noll_sterm_array_push(a, tv);
 		break;
 	}
-	default: // NOLL_F_UNLOC:
+	default:
+		//NOLL_F_UNLOC:
 	{
 		for (uint_t i = 0; i < e->size; i++)
 			noll_exp_push_sterm(e->args[i], a);
@@ -1553,18 +1640,19 @@ void noll_exp_push_sterm(noll_exp_t* e, noll_sterm_array* a) {
 	}
 }
 
-void noll_exp_push_share(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
-	assert (e && e->size == 2);
+void noll_exp_push_share(noll_context_t * ctx, noll_exp_t * e,
+		noll_form_t * form) {
+	assert(e && e->size == 2);
 
 	switch (e->discr) {
 	case NOLL_F_NILOC:
 	case NOLL_F_INLOC: {
-		noll_atom_share_t* a = (noll_atom_share_t*) malloc(
+		noll_atom_share_t *a = (noll_atom_share_t *) malloc(
 				sizeof(noll_atom_share_t));
 		a->kind = (e->discr == NOLL_F_INLOC) ? NOLL_SHARE_IN : NOLL_SHARE_NI;
-		assert (e->args[0]);
-		assert (e->args[0]->discr == NOLL_F_LVAR);
-		noll_sterm_t* tv = noll_sterm_new_var(e->args[0]->p.sid,
+		assert(e->args[0]);
+		assert(e->args[0]->discr == NOLL_F_LVAR);
+		noll_sterm_t *tv = noll_sterm_new_var(e->args[0]->p.sid,
 				NOLL_STERM_LVAR);
 		a->t_left = tv;
 		a->t_right = noll_sterm_array_new();
@@ -1573,15 +1661,15 @@ void noll_exp_push_share(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) 
 		break;
 	}
 	case NOLL_F_EQLOC: {
-		// push conjunct for <=
+		//push conjunct for <=
 		e->discr = NOLL_F_LELOC;
 		noll_exp_push_share(ctx, e, form);
-		// push conjunct for >=
-		noll_exp_t* tmp = e->args[0];
+		//push conjunct for >=
+		noll_exp_t *tmp = e->args[0];
 		e->args[0] = e->args[1];
 		e->args[1] = tmp;
 		noll_exp_push_share(ctx, e, form);
-		// redo the expression
+		//redo the expression
 		e->discr = NOLL_F_EQLOC;
 		tmp = e->args[0];
 		e->args[0] = e->args[1];
@@ -1589,15 +1677,15 @@ void noll_exp_push_share(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) 
 		break;
 	}
 	case NOLL_F_LELOC: {
-		noll_sterm_array* left = noll_sterm_array_new();
+		noll_sterm_array *left = noll_sterm_array_new();
 		noll_exp_push_sterm(e->args[0], left);
-		noll_sterm_array* right = noll_sterm_array_new();
+		noll_sterm_array *right = noll_sterm_array_new();
 		noll_exp_push_sterm(e->args[1], right);
-		for (uint_t i = 0; i < noll_vector_size (left); i++) {
-			noll_atom_share_t* a = (noll_atom_share_t*) malloc(
+		for (uint_t i = 0; i < noll_vector_size(left); i++) {
+			noll_atom_share_t *a = (noll_atom_share_t *) malloc(
 					sizeof(noll_atom_share_t));
 			a->kind = NOLL_SHARE_SUBSET;
-			a->t_left = noll_vector_at (left, i);
+			a->t_left = noll_vector_at(left, i);
 			a->t_right = right;
 			noll_share_array_push(form->share, a);
 		}
@@ -1610,15 +1698,15 @@ void noll_exp_push_share(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) 
 	}
 }
 
-void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
-	assert (ctx != NULL);
-	assert (e != NULL);
-	assert (form != NULL);
+void noll_exp_push_top(noll_context_t * ctx, noll_exp_t * e, noll_form_t * form) {
+	assert(ctx != NULL);
+	assert(e != NULL);
+	assert(form != NULL);
 
 	if (form->kind == NOLL_FORM_UNSAT)
 		return;
 
-	// copy variables from context to formula
+	//copy variables from context to formula
 	if (form->lvars != NULL && form->lvars != ctx->lvar_env)
 		noll_var_array_delete(form->lvars);
 	form->lvars = ctx->lvar_env;
@@ -1626,19 +1714,21 @@ void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
 		noll_var_array_delete(form->svars);
 	form->svars = ctx->svar_env;
 #ifndef NDEBUG
-	fprintf (stdout, "noll_exp_push_top:\n\t");
-	noll_var_array_fprint (stdout, form->lvars, "lvars");
-	fprintf (stdout, "\n\t");
-	noll_var_array_fprint (stdout, form->svars, "svars");
-	fprintf (stdout, "\n");
+	fprintf(stdout, "noll_exp_push_top:\n\t");
+	noll_var_array_fprint(stdout, form->lvars, "lvars");
+	fprintf(stdout, "\n\t");
+	noll_var_array_fprint(stdout, form->svars, "svars");
+	fprintf(stdout, "\n");
 #endif
-	// fill other parts of the formula
+	//fill other parts of the formula
 	switch (e->discr) {
 	/* boolean operations */
 	case NOLL_F_TRUE:
 		return; /* nothing to be done */
 	case NOLL_F_FALSE: {
-		/* put the formula to unsat */
+		/*
+		 * set the formula to unsat
+		 */
 		noll_form_set_unsat(form);
 		break;
 	}
@@ -1648,7 +1738,7 @@ void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
 		break;
 	}
 	case NOLL_F_EXISTS: {
-		// existential variables are already in form->?vars
+		//existential variables are already in form->? vars
 		for (uint_t i = 0; i < e->size; i++)
 			noll_exp_push_top(ctx, e->args[i], form);
 		break;
@@ -1657,7 +1747,7 @@ void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
 	case NOLL_F_OR:
 	case NOLL_F_IMPLIES:
 	case NOLL_F_FORALL: {
-		// this is an error, no translation is possible
+		//this is an error, no translation is possible
 		noll_error(0, "noll_exp_push_top", "boolean operation not allowed");
 		return;
 	}
@@ -1666,18 +1756,22 @@ void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
 	case NOLL_F_EQ:
 	case NOLL_F_DISTINCT: {
 #ifndef NDEBUG
-		fprintf (stdout, "Push pure:");
+		fprintf(stdout, "Push pure:");
 		noll_exp_printf(stdout, ctx, e);
 		fflush(stdout);
 #endif
 		noll_exp_push_pure(ctx, e, form);
 		break;
 	}
-		/* towards space operations */
+		/*
+		 * towards space
+		 * operations
+		 */
 	case NOLL_F_TOBOOL: {
 		form->space = noll_exp_push_space(ctx, e->args[0]);
 		if (form->kind == NOLL_FORM_VALID && form->space != NULL)
-			form->kind = NOLL_FORM_SAT; // over-approximate
+			form->kind = NOLL_FORM_SAT;
+		//over - approximate
 		break;
 	}
 		/* share operators */
@@ -1689,18 +1783,19 @@ void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
 			form->share = noll_share_array_new();
 		noll_exp_push_share(ctx, e, form);
 		if (form->kind == NOLL_FORM_VALID && form->share != NULL)
-			form->kind = NOLL_FORM_SAT; // over-approximate
+			form->kind = NOLL_FORM_SAT;
+		//over - approximate
 		break;
 	}
 	case NOLL_F_SELOC:
 	case NOLL_F_SLOC:
 	case NOLL_F_UNLOC: {
-		// this is an error, no translation is possible
+		//this is an error, no translation is possible
 		noll_error(0, "noll_exp_push_top", "set operation not allowed");
 		return;
 	}
 	default: {
-		// this is an error, no translation is possible
+		//this is an error, no translation is possible
 		noll_error(0, "noll_exp_push_top", "space operation not allowed");
 		return;
 	}
@@ -1709,22 +1804,23 @@ void noll_exp_push_top(noll_context_t* ctx, noll_exp_t* e, noll_form_t* form) {
 
 /** Translation form AST to NOLL formula and push into the global formulas.
  */
-void noll_exp_push(noll_context_t* ctx, noll_exp_t* e, int ispos) {
+void noll_exp_push(noll_context_t * ctx, noll_exp_t * e, int ispos) {
 #ifndef NDEBUG
-	// printing now:
-	fprintf (stdout, "Push %stive formula:\n", (ispos) ? "posi" : "nega");
-	noll_exp_printf (stdout, ctx, e);
-	fprintf (stdout, "\nwith context: ");
+	//printing now:
+	fprintf(stdout, "Push %stive formula:\n", (ispos) ? "posi" : "nega");
+	noll_exp_printf(stdout, ctx, e);
+	fprintf(stdout, "\nwith context: ");
 	noll_var_array_fprint(stdout, ctx->lvar_env, "lvars");
 	noll_var_array_fprint(stdout, ctx->svar_env, "svars");
-	fflush (stdout);
+	fflush(stdout);
 #endif
 	if (!e)
 		return;
 
-	noll_form_t* form = (ispos == 0) ? noll_entl_get_nform_last() : noll_entl_get_pform();
+	noll_form_t *form =
+			(ispos == 0) ? noll_entl_get_nform_last() : noll_entl_get_pform();
 
-	// if unsat formula, no need to push more formulas
+	/* if unsat formula, no need to push more formulas */
 	if (form->kind == NOLL_FORM_UNSAT)
 		return;
 
