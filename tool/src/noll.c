@@ -455,7 +455,7 @@ uint_t noll_mk_fun_def(noll_context_t * ctx, const char *name, uint_t npar,
 					}
 					uint_t p0 = fpred->args[0]->p.sid;
 					if ((p0 == UNDEFINED_ID)
-							|| (noll_var_record(ctx->lvar_env, p0) != pred_ty)) {
+						|| (noll_var_record(ctx->lvar_env, p0) != pred_ty)) {
 						//TODO:	error message
 						printf(
 								"Error: NOLL predicate definition `%s' not correct.\n",

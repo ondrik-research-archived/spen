@@ -2,7 +2,7 @@
 #
 
 
-include ../Makefile.config
+include Makefile.config
 
 #---------------------------------------
 # Flags
@@ -52,7 +52,7 @@ nolldp: $(subst .c,$(DEBUG).o,$(CCSRC))
 	$(SHARED_LIBS)
 
 clean:
-	rm -f *.o *~ *-out.txt
+	rm -f *.o *~ *-out.txt result.txt
 	
 distclean: clean
 	rm nolldp

@@ -22,11 +22,13 @@
 (declare-fun x2 () Sll_t)
 (declare-fun x3 () Sll_t)
 (declare-fun x4 () Sll_t)
+(declare-fun x5 () Sll_t)
 (declare-fun const_0 () Sll_t)
 (declare-fun const_1 () Sll_t)
 (declare-fun const_2 () Sll_t)
 (declare-fun const_3 () Sll_t)
 (declare-fun const_4 () Sll_t)
+(declare-fun const_5 () Sll_t)
 (declare-fun alpha0 () SetLoc)
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
@@ -42,6 +44,6 @@
   (not
     (and (= const_1 const_1 )
     (tobool (ssep (pto x_emp (ref f y_emp)) (pto z_emp (ref f t_emp))))
-)  ))
+)))
 
 (check-sat)

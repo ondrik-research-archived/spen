@@ -16,12 +16,13 @@
 (declare-fun x_emp () Sll_t)
 (declare-fun y_emp () Sll_t)
 (declare-fun z_emp () Sll_t)
+(declare-fun alpha1 () SetLoc)
 (assert
     (tobool (ssep (pto x_emp (ref f y_emp)) (pto y_emp (ref f z_emp))))
 )
 (assert
   (not
-    (tobool (lso x_emp z_emp))
+    (tobool (index alpha1 (lso x_emp z_emp)))
 ))
 
 (check-sat)
