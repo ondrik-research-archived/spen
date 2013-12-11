@@ -1,3 +1,0 @@
-[submodule "tool/libvata"]
-	path = tool/libvata
-	url = https://github.com/ondrik/libvata.git
