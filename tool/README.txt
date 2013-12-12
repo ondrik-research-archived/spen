@@ -59,3 +59,7 @@ libVATA is provided as a Git submodule fetching a specific revision of the libra
        - or '$ MAKE="make -j" make release' (or debug) for faster compilation (on a multicore machine)
 
 3) See the examples in libvata/examples
+
+4) When the libVATA submodule is updated, you need to run again
+
+  $ git submodule update
