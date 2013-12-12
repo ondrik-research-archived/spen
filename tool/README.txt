@@ -44,7 +44,7 @@ Installation
 libVATA
 =======
 
-libVATA is provided as a Git submodule fetchning a specific revision of the library from Github.
+libVATA is provided as a Git submodule fetching a specific revision of the library from Github.
 
 1) Download with
 
