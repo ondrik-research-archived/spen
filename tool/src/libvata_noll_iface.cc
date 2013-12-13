@@ -38,30 +38,58 @@ typedef VATA::ExplicitTreeAut TreeAut;
 /* ====================================================================== */
 typedef struct type_noll_ta_t
 {
-private:
-
-	TreeAut ta_;
-
-public:
-
+	TreeAut ta;
 } noll_ta_t;
 
 /* ====================================================================== */
 /* Functions */
 /* ====================================================================== */
 
-noll_ta_t* vata_create_ta()
+vata_ta_t* vata_create_ta()
 {
-	noll_ta_t* treeaut = new noll_ta_t;
-	if (NULL == treeaut)
-	{
-		return NULL;
-	}
-
-
-
-
-
-	return treeaut;
+	return new vata_ta_t;
 }
 
+void vata_free_ta(
+	vata_ta_t*       ta)
+{
+	delete ta;
+}
+
+void vata_set_state_root(
+	vata_ta_t*          ta,
+	vata_state_t        state)
+{
+	// check whether the input is sane
+	assert(NULL != ta);
+
+	ta->ta.SetStateFinal(state);
+}
+
+void vata_add_transition(
+	vata_ta_t*              ta,
+	vata_state_t            parent,
+	const vata_symbol_t*    symbol,
+	const vata_state_t*     children,
+	size_t                  numChildren)
+{
+	// check that the input is sane
+	assert(NULL != ta);
+	assert((numChildren == 0) || (NULL != children));
+
+	// add the transition to the TA
+	assert(false);
+
+
+}
+
+
+void vata_print_ta(
+	const vata_ta_t*        ta)
+{
+	// check that the input is sane
+	assert(NULL != ta);
+
+	std::cout << "TreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n";
+	assert(false);
+}
