@@ -22,9 +22,10 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to time automata
+ * Defines translation between heap graph to tree automata
  */
 
+#include "libvata_noll_iface.h"
 #include "noll_pred2ta.h"
 
 /* ====================================================================== */
@@ -32,10 +33,23 @@
 /* ====================================================================== */
 
 /**
- *  Translates g into a tree automaton.
+ *  Translates a predicate into a tree automaton.
  *  @return TA built or NULL
  */
 noll_ta_t* noll_pred2ta(noll_pred_t* p) {
-	return NULL; // TODO
+  assert(NULL != p);
+
+  noll_ta_t* ta = NULL;
+  if ((ta = vata_create_ta()) == NULL)
+  {
+    return NULL;
+  }
+
+
+
+
+
+
+	return ta;
 }
 

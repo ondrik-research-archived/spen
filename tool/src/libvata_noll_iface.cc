@@ -2,9 +2,9 @@
 /*                                                                        */
 /*  NOLL decision procedure                                               */
 /*                                                                        */
-/*  Copyright (C) 2013                                                    */
+/*  Copyright (C) 2012-2014                                               */
 /*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    TEAM (Brno University)                                              */
+/*    VeriFIT (Brno University of Technology)                             */
 /*                                                                        */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
@@ -21,22 +21,47 @@
 /*                                                                        */
 /**************************************************************************/
 
-/**
- * Defines translation between heap graph to time automata
- */
+// VATA header files
+#include <vata/explicit_tree_aut.hh>
 
-#include "noll_graph2ta.h"
 #include "libvata_noll_iface.h"
 
+// to catch strange behaviour
+#ifndef __cplusplus
+	#error "Needs a C++ compiler!"
+#endif
+
+typedef VATA::ExplicitTreeAut TreeAut;
+
 /* ====================================================================== */
-/* Translators */
+/* Datatypes */
+/* ====================================================================== */
+typedef struct type_noll_ta_t
+{
+private:
+
+	TreeAut ta_;
+
+public:
+
+} noll_ta_t;
+
+/* ====================================================================== */
+/* Functions */
 /* ====================================================================== */
 
-/**
- *  Translates g into a tree automaton.
- *  @return TA built or NULL
- */
-noll_ta_t* noll_graph2ta(noll_graph_t* g) {
-	return NULL; // TODO
+noll_ta_t* vata_create_ta()
+{
+	noll_ta_t* treeaut = new noll_ta_t;
+	if (NULL == treeaut)
+	{
+		return NULL;
+	}
+
+
+
+
+
+	return treeaut;
 }
 

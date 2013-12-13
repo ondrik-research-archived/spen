@@ -2,9 +2,9 @@
 /*                                                                        */
 /*  NOLL decision procedure                                               */
 /*                                                                        */
-/*  Copyright (C) 2013                                                    */
+/*  Copyright (C) 2012-2014                                               */
 /*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    TEAM (Brno University)                                              */
+/*    VeriFIT (Brno University of Technology)                             */
 /*                                                                        */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
@@ -22,21 +22,31 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to time automata
+ * Interface to libvata.
  */
 
-#include "noll_graph2ta.h"
-#include "libvata_noll_iface.h"
+#ifndef LIBVATA_NOLL_IFACE_H_
+#define LIBVATA_NOLL_IFACE_H_
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
 
 /* ====================================================================== */
-/* Translators */
+/* Datatypes */
+/* ====================================================================== */
+struct type_noll_ta_t;
+
+typedef struct type_noll_ta_t noll_ta_t;
+
+/* ====================================================================== */
+/* Functions */
 /* ====================================================================== */
 
-/**
- *  Translates g into a tree automaton.
- *  @return TA built or NULL
- */
-noll_ta_t* noll_graph2ta(noll_graph_t* g) {
-	return NULL; // TODO
-}
+noll_ta_t* vata_create_ta(void);
 
+#ifdef __cplusplus
+	} // extern "C"
+#endif
+
+#endif /* LIBVATA_NOLL_IFACE_H_ */

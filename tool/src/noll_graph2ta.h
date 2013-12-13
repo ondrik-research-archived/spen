@@ -29,6 +29,7 @@
 
 //#include "ta.h" // Tree automata library
 #include "noll_graph.h"
+#include "libvata_noll_iface.h"
 
 /* ====================================================================== */
 /* Datatypes */
@@ -38,7 +39,7 @@
  * Type for tree automaton format used here.
  * TODO: define tree automaton type here or anywhere
  */
-#define noll_ta_t  void
+//#define noll_ta_t  void
 
 /* ====================================================================== */
 /* Translators */

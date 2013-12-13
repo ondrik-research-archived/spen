@@ -4,7 +4,7 @@
 /*                                                                        */
 /*  Copyright (C) 2013                                                    */
 /*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    TEAM (Brno University)                                              */
+/*    VeriFIT (Brno University of Technology)                             */
 /*                                                                        */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
@@ -22,7 +22,7 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to time automata
+ * Defines translation between heap graph to tree automata
  */
 #ifndef NOLL_PRED2TA_H_
 #define NOLL_PRED2TA_H_
