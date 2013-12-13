@@ -118,6 +118,7 @@ void vata_add_transition(
 void vata_print_ta(
 	const vata_ta_t*        ta);
 
+
 #ifdef __cplusplus
 	} // extern "C"
 #endif

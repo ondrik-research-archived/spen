@@ -23,6 +23,7 @@
 
 // VATA header files
 #include <vata/explicit_tree_aut.hh>
+#include <vata/serialization/timbuk_serializer.hh>
 
 #include "libvata_noll_iface.h"
 
@@ -77,10 +78,10 @@ void vata_add_transition(
 	assert(NULL != ta);
 	assert((numChildren == 0) || (NULL != children));
 
-	// add the transition to the TA
-	assert(false);
+	TreeAut::StateTuple tupChildren(children, children + numChildren);
+	uintptr_t vataSymbol = reinterpret_cast<uintptr_t>(symbol);
 
-
+	ta->ta.AddTransition(tupChildren, vataSymbol, parent);
 }
 
 
@@ -91,5 +92,7 @@ void vata_print_ta(
 	assert(NULL != ta);
 
 	std::cout << "TreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n";
-	assert(false);
+
+	VATA::Serialization::TimbukSerializer serializer;
+	std::cout << ta->ta.DumpToString(serializer);
 }

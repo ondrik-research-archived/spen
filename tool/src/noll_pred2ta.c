@@ -53,7 +53,9 @@ vata_ta_t* noll_pred2ta(noll_pred_t* p) {
   // to a TA (q1 is a root state):
   //
   //   q1 -> [f, in, m(f)](q2)
+  //   q1 -> [lso, in, m(f)](q2)
   //   q2 -> [f, m(f)](q2)
+  //   q2 -> [lso, m(f)](q2)
   //   q2 -> [out]
   //
 
