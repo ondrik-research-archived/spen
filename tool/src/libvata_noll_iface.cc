@@ -72,6 +72,11 @@ public:   // methods
 	}
 };
 
+/* ====================================================================== */
+/* Global variables */
+/* ====================================================================== */
+
+static VATA::ExplicitTreeAut::AlphabetType nollAlph(new NollAlphabet);
 
 /* ====================================================================== */
 /* Functions */
@@ -81,7 +86,6 @@ vata_ta_t* vata_create_ta()
 {
 	vata_ta_t* ta = new vata_ta_t;
 
-	VATA::ExplicitTreeAut::AlphabetType nollAlph(new NollAlphabet);
 	ta->ta.SetAlphabet(nollAlph);
 
 	return ta;

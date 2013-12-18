@@ -24,6 +24,8 @@
 #include "smtlib2noll.h"
 #include "noll.h"
 
+#include "noll_pred2ta.h"
+
 /* ====================================================================== */
 /* MAIN/Main/main */
 /* ====================================================================== */
@@ -86,6 +88,10 @@ int main(int argc, char** argv) {
 	// Step 2: call the solving execute the commands in the file (check-sat)
     // done in (noll.c) noll_check
 	// also sets the smtlib2 parser result
+
+	// Ondra: call here to experiment (you can remove this)
+	noll_pred2ta(NULL);
+
 
 	// Step 3: finish (free memory, etc.)
 	smtlib2_noll_parser_delete(sp);

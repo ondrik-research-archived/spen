@@ -39,12 +39,12 @@
 /* Datatypes */
 /* ====================================================================== */
 struct type_noll_ta_t;
-
 typedef struct type_noll_ta_t vata_ta_t;
-
 typedef vata_ta_t noll_ta_t;
 
 typedef size_t vata_state_t;
+
+// TODO: change from const char to something we will use
 typedef const char vata_symbol_t;
 
 /* ====================================================================== */
