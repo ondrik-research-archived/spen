@@ -32,15 +32,46 @@
 	#error "Needs a C++ compiler!"
 #endif
 
-typedef VATA::ExplicitTreeAut TreeAut;
-
 /* ====================================================================== */
 /* Datatypes */
 /* ====================================================================== */
+
+using TreeAut       = VATA::ExplicitTreeAut;
+using TreeAutSymbol = VATA::ExplicitTreeAut::SymbolType;
+
 typedef struct type_noll_ta_t
 {
 	TreeAut ta;
 } noll_ta_t;
+
+
+class NollAlphabet : public TreeAut::AbstractAlphabet
+{
+private:  // data members
+
+	TreeAut::SymbolDict symbolDict_{};
+	TreeAutSymbol nextSymbol_ = 0;
+
+public:   // methods
+
+	virtual FwdTranslatorPtr GetSymbolTransl() override
+	{
+		FwdTranslator* fwdTransl = new
+			TreeAut::StringSymbolToSymbolTranslWeak{symbolDict_,
+			[&](const TreeAut::StringSymbolType&){return nextSymbol_++;}};
+
+		return FwdTranslatorPtr(fwdTransl);
+	}
+
+	virtual BwdTranslatorPtr GetSymbolBackTransl() override
+	{
+		BwdTranslator* bwdTransl =
+			new TreeAut::SymbolBackTranslStrict(symbolDict_.GetReverseMap());
+
+		return BwdTranslatorPtr(bwdTransl);
+	}
+};
+
 
 /* ====================================================================== */
 /* Functions */
@@ -50,9 +81,8 @@ vata_ta_t* vata_create_ta()
 {
 	vata_ta_t* ta = new vata_ta_t;
 
-	VATA::ExplicitTreeAut::AlphabetType directAlph(
-		new VATA::ExplicitTreeAut::DirectAlphabet);
-	ta->ta.SetAlphabet(directAlph);
+	VATA::ExplicitTreeAut::AlphabetType nollAlph(new NollAlphabet);
+	ta->ta.SetAlphabet(nollAlph);
 
 	return ta;
 }
@@ -81,13 +111,16 @@ void vata_add_transition(
 	size_t                  numChildren)
 {
 	// check that the input is sane
-	assert(NULL != ta);
-	assert((numChildren == 0) || (NULL != children));
+	assert(nullptr != ta);
+	assert(nullptr != ta->ta.GetAlphabet());
+	assert((0 == numChildren) || (nullptr != children));
 
 	TreeAut::StateTuple tupChildren(children, children + numChildren);
-	uintptr_t vataSymbol = reinterpret_cast<uintptr_t>(symbol);
 
-	ta->ta.AddTransition(tupChildren, vataSymbol, parent);
+	TreeAut::StringSymbolType vataStringSymbol(symbol, numChildren);
+	TreeAutSymbol taSym = (*ta->ta.GetAlphabet()->GetSymbolTransl())(vataStringSymbol);
+
+	ta->ta.AddTransition(tupChildren, taSym, parent);
 }
 
 
@@ -97,7 +130,7 @@ void vata_print_ta(
 	// check that the input is sane
 	assert(NULL != ta);
 
-	std::cout << "TreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n";
+	std::cout << "\nTreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n\n";
 
 	VATA::Serialization::TimbukSerializer serializer;
 	std::cout << ta->ta.DumpToString(serializer);

@@ -45,7 +45,7 @@ typedef struct type_noll_ta_t vata_ta_t;
 typedef vata_ta_t noll_ta_t;
 
 typedef size_t vata_state_t;
-typedef void vata_symbol_t;
+typedef const char vata_symbol_t;
 
 /* ====================================================================== */
 /* Functions */
