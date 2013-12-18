@@ -65,11 +65,11 @@ vata_ta_t* noll_pred2ta(noll_pred_t* p) {
 
   // here, we should add the symbols into a list (tree? some other set?)
 
-  vata_symbol_t* symbol_f_in_mf   = NULL;
-  vata_symbol_t* symbol_lso_in_mf = NULL;
-  vata_symbol_t* symbol_f_mf      = NULL;
-  vata_symbol_t* symbol_lso_mf    = NULL;
-  vata_symbol_t* symbol_out       = NULL;
+  vata_symbol_t* symbol_f_in_mf   = 100;
+  vata_symbol_t* symbol_lso_in_mf = 200;
+  vata_symbol_t* symbol_f_mf      = 300;
+  vata_symbol_t* symbol_lso_mf    = 400;
+  vata_symbol_t* symbol_out       = 500;
 
   vata_add_transition(ta, 1, symbol_f_in_mf  , children, 1);
   vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1);

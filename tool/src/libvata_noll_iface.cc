@@ -48,7 +48,13 @@ typedef struct type_noll_ta_t
 
 vata_ta_t* vata_create_ta()
 {
-	return new vata_ta_t;
+	vata_ta_t* ta = new vata_ta_t;
+
+	VATA::ExplicitTreeAut::AlphabetType directAlph(
+		new VATA::ExplicitTreeAut::DirectAlphabet);
+	ta->ta.SetAlphabet(directAlph);
+
+	return ta;
 }
 
 void vata_free_ta(
