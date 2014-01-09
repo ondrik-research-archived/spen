@@ -47,7 +47,7 @@ extern "C"
     size_t pargs; // type of list = number of arguments of this record type 2 or 4
     noll_var_array* vars; // formal arguments and local variables
     uint_t fargs; // number of formal arguments in the array above
-    noll_space_t* sigma_0; // recursive part
+    noll_space_t* sigma_0; // points-to part
     noll_space_t* sigma_1; // nested part
   } noll_pred_binding_t;
 

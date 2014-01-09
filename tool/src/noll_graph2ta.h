@@ -4,7 +4,7 @@
 /*                                                                        */
 /*  Copyright (C) 2013                                                    */
 /*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    TEAM (Brno University)                                              */
+/*    VeriFIT (Brno University of Technology)                             */
 /*                                                                        */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
@@ -27,8 +27,8 @@
 #ifndef NOLL_GRAPH2TA_H_
 #define NOLL_GRAPH2TA_H_
 
-//#include "ta.h" // Tree automata library
 #include "noll_graph.h"
+#include "libvata_noll_iface.h"
 
 /* ====================================================================== */
 /* Datatypes */
@@ -38,7 +38,7 @@
  * Type for tree automaton format used here.
  * TODO: define tree automaton type here or anywhere
  */
-#define noll_ta_t  void
+//#define noll_ta_t  void
 
 /* ====================================================================== */
 /* Translators */

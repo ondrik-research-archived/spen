@@ -25,18 +25,18 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-%code requires{
+%{
 #include "smtlib2parserinterface.h"
 #include "smtlib2bisonparser.h"
+#include "smtlib2flexlexer.h"
 #include <limits.h>
 #include <assert.h>
 
 #define YYMAXDEPTH LONG_MAX
 #define YYLTYPE_IS_TRIVIAL 1
-typedef void* yyscan_t;
-}
+//typedef void* yyscan_t;
 
-%code provides{
+
 void smtlib2_parser_error(YYLTYPE *yylloc, yyscan_t scanner,
                           smtlib2_parser_interface *parser,
                           const char *s);
@@ -59,7 +59,7 @@ smtlib2_term smtlib2_make_term_from_identifier(
     smtlib2_parser_interface *parser,
     smtlib2_indexed_identifier *ident, smtlib2_vector *args);
 
-}
+%}
 
 %locations
 %pure_parser
@@ -362,7 +362,12 @@ cmd_set_option :
   }
 | '(' TK_SET_OPTION KEYWORD STRING ')'
   {
-      parser->set_str_option(parser, $3, $4);
+      /* remove the quoting from $4 */
+      char *s = $4;
+      assert(strlen(s) >= 2);
+      s[strlen(s)-1] = 0;
+      parser->set_str_option(parser, $3, s+1);
+      // parser->set_str_option(parser, $3, $4);
       free($4);
       free($3);
   }

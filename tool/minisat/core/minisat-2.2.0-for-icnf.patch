@@ -1,0 +1,329 @@
+diff -rc minisat/core/Dimacs.h minisat-icnf/core/Dimacs.h
+*** minisat/core/Dimacs.h	2010-07-10 19:07:36.000000000 +0300
+--- minisat-icnf/core/Dimacs.h	2011-06-01 14:46:57.779678000 +0300
+***************
+*** 18,23 ****
+--- 18,30 ----
+  OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  **************************************************************************************************/
+  
++ /* This file includes modifications for handling the iCNF format
++ 
++    Modifications (c) Siert Wieringa 2010-2011
++    
++    http://www.tcs.hut.fi/~swiering/icnf
++  */
++ 
+  #ifndef Minisat_Dimacs_h
+  #define Minisat_Dimacs_h
+  
+***************
+*** 45,79 ****
+  }
+  
+  template<class B, class Solver>
+! static void parse_DIMACS_main(B& in, Solver& S) {
+      vec<Lit> lits;
+!     int vars    = 0;
+!     int clauses = 0;
+!     int cnt     = 0;
+      for (;;){
+          skipWhitespace(in);
+          if (*in == EOF) break;
+          else if (*in == 'p'){
+!             if (eagerMatch(in, "p cnf")){
+!                 vars    = parseInt(in);
+!                 clauses = parseInt(in);
+!                 // SATRACE'06 hack
+!                 // if (clauses > 4000000)
+!                 //     S.eliminate(true);
+!             }else{
+!                 printf("PARSE ERROR! Unexpected char: %c\n", *in), exit(3);
+              }
+!         } else if (*in == 'c' || *in == 'p')
+              skipLine(in);
+!         else{
+              cnt++;
+              readClause(in, S, lits);
+!             S.addClause_(lits); }
+      }
+!     if (vars != S.nVars())
+!         fprintf(stderr, "WARNING! DIMACS header mismatch: wrong number of variables.\n");
+!     if (cnt  != clauses)
+!         fprintf(stderr, "WARNING! DIMACS header mismatch: wrong number of clauses.\n");
+  }
+  
+  // Inserts problem into solver.
+--- 52,111 ----
+  }
+  
+  template<class B, class Solver>
+! static bool parse_DIMACS_main(B& in, Solver& S, vec<Lit>* assumptions = NULL) {
+      vec<Lit> lits;
+!     bool dimacsCNF = false;
+!     bool incCNF    = false;   
+!     int  vars      = 0;
+!     int  clauses   = 0;
+!     int  cnt       = 0;
+! 
+!     if ( *in == EOF ) return false;    
+!     if ( assumptions != NULL ) assumptions->clear();
+! 
+      for (;;){
+          skipWhitespace(in);
+          if (*in == EOF) break;
+          else if (*in == 'p'){
+!             if (eagerMatch(in,"p ")) {
+!                 if (*in == 'c' && eagerMatch(in,"cnf")) {
+!                     vars     = parseInt(in);
+!                     clauses  = parseInt(in);
+!                     dimacsCNF= true;
+!                     // SATRACE'06 hack
+!                     // if (clauses > 4000000)
+!                     //     S.eliminate(true);
+!                 }
+!                 else if (assumptions != NULL && 
+!                          *in == 'i' && eagerMatch(in,"inccnf")) incCNF = true;
+              }
+! 
+!             if ( !dimacsCNF && !incCNF )
+!                 printf("PARSE ERROR! Unexpected char: %c\n", *in), exit(3);
+!         } else if (assumptions != NULL && *in == 'a') {
+!             ++in;
+!             skipWhitespace(in);
+!             readClause(in, S, *assumptions); // SW: Not reading a "clause" here, but a sequence of literals anyway
+! 
+!             return true;
+!         } else if (*in == 'c' || *in == 'p') {
+              skipLine(in);
+!         } else {
+              cnt++;
+              readClause(in, S, lits);
+!             S.addClause_(lits); 
+!         }
+      }
+! 
+!     if (dimacsCNF) {
+!         if (vars != S.nVars())
+!             fprintf(stderr, "WARNING! DIMACS header mismatch: wrong number of variables.\n");
+!         if (cnt  != clauses)
+!             fprintf(stderr, "WARNING! DIMACS header mismatch: wrong number of clauses.\n");	
+! 	return true;
+!     }
+! 
+!     return false;
+  }
+  
+  // Inserts problem into solver.
+diff -rc minisat/core/Main.cc minisat-icnf/core/Main.cc
+*** minisat/core/Main.cc	2010-07-10 19:07:36.000000000 +0300
+--- minisat-icnf/core/Main.cc	2011-06-01 14:46:57.783675000 +0300
+***************
+*** 18,23 ****
+--- 18,30 ----
+  OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  **************************************************************************************************/
+  
++ /* This file includes modifications for handling the iCNF format
++ 
++    Modifications (c) Siert Wieringa 2010-2011
++    
++    http://www.tcs.hut.fi/~swiering/icnf
++  */
++ 
+  #include <errno.h>
+  
+  #include <signal.h>
+***************
+*** 84,94 ****
+          IntOption    verb   ("MAIN", "verb",   "Verbosity level (0=silent, 1=some, 2=more).", 1, IntRange(0, 2));
+          IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
+          IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
+          
+          parseOptions(argc, argv, true);
+  
+          Solver S;
+-         double initial_time = cpuTime();
+  
+          S.verbosity = verb;
+          
+--- 91,105 ----
+          IntOption    verb   ("MAIN", "verb",   "Verbosity level (0=silent, 1=some, 2=more).", 1, IntRange(0, 2));
+          IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", INT32_MAX, IntRange(0, INT32_MAX));
+          IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", INT32_MAX, IntRange(0, INT32_MAX));
++         IntOption    from_bound("MAIN", "from-bound","Start solving from this bound.\n", 0, IntRange(0, INT32_MAX));
++         IntOption    to_bound  ("MAIN", "to-bound","Stop solving at this bound.\n", INT32_MAX, IntRange(0, INT32_MAX));
++         IntOption    inc_bound  ("MAIN", "inc-bound","After solving a bound increment it by this amount.\n", 1, IntRange(1, INT32_MAX));
+          
++ 	BoolOption   stopAtSat  ("MAIN", "stop-at-sat", "Stop solving if a bound is found SATISFIABLE.\n", false);
++ 	BoolOption   stopAtUnsat("MAIN", "stop-at-unsat", "Stop solving if a bound is found UNSATISFIABLE.\n", false);
+          parseOptions(argc, argv, true);
+  
+          Solver S;
+  
+          S.verbosity = verb;
+          
+***************
+*** 126,189 ****
+          if (in == NULL)
+              printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
+          
+-         if (S.verbosity > 0){
+-             printf("============================[ Problem Statistics ]=============================\n");
+-             printf("|                                                                             |\n"); }
+-         
+-         parse_DIMACS(in, S);
+-         gzclose(in);
+          FILE* res = (argc >= 3) ? fopen(argv[2], "wb") : NULL;
+!         
+!         if (S.verbosity > 0){
+!             printf("|  Number of variables:  %12d                                         |\n", S.nVars());
+!             printf("|  Number of clauses:    %12d                                         |\n", S.nClauses()); }
+!         
+!         double parsed_time = cpuTime();
+!         if (S.verbosity > 0){
+!             printf("|  Parse time:           %12.2f s                                       |\n", parsed_time - initial_time);
+!             printf("|                                                                             |\n"); }
+!  
+!         // Change to signal-handlers that will only notify the solver and allow it to terminate
+!         // voluntarily:
+!         signal(SIGINT, SIGINT_interrupt);
+!         signal(SIGXCPU,SIGINT_interrupt);
+         
+!         if (!S.simplify()){
+!             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);
+!             if (S.verbosity > 0){
+!                 printf("===============================================================================\n");
+!                 printf("Solved by unit propagation\n");
+!                 printStats(S);
+!                 printf("\n"); }
+!             printf("UNSATISFIABLE\n");
+!             exit(20);
+!         }
+!         
+!         vec<Lit> dummy;
+!         lbool ret = S.solveLimited(dummy);
+!         if (S.verbosity > 0){
+!             printStats(S);
+!             printf("\n"); }
+!         printf(ret == l_True ? "SATISFIABLE\n" : ret == l_False ? "UNSATISFIABLE\n" : "INDETERMINATE\n");
+!         if (res != NULL){
+!             if (ret == l_True){
+!                 fprintf(res, "SAT\n");
+!                 for (int i = 0; i < S.nVars(); i++)
+!                     if (S.model[i] != l_Undef)
+!                         fprintf(res, "%s%s%d", (i==0)?"":" ", (S.model[i]==l_True)?"":"-", i+1);
+!                 fprintf(res, " 0\n");
+!             }else if (ret == l_False)
+!                 fprintf(res, "UNSAT\n");
+!             else
+!                 fprintf(res, "INDET\n");
+!             fclose(res);
+!         }
+!         
+! #ifdef NDEBUG
+!         exit(ret == l_True ? 10 : ret == l_False ? 20 : 0);     // (faster than "return", which will invoke the destructor for 'Solver')
+! #else
+!         return (ret == l_True ? 10 : ret == l_False ? 20 : 0);
+! #endif
+      } catch (OutOfMemoryException&){
+          printf("===============================================================================\n");
+          printf("INDETERMINATE\n");
+--- 137,212 ----
+          if (in == NULL)
+              printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
+          
+          FILE* res = (argc >= 3) ? fopen(argv[2], "wb") : NULL;
+! 	
+! 	// Change to signal-handlers that will only notify the solver and allow it to terminate
+! 	// voluntarily:
+! 	signal(SIGINT, SIGINT_interrupt);
+! 	signal(SIGXCPU,SIGINT_interrupt);
+! 	    
+! 	lbool ret = l_Undef;
+! 	vec<Lit> assumptions;
+! 	int bound = 0;
+! 	int next_solve_bound = from_bound;
+! 	StreamBuffer streamBuf(in);
+!         while ( parse_DIMACS_main(streamBuf, S, &assumptions ) ) {
+! 	  if ( bound < next_solve_bound ) goto nextBound;
+! 
+! 	  if (S.verbosity > 0){
+! 	    printf("============================[ Problem Statistics ]=============================\n");
+! 	    printf("|                                                                             |\n"); 
+! 	    printf("|  Bound:                %12d                                         |\n", bound);
+! 	    printf("|  Number of variables:  %12d                                         |\n", S.nVars());
+! 	    printf("|  Number of clauses:    %12d                                         |\n", S.nClauses()); }      
+         
+! 	  if (!S.simplify()){
+! 	    if (res != NULL) fprintf(res, "UNSAT\n");
+! 	    if (S.verbosity > 0){
+! 	      printf("===============================================================================\n");
+! 	      printf("Solved by unit propagation\n");
+! 	      printStats(S);
+! 	      printf("\n"); }
+! 	    printf("Bound %d is UNSATISFIABLE by IUP\n", bound);
+! 	    break;
+! 	  }
+! 	    
+! 	  ret = S.solveLimited(assumptions);
+! 	  if (S.verbosity > 0){
+! 	    printStats(S);
+! 	    printf("\n"); }
+! 	  printf("Bound %d is %s\n", bound, 
+! 		 ret == l_True ? "SATISFIABLE" : ret == l_False ? "UNSATISFIABLE" : "INDETERMINATE");
+! 	  if (res != NULL){
+! 	    if (ret == l_True){
+! 	      fprintf(res, "SAT ");
+! 	      for (int i = 0; i < S.nVars(); i++)
+! 		if (S.model[i] != l_Undef)
+! 		  fprintf(res, "%s%s%d", (i==0)?"":" ", (S.model[i]==l_True)?"":"-", i+1);
+! 	      fprintf(res, " 0\n");
+! 	    }else if (ret == l_False)
+! 	      fprintf(res, "UNSAT\n");
+! 	    else
+! 	      fprintf(res, "INDET\n");            
+! 	  }
+! 
+! 	  if ( ret == l_Undef ) break;
+! 	  next_solve_bound+= inc_bound;
+! 
+! nextBound:;
+! 	  if ( ( ++bound > to_bound )
+! 	       || ( ret == l_True && stopAtSat ) 
+! 	       || ( ret == l_False && stopAtUnsat ) 
+! 	       ) break;
+! 	}
+! 	if (res != NULL) fclose(res);
+! 	gzclose(in);
+! 
+! 	if (S.verbosity == 0){
+! 	  printf("\n");
+! 	  printStats(S);
+! 	  printf("\n"); }
+! 
+! 	return 0;
+      } catch (OutOfMemoryException&){
+          printf("===============================================================================\n");
+          printf("INDETERMINATE\n");
+diff -rc minisat/core/Solver.cc minisat-icnf/core/Solver.cc
+*** minisat/core/Solver.cc	2010-07-10 19:07:36.000000000 +0300
+--- minisat-icnf/core/Solver.cc	2011-06-01 14:53:37.659249000 +0300
+***************
+*** 789,794 ****
+--- 789,803 ----
+          ok = false;
+  
+      cancelUntil(0);
++ 
++ #if 0
++     assert( activity.size() == nVars() );
++     fprintf(stderr, "activities");
++     for( int i = 0; i < nVars(); i++ )
++       fprintf(stderr, " %lf", activity[i]);
++     fprintf(stderr, "\n");
++ #endif
++ 
+      return status;
+  }
+  

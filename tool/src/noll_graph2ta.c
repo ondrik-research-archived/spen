@@ -4,7 +4,7 @@
 /*                                                                        */
 /*  Copyright (C) 2013                                                    */
 /*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    TEAM (Brno University)                                              */
+/*    VeriFIT (Brno University of Technology)                             */
 /*                                                                        */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
@@ -26,6 +26,7 @@
  */
 
 #include "noll_graph2ta.h"
+#include "libvata_noll_iface.h"
 
 /* ====================================================================== */
 /* Translators */

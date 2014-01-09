@@ -2,7 +2,7 @@
 #
 
 
-include ../Makefile.config
+include Makefile.config
 
 #---------------------------------------
 # Flags
@@ -12,8 +12,13 @@ include ../Makefile.config
 ICFLAGS = -g -I. \
 -I$(SMTLIB2_PREFIX)
 
+ICXXFLAGS = -g \
+-I$(LIBVATA_INCLUDE)
+
 LDFLAGS = \
--L$(SMTLIB2_PREFIX)
+-L$(SMTLIB2_PREFIX) \
+-L$(LIBVATA_LIB)
+
 
 #---------------------------------------
 # Files
@@ -24,7 +29,8 @@ CCINC = noll_vector.h \
 	noll2bool.h noll2sat.h noll2graph.h \
 	noll_graph2ta.h noll_pred2ta.h \
 	noll_hom.h noll_entl.h \
-	noll.h smtlib2noll.h 
+	noll.h smtlib2noll.h \
+	libvata_noll_iface.h
 
 CCSRC = noll_types.c \
 	noll_vars.c \
@@ -36,23 +42,26 @@ CCSRC = noll_types.c \
 	noll.c smtlib2noll.c \
 	noll-dp.c 
 
+CXXSRC = libvata_noll_iface.cc
+
 #---------------------------------------
 # Rules
 #---------------------------------------
 
 #TODO
 SHARED_LIBS = -lsmtlib2parser \
-	-lm 
+	-lm \
+	-lvata
 
 all: nolldp
 
-nolldp: $(subst .c,$(DEBUG).o,$(CCSRC))
-	$(CC) $(CFLAGS_DEBUG) $(ICFLAGS) -o $@ $^ \
+nolldp: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
+	$(CXX) -o $@ $^ \
 	$(LDFLAGS) \
 	$(SHARED_LIBS)
 
 clean:
-	rm -f *.o *~ *-out.txt
+	rm -f *.o *~ *-out.txt result.txt
 	
 distclean: clean
 	rm nolldp
@@ -61,8 +70,10 @@ distclean: clean
 # IMPLICIT RULES AND DEPENDENCIES
 #---------------------------------------
 
-.SUFFIXES: .c .h .a .o .so
+.SUFFIXES: .c .h .a .o .so .cc
 
+libvata_noll_iface.o: libvata_noll_iface.cc $(CCINC) $(DEPS)
+	$(CXX) $(CXXFLAGS) $(ICXXFLAGS) -c -o $@ $<
 
 %.o: %.c $(CCINC) $(DEPS)
 	$(CC) $(CFLAGS) $(ICFLAGS) -c -o $@ $<

@@ -4,7 +4,7 @@
 /*                                                                        */
 /*  Copyright (C) 2013                                                    */
 /*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    TEAM (Brno University)                                              */
+/*    VeriFIT (Brno University of Technology)                             */
 /*                                                                        */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
@@ -22,9 +22,10 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to time automata
+ * Defines translation between heap graph to tree automata
  */
 
+#include "libvata_noll_iface.h"
 #include "noll_pred2ta.h"
 
 /* ====================================================================== */
@@ -32,10 +33,51 @@
 /* ====================================================================== */
 
 /**
- *  Translates g into a tree automaton.
+ *  Translates a predicate into a tree automaton.
  *  @return TA built or NULL
  */
-noll_ta_t* noll_pred2ta(noll_pred_t* p) {
-	return NULL; // TODO
-}
+vata_ta_t* noll_pred2ta(noll_pred_t* p) {
+  assert(NULL != p);
 
+  vata_ta_t* ta = NULL;
+  if ((ta = vata_create_ta()) == NULL)
+  {
+    return NULL;
+  }
+
+  // now, we translate the 'lso(in, out)' predicate (see
+  // ../samples/nll/ls-vc01.smt)
+  //
+  //   lso(in, out) = \exists u . in -> {(f, u)} * ((u = out) \/ lso(u, out))
+  //
+  // to a TA (q1 is a root state):
+  //
+  //   q1 -> [f, in, m(f)](q2)
+  //   q1 -> [lso, in, m(f)](q2)
+  //   q2 -> [f, m(f)](q2)
+  //   q2 -> [lso, m(f)](q2)
+  //   q2 -> [out]
+  //
+
+  vata_set_state_root(ta, 1);
+
+  vata_state_t children[] = {2};
+
+  // here, we should add the symbols into a list (tree? some other set?)
+
+  vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]";
+  vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]";
+  vata_symbol_t* symbol_f_mf      = "<f> [m(f)]";
+  vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]";
+  vata_symbol_t* symbol_out       = "<> [out]";
+
+  vata_add_transition(ta, 1, symbol_f_in_mf  , children, 1);
+  vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1);
+  vata_add_transition(ta, 2, symbol_f_mf     , children, 1);
+  vata_add_transition(ta, 2, symbol_lso_mf   , children, 1);
+  vata_add_transition(ta, 2, symbol_out      , NULL    , 0);
+
+  vata_print_ta(ta);
+
+	return ta;
+}
