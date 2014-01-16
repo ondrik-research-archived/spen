@@ -21,10 +21,12 @@ OBJECTS = smtlib2bisonparser.o \
 YICES_OBJECTS = smtlib2yices.o \
 	        yicesmain.o
 
-GCCVERSIONGTEQ46 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 4.6)
+GCCVERSIONGTEQ46 := $(shell expr `gcc -dumpversion | cut -f2 -d.` \>= 6)
 
 ifeq "$(GCCVERSIONGTEQ46)" "0"
 BISON_SRC = smtlib2bisonparser.orig.y 
+else
+BISON_SRC = smtlib2bisonparser.y 
 endif
 
 all: libsmtlib2parser.a
