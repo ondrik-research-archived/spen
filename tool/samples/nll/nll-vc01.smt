@@ -12,24 +12,22 @@
 
 ; singly-linked list
 (define-fun lso ((?in NLL_lvl1_t) (?out NLL_lvl1_t))
-  Space (tospace 
+  Space (tospace (or (= ?in ?out) 
     (exists ((?u NLL_lvl1_t)) (tobool (ssep
       (pto ?in (ref next1 ?u))
-      (zplus (lso ?u ?out)))
-))))
+      (lso ?u ?out))
+)))))
 
 ; singly-linked list of singly-linked lists
 (define-fun nll ((?in NLL_lvl2_t) (?out NLL_lvl2_t))
-  Space (tospace 
+  Space (tospace (or (= ?in ?out)
     (exists ((?u NLL_lvl2_t) (?Z1 NLL_lvl1_t)) (tobool (ssep
       (pto ?in (sref
         (ref next2 ?u)
         (ref down ?Z1)))
-      (lso ?Z1 ?Z1)
-      (zplus (nll ?u ?out)))
-))))
-
-(declare-fun nil () NLL_lvl2_t)
+      (loop (lso ?Z1 ?Z1))
+      (nll ?u ?out))
+)))))
 
 (declare-fun first () NLL_lvl2_t)
 (declare-fun last () NLL_lvl2_t)

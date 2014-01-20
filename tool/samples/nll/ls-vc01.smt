@@ -5,13 +5,11 @@
 (declare-fun f () (Field Sll_t Sll_t))
 
 (define-fun lso ((?in Sll_t) (?out Sll_t)) Space
-(tospace 
+(tospace (or (= ?in ?out)
 (exists ((?u Sll_t))
 (tobool
-(ssep (pto ?in (ref f ?u)) (zplus (lso ?u ?out)))
-))))
-
-(declare-fun nil () Sll_t)
+(ssep (pto ?in (ref f ?u)) (lso ?u ?out))
+)))))
 
 (declare-fun x_emp () Sll_t)
 (declare-fun y_emp () Sll_t)
