@@ -41,14 +41,13 @@ noll_error (int level, const char *fun, const char *msg)
 }
 
 void
-noll_error_args (int level, const char *fun, uint_t size)
-{
-  fprintf (stderr,
-	   "NOLL-DP Error of level %d in %s: bad number (%d) of arguments.\n",
-	   level, fun, size);
-  if (level == 0)
-    //terminate
-    exit (0);
+noll_error_args(int level, const char *fun, uint_t size, const char* expect) {
+	fprintf(stderr,
+			"NOLL-DP Error of level %d in %s: bad number (%d) of arguments, expected (%s).\n",
+			level, fun, size, expect);
+	if (level == 0)
+		//terminate
+		exit(0);
 }
 
 void
@@ -96,7 +95,7 @@ noll_mk_context (void)
 #ifndef NDEBUG
   printf ("noll_mk_context reset qstack\n");
 #endif
-  /* initialize the stack of location variables to store 
+  /* initialize the stack of location variables to store
    * empty set of globals (nil is a special symbol) */
   r->lvar_stack = noll_uint_array_new ();
   noll_uint_array_push (r->lvar_stack, 0);
@@ -260,7 +259,7 @@ noll_exp_typecheck_pred_basic_case (const char *name,
     {
       /* TODO: see how to check that it is a two way predicate
        * Now, only two equalities between variables 1 = 3 and 2 = 4,
-       * thus the node shall be an 'and' and 
+       * thus the node shall be an 'and' and
        *      the inner nodes shall be equalities
        */
       if ((fequals->discr != NOLL_F_AND) ||
@@ -283,7 +282,7 @@ noll_exp_typecheck_pred_basic_case (const char *name,
 }
 
 /**
- * Define a predicate. 
+ * Define a predicate.
  *
  * @param ctx   contains the parameters and local variables
  * @param name  name of the predicate
@@ -306,7 +305,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
     }
   /*
    * assert: no global variables except the "nil" constant
-   * may be defined before the predicate definition, 
+   * may be defined before the predicate definition,
    * since no global context is kept for the definition of
    * the predicate
    */
@@ -347,7 +346,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
       return UNDEFINED_ID;
     }
   /*
-   * Check the syntax of predicates while 
+   * Check the syntax of predicates while
    * the predicate definition is built
    */
   /* cond 0:      all the parameters are of record type */
@@ -363,7 +362,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
   /*
    * cond 1: The first two parameters are of the same sort, the
    * sort of the predicate.
-   * 
+   *
    * TODO: for dll, the first four parameters shall have the same sort.
    * TODO: the sort of the remaining parameters shall be checked also!
    */
@@ -1057,7 +1056,7 @@ noll_mk_pred (noll_context_t * ctx, const char *name, noll_exp_t ** args,
   if (size < 2)
     {
       char *msg = strdup (name);
-      noll_error_args (1, msg, size);
+      noll_error_args (1, msg, size, ">= 2");
       free (msg);
       return NULL;
     }
@@ -1130,7 +1129,7 @@ noll_exp_t *
 noll_mk_not (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 1)
-    noll_error_args (1, "noll_mk_not", size);
+    noll_error_args (1, "noll_mk_not", size, "= 1");
   noll_exp_t *e = args[0];
   if (e->discr == NOLL_F_INLOC)
     {
@@ -1150,7 +1149,7 @@ noll_exp_t *
 noll_mk_eq (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_eq", size);
+    noll_error_args (1, "noll_mk_eq", size, "= 2");
   return noll_mk_op (NOLL_F_EQ, args, size);
 }
 
@@ -1158,7 +1157,7 @@ noll_exp_t *
 noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_distinct", size);
+    noll_error_args (1, "noll_mk_distinct", size, "= 2");
   return noll_mk_op (NOLL_F_DISTINCT, args, size);
 }
 
@@ -1182,7 +1181,7 @@ noll_exp_t *
 noll_mk_wsep (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size < 2)
-    noll_error_args (1, "noll_mk_wsep", size);
+    noll_error_args (1, "noll_mk_wsep", size, ">= 2");
   return noll_mk_op (NOLL_F_WSEP, args, size);
 }
 
@@ -1190,7 +1189,7 @@ noll_exp_t *
 noll_mk_ssep (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size < 2)
-    noll_error_args (1, "noll_mk_ssep", size);
+    noll_error_args (1, "noll_mk_ssep", size, ">= 2");
   return noll_mk_op (NOLL_F_SSEP, args, size);
 }
 
@@ -1198,7 +1197,7 @@ noll_exp_t *
 noll_mk_pto (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_pto", size);
+    noll_error_args (1, "noll_mk_pto", size, "= 2");
   return noll_mk_op (NOLL_F_PTO, args, size);
 }
 
@@ -1206,7 +1205,7 @@ noll_exp_t *
 noll_mk_ref (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size < 2)
-    noll_error_args (1, "noll_mksref", size);
+    noll_error_args (1, "noll_mksref", size, ">= 2");
   return noll_mk_op (NOLL_F_REF, args, size);
 }
 
@@ -1214,7 +1213,7 @@ noll_exp_t *
 noll_mk_sref (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size < 2)
-    noll_error_args (1, "noll_mk_sref", size);
+    noll_error_args (1, "noll_mk_sref", size, ">= 2");
   return noll_mk_op (NOLL_F_SREF, args, size);
 }
 
@@ -1222,7 +1221,7 @@ noll_exp_t *
 noll_mk_index (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_index", size);
+    noll_error_args (1, "noll_mk_index", size, "= 2");
   return noll_mk_op (NOLL_F_INDEX, args, size);
 }
 
@@ -1230,7 +1229,7 @@ noll_exp_t *
 noll_mk_sloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 1)
-    noll_error_args (1, "noll_mk_sloc", size);
+    noll_error_args (1, "noll_mk_sloc", size, "= 1");
   return noll_mk_op (NOLL_F_SLOC, args, size);
 }
 
@@ -1238,7 +1237,7 @@ noll_exp_t *
 noll_mk_unloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size < 2)
-    noll_error_args (1, "noll_mk_unloc", size);
+    noll_error_args (1, "noll_mk_unloc", size, ">= 2");
   return noll_mk_op (NOLL_F_UNLOC, args, size);
 }
 
@@ -1246,7 +1245,7 @@ noll_exp_t *
 noll_mk_inloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_inloc", size);
+    noll_error_args (1, "noll_mk_inloc", size, "= 2");
   return noll_mk_op (NOLL_F_INLOC, args, size);
 }
 
@@ -1254,7 +1253,7 @@ noll_exp_t *
 noll_mk_eqloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_eqloc", size);
+    noll_error_args (1, "noll_mk_eqloc", size, "= 2");
   return noll_mk_op (NOLL_F_EQLOC, args, size);
 }
 
@@ -1262,7 +1261,7 @@ noll_exp_t *
 noll_mk_leloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_leloc", size);
+    noll_error_args (1, "noll_mk_leloc", size, "= 2");
   return noll_mk_op (NOLL_F_LELOC, args, size);
 }
 
@@ -1270,7 +1269,7 @@ noll_exp_t *
 noll_mk_seloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 2)
-    noll_error_args (1, "noll_mk_seloc", size);
+    noll_error_args (1, "noll_mk_seloc", size, "= 2");
   return noll_mk_op (NOLL_F_SELOC, args, size);
 }
 
@@ -1278,7 +1277,7 @@ noll_exp_t *
 noll_mk_tobool (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 1)
-    noll_error_args (1, "noll_mk_tobool", size);
+    noll_error_args (1, "noll_mk_tobool", size, "= 1");
   return noll_mk_op (NOLL_F_TOBOOL, args, size);
 }
 
@@ -1286,7 +1285,7 @@ noll_exp_t *
 noll_mk_tospace (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 1)
-    noll_error_args (1, "noll_mk_tospace", size);
+    noll_error_args (1, "noll_mk_tospace", size, "= 1");
   return noll_mk_op (NOLL_F_TOSPACE, args, size);
 }
 
@@ -1294,7 +1293,7 @@ noll_exp_t *
 noll_mk_loop (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
   if (size != 1)
-    noll_error_args (1, "noll_mk_loop", size);
+    noll_error_args (1, "noll_mk_loop", size, "= 1");
   return noll_mk_op (NOLL_F_LOOP, args, size);
 }
 
@@ -1505,7 +1504,7 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
 
 /*
  * ======================================================================
- * Typechecking 
+ * Typechecking
  * ======================================================================
  */
 
