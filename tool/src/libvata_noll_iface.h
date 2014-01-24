@@ -28,6 +28,7 @@
 #ifndef LIBVATA_NOLL_IFACE_H_
 #define LIBVATA_NOLL_IFACE_H_
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 
@@ -117,6 +118,23 @@ void vata_add_transition(
  */
 void vata_print_ta(
 	const vata_ta_t*        ta);
+
+
+/**
+ * @brief Checks whether L(smaller_ta) <= L(bigger_ta)
+ *
+ * This function checks whether the language of the TA @p
+ * smaller_ta is included in the language of the TA @p
+ * bigger_ta.
+ *
+ * @param[in]  smaller_ta   The included TA
+ * @param[in]  bigger_ta    The including TA
+ *
+ * @returns  @p bool if L(smaller_ta) <= L(bigger_ta), @p false otherwise
+ */
+bool vata_check_inclusion(
+	const vata_ta_t*        smaller_ta,
+	const vata_ta_t*        bigger_ta);
 
 
 #ifdef __cplusplus

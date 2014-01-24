@@ -139,3 +139,18 @@ void vata_print_ta(
 	VATA::Serialization::TimbukSerializer serializer;
 	std::cout << ta->ta.DumpToString(serializer);
 }
+
+
+bool vata_check_inclusion(
+	const vata_ta_t*        smaller_ta,
+	const vata_ta_t*        bigger_ta)
+{
+	// check the sanity of passed paremeters
+	assert(NULL != smaller_ta);
+	assert(NULL != bigger_ta);
+
+	// the params may be used to specify the exact inclusion checking
+	// algorithm
+	VATA::InclParam params;
+	return TreeAut::CheckInclusion(smaller_ta->ta, bigger_ta->ta, params);
+}
