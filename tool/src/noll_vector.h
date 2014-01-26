@@ -27,6 +27,7 @@
 #ifndef NOLL_VECTOR_H_
 #define NOLL_VECTOR_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -50,7 +51,8 @@ void name ## _resize(name *v, uint_t newsz);        \
 void name ## _reserve(name *v, uint_t cap);         \
 void name ## _clear(name *v); \
 void name ## _copy(name *src, name *dest);      \
-void name ## _swap(name *v1, name *v2);
+void name ## _swap(name *v1, name *v2);         \
+bool name ## _equal(name *v1, name *v2);
 
 #define NOLL_VECTOR_SIZE(v) ((v)->size_)
 #define NOLL_VECTOR_CAPACITY(v) ((v)->capacity_)
@@ -172,8 +174,24 @@ void name ## _swap(name *v1, name *v2)                                  \
     tmp2 = v1->data_;                                                   \
     v1->data_ = v2->data_;                                              \
     v2->data_ = tmp2;                                                   \
+}                                                                       \
+                                                                        \
+bool name ## _equal(name *v1, name *v2)                                 \
+{                                                                       \
+    assert(NULL != v1);                                                 \
+    assert(NULL != v2);                                                 \
+    size_t size = noll_vector_size(v1);                                 \
+    if (noll_vector_size(v2) != size)                                   \
+        return false;                                                   \
+                                                                        \
+    for (size_t i = 0; i < size; ++i)                                   \
+    {                                                                   \
+        if (noll_vector_at(v1, i) != noll_vector_at(v2, i))             \
+            return false;                                               \
+    }                                                                   \
+                                                                        \
+    return true;                                                        \
 }
-
 
 #endif /* NOLL_VECTOR_H_ */
 
