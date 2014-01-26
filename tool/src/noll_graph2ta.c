@@ -34,8 +34,13 @@
 /* Data types */
 /* ====================================================================== */
 
+// a list of markings (associated to very node)
 NOLL_VECTOR_DECLARE( noll_marking_list, noll_uid_array* )
 NOLL_VECTOR_DEFINE( noll_marking_list, noll_uid_array* )
+
+// mapping of nodes to lists of their markings
+NOLL_VECTOR_DECLARE( noll_nodes_to_markings , noll_marking_list* )
+NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 
 /* ====================================================================== */
 /* Constants */
@@ -98,14 +103,14 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	// from 0, so let that be a vector
 
 	assert(0 < g->nodes_size);
-	size_t nodes = g->nodes_size;
-	noll_marking_list* markings = noll_marking_list_new();
+	size_t num_nodes = g->nodes_size;
+	noll_nodes_to_markings* markings = noll_nodes_to_markings_new();
 	assert(NULL != markings);
-	noll_marking_list_resize(markings, nodes); // resize should allocate enough mem
+	noll_nodes_to_markings_resize(markings, num_nodes); // resize should allocate enough mem
 	for (size_t i = 0; i < noll_vector_size(markings); ++i)
 	{	// we allocate empty markings for every node now
 		NOLL_DEBUG("Allocating marking for node %lu\n", i);
-		noll_vector_at(markings, i) = noll_uid_array_new();
+		noll_vector_at(markings, i) = noll_marking_list_new();
 		assert(NULL != noll_vector_at(markings, i));
 	}
 
@@ -114,14 +119,17 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	// initialize the marking of the initial node to be 'epsilon'
 	assert(0 < noll_vector_size(markings));
 	assert(NULL != noll_vector_at(markings, 0));
-	noll_uid_array_push(noll_vector_at(markings, 0), NOLL_MARKINGS_EPSILON);
+	noll_uid_array* epsilon_marking = noll_uid_array_new();
+	assert(NULL != epsilon_marking);
+	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
+	noll_marking_list_push(noll_vector_at(markings, 0), epsilon_marking);
 
 	// TODO: consider other initial node that the one with number 0
 	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
 
 	bool changed = true;
 	while (changed)
-	{
+	{	// until we reach a fixed point
 		changed = false;
 
 		for (size_t i = 0; i < noll_vector_size(g->edges); ++i)
@@ -137,20 +145,65 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 				edge->kind,
 				edge->label);
 
+			// check that the nodes are in the correct range
+			assert(noll_vector_at(edge->args, 0) < num_nodes);
+			assert(noll_vector_at(edge->args, 1) < num_nodes);
 
+			// get markings of the source and destination nodes
+			const noll_marking_list* src_markings = noll_vector_at(markings,
+				noll_vector_at(edge->args, 0));
+			noll_marking_list* dst_markings = noll_vector_at(markings,
+				noll_vector_at(edge->args, 1));
+			for (size_t j = 0; j < noll_vector_size(src_markings); ++j)
+			{
+				noll_uid_array* new_marking = noll_uid_array_new();
+				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
+				noll_uid_array_push(new_marking, edge->label);
+
+				bool found = false;
+				for (size_t k = 0; k < noll_vector_size(dst_markings); ++k)
+				{	// check whether the marking is not already there
+					const noll_uid_array* dst_mark = noll_vector_at(dst_markings, k);
+					assert(NULL != dst_mark);
+					if (noll_uid_array_equal(new_marking, dst_mark))
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+				{
+					changed = true;
+					noll_marking_list_push(dst_markings, new_marking);
+				}
+				else
+				{
+					noll_uid_array_delete(new_marking);
+				}
+			}
 		}
 	}
 
 	NOLL_DEBUG("Marking of nodes of the graph computed\n");
 	NOLL_DEBUG("Markings:\n");
 
+	// print the computed marking
 	for (size_t i = 0; i < noll_vector_size(markings); ++i)
 	{
-		assert(NULL != noll_vector_at(markings, i));
+		const noll_marking_list* list = noll_vector_at(markings, i);
+		assert(NULL != list);
 		NOLL_DEBUG("Node %lu: {", i);
-		for (size_t j = 0; j < noll_vector_size(noll_vector_at(markings, i)); ++j)
+		for (size_t j = 0; j < noll_vector_size(list); ++j)
 		{
-			NOLL_DEBUG("%d, ", noll_vector_at(noll_vector_at(markings, i), j));
+			const noll_uid_array* mark = noll_vector_at(list, j);
+			NOLL_DEBUG("[");
+			for (size_t k = 0; k < noll_vector_size(mark); ++k)
+			{
+				NOLL_DEBUG("%d, ", noll_vector_at(mark, k));
+			}
+
+			NOLL_DEBUG("], ");
 		}
 		NOLL_DEBUG("}\n");
 	}
@@ -158,9 +211,15 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	// delete markings
 	for (size_t i = 0; i < noll_vector_size(markings); ++i)
 	{	// we allocate empty markings for every node now
-		noll_uid_array_delete(noll_vector_at(markings, i));
+		noll_marking_list* list = noll_vector_at(markings, i);
+		assert(NULL != list);
+		for (size_t j = 0; j < noll_vector_size(list); ++j)
+		{
+			noll_uid_array_delete(noll_vector_at(list, j));
+		}
+		noll_marking_list_delete(list);
 	}
-	noll_marking_list_delete(markings);
+	noll_nodes_to_markings_delete(markings);
 
 
 
