@@ -101,6 +101,15 @@ extern "C"
    * actuals_ty of length size.
    */
 
+	/**
+	 * @brief  Returns the predicate with given Predicate ID
+	 *
+	 * @param[in]  pid   ID of the desired predicate
+	 *
+	 * @returns  The desired predicate
+	 */
+  const noll_pred_t* noll_pred_getpred(uid_t pid);
+
   char* noll_pred_name (uid_t pid);
   /* Accessors */
 

@@ -109,15 +109,26 @@ uid_t noll_pred_typecheck_call(uid_t pid, uid_t* actuals_ty, uid_t size) {
 	return pid;
 }
 
-char*
-noll_pred_name(uid_t pid) {
+const noll_pred_t* noll_pred_getpred(uid_t pid)
+{
 	if (pid >= noll_vector_size (preds_array)) {
 		printf(
-				"noll_pred_name: called with identifier %d not in the global environment.\n",
+				"noll_pred_getpred: called with identifier %d not in the global environment.\n",
 				pid);
+		return NULL;
+	}
+
+	return noll_vector_at(preds_array, pid);
+}
+
+char*
+noll_pred_name(uid_t pid) {
+	const noll_pred_t* pred = NULL;
+	if ((pred = noll_pred_getpred(pid)) == NULL) {
 		return "unknown";
 	}
-	return noll_vector_at (preds_array, pid)->pname;
+
+	return pred->pname;
 }
 
 /* ====================================================================== */
