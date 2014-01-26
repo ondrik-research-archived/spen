@@ -146,7 +146,13 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 	for (size_t i = 0; i < noll_vector_size(markings); ++i)
 	{
-		NOLL_DEBUG("Node %lu: TODO!!!!!\n", i);
+		assert(NULL != noll_vector_at(markings, i));
+		NOLL_DEBUG("Node %lu: {", i);
+		for (size_t j = 0; j < noll_vector_size(noll_vector_at(markings, i)); ++j)
+		{
+			NOLL_DEBUG("%d, ", noll_vector_at(noll_vector_at(markings, i), j));
+		}
+		NOLL_DEBUG("}\n");
 	}
 
 	// delete markings
