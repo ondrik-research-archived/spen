@@ -251,6 +251,19 @@ extern "C"
   void noll_exp_push (noll_context_t * ctx, noll_exp_t * e, int ispos);
 /* Translates the expression into a formula and push in global formulas. */
 
+#ifndef NDEBUG
+
+#define NOLL_DEBUG(...) \
+	do { \
+			fprintf (stderr, __VA_ARGS__); \
+	} while (0)
+
+#else /* #ifndef NDEBUG */
+
+#define NOLL_DEBUG(...) /* empty */
+
+#endif /* #ifndef NDEBUG */
+
 #ifdef __cplusplus
 }
 #endif
