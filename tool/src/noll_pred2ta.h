@@ -44,7 +44,7 @@
 /* Translators */
 /* ====================================================================== */
 
-noll_ta_t* noll_pred2ta(noll_pred_t* p);
+noll_ta_t* noll_pred2ta(const noll_pred_t* p);
 /* Translates predicate p to a ta with formal parameters */
 
 #endif /* NOLL_PRED2TA_H_ */

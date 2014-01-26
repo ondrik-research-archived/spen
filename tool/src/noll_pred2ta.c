@@ -25,6 +25,7 @@
  * Defines translation between heap graph to tree automata
  */
 
+#include "noll.h"
 #include "libvata_noll_iface.h"
 #include "noll_pred2ta.h"
 
@@ -36,7 +37,7 @@
  *  Translates a predicate into a tree automaton.
  *  @return TA built or NULL
  */
-vata_ta_t* noll_pred2ta(noll_pred_t* p) {
+vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   assert(NULL != p);
 
   vata_ta_t* ta = NULL;
@@ -59,6 +60,7 @@ vata_ta_t* noll_pred2ta(noll_pred_t* p) {
   //   q2 -> [out]
   //
 
+	NOLL_DEBUG("WARNING: Generating fixed TA for the predicate lso\n");
   vata_set_state_root(ta, 1);
 
   vata_state_t children[] = {2};
@@ -76,8 +78,6 @@ vata_ta_t* noll_pred2ta(noll_pred_t* p) {
   vata_add_transition(ta, 2, symbol_f_mf     , children, 1);
   vata_add_transition(ta, 2, symbol_lso_mf   , children, 1);
   vata_add_transition(ta, 2, symbol_out      , NULL    , 0);
-
-  vata_print_ta(ta);
 
 	return ta;
 }
