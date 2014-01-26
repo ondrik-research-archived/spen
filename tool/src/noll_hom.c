@@ -40,6 +40,11 @@
 
 void noll_hom_fprint(FILE* f, noll_hom_t* h) {
 	assert(f != NULL);
+	if (NULL == h)
+	{
+		// do sth
+	}
+
 	fprintf(f, "\nHom:[]\n");
 }
 
@@ -78,6 +83,13 @@ noll_hom_apply_size_array(uint_t* h, uint_t size, noll_uid_array* args) {
 void noll_graph_complete_edge(noll_graph_t* g, noll_uid_array* svar2edge,
 		uint_t node, uint_t node_ty, noll_sterm_t* t, noll_edge_array* ptos,
 		noll_edge_array* preds, noll_uid_array* impl, bool toFill) {
+
+	if ((&g != &g) || (&node != &node) || (&node_ty != &node_ty) ||
+		(&ptos != &ptos) || (&preds != &preds) || (&impl != &impl) ||
+		(&toFill != &toFill))
+	{
+		assert(0);    // to avoid the "unused parameter" bug
+	}
 
 	assert (svar2edge != NULL);
 	assert (t != NULL);
@@ -557,6 +569,11 @@ noll_graph_get_edge(noll_graph_t* g, noll_edge_e kind, noll_uid_array* args,
 int noll_graph_used(noll_uid_array* used, uint_t e, noll_graph_t* g) {
 	assert (used != NULL);
 	assert (e < noll_vector_size(used));
+
+	if (&g != &g)
+	{
+		assert(0);
+	}
 
 	// directly used
 	if (noll_vector_at(used,e) != UNDEFINED_ID)

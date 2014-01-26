@@ -110,6 +110,11 @@ noll_var_array_find_local (noll_var_array * a, const char *name)
 char *
 noll_var_name (noll_var_array * a, uid_t vid, noll_typ_t ty)
 {
+	if (&ty != &ty)
+	{
+		assert(0);     // just to avoid an "unused parameter warning"
+	}
+
   if (a == NULL)
     return "unknown";
   if (vid == VNIL_ID)

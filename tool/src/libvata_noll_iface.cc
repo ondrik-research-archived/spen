@@ -134,7 +134,7 @@ void vata_print_ta(
 	// check that the input is sane
 	assert(NULL != ta);
 
-	std::cout << "\nTreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n\n";
+	//std::cout << "\nTreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n\n";
 
 	VATA::Serialization::TimbukSerializer serializer;
 	std::cout << ta->ta.DumpToString(serializer);

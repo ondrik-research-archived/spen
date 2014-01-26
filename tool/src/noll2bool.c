@@ -1318,6 +1318,11 @@ void write_bool_abstr(noll_form_t* form, char* fname, int* nbvar,
  */
 int test_in_equality(uint_t x, uint_t y, noll_pure_op_t oper, int nbv, int nbc,
 		char* fname) {
+	if (&nbv != &nbv)
+	{
+		assert(0);         // just to remove "unused variable" warning
+	}
+
 	//adding the (in)equality between x and y to the input file*/
 	FILE *out;
 	int new = 0;

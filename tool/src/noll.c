@@ -167,6 +167,11 @@ noll_pop_context (noll_context_t * ctx)
 int
 noll_set_logic (noll_context_t * ctx, const char *logic)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (!strcmp (logic, "QF_NOLL"))
     {
       noll_error (0, "set-logic", "unknown logic");
@@ -786,6 +791,11 @@ noll_assert (noll_context_t * ctx, noll_exp_t * term)
 int
 noll_check (noll_context_t * ctx)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);    // to avoid "unused parameter" warning
+	}
+
   noll_entl_set_cmd (NOLL_FORM_SAT);
   return noll_entl_solve ();
 }
@@ -1084,6 +1094,11 @@ noll_mk_pred (noll_context_t * ctx, const char *name, noll_exp_t ** args,
 noll_exp_t *
 noll_mk_true (noll_context_t * ctx)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   noll_exp_t *res = (noll_exp_t *) malloc (sizeof (struct noll_exp_t));
   res->discr = NOLL_F_TRUE;
   return res;
@@ -1092,6 +1107,11 @@ noll_mk_true (noll_context_t * ctx)
 noll_exp_t *
 noll_mk_false (noll_context_t * ctx)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   noll_exp_t *res = (noll_exp_t *) malloc (sizeof (struct noll_exp_t));
   res->discr = NOLL_F_FALSE;
   return res;
@@ -1128,6 +1148,11 @@ noll_mk_or (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_not (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 1)
     noll_error_args (1, "noll_mk_not", size, "= 1");
   noll_exp_t *e = args[0];
@@ -1148,6 +1173,11 @@ noll_mk_not (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_eq (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_eq", size, "= 2");
   return noll_mk_op (NOLL_F_EQ, args, size);
@@ -1156,6 +1186,11 @@ noll_mk_eq (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_distinct", size, "= 2");
   return noll_mk_op (NOLL_F_DISTINCT, args, size);
@@ -1164,6 +1199,11 @@ noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_emp (noll_context_t * ctx)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   noll_exp_t *res = (noll_exp_t *) malloc (sizeof (struct noll_exp_t));
   res->discr = NOLL_F_EMP;
   return res;
@@ -1172,6 +1212,11 @@ noll_mk_emp (noll_context_t * ctx)
 noll_exp_t *
 noll_mk_junk (noll_context_t * ctx)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   noll_exp_t *res = (noll_exp_t *) malloc (sizeof (struct noll_exp_t));
   res->discr = NOLL_F_JUNK;
   return res;
@@ -1180,6 +1225,11 @@ noll_mk_junk (noll_context_t * ctx)
 noll_exp_t *
 noll_mk_wsep (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size < 2)
     noll_error_args (1, "noll_mk_wsep", size, ">= 2");
   return noll_mk_op (NOLL_F_WSEP, args, size);
@@ -1188,6 +1238,11 @@ noll_mk_wsep (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_ssep (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size < 2)
     noll_error_args (1, "noll_mk_ssep", size, ">= 2");
   return noll_mk_op (NOLL_F_SSEP, args, size);
@@ -1196,6 +1251,11 @@ noll_mk_ssep (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_pto (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_pto", size, "= 2");
   return noll_mk_op (NOLL_F_PTO, args, size);
@@ -1204,6 +1264,11 @@ noll_mk_pto (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_ref (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size < 2)
     noll_error_args (1, "noll_mksref", size, ">= 2");
   return noll_mk_op (NOLL_F_REF, args, size);
@@ -1212,6 +1277,11 @@ noll_mk_ref (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_sref (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size < 2)
     noll_error_args (1, "noll_mk_sref", size, ">= 2");
   return noll_mk_op (NOLL_F_SREF, args, size);
@@ -1220,6 +1290,11 @@ noll_mk_sref (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_index (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_index", size, "= 2");
   return noll_mk_op (NOLL_F_INDEX, args, size);
@@ -1228,6 +1303,11 @@ noll_mk_index (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_sloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 1)
     noll_error_args (1, "noll_mk_sloc", size, "= 1");
   return noll_mk_op (NOLL_F_SLOC, args, size);
@@ -1236,6 +1316,11 @@ noll_mk_sloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_unloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size < 2)
     noll_error_args (1, "noll_mk_unloc", size, ">= 2");
   return noll_mk_op (NOLL_F_UNLOC, args, size);
@@ -1244,6 +1329,11 @@ noll_mk_unloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_inloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_inloc", size, "= 2");
   return noll_mk_op (NOLL_F_INLOC, args, size);
@@ -1252,6 +1342,11 @@ noll_mk_inloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_eqloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_eqloc", size, "= 2");
   return noll_mk_op (NOLL_F_EQLOC, args, size);
@@ -1260,6 +1355,11 @@ noll_mk_eqloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_leloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_leloc", size, "= 2");
   return noll_mk_op (NOLL_F_LELOC, args, size);
@@ -1268,6 +1368,11 @@ noll_mk_leloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_seloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 2)
     noll_error_args (1, "noll_mk_seloc", size, "= 2");
   return noll_mk_op (NOLL_F_SELOC, args, size);
@@ -1276,6 +1381,11 @@ noll_mk_seloc (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_tobool (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 1)
     noll_error_args (1, "noll_mk_tobool", size, "= 1");
   return noll_mk_op (NOLL_F_TOBOOL, args, size);
@@ -1284,6 +1394,11 @@ noll_mk_tobool (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_tospace (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 1)
     noll_error_args (1, "noll_mk_tospace", size, "= 1");
   return noll_mk_op (NOLL_F_TOSPACE, args, size);
@@ -1292,6 +1407,11 @@ noll_mk_tospace (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 noll_exp_t *
 noll_mk_loop (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (size != 1)
     noll_error_args (1, "noll_mk_loop", size, "= 1");
   return noll_mk_op (NOLL_F_LOOP, args, size);
@@ -1514,6 +1634,11 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
 noll_exp_t *
 noll_exp_typecheck_and (noll_context_t * ctx, noll_exp_t * e)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   if (!e)
     return e;
 
@@ -1603,6 +1728,11 @@ noll_exp_typecheck (noll_context_t * ctx, noll_exp_t * e)
 void
 noll_exp_push_pure (noll_context_t * ctx, noll_exp_t * e, noll_form_t * form)
 {
+	if (&ctx != &ctx)
+	{
+		assert(0);
+	}
+
   assert (e);
 
   if (form->pure == NULL)

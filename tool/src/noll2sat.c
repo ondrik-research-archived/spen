@@ -740,6 +740,11 @@ uint_t noll2sat_get_bvar_pto(noll_sat_t* fsat, noll_space_t* subform, uint_t i) 
 
 uint_t noll2sat_get_bvar_pred(noll_sat_t* fsat, noll_space_t* subform,
 		uint_t vin, uint_t pid, uint_t sid) {
+	if ((&vin != &vin) || (&pid != &pid) || (&sid != &sid))
+	{
+		assert(0);    // just to remove "unused variable" warning
+	}
+
 	assert(fsat != NULL);
 	assert(subform != NULL);
 

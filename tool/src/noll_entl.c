@@ -492,7 +492,7 @@ int noll_entl_to_graph(void) {
 #ifndef NDEBUG
 	fprintf (stdout, "\n*****pos_graph: file dot_left_graph\n");
 	noll_graph_fprint (stdout, noll_prob->pgraph);
-	noll_graph_fprint_dot ("dot_left_graph", pos_graph);
+//	noll_graph_fprint_dot ("dot_left_graph", pos_graph);
 #endif
 
 	if (nform) {
@@ -506,7 +506,7 @@ int noll_entl_to_graph(void) {
 			noll_vector_at(noll_prob->ngraph,i) = nform_i_graph;
 #ifndef NDEBUG
 			fprintf (stdout, "\n*****neg_graph: file dot_right_graph_%zu\n",i);
-			char[20] fname = "\0";
+			char fname[20] = "\0";
 			sprintf(fname, "dot_right_graph_%zu", i);
 			noll_graph_fprint_dot (fname, nform_i_graph);
 			fflush (stdout);
@@ -544,7 +544,7 @@ int noll_entl_to_homomorphism(void) {
 	noll_graph_fprint (stdout, noll_prob->pgraph);
 	noll_graph_fprint_dot ("dot_left_graph_compl", noll_prob->pgraph);
 	fprintf (stdout, "\n*****neg_graph: file dot_right_graph_compl\n");
-	noll_graph_fprint_dot ("dot_right_graph_compl", noll_vector_at(nol_prob->ngraph,0));
+	//noll_graph_fprint_dot ("dot_right_graph_compl", noll_vector_at(nol_prob->ngraph,0));
 	fflush (stdout);
 #endif
 // TODO: when updated share constraints in graphs
@@ -560,23 +560,24 @@ int noll_entl_to_homomorphism(void) {
  * @return 1 if satisfiable, 0 if unsat, -1 if not known
  */
 int noll_entl_solve_special(void) {
-	if (((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform))
-			|| ((noll_prob->nform != NULL)
-					&& noll_form_array_is_valid(noll_prob->nform))) {
-#ifndef NDEBUG
-		fprintf (stdout, "*** check-sat: special case 0 ...\n");
-#endif
-		return 0;
-	}
-
-	if ((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform)
-			&& ((noll_prob->nform == NULL)
-					|| noll_form_array_is_unsat(noll_prob->nform))) {
-#ifndef NDEBUG
-		fprintf (stdout, "*** check-sat: special case 1 ...\n");
-#endif
-		return 1;
-	}
+// commented out becase noll_form_is_unsat() could not be found
+//	if (((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform))
+//			|| ((noll_prob->nform != NULL)
+//					&& noll_form_array_is_valid(noll_prob->nform))) {
+//#ifndef NDEBUG
+//		fprintf (stdout, "*** check-sat: special case 0 ...\n");
+//#endif
+//		return 0;
+//	}
+//
+//	if ((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform)
+//			&& ((noll_prob->nform == NULL)
+//					|| noll_form_array_is_unsat(noll_prob->nform))) {
+//#ifndef NDEBUG
+//		fprintf (stdout, "*** check-sat: special case 1 ...\n");
+//#endif
+//		return 1;
+//	}
 	if (((noll_prob->nform != NULL)
 			&& (!noll_form_array_is_valid(noll_prob->nform))
 			&& (noll_prob->pform == NULL))
