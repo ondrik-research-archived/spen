@@ -19,6 +19,7 @@ LDFLAGS = \
 -L$(SMTLIB2_PREFIX) \
 -L$(LIBVATA_LIB)
 
+DEBUG=_debug
 
 #---------------------------------------
 # Files
@@ -74,6 +75,9 @@ distclean: clean
 
 libvata_noll_iface.o: libvata_noll_iface.cc $(CCINC) $(DEPS)
 	$(CXX) $(CXXFLAGS) $(ICXXFLAGS) -c -o $@ $<
+
+libvata_noll_iface_debug.o: libvata_noll_iface.cc $(CCINC) $(DEPS)
+	$(CXX) $(CXXFLAGS_DEBUG) $(ICXXFLAGS) -c -o $@ $<
 
 %.o: %.c $(CCINC) $(DEPS)
 	$(CC) $(CFLAGS) $(ICFLAGS) -c -o $@ $<
