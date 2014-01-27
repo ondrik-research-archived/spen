@@ -90,6 +90,8 @@ static bool noll_marking_order_lt(
 	const noll_uid_array*      lhs,
 	const noll_uid_array*      rhs)
 {
+	assert(NULL != lhs);
+	assert(NULL != rhs);
 	if ((&rhs != &rhs) || (&lhs != &lhs))
 	{
 		assert(false);
@@ -136,18 +138,20 @@ static bool compute_markings(
 		assert(NULL != noll_vector_at(nodes_to_markings, i));
 	}
 
+	// TODO: consider other initial node that the one with number 0
+	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
+	uid_t initial_node = 0;
+	assert(initial_node < num_nodes);
+
 	NOLL_DEBUG("Computing marking of nodes of the graph\n");
 
 	// initialize the marking of the initial node to be 'epsilon'
-	assert(0 < noll_vector_size(nodes_to_markings));
-	assert(NULL != noll_vector_at(nodes_to_markings, 0));
 	noll_uid_array* epsilon_marking = noll_uid_array_new();
 	assert(NULL != epsilon_marking);
 	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
-	noll_marking_list_push(noll_vector_at(nodes_to_markings, 0), epsilon_marking);
-
-	// TODO: consider other initial node that the one with number 0
-	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
+	noll_marking_list* initial_node_markings = noll_vector_at(nodes_to_markings, initial_node);
+	assert(NULL != initial_node_markings);
+	noll_marking_list_push(initial_node_markings, epsilon_marking);
 
 	bool changed = true;
 	while (changed)
@@ -345,6 +349,8 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	{	// in the case the computation of markings was not successful
 		assert(false);            // fail gracefully
 	}
+
+	NOLL_DEBUG("Least markings:\n");
 
 	// print the computed markings
 	for (size_t i = 0; i < noll_vector_size(markings); ++i)
