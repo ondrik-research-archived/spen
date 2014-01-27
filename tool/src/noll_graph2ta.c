@@ -77,6 +77,20 @@ static bool noll_fields_order_lt(
 }
 
 
+static bool noll_fields_is_backbone(
+	uid_t            field)
+{
+	if (&field != &field)
+	{
+		assert(false);
+	}
+
+	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
+
+	return true;
+}
+
+
 /**
  * @brief  Implementation of the <= relation over nodes' markings
  *
@@ -185,12 +199,19 @@ static bool compute_markings(
 				noll_uid_array* new_marking = noll_uid_array_new();
 				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
 				assert(0 < noll_vector_size(new_marking));
-				if (noll_vector_last(new_marking) != edge->label)
+				if ((noll_vector_last(new_marking) == edge->label)
+					&& noll_fields_is_backbone(edge->label))
 				{
-					if (noll_fields_order_lt(noll_vector_last(new_marking), edge->label))
-					{
-						noll_uid_array_push(new_marking, edge->label);
-					}
+					// we keep the same marking
+				}
+				else if (noll_fields_order_lt(noll_vector_last(new_marking), edge->label))
+				{
+					// we add the field at the end of the marking
+					noll_uid_array_push(new_marking, edge->label);
+				}
+				else
+				{
+					assert(false);       // fail gracefully
 				}
 
 				bool found = false;
