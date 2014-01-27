@@ -49,6 +49,243 @@ NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 const uid_t NOLL_MARKINGS_EPSILON = -1;
 
 /* ====================================================================== */
+/* Auxiliary functions */
+/* ====================================================================== */
+
+
+/**
+ * @brief  Implementation of the <= relation over record fields
+ *
+ * @param[in]  lhs  The left hand side field
+ * @param[in]  rhs  The right hand side field
+ *
+ * @returns  @p true iff lhs <= rhs w.r.t. the field ordering, @p false
+ *           otherwise
+ */
+static bool noll_fields_order_lt(
+	uid_t            lhs,
+	uid_t            rhs)
+{
+	if ((&rhs != &rhs) || (&lhs != &lhs))
+	{
+		assert(false);
+	}
+
+	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
+
+	return true;
+}
+
+
+/**
+ * @brief  Implementation of the <= relation over nodes' markings
+ *
+ * @param[in]  lhs  The left hand side marking
+ * @param[in]  rhs  The right hand side marking
+ *
+ * @returns  @p true iff lhs <= rhs w.r.t. the marking ordering, @p false
+ *           otherwise
+ */
+static bool noll_marking_order_lt(
+	const noll_uid_array*      lhs,
+	const noll_uid_array*      rhs)
+{
+	if ((&rhs != &rhs) || (&lhs != &lhs))
+	{
+		assert(false);
+	}
+
+	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
+
+	return true;
+}
+
+
+/**
+ * @brief  Computes markings of nodes of a graph
+ *
+ * Given a @p graph, this function computes the minimum marker for every node
+ * of @p graph, which is stored into @p markings. In the case the computation
+ * failed at some point (such as when there is a disconnected node in the
+ * graph), the function returns @p false, otherwise (if the computation was
+ * successful), the function returns @p true.
+ *
+ * @param[in]   graph     The input graph
+ * @param[out]  markings  The computed markings
+ *
+ * @returns  @p true if the computation was successful, @p false otherwise
+ */
+static bool compute_markings(
+	const noll_graph_t*     graph,
+	noll_marking_list*      markings)
+{
+	assert(NULL != graph);
+	assert(NULL != markings);
+
+	size_t num_nodes = graph->nodes_size;
+	assert(0 < num_nodes);
+	noll_marking_list_resize(markings, num_nodes);
+
+	noll_nodes_to_markings* nodes_to_markings = noll_nodes_to_markings_new();
+	assert(NULL != nodes_to_markings);
+	noll_nodes_to_markings_resize(nodes_to_markings, num_nodes); // resize should allocate enough mem
+	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	{	// we allocate empty list of markings for every node now
+		NOLL_DEBUG("Allocating marking for node %lu\n", i);
+		noll_vector_at(nodes_to_markings, i) = noll_marking_list_new();
+		assert(NULL != noll_vector_at(nodes_to_markings, i));
+	}
+
+	NOLL_DEBUG("Computing marking of nodes of the graph\n");
+
+	// initialize the marking of the initial node to be 'epsilon'
+	assert(0 < noll_vector_size(nodes_to_markings));
+	assert(NULL != noll_vector_at(nodes_to_markings, 0));
+	noll_uid_array* epsilon_marking = noll_uid_array_new();
+	assert(NULL != epsilon_marking);
+	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
+	noll_marking_list_push(noll_vector_at(nodes_to_markings, 0), epsilon_marking);
+
+	// TODO: consider other initial node that the one with number 0
+	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
+
+	bool changed = true;
+	while (changed)
+	{	// until we reach a fixed point
+		changed = false;
+
+		for (size_t i = 0; i < noll_vector_size(graph->edges); ++i)
+		{	// go over all edges and update according to them
+			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
+			assert(NULL != edge);
+			assert(2 == noll_vector_size(edge->args));
+			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
+			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
+				noll_vector_at(edge->args, 0),
+				noll_vector_at(edge->args, 1),
+				edge->id,
+				edge->kind,
+				edge->label);
+
+			// check that the nodes are in the correct range
+			assert(noll_vector_at(edge->args, 0) < num_nodes);
+			assert(noll_vector_at(edge->args, 1) < num_nodes);
+
+			// get markings of the source and destination nodes
+			const noll_marking_list* src_markings = noll_vector_at(nodes_to_markings,
+				noll_vector_at(edge->args, 0));
+			noll_marking_list* dst_markings = noll_vector_at(nodes_to_markings,
+				noll_vector_at(edge->args, 1));
+			for (size_t j = 0; j < noll_vector_size(src_markings); ++j)
+			{
+				noll_uid_array* new_marking = noll_uid_array_new();
+				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
+				assert(0 < noll_vector_size(new_marking));
+				if (noll_vector_last(new_marking) != edge->label)
+				{
+					if (noll_fields_order_lt(noll_vector_last(new_marking), edge->label))
+					{
+						noll_uid_array_push(new_marking, edge->label);
+					}
+				}
+
+				bool found = false;
+				for (size_t k = 0; k < noll_vector_size(dst_markings); ++k)
+				{	// check whether the marking is not already there
+					const noll_uid_array* dst_mark = noll_vector_at(dst_markings, k);
+					assert(NULL != dst_mark);
+					if (noll_uid_array_equal(new_marking, dst_mark))
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+				{
+					changed = true;
+					noll_marking_list_push(dst_markings, new_marking);
+				}
+				else
+				{
+					noll_uid_array_delete(new_marking);
+				}
+			}
+		}
+	}
+
+	NOLL_DEBUG("Marking of nodes of the graph computed\n");
+	NOLL_DEBUG("Markings:\n");
+
+	// print the computed markings
+	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	{
+		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		assert(NULL != list);
+		NOLL_DEBUG("Node %lu: {", i);
+		for (size_t j = 0; j < noll_vector_size(list); ++j)
+		{
+			const noll_uid_array* mark = noll_vector_at(list, j);
+			NOLL_DEBUG("[");
+			for (size_t k = 0; k < noll_vector_size(mark); ++k)
+			{
+				NOLL_DEBUG("%d, ", noll_vector_at(mark, k));
+			}
+
+			NOLL_DEBUG("], ");
+		}
+		NOLL_DEBUG("}\n");
+	}
+
+	// compute the least marking for every node
+	bool is_fine = true;
+	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	{
+		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		assert(NULL != list);
+		if (0 == noll_vector_size(list))
+		{	// if there is a node with no marking
+			is_fine = false;
+			break;
+		}
+
+		noll_uid_array** ptr_least_marking = &noll_vector_at(list, 0);
+		assert(NULL != ptr_least_marking);
+		assert(NULL != *ptr_least_marking);
+		for (size_t j = 1; j < noll_vector_size(list); ++j)
+		{
+			noll_uid_array* mark = noll_vector_at(list, j);
+			assert(NULL != mark);
+			if (noll_marking_order_lt(mark, *ptr_least_marking))
+			{
+				ptr_least_marking = &mark;
+			}
+		}
+
+		noll_vector_at(markings, i) = *ptr_least_marking;
+		*ptr_least_marking = NULL;
+	}
+
+	// delete markings
+	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	{	// we allocate empty markings for every node now
+		noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		assert(NULL != list);
+		for (size_t j = 0; j < noll_vector_size(list); ++j)
+		{
+			if (NULL != noll_vector_at(list,j))
+			{
+				noll_uid_array_delete(noll_vector_at(list, j));
+			}
+		}
+		noll_marking_list_delete(list);
+	}
+	noll_nodes_to_markings_delete(nodes_to_markings);
+
+	return is_fine;
+}
+
+/* ====================================================================== */
 /* Translators */
 /* ====================================================================== */
 
@@ -102,126 +339,27 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	// first, let's prepare a map of nodes to their markings, nodes are labelled
 	// from 0, so let that be a vector
 
-	assert(0 < g->nodes_size);
-	size_t num_nodes = g->nodes_size;
-	noll_nodes_to_markings* markings = noll_nodes_to_markings_new();
+	noll_marking_list* markings = noll_marking_list_new();
 	assert(NULL != markings);
-	noll_nodes_to_markings_resize(markings, num_nodes); // resize should allocate enough mem
-	for (size_t i = 0; i < noll_vector_size(markings); ++i)
-	{	// we allocate empty markings for every node now
-		NOLL_DEBUG("Allocating marking for node %lu\n", i);
-		noll_vector_at(markings, i) = noll_marking_list_new();
-		assert(NULL != noll_vector_at(markings, i));
+	if (!compute_markings(g, markings))
+	{	// in the case the computation of markings was not successful
+		assert(false);            // fail gracefully
 	}
 
-	NOLL_DEBUG("Computing marking of nodes of the graph\n");
-
-	// initialize the marking of the initial node to be 'epsilon'
-	assert(0 < noll_vector_size(markings));
-	assert(NULL != noll_vector_at(markings, 0));
-	noll_uid_array* epsilon_marking = noll_uid_array_new();
-	assert(NULL != epsilon_marking);
-	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
-	noll_marking_list_push(noll_vector_at(markings, 0), epsilon_marking);
-
-	// TODO: consider other initial node that the one with number 0
-	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
-
-	bool changed = true;
-	while (changed)
-	{	// until we reach a fixed point
-		changed = false;
-
-		for (size_t i = 0; i < noll_vector_size(g->edges); ++i)
-		{	// go over all edges and update according to them
-			const noll_edge_t* edge = noll_vector_at(g->edges, i);
-			assert(NULL != edge);
-			assert(2 == noll_vector_size(edge->args));
-			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
-			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
-				noll_vector_at(edge->args, 0),
-				noll_vector_at(edge->args, 1),
-				edge->id,
-				edge->kind,
-				edge->label);
-
-			// check that the nodes are in the correct range
-			assert(noll_vector_at(edge->args, 0) < num_nodes);
-			assert(noll_vector_at(edge->args, 1) < num_nodes);
-
-			// get markings of the source and destination nodes
-			const noll_marking_list* src_markings = noll_vector_at(markings,
-				noll_vector_at(edge->args, 0));
-			noll_marking_list* dst_markings = noll_vector_at(markings,
-				noll_vector_at(edge->args, 1));
-			for (size_t j = 0; j < noll_vector_size(src_markings); ++j)
-			{
-				noll_uid_array* new_marking = noll_uid_array_new();
-				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
-				noll_uid_array_push(new_marking, edge->label);
-
-				bool found = false;
-				for (size_t k = 0; k < noll_vector_size(dst_markings); ++k)
-				{	// check whether the marking is not already there
-					const noll_uid_array* dst_mark = noll_vector_at(dst_markings, k);
-					assert(NULL != dst_mark);
-					if (noll_uid_array_equal(new_marking, dst_mark))
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if (!found)
-				{
-					changed = true;
-					noll_marking_list_push(dst_markings, new_marking);
-				}
-				else
-				{
-					noll_uid_array_delete(new_marking);
-				}
-			}
-		}
-	}
-
-	NOLL_DEBUG("Marking of nodes of the graph computed\n");
-	NOLL_DEBUG("Markings:\n");
-
-	// print the computed marking
+	// print the computed markings
 	for (size_t i = 0; i < noll_vector_size(markings); ++i)
 	{
-		const noll_marking_list* list = noll_vector_at(markings, i);
-		assert(NULL != list);
-		NOLL_DEBUG("Node %lu: {", i);
-		for (size_t j = 0; j < noll_vector_size(list); ++j)
+		const noll_uid_array* mark = noll_vector_at(markings, i);
+		assert(NULL != mark);
+		NOLL_DEBUG("Node %lu: [", i);
+		for (size_t j = 0; j < noll_vector_size(mark); ++j)
 		{
-			const noll_uid_array* mark = noll_vector_at(list, j);
-			NOLL_DEBUG("[");
-			for (size_t k = 0; k < noll_vector_size(mark); ++k)
-			{
-				NOLL_DEBUG("%d, ", noll_vector_at(mark, k));
-			}
-
-			NOLL_DEBUG("], ");
+			NOLL_DEBUG("%d, ", noll_vector_at(mark, j));
 		}
-		NOLL_DEBUG("}\n");
+		NOLL_DEBUG("]\n");
 	}
 
-	// delete markings
-	for (size_t i = 0; i < noll_vector_size(markings); ++i)
-	{	// we allocate empty markings for every node now
-		noll_marking_list* list = noll_vector_at(markings, i);
-		assert(NULL != list);
-		for (size_t j = 0; j < noll_vector_size(list); ++j)
-		{
-			noll_uid_array_delete(noll_vector_at(list, j));
-		}
-		noll_marking_list_delete(list);
-	}
-	noll_nodes_to_markings_delete(markings);
-
-
+	noll_marking_list_delete(markings);
 
 	NOLL_DEBUG("Generating the TA for the graph\n");
 
