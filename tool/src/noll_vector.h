@@ -50,7 +50,7 @@ void name ## _cup(name *v, type elem);              \
 void name ## _resize(name *v, uint_t newsz);        \
 void name ## _reserve(name *v, uint_t cap);         \
 void name ## _clear(name *v); \
-void name ## _copy(name *dest, name *src);      \
+void name ## _copy(name *dest, const name *src);      \
 void name ## _swap(name *v1, name *v2);         \
 bool name ## _equal(const name *v1, const name *v2);
 
@@ -148,7 +148,7 @@ void name ## _clear(name *v)                            \
 }                                                                       \
                                                                         \
                                                                         \
-void name ## _copy(name *dest, name *src)                               \
+void name ## _copy(name *dest, const name *src)                         \
 {                                                                       \
     name ## _resize(dest, src->size_);                                  \
     dest->size_ = src->size_;                                           \
