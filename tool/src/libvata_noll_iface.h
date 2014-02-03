@@ -31,6 +31,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+// NOLL headers
+#include "noll_ta_symbols.h"
+
 
 #ifdef __cplusplus
 	extern "C" {
@@ -46,7 +49,7 @@ typedef vata_ta_t noll_ta_t;
 typedef size_t vata_state_t;
 
 // TODO: change from const char to something we will use
-typedef const char vata_symbol_t;
+typedef noll_ta_symbol_t vata_symbol_t;
 
 /* ====================================================================== */
 /* Functions */
@@ -100,15 +103,13 @@ void vata_set_state_root(
  * @param[in,out]  ta           The TA to be altered
  * @param[in]      parent       The parent state of the transition
  * @param[in]      symbol       The symbol of the transition
- * @param[in]      children     The children states of the transition
- * @param[in]      numChildren  The number of states in @p children
+ * @param[in]      children     Array of children states of the transition
  */
 void vata_add_transition(
-	vata_ta_t*              ta,
-	vata_state_t            parent,
-	const vata_symbol_t*    symbol,
-	const vata_state_t*     children,
-	size_t                  numChildren);
+	vata_ta_t*                ta,
+	vata_state_t              parent,
+	const vata_symbol_t*      symbol,
+	const noll_uid_array*     children);
 
 
 /**

@@ -108,20 +108,26 @@ void vata_set_state_root(
 }
 
 void vata_add_transition(
-	vata_ta_t*              ta,
-	vata_state_t            parent,
-	const vata_symbol_t*    symbol,
-	const vata_state_t*     children,
-	size_t                  numChildren)
+	vata_ta_t*                ta,
+	vata_state_t              parent,
+	const vata_symbol_t*      symbol,
+	const noll_uid_array*     children)
 {
 	// check that the input is sane
 	assert(nullptr != ta);
 	assert(nullptr != ta->ta.GetAlphabet());
-	assert((0 == numChildren) || (nullptr != children));
+	assert(NULL != symbol);
+	assert(NULL != children);
 
-	TreeAut::StateTuple tupChildren(children, children + numChildren);
+	size_t numChildren = noll_vector_size(children);
+	TreeAut::StateTuple tupChildren(
+		noll_vector_array(children),
+		noll_vector_array(children) + numChildren);
 
-	TreeAut::StringSymbolType vataStringSymbol(symbol, numChildren);
+	TreeAut::StringSymbolType vataStringSymbol(
+		noll_ta_symbol_get_str(symbol),
+		numChildren);
+
 	TreeAutSymbol taSym = (*ta->ta.GetAlphabet()->GetSymbolTransl())(vataStringSymbol);
 
 	ta->ta.AddTransition(tupChildren, taSym, parent);
