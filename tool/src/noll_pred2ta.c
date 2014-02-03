@@ -63,21 +63,21 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 	NOLL_DEBUG("WARNING: Generating fixed TA for the predicate lso\n");
   vata_set_state_root(ta, 1);
 
-  vata_state_t children[] = {2};
+  /* vata_state_t children[] = {2}; */
 
   // here, we should add the symbols into a list (tree? some other set?)
 
-  vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]";
-  vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]";
-  vata_symbol_t* symbol_f_mf      = "<f> [m(f)]";
-  vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]";
-  vata_symbol_t* symbol_out       = "<> [out]";
+  /* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
+  /* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
+  /* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
+  /* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
+  /* vata_symbol_t* symbol_out       = "<> [out]"; */
 
-  vata_add_transition(ta, 1, symbol_f_in_mf  , children, 1);
-  vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1);
-  vata_add_transition(ta, 2, symbol_f_mf     , children, 1);
-  vata_add_transition(ta, 2, symbol_lso_mf   , children, 1);
-  vata_add_transition(ta, 2, symbol_out      , NULL    , 0);
+  /* vata_add_transition(ta, 1, symbol_f_in_mf  , children, 1); */
+  /* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
+  /* vata_add_transition(ta, 2, symbol_f_mf     , children, 1); */
+  /* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
+  /* vata_add_transition(ta, 2, symbol_out      , NULL    , 0); */
 
 	return ta;
 }

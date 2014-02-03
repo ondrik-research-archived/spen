@@ -389,6 +389,16 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 		NOLL_DEBUG("]\n");
 	}
 
+	NOLL_DEBUG("Generating the TA for the graph\n");
+  vata_ta_t* ta = NULL;
+  if ((ta = vata_create_ta()) == NULL)
+  {
+    return NULL;
+  }
+
+	// set the initial node as the root state
+	vata_set_state_root(ta, initial_node);
+
 	// we transform the graph into a TA represting a tree (i.e. the language of
 	// the TA is a singleton set) such that node 'i' is represented by the TA
 	// state 'i'
@@ -437,6 +447,8 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 		NOLL_DEBUG("Adding transition over %s\n", noll_ta_symbol_get_str(symbol));
 
+		vata_add_transition(ta, i, symbol, children);
+
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
 	}
@@ -477,14 +489,6 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 	noll_marking_list_delete(markings);
 
-	NOLL_DEBUG("Generating the TA for the graph\n");
-
-  vata_ta_t* ta = NULL;
-  if ((ta = vata_create_ta()) == NULL)
-  {
-    return NULL;
-  }
-
 	for (size_t i = 0; i < noll_vector_size(g->edges); ++i) {
 		NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, noll_vector_at(g->edges, i));
 		const noll_edge_t* edge = noll_vector_at(g->edges, i);
@@ -497,11 +501,11 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			edge->label,
 			noll_field_name(edge->label));
 
-		vata_symbol_t* symbol       = "symbol";
-		assert(NOLL_EDGE_PTO == edge->kind);
-		assert(2 == noll_vector_size(edge->args));
-		vata_state_t children[] = {noll_vector_at(edge->args, 1)};
-		vata_add_transition(ta, noll_vector_at(edge->args, 0), symbol, children, 1);
+		/* vata_symbol_t* symbol       = "symbol"; */
+		/* assert(NOLL_EDGE_PTO == edge->kind); */
+		/* assert(2 == noll_vector_size(edge->args)); */
+		/* vata_state_t children[] = {noll_vector_at(edge->args, 1)}; */
+		/* vata_add_transition(ta, noll_vector_at(edge->args, 0), symbol, children, 1); */
 	}
 
 	// TODO
