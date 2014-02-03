@@ -24,6 +24,11 @@
 #ifndef _NOLL_TA_SYMBOLS_H_
 #define _NOLL_TA_SYMBOLS_H_
 
+#ifdef	__cplusplus
+extern "C"
+{
+#endif
+
 #include "noll_types.h"
 #include "noll_vector.h"
 
@@ -78,5 +83,11 @@ const char* noll_ta_symbol_get_str(
  */
 const noll_ta_symbol_t* noll_ta_symbol_create(
 	const noll_uid_array*            sels);
+
+
+#ifdef	__cplusplus
+}
+#endif
+
 
 #endif /* _NOLL_TA_SYMBOLS_H_ */
