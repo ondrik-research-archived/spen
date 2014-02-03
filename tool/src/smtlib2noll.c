@@ -32,8 +32,8 @@
  */
 
 /* =========================================================================
- * Forward declaration of 
- * functions overriding the abstract parser functions. 
+ * Forward declaration of
+ * functions overriding the abstract parser functions.
  * ========================================================================= */
 
 /* Commands */
@@ -122,7 +122,7 @@ SMTLIB2_NOLL_DECLHANDLER (loop);
     smtlib2_term_parser_set_handler(tp, s, smtlib2_noll_parser_mk_ ## name)
 
 /* =========================================================================
- * NOLL parser creation/destruction. 
+ * NOLL parser creation/destruction.
  * ========================================================================= */
 
 #define noll_ctx(p) (((smtlib2_noll_parser *)(p))->ctx_)
@@ -192,18 +192,18 @@ smtlib2_noll_parser_new (void)
   SMTLIB2_NOLL_SETHANDLER (tp, "loop", loop);
 
   /* Initialize the logic pre-defined sorts */
-  smtlib2_hashtable_set (ret->sorts_, (intptr_t) smtlib2_strdup ("Bool"),
-			 (intptr_t) noll_mk_type_bool ());
-  smtlib2_hashtable_set (ret->sorts_, (intptr_t) smtlib2_strdup ("Int"),
-			 (intptr_t) noll_mk_type_int ());
-  smtlib2_hashtable_set (ret->sorts_, (intptr_t) smtlib2_strdup ("Field"),
-			 (intptr_t) noll_mk_type_field (0, 0));
-  smtlib2_hashtable_set (ret->sorts_, (intptr_t) smtlib2_strdup ("SetLoc"),
-			 (intptr_t) noll_mk_type_setloc ());
-  smtlib2_hashtable_set (ret->sorts_, (intptr_t) smtlib2_strdup ("SetRef"),
-			 (intptr_t) noll_mk_type_setref (0));
-  smtlib2_hashtable_set (ret->sorts_, (intptr_t) smtlib2_strdup ("Space"),
-			 (intptr_t) noll_mk_type_space ());
+  smtlib2_hashtable_set (ret->sorts_, (intptr_t)(void*) smtlib2_strdup ("Bool"),
+			 (intptr_t)(void*) noll_mk_type_bool ());
+  smtlib2_hashtable_set (ret->sorts_, (intptr_t)(void*) smtlib2_strdup ("Int"),
+			 (intptr_t)(void*) noll_mk_type_int ());
+  smtlib2_hashtable_set (ret->sorts_, (intptr_t)(void*) smtlib2_strdup ("Field"),
+			 (intptr_t)(void*) noll_mk_type_field (0, 0));
+  smtlib2_hashtable_set (ret->sorts_, (intptr_t)(void*) smtlib2_strdup ("SetLoc"),
+			 (intptr_t)(void*) noll_mk_type_setloc ());
+  smtlib2_hashtable_set (ret->sorts_, (intptr_t)(void*) smtlib2_strdup ("SetRef"),
+			 (intptr_t)(void*) noll_mk_type_setref (0));
+  smtlib2_hashtable_set (ret->sorts_, (intptr_t)(void*) smtlib2_strdup ("Space"),
+			 (intptr_t)(void*) noll_mk_type_space ());
 
   /* set options in the abstract parser */
   ap = (smtlib2_abstract_parser *) pi;
@@ -223,7 +223,7 @@ smtlib2_noll_parser_delete (smtlib2_noll_parser * p)
 }
 
 /* =========================================================================
- * Commands parsing. 
+ * Commands parsing.
  * ========================================================================= */
 
 /**
@@ -250,8 +250,8 @@ smtlib2_noll_parser_set_logic (smtlib2_parser_interface * p,
       /* register the SetLoc sort */
       noll_type_t *ty = noll_mk_type_setloc ();
       smtlib2_hashtable_set (noll_sorts (p),
-			     (intptr_t) smtlib2_strdup ("SetLoc"),
-			     (intptr_t) ty);
+			     (intptr_t)(void*) smtlib2_strdup ("SetLoc"),
+			     (intptr_t)(void*) ty);
     }
 }
 
@@ -289,8 +289,8 @@ smtlib2_noll_parser_declare_sort (smtlib2_parser_interface * p,
 	    {
 	      ap->response_ = SMTLIB2_RESPONSE_SUCCESS;
 	      smtlib2_hashtable_set (noll_sorts (p),
-				     (intptr_t) smtlib2_strdup (sortname),
-				     (intptr_t) ty);
+				     (intptr_t)(void*) smtlib2_strdup (sortname),
+				     (intptr_t)(void*) ty);
 	    }
 	  else
 	    {
@@ -306,10 +306,10 @@ smtlib2_noll_parser_declare_sort (smtlib2_parser_interface * p,
 /** Command (declare-fun name args res)
  *  Used to declare NOLL fields and variables (location or set of locations).
  *  The args shall be empty.
- * @param name the name of the function declared 
- * @param sort the res sort, 
+ * @param name the name of the function declared
+ * @param sort the res sort,
  *             already checked that args = () @see make_function_sort
- * 
+ *
  */
 static void
 smtlib2_noll_parser_declare_function (smtlib2_parser_interface * p,
@@ -337,8 +337,8 @@ smtlib2_noll_parser_declare_function (smtlib2_parser_interface * p,
 	    {
 	      ap->response_ = SMTLIB2_RESPONSE_SUCCESS;
 	      smtlib2_hashtable_set (sp->funs_,
-				     (intptr_t) smtlib2_strdup (name),
-				     (intptr_t) ty);
+				     (intptr_t)(void*) smtlib2_strdup (name),
+				     (intptr_t)(void*) ty);
 	    }
 	  else
 	    {
@@ -355,7 +355,7 @@ smtlib2_noll_parser_declare_function (smtlib2_parser_interface * p,
  *  function definition.
  *  Used to declare local variables.
  *  The variable declared is pushed in the local context.
- * 
+ *
  *  @param name variable name; it shall start with ?
  *  @param sort variable type; it shall be a record
  */
@@ -397,14 +397,14 @@ smtlib2_noll_parser_declare_variable (smtlib2_parser_interface * p,
 
 /** Command (define-fun name ( params ) sort term)
  *  Used to define predicates.
- * 
+ *
  *  @param name  predicate name
- *  @param parms predicate arguments: a vector of terms; 
+ *  @param parms predicate arguments: a vector of terms;
  *               arguments already pushed in the local context;
  *               the @param term make reference to vars in the local context.
  *  @param sort  predicate return type
  *  @param term  predicate expression.
- * 
+ *
  */
 static void
 smtlib2_noll_parser_define_function (smtlib2_parser_interface * p,
@@ -511,7 +511,7 @@ smtlib2_noll_parser_check_sat (smtlib2_parser_interface * p)
 }
 
 /* =========================================================================
- * Sorts parsing. 
+ * Sorts parsing.
  * ========================================================================= */
 
 /** Called for a sort use.
@@ -546,7 +546,7 @@ smtlib2_noll_parser_make_sort (smtlib2_parser_interface * p,
 }
 
 /** Called in declare-fun to collect typing information.
- * 
+ *
  * @param p abstract parser
  * @param tps vector of types for the args and result, will be deleted
  */
@@ -630,7 +630,7 @@ smtlib2_noll_parser_make_parametric_sort (smtlib2_parser_interface * p,
 }
 
 /* =========================================================================
- * Terms parsing. 
+ * Terms parsing.
  * ========================================================================= */
 
 /** Used in define-fun for parameters and quantified terms.
@@ -674,6 +674,11 @@ static smtlib2_term
 smtlib2_noll_parser_make_forall_term (smtlib2_parser_interface * p,
 				      smtlib2_term term)
 {
+	if (&term != &term)
+	{
+		assert(false);
+	}
+
   smtlib2_abstract_parser *ap = (smtlib2_abstract_parser *) p;
   smtlib2_term ret = NULL;
 
@@ -707,8 +712,8 @@ smtlib2_noll_parser_make_exists_term (smtlib2_parser_interface * p,
 }
 
 /** Used for function application term (symbol args).
- * 
- * @param ctx    context of call 
+ *
+ * @param ctx    context of call
  * @param symbol name of the function
  * @param sort   type annotation NOT SUPPORTED
  * @param index  index annotation NOT SUPPORTED
@@ -721,6 +726,11 @@ smtlib2_noll_parser_mk_function (smtlib2_context ctx,
 				 smtlib2_vector * index,
 				 smtlib2_vector * args)
 {
+	if (&sort != &sort)
+	{
+		assert(false);
+	}
+
   noll_context_t *sctx = noll_ctx (ctx);
   noll_exp_t *res = NULL;
   if (index)
