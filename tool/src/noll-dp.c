@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include "smtlib2noll.h"
+#include "noll_ta_symbols.h"
 
 /* ====================================================================== */
 /* MAIN/Main/main */
@@ -75,6 +76,10 @@ int main(int argc, char** argv) {
 		printf("File %s not found!\nquit.", argv[arg_file]);
 		return 1;
 	}
+
+	// initialize the TA symbol database
+	noll_ta_symbol_init();
+
 	// initialize the problem
 	noll_entl_init();
 	noll_entl_set_fname(argv[arg_file]);
