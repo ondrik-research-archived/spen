@@ -27,6 +27,7 @@
 
 #include "noll.h"
 #include "noll_graph2ta.h"
+#include "noll_ta_symbols.h"
 #include "noll_vector.h"
 #include "libvata_noll_iface.h"
 
@@ -46,7 +47,8 @@ NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 /* Constants */
 /* ====================================================================== */
 
-const uid_t NOLL_MARKINGS_EPSILON = -1;
+static const uid_t NOLL_MARKINGS_EPSILON = -1;
+static const uid_t initial_node = 0;
 
 /* ====================================================================== */
 /* Auxiliary functions */
@@ -154,12 +156,13 @@ static bool compute_markings(
 
 	// TODO: consider other initial node that the one with number 0
 	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
-	uid_t initial_node = 0;
 	assert(initial_node < num_nodes);
 
 	NOLL_DEBUG("Computing marking of nodes of the graph\n");
 
 	// initialize the marking of the initial node to be 'epsilon'
+	// TODO: the NOLL_MARKINGS_EPSILON symbol is useless here, but it makes some
+	// things easier (such as that *_last() will not fail)
 	noll_uid_array* epsilon_marking = noll_uid_array_new();
 	assert(NULL != epsilon_marking);
 	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
@@ -385,6 +388,99 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 		}
 		NOLL_DEBUG("]\n");
 	}
+
+	// we transform the graph into a TA represting a tree (i.e. the language of
+	// the TA is a singleton set) such that node 'i' is represented by the TA
+	// state 'i'
+	for (size_t i = 0; i < g->nodes_size; ++i)
+	{
+		NOLL_DEBUG("Processing node %lu\n", i);
+
+		const noll_uid_array* edges = g->mat[i];
+		if (NULL == edges)
+		{	// if there are no edges leaving 'i'
+			NOLL_DEBUG("No edges leaving node %lu\n", i);
+			continue;
+		}
+
+		noll_uid_array* children = noll_uid_array_new();
+		assert(NULL != children);
+
+		noll_uid_array* selectors = noll_uid_array_new();
+		assert(NULL != selectors);
+
+		for (size_t j = 0; j < noll_vector_size(edges); ++j)
+		{
+			const noll_edge_t* ed = noll_vector_at(g->edges, noll_vector_at(edges, j));
+			assert(NULL != ed);
+			assert(NOLL_EDGE_PTO == ed->kind);
+			const char* field_name = noll_field_name(ed->label);
+			NOLL_DEBUG("Edge from the node %lu: %p, %s\n", i, ed, field_name);
+			assert(2 == noll_vector_size(ed->args));
+			assert(noll_vector_at(ed->args, 0) == i);
+			uid_t next_child = noll_vector_at(ed->args, 1);
+			NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
+			noll_uid_array_push(children, next_child);
+			noll_uid_array_push(selectors, ed->label);
+		}
+
+		NOLL_DEBUG("Inserting transition q%lu -> <(", i);
+		for (size_t j = 0; j < noll_vector_size(selectors); ++j)
+		{
+			NOLL_DEBUG("%s, ", noll_field_name(noll_vector_at(selectors, j)));
+		}
+		NOLL_DEBUG(">(");
+		for (size_t j = 0; j < noll_vector_size(children); ++j)
+		{
+			NOLL_DEBUG("q%u, ", noll_vector_at(children, j));
+		}
+
+		NOLL_DEBUG(")\n");
+
+		noll_uid_array_delete(children);
+		noll_uid_array_delete(selectors);
+
+		const noll_ta_symbol_t* symbol = noll_ta_symbol_create(selectors);
+		assert(NULL != symbol);
+	}
+
+
+
+
+
+	NOLL_DEBUG("Starting traversing the edges\n");
+	assert(NULL != g->mat);
+
+	// the work stack that contains nodes to be processed
+	noll_uid_array* workstack = noll_uid_array_new();
+	assert(NULL != workstack);
+	noll_uid_array_reserve(workstack, g->nodes_size);
+	noll_uid_array_push(workstack, initial_node);
+
+
+	noll_uid_array_delete(workstack);
+
+	const noll_uid_array* edges = g->mat[initial_node];
+	assert(NULL != edges);
+
+	for (size_t i = 0; i < noll_vector_size(edges); ++i)
+	{
+		const noll_edge_t* ed = noll_vector_at(g->edges, noll_vector_at(edges, i));
+		assert(NULL != ed);
+		NOLL_DEBUG("Edge from the initial node: %p\n", ed);
+		assert(2 == noll_vector_size(ed->args));
+		assert(noll_vector_at(ed->args, 0) == initial_node );
+		NOLL_DEBUG("Neighbour of the initial node: %u\n", noll_vector_at(ed->args, 1));
+	}
+
+
+
+
+
+
+
+
+
 
 	noll_marking_list_delete(markings);
 

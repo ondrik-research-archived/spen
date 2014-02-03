@@ -24,6 +24,7 @@
  */
 
 #include "noll.h"
+#include "noll_ta_symbols.h"
 
 /*
  * ======================================================================
@@ -75,6 +76,7 @@ noll_init ()
   //TODO:remove noll_vars_init();
   noll_pred_init ();
   noll_entl_init ();
+	noll_ta_symbol_init();
 }
 
 /*
