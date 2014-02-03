@@ -424,29 +424,22 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			noll_uid_array_push(selectors, ed->label);
 		}
 
-		NOLL_DEBUG("Inserting transition q%lu -> <(", i);
-		for (size_t j = 0; j < noll_vector_size(selectors); ++j)
-		{
-			NOLL_DEBUG("%s, ", noll_field_name(noll_vector_at(selectors, j)));
-		}
-		NOLL_DEBUG(">(");
+		const noll_ta_symbol_t* symbol = noll_ta_symbol_create(selectors);
+		assert(NULL != symbol);
+
+		NOLL_DEBUG("Inserting transition q%lu -> %s", i, noll_ta_symbol_get_str(symbol));
+		NOLL_DEBUG("(");
 		for (size_t j = 0; j < noll_vector_size(children); ++j)
 		{
 			NOLL_DEBUG("q%u, ", noll_vector_at(children, j));
 		}
-
 		NOLL_DEBUG(")\n");
+
+		NOLL_DEBUG("Adding transition over %s\n", noll_ta_symbol_get_str(symbol));
 
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
-
-		const noll_ta_symbol_t* symbol = noll_ta_symbol_create(selectors);
-		assert(NULL != symbol);
 	}
-
-
-
-
 
 	NOLL_DEBUG("Starting traversing the edges\n");
 	assert(NULL != g->mat);

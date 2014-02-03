@@ -48,6 +48,24 @@ void noll_ta_symbol_init(void);
 
 
 /**
+ * @brief  Destroys the database of symbols
+ *
+ * Releases allocated memory and does all the housekeeping.
+ */
+void noll_ta_symbol_destroy(void);
+
+
+/**
+ * @brief  Retrieves the human-readable textual representation of the symbol
+ *
+ * @param[in]  symb  The input symbol
+ *
+ * @returns  A human-readable represenation of @p symb
+ */
+const char* noll_ta_symbol_get_str(
+	const noll_ta_symbol_t*       symb);
+
+/**
  * @brief  Creates a TA symbol
  *
  * The TA symbols are managed in a global database and the procedure first
