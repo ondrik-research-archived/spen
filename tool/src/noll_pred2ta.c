@@ -63,7 +63,8 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 	NOLL_DEBUG("WARNING: Generating fixed TA for the predicate lso\n");
   vata_set_state_root(ta, 1);
 
-  /* vata_state_t children[] = {2}; */
+	noll_uid_array* children = noll_uid_array_new();
+	noll_uid_array_push(children, 2);
 
   // here, we should add the symbols into a list (tree? some other set?)
 
@@ -73,11 +74,22 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   /* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
   /* vata_symbol_t* symbol_out       = "<> [out]"; */
 
-  /* vata_add_transition(ta, 1, symbol_f_in_mf  , children, 1); */
+	// this works only for the lso predicate
+	uid_t f_uid = noll_field_array_find("f");
+	assert(UNDEFINED_ID != f_uid);
+
+	noll_uid_array* selectors = noll_uid_array_new();
+	noll_uid_array_push(selectors, f_uid);
+
+	const noll_ta_symbol_t* symbol_f = noll_ta_symbol_create(selectors);
+
+  vata_add_transition(ta, 1, symbol_f  , children);
   /* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
-  /* vata_add_transition(ta, 2, symbol_f_mf     , children, 1); */
+  vata_add_transition(ta, 2, symbol_f  , children);
   /* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
-  /* vata_add_transition(ta, 2, symbol_out      , NULL    , 0); */
+
+	noll_uid_array_delete(children);
+	noll_uid_array_delete(selectors);
 
 	return ta;
 }
