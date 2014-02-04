@@ -22,7 +22,7 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to time automata
+ * Defines translation between heap graph to tree automata
  */
 #ifndef NOLL_GRAPH2TA_H_
 #define NOLL_GRAPH2TA_H_

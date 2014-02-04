@@ -22,7 +22,7 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to time automata
+ * Defines translation between heap graph to tree automata
  */
 
 #include "noll.h"
