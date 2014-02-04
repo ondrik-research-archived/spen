@@ -31,9 +31,9 @@
 typedef struct noll_ta_symbol_t
 {
 	/// The selectors
-	const noll_uid_array* sels;
+	noll_uid_array* sels;
 	/// The string representation (for humans)
-	const char* str;
+	char* str;
 } noll_ta_symbol_t;
 
 // a database of symbols
@@ -112,7 +112,7 @@ const char* noll_ta_symbol_get_str(
  *           human-readable representation of the symbol. After the return, the
  *           caller is responsible for deallocating this block.
  */
-const char* noll_sels_to_string_symbol(
+char* noll_sels_to_string_symbol(
 	const noll_uid_array*           sels)
 {
 	// check that the caller is not mischievous
@@ -168,13 +168,25 @@ void noll_ta_symbol_init()
 
 void noll_ta_symbol_destroy()
 {
-	assert(false);
+	assert(NULL != g_ta_symbols);
+
+	for (size_t i = 0; i < noll_vector_size(g_ta_symbols); ++i)
+	{
+		noll_ta_symbol_t* smb = noll_vector_at(g_ta_symbols, i);
+		assert(NULL != smb);
+		assert(NULL != smb->sels);
+		noll_uid_array_delete(smb->sels);
+		free(smb->str);
+		free(smb);
+	}
+
 	// NOT IMPLEMENTED!!!!
+	noll_ta_symbol_array_delete(g_ta_symbols);
 }
 
 
 /**
- * @brief  Attempts to find a given in the global database
+ * @brief  Attempts to find a given symbol in the global database
  *
  * @param[in]  symb  The symbol to be sought
  *
@@ -207,7 +219,9 @@ const noll_ta_symbol_t* noll_ta_symbol_create(
 	assert(NULL != g_ta_symbols);
 
 	noll_ta_symbol_t symb;
-	symb.sels = sels;
+
+	// this issues a warning because of the -Wcast-qual flag of GCC
+	symb.sels = (noll_uid_array*)sels;
 
 	const noll_ta_symbol_t* ret_symb;
 	if ((ret_symb = noll_ta_symbol_find(&symb)) != NULL)

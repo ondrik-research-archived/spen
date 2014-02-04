@@ -95,5 +95,7 @@ int main(int argc, char** argv) {
 	smtlib2_noll_parser_delete(sp);
 	fclose(f);
 	noll_entl_free();
+	noll_ta_symbol_destroy();   // destroy the TA symbol database
+
 	return 0;
 }
