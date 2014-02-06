@@ -313,6 +313,64 @@ static bool compute_markings(
 	return is_fine;
 }
 
+
+/**
+ * @brief  Checks whether a marking corresponds to a successor of another one
+ *
+ * This function checks that the marking @p node_marking of some node @p n can
+ * be achieved by extending the marking @p pred_marking of its predecessor @p p
+ * with the symbol @p symbol. This is used to check whether @p symbol denotes
+ * the @p backbone edge from @p n to @p p.
+ */
+bool noll_marking_is_succ_of_via(
+	const noll_uid_array*     node_marking,
+	const noll_uid_array*     pred_marking,
+	uid_t                     symbol)
+{
+	// check whether the parameters are sane
+	assert(NULL != node_marking);
+	assert(NULL != pred_marking);
+	assert(0 != noll_vector_size(node_marking));
+	assert(0 != noll_vector_size(pred_marking));
+
+	NOLL_DEBUG("Testing whether marking [");
+	for (size_t i = 0; i < noll_vector_size(node_marking); ++i)
+	{
+		NOLL_DEBUG("%d, ", noll_vector_at(node_marking, i));
+	}
+	NOLL_DEBUG("] is a successor of [");
+	for (size_t i = 0; i < noll_vector_size(pred_marking); ++i)
+	{
+		NOLL_DEBUG("%d, ", noll_vector_at(pred_marking, i));
+	}
+	NOLL_DEBUG("] via %u: ", symbol);
+
+	if (noll_vector_last(node_marking) != symbol)
+	{	// in the case the last symbol of the marking is not the checked symbol
+		NOLL_DEBUG("false\n");
+		return false;
+	}
+
+	int diff = noll_vector_size(node_marking) - noll_vector_size(pred_marking);
+	if ((0 != diff) && (1 != diff))
+	{	// if the backboneness is impossible
+		NOLL_DEBUG("false\n");
+		return false;
+	}
+
+	for (size_t i = 0; i < noll_vector_size(pred_marking); ++i)
+	{
+		if (noll_vector_at(pred_marking, i) != noll_vector_at(node_marking, i))
+		{	// in the case there is a mismatch
+			NOLL_DEBUG("false\n");
+			return false;
+		}
+	}
+
+	NOLL_DEBUG("true\n");
+	return true;
+}
+
 /* ====================================================================== */
 /* Translators */
 /* ====================================================================== */
@@ -430,6 +488,18 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			assert(noll_vector_at(ed->args, 0) == i);
 			uid_t next_child = noll_vector_at(ed->args, 1);
 			NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
+
+			NOLL_DEBUG("Now, we check whether we are on the backbone or not\n");
+			if (noll_marking_is_succ_of_via(noll_vector_at(markings, next_child),
+				noll_vector_at(markings, i), ed->label))
+			{
+				NOLL_DEBUG("We are on the backbone!\n");
+			}
+			else
+			{
+				NOLL_DEBUG("We are NOT on the backbone...\n");
+			}
+
 			noll_uid_array_push(children, next_child);
 			noll_uid_array_push(selectors, ed->label);
 		}

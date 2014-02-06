@@ -60,7 +60,7 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   //   q2 -> [out]
   //
 
-	NOLL_DEBUG("WARNING: Generating fixed TA for the predicate lso\n");
+	NOLL_DEBUG("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
   vata_set_state_root(ta, 1);
 
 	noll_uid_array* children = noll_uid_array_new();

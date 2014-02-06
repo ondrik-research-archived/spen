@@ -682,6 +682,7 @@ int noll_entl_solve(void) {
 
 	assert(NULL != noll_prob->ngraph);
 	assert(1 == noll_vector_size(noll_prob->ngraph));
+	NOLL_DEBUG("WARNING: checking only ngraph no. 0\n");
 	const noll_graph_t* pred_graph = noll_vector_at(noll_prob->ngraph, 0);
 	assert(NULL != pred_graph);
 	assert(NULL != pred_graph->lvars);
@@ -727,8 +728,20 @@ int noll_entl_solve(void) {
 	const noll_edge_t* pred_edge = noll_vector_at(pred_graph->edges, 0);
 	assert(NULL != pred_edge);
 	assert(NOLL_EDGE_PRED == pred_edge->kind);
+	assert(2 == noll_vector_size(pred_edge->args));
 	NOLL_DEBUG("predicate: %s\n", noll_pred_name(pred_edge->label));
 	const noll_pred_t* pred = noll_pred_getpred(pred_edge->label);
+
+	const noll_graph_t* proc_grpah = noll_prob->pgraph;
+	NOLL_DEBUG("Now, lets traverse noll_graph_t::share!\n");
+	assert(NULL != proc_grpah->share);
+	for (size_t i = 0; i < noll_vector_size(proc_grpah->share); ++i)
+	{
+		NOLL_DEBUG("Sharing: %p\n", noll_vector_at(proc_grpah->share, i));
+	}
+
+
+
 
 
 	noll_ta_t* pred_ta = noll_pred2ta(pred);
