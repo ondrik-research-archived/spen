@@ -520,7 +520,7 @@ void noll2sat_info(noll_form_t* form, noll_sat_t* res) {
 	fprintf (stdout, "]\n\t\t used preds: [");
 	for (uint_t i = 0; i < noll_vector_size(preds_array); i++)
 	if (res->finfo->used_pred[i] == true)
-	fprintf (stdout, "%s, ", ((noll_pred_t*) noll_vector_at(preds_array,i))->pname);
+	fprintf (stdout, "%s, ", (noll_pred_getpred(i))->pname);
 	fprintf (stdout, "]\n\t\t used fields: [");
 	for (uint_t i = 0; i < noll_vector_size(fields_array); i++)
 	if (res->finfo->used_flds[i] == true)
@@ -602,7 +602,7 @@ noll_sat_t* noll2sat_fill_bvar(noll_form_t* form, char* fname) {
 				noll_space_t * ls =
 						((noll_sat_space_t*) noll_vector_at(res->var_pred,lsi))->forig;
 				uint_t ls_pid = ls->m.ls.pid;
-				noll_pred_t* ls_pred = noll_vector_at(preds_array, ls_pid);
+				const noll_pred_t* ls_pred = noll_pred_getpred(ls_pid);
 				// see all fields of level 0 or 1
 				for (uint_t level = 0; level <= 1; level++) {
 					noll_uid_array* ls_flds =
@@ -683,8 +683,8 @@ int type_in_pred_of_svar(noll_sat_t* fsat, uint_t type, uint_t svar) {
 		noll_sat_space_t* ls_i = noll_vector_at(fsat->var_pred,i);
 		if (ls_i->forig->m.ls.sid != svar)
 			continue;
-		noll_pred_t * pred_i =
-				noll_vector_at (preds_array, ls_i->forig->m.ls.pid);
+		const noll_pred_t * pred_i =
+				noll_pred_getpred (ls_i->forig->m.ls.pid);
 		noll_pred_typing_t * typ_pred_i = pred_i->typ;
 		if (typ_pred_i->ptype0 == type)
 			return 1;
@@ -1325,7 +1325,7 @@ int noll2sat_membership(noll_sat_t* fsat) {
 		uint_t alpha_i = noll_vector_at(fsat->var_pred, i)->forig->m.ls.sid;
 #ifndef NDEBUG
 		fprintf (stdout,"---- predicate %s implies %s in %s\n",
-				noll_vector_at (preds_array,pid_i)->pname,
+				noll_pred_getpred (pid_i)->pname,
 				noll_vector_at (fsat->form->lvars, x_i)->vname,
 				noll_vector_at (fsat->form->svars, alpha_i)->vname);
 #endif
@@ -1362,7 +1362,7 @@ int noll2sat_membership(noll_sat_t* fsat) {
 					continue;// go to a new variable
 
 				// look at the fields of the predicate
-				noll_pred_t* pred = noll_vector_at (preds_array, pid_i);
+				const noll_pred_t* pred = noll_pred_getpred(pid_i);
 				int flag = 0; //used to print just once the index of the membership predicate
 				// and the 0 at the end of the clause
 				for (uint_t f = 0; f <= 1; f++) {
@@ -1536,7 +1536,7 @@ int noll2sat_det_pto_pred(noll_sat_t* fsat) {
 					noll_vector_at (sat_i->forig->m.pto.fields, sat_i->m.idx);
 			uid_t pid_j = sat_j->forig->m.ls.pid;
 			uid_t alpha_j = sat_j->forig->m.ls.sid;
-			noll_pred_t* pred_j = noll_vector_at (preds_array, pid_j);
+			const noll_pred_t* pred_j = noll_pred_getpred(pid_j);
 			noll_uid_array* fields0 = pred_j->typ->pfields0;
 			// find if f_i is in fields0
 			int flag = 0;
@@ -1595,14 +1595,14 @@ int noll2sat_det_pred_pred(noll_sat_t* fsat) {
 			noll_sat_space_t* sat_i = noll_vector_at (fsat->var_pred, i);
 			noll_sat_space_t* sat_j = noll_vector_at (fsat->var_pred, j);
 			uid_t pid_i = sat_i->forig->m.ls.pid;
-			noll_pred_t* pred_i = noll_vector_at (preds_array, pid_i);
+			const noll_pred_t* pred_i = noll_pred_getpred(pid_i);
 			uid_t typ0_i = pred_i->typ->ptype0;
 			noll_uid_array* fields0_i = pred_i->typ->pfields0;
 
 			uid_t alpha_i = sat_i->forig->m.ls.sid;
 			uid_t pid_j = sat_j->forig->m.ls.pid;
 			uid_t alpha_j = sat_j->forig->m.ls.sid;
-			noll_pred_t* pred_j = noll_vector_at (preds_array, pid_j);
+			const noll_pred_t* pred_j = noll_pred_getpred(pid_j);
 			uid_t typ0_j = pred_i->typ->ptype0;
 			noll_uid_array* fields0_j = pred_j->typ->pfields0;
 

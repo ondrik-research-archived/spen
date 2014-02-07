@@ -156,7 +156,7 @@ void noll_graph_complete(noll_graph_t* g) {
 			// get the source of this edge
 			node = noll_vector_at(alpha_e->args,0);
 			// get the type of the node start of alpha = type of the predicate
-			node_ty = noll_vector_at(preds_array,alpha_pid)->typ->ptype0;
+			node_ty = noll_pred_getpred(alpha_pid)->typ->ptype0;
 			if ((alpha_ty != UNDEFINED_ID) && (alpha_ty != node_ty))
 				// alpha is projected on a inner type, thus not a program variable
 				// for this type in the edge bound to alpha
@@ -454,7 +454,7 @@ void noll_graph_get_edge_path(noll_graph_t* g, noll_edge_e kind, uint_t label,
 	// The negative case: for PRED edge, no edge found
 	if (uint_temp == 0) {
 		// try to match predicate definition
-		noll_pred_t* p = noll_vector_at(preds_array,label);
+		const noll_pred_t* p = noll_pred_getpred(label);
 		// init mapping of variables to nodes for this definition, UNDEFINED_ID if not known
 		noll_uid_array* mapvar = noll_uid_array_new();
 		for (uint_t i = 0; i < noll_vector_size(p->def->vars); i++)
@@ -627,7 +627,7 @@ int ***noll_graph_paths_fields(noll_graph_t* g, noll_uid_array* edge_set) {
 							&& in_set[ei]) ? 2 : 1;
 				}
 		} else if (e->kind == NOLL_EDGE_PRED) {
-			noll_pred_t* pred = noll_vector_at(preds_array,label);
+			const noll_pred_t* pred = noll_pred_getpred(label);
 			noll_uid_array* fields0 = pred->typ->pfields0;
 			for (uint_t fi = 0; fi < noll_vector_size(fields0); fi++) {
 				uint_t f = noll_vector_at(fields0,fi);

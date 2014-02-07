@@ -66,8 +66,8 @@ uid_t noll_pred_array_find(const char* name) {
 	if (preds_array && (noll_vector_size (preds_array) > 0)) {
 		uint_t sz = noll_vector_size (preds_array);
 		for (uint_t i = 0; i < sz; i++)
-			if (noll_vector_at (preds_array, i) && !strcmp(name,
-					noll_vector_at (preds_array, i)->pname))
+			if (noll_pred_getpred(i) && !strcmp(name,
+					noll_pred_getpred(i)->pname))
 				return i;
 	}
 	return UNDEFINED_ID;
@@ -84,7 +84,7 @@ uid_t noll_pred_register(const char* pname, noll_pred_binding_t* def) {
 uid_t noll_pred_typecheck_call(uid_t pid, uid_t* actuals_ty, uid_t size) {
 	if (pid == UNDEFINED_ID)
 		return UNDEFINED_ID;
-	noll_pred_t* p = noll_vector_at (preds_array, pid);
+	const noll_pred_t* p = noll_pred_getpred(pid);
 	if (size != p->def->fargs) {
 		// TODO: make error message
 		printf(

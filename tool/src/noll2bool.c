@@ -468,7 +468,7 @@ int bool_abstr_membership(noll_form_t* form, FILE *out) {
 #ifndef NDEBUG
 				fprintf (stdout,"Var %s in %s implies %s\n", t1->vname,
 						noll_vector_at (form->svars, svar)->vname,
-						noll_vector_at (preds_array, var_ls[i].predicate->pid)->pname);
+						noll_pred_getpred(var_ls[i].predicate->pid)->pname);
 #endif
 				fprintf(out, "-%d %d 0\n", encode_member(j, svar),
 						var_ls[i].index);
@@ -532,7 +532,7 @@ int bool_abstr_membership(noll_form_t* form, FILE *out) {
 	for (int i = 0; i < index_ls; i++) {
 #ifndef NDEBUG
 		fprintf (stdout,"predicate %s implies %s in %s\n",
-				noll_vector_at (preds_array, var_ls[i].predicate->pid)->pname,
+				noll_pred_getpred(var_ls[i].predicate->pid)->pname,
 				noll_vector_at (form->lvars,
 						noll_vector_at (var_ls[i].predicate->args,0))->vname,
 				noll_vector_at (form->svars, var_ls[i].predicate->sid)->vname);
@@ -572,7 +572,7 @@ int bool_abstr_membership(noll_form_t* form, FILE *out) {
 
 			int pid = get_pred_of_svar(j);
 			if (pid >= 0) { //the set of locations variable is bound to a predicate pid
-				noll_pred_t* pred = noll_vector_at (preds_array, pid);
+				const noll_pred_t* pred = noll_pred_getpred(pid);
 				noll_uid_array* f_array = pred->typ->pfields0;
 
 				//write x in alpha => disjunction of points-to with no destination
@@ -673,7 +673,7 @@ int type_in_predicate_of_svar(uint_t type, uint_t svar) {
 		return -1;
 	uint_t i = (uint_t) ls_i;
 
-	noll_pred_t * pred = noll_vector_at (preds_array, var_ls[i].predicate->pid);
+	const noll_pred_t * pred = noll_pred_getpred(var_ls[i].predicate->pid);
 	noll_pred_typing_t * pred_ty = pred->typ;
 	if (pred_ty->ptype0 == type)
 		return 1;
@@ -829,8 +829,8 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 			uint_t svar = var_ls[j].predicate->sid;
 			uint_t lvar = var_pto[i].points_to->sid;
 			uint_t field = noll_vector_at (var_pto[i].points_to->fields, 0);
-			noll_pred_t* pred =
-					noll_vector_at (preds_array, var_ls[j].predicate->pid);
+			const noll_pred_t* pred =
+					noll_pred_getpred(var_ls[j].predicate->pid);
 			noll_uid_array* fields0 = pred->typ->pfields0;
 			// fields_level0_pred_array[ var_ls[j].predicate->pid ];
 			int flag = 0;
@@ -854,8 +854,7 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 						fprintf (stdout, "Var: %s, Field: %s, Predicate: %s, SVar: %s\n",
 								noll_vector_at (form->lvars, lvar)->vname,
 								noll_vector_at (fields_array, field)->name,
-								noll_vector_at (preds_array,
-										var_ls[j].predicate->pid)->pname,
+								noll_pred_getpred(var_ls[j].predicate->pid)->pname,
 								noll_vector_at (form->svars,
 										var_ls[j].predicate->sid)->vname);
 #endif
@@ -931,8 +930,8 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 		for (uint_t j = i; j < noll_vector_size (preds_array); j++) {
 			common_fields[i][j] = 0;
 			common_fields[j][i] = 0;
-			noll_pred_t* pi = noll_vector_at (preds_array, i);
-			noll_pred_t* pj = noll_vector_at (preds_array, j);
+			const noll_pred_t* pi = noll_pred_getpred(i);
+			const noll_pred_t* pj = noll_pred_getpred(j);
 			noll_uid_array* fields01 = pi->typ->pfields0; //fields_level0_pred_array[i];
 			noll_uid_array* fields02 = pj->typ->pfields0; //fields_level0_pred_array[j];
 			for (uint_t t1 = 0; t1 < noll_vector_size (fields01); t1++)
@@ -943,8 +942,8 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 						common_fields[j][i] = 1;
 #ifndef NDEBUG
 						fprintf (stdout, "%s has common fields with %s\n",
-								noll_vector_at (preds_array, i)->pname,
-								noll_vector_at (preds_array, j)->pname);
+								noll_pred_getpred(i)->pname,
+								noll_pred_getpred(j)->pname);
 #endif
 						break;
 					}
@@ -965,10 +964,10 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 				uint_t svar2 = var_ls[j].predicate->sid;
 				uint_t pred1 = var_ls[i].predicate->pid;
 				uint_t pred2 = var_ls[j].predicate->pid;
-				noll_pred_t* pred1p =
-						noll_vector_at (preds_array, var_ls[i].predicate->pid);
-				noll_pred_t* pred2p =
-						noll_vector_at (preds_array, var_ls[j].predicate->pid);
+				const noll_pred_t* pred1p =
+						noll_pred_getpred (var_ls[i].predicate->pid);
+				const noll_pred_t* pred2p =
+						noll_pred_getpred (var_ls[j].predicate->pid);
 				uint_t type1 = noll_vector_at (fields_array,
 						noll_vector_at (pred1p->typ->pfields0, 0))->src_r;
 				uint_t type2 = noll_vector_at (fields_array,
@@ -982,8 +981,8 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 										== noll_vector_at (noll_vector_at (form->lvars, k)->vty->args, 0))) {
 #ifndef NDEBUG
 							fprintf (stdout,"Pred1: %s, Pred2: %s, Var1: %s, Var2: %s\n",
-									noll_vector_at (preds_array, pred1)->pname,
-									noll_vector_at (preds_array, pred2)->pname,
+									noll_pred_getpred(pred1)->pname,
+									noll_pred_getpred(pred2)->pname,
 									noll_vector_at (form->lvars, k)->vname,
 									noll_vector_at (form->lvars, t)->vname);
 #endif

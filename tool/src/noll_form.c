@@ -379,7 +379,7 @@ void noll_form_fill_type(noll_space_t* form, noll_uid_array* flds,
 		break;
 	}
 	case NOLL_SPACE_LS: {
-		noll_pred_t* pred = noll_vector_at (preds_array, form->m.ls.pid);
+		const noll_pred_t* pred = noll_pred_getpred(form->m.ls.pid);
 		if (pred && pred->typ) {
 			// copy pred information in the arrays
 			if (pred->typ->pfields0)
@@ -498,7 +498,7 @@ void noll_space_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
 		break;
 	}
 	case NOLL_SPACE_LS: {
-		noll_pred_t* pred = noll_vector_at (preds_array, phi->m.ls.pid);
+		const noll_pred_t* pred = noll_pred_getpred(phi->m.ls.pid);
 		fprintf(f, "(%s_", pred->pname);
 		if (svars == NULL)
 			fprintf(f, "*%d", phi->m.ls.sid);
