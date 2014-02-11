@@ -731,6 +731,7 @@ int noll_entl_solve(void) {
 	assert(2 == noll_vector_size(pred_edge->args));
 	NOLL_DEBUG("predicate: %s\n", noll_pred_name(pred_edge->label));
 	const noll_pred_t* pred = noll_pred_getpred(pred_edge->label);
+	assert(NULL != pred);
 
 	const noll_graph_t* proc_grpah = noll_prob->pgraph;
 	NOLL_DEBUG("Now, lets traverse noll_graph_t::share!\n");
@@ -739,7 +740,6 @@ int noll_entl_solve(void) {
 	{
 		NOLL_DEBUG("Sharing: %p\n", noll_vector_at(proc_grpah->share, i));
 	}
-
 
 
 

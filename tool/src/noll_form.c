@@ -499,6 +499,7 @@ void noll_space_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
 	}
 	case NOLL_SPACE_LS: {
 		const noll_pred_t* pred = noll_pred_getpred(phi->m.ls.pid);
+		assert(NULL != pred);
 		fprintf(f, "(%s_", pred->pname);
 		if (svars == NULL)
 			fprintf(f, "*%d", phi->m.ls.sid);

@@ -85,6 +85,7 @@ uid_t noll_pred_typecheck_call(uid_t pid, uid_t* actuals_ty, uid_t size) {
 	if (pid == UNDEFINED_ID)
 		return UNDEFINED_ID;
 	const noll_pred_t* p = noll_pred_getpred(pid);
+	assert(NULL != p);
 	if (size != p->def->fargs) {
 		// TODO: make error message
 		printf(
@@ -120,7 +121,7 @@ const noll_pred_t* noll_pred_getpred(uid_t pid)
 	return noll_vector_at(preds_array, pid);
 }
 
-char*
+const char*
 noll_pred_name(uid_t pid) {
 	const noll_pred_t* pred = NULL;
 	if ((pred = noll_pred_getpred(pid)) == NULL) {

@@ -603,6 +603,7 @@ noll_sat_t* noll2sat_fill_bvar(noll_form_t* form, char* fname) {
 						((noll_sat_space_t*) noll_vector_at(res->var_pred,lsi))->forig;
 				uint_t ls_pid = ls->m.ls.pid;
 				const noll_pred_t* ls_pred = noll_pred_getpred(ls_pid);
+				assert(NULL != ls_pred);
 				// see all fields of level 0 or 1
 				for (uint_t level = 0; level <= 1; level++) {
 					noll_uid_array* ls_flds =
@@ -685,6 +686,7 @@ int type_in_pred_of_svar(noll_sat_t* fsat, uint_t type, uint_t svar) {
 			continue;
 		const noll_pred_t * pred_i =
 				noll_pred_getpred (ls_i->forig->m.ls.pid);
+		assert(NULL != pred_i);
 		noll_pred_typing_t * typ_pred_i = pred_i->typ;
 		if (typ_pred_i->ptype0 == type)
 			return 1;
@@ -1363,6 +1365,7 @@ int noll2sat_membership(noll_sat_t* fsat) {
 
 				// look at the fields of the predicate
 				const noll_pred_t* pred = noll_pred_getpred(pid_i);
+				assert(NULL != pred);
 				int flag = 0; //used to print just once the index of the membership predicate
 				// and the 0 at the end of the clause
 				for (uint_t f = 0; f <= 1; f++) {
@@ -1537,6 +1540,7 @@ int noll2sat_det_pto_pred(noll_sat_t* fsat) {
 			uid_t pid_j = sat_j->forig->m.ls.pid;
 			uid_t alpha_j = sat_j->forig->m.ls.sid;
 			const noll_pred_t* pred_j = noll_pred_getpred(pid_j);
+			assert(NULL != pred_j);
 			noll_uid_array* fields0 = pred_j->typ->pfields0;
 			// find if f_i is in fields0
 			int flag = 0;
@@ -1596,6 +1600,7 @@ int noll2sat_det_pred_pred(noll_sat_t* fsat) {
 			noll_sat_space_t* sat_j = noll_vector_at (fsat->var_pred, j);
 			uid_t pid_i = sat_i->forig->m.ls.pid;
 			const noll_pred_t* pred_i = noll_pred_getpred(pid_i);
+			assert(NULL != pred_i);
 			uid_t typ0_i = pred_i->typ->ptype0;
 			noll_uid_array* fields0_i = pred_i->typ->pfields0;
 
@@ -1603,6 +1608,7 @@ int noll2sat_det_pred_pred(noll_sat_t* fsat) {
 			uid_t pid_j = sat_j->forig->m.ls.pid;
 			uid_t alpha_j = sat_j->forig->m.ls.sid;
 			const noll_pred_t* pred_j = noll_pred_getpred(pid_j);
+			assert(NULL != pred_j);
 			uid_t typ0_j = pred_i->typ->ptype0;
 			noll_uid_array* fields0_j = pred_j->typ->pfields0;
 

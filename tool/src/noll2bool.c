@@ -573,6 +573,7 @@ int bool_abstr_membership(noll_form_t* form, FILE *out) {
 			int pid = get_pred_of_svar(j);
 			if (pid >= 0) { //the set of locations variable is bound to a predicate pid
 				const noll_pred_t* pred = noll_pred_getpred(pid);
+				assert(NULL != pred);
 				noll_uid_array* f_array = pred->typ->pfields0;
 
 				//write x in alpha => disjunction of points-to with no destination
@@ -674,6 +675,7 @@ int type_in_predicate_of_svar(uint_t type, uint_t svar) {
 	uint_t i = (uint_t) ls_i;
 
 	const noll_pred_t * pred = noll_pred_getpred(var_ls[i].predicate->pid);
+	assert(NULL != pred);
 	noll_pred_typing_t * pred_ty = pred->typ;
 	if (pred_ty->ptype0 == type)
 		return 1;
@@ -831,6 +833,7 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 			uint_t field = noll_vector_at (var_pto[i].points_to->fields, 0);
 			const noll_pred_t* pred =
 					noll_pred_getpred(var_ls[j].predicate->pid);
+			assert(NULL != pred);
 			noll_uid_array* fields0 = pred->typ->pfields0;
 			// fields_level0_pred_array[ var_ls[j].predicate->pid ];
 			int flag = 0;
@@ -931,7 +934,9 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 			common_fields[i][j] = 0;
 			common_fields[j][i] = 0;
 			const noll_pred_t* pi = noll_pred_getpred(i);
+			assert(NULL != pi);
 			const noll_pred_t* pj = noll_pred_getpred(j);
+			assert(NULL != pj);
 			noll_uid_array* fields01 = pi->typ->pfields0; //fields_level0_pred_array[i];
 			noll_uid_array* fields02 = pj->typ->pfields0; //fields_level0_pred_array[j];
 			for (uint_t t1 = 0; t1 < noll_vector_size (fields01); t1++)
@@ -966,8 +971,10 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 				uint_t pred2 = var_ls[j].predicate->pid;
 				const noll_pred_t* pred1p =
 						noll_pred_getpred (var_ls[i].predicate->pid);
+				assert(NULL != pred1p);
 				const noll_pred_t* pred2p =
 						noll_pred_getpred (var_ls[j].predicate->pid);
+				assert(NULL != pred2p);
 				uint_t type1 = noll_vector_at (fields_array,
 						noll_vector_at (pred1p->typ->pfields0, 0))->src_r;
 				uint_t type2 = noll_vector_at (fields_array,

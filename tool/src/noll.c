@@ -1512,7 +1512,9 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
       }
     case NOLL_F_PRED:
       {
-	fprintf (f, " (%s ", noll_pred_name (e->p.sid));
+	const char* pred_name = noll_pred_name (e->p.sid);
+	assert(NULL != pred_name);
+	fprintf (f, " (%s ", pred_name);
 	break;
       }
     case NOLL_F_EQ:
@@ -1872,7 +1874,8 @@ noll_mk_form_pred (noll_context_t * ctx, noll_exp_t * e)
   noll_uid_array *actuals = noll_uid_array_new ();
   noll_uid_array_reserve (actuals, e->size);
   uint_t *actuals_ty = (uint_t *) malloc (e->size * sizeof (uint_t));
-  char *pname = noll_pred_name (e->p.sid);
+  const char *pname = noll_pred_name (e->p.sid);
+	assert(NULL != pname);
   uint_t i;
   for (i = 0; i < e->size; i++)
     {

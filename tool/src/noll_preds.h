@@ -110,7 +110,7 @@ extern "C"
 	 */
   const noll_pred_t* noll_pred_getpred(uid_t pid);
 
-  char* noll_pred_name (uid_t pid);
+  const char* noll_pred_name (uid_t pid);
   /* Accessors */
 
   /* ====================================================================== */
