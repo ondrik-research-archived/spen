@@ -50,6 +50,53 @@ NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 static const uid_t NOLL_MARKINGS_EPSILON = -1;
 static const uid_t initial_node = 0;
 
+
+/* ====================================================================== */
+/* Debugging functions */
+/* ====================================================================== */
+
+void noll_debug_print_one_mark(const noll_uid_array* mark)
+{
+	if (NULL == mark)
+	{
+		NOLL_DEBUG("NULL");
+		return;
+	}
+
+	NOLL_DEBUG("[");
+	for (size_t i = 0; i < noll_vector_size(mark); ++i)
+	{
+		if (i != 0)
+		{
+			NOLL_DEBUG(", ");
+		}
+
+		NOLL_DEBUG("%d", noll_vector_at(mark, i));
+	}
+	NOLL_DEBUG("]");
+}
+
+
+/**
+ * @brief  Debugging output of markings
+ *
+ * @param[in]  markings  The markings to be printed
+ */
+void noll_debug_print_markings(const noll_marking_list* markings)
+{
+	assert(NULL != markings);
+
+	for (size_t j = 0; j < noll_vector_size(markings); ++j)
+	{
+		const noll_uid_array* mark = noll_vector_at(markings, j);
+		assert(NULL != mark);
+		NOLL_DEBUG("Node %lu: ", j);
+		noll_debug_print_one_mark(mark);
+		NOLL_DEBUG("\n");
+	}
+}
+
+
 /* ====================================================================== */
 /* Auxiliary functions */
 /* ====================================================================== */
@@ -61,7 +108,7 @@ static const uid_t initial_node = 0;
  * @param[in]  lhs  The left hand side field
  * @param[in]  rhs  The right hand side field
  *
- * @returns  @p true iff lhs <= rhs w.r.t. the field ordering, @p false
+ * @returns  @p true iff lhs < rhs w.r.t. the field ordering, @p false
  *           otherwise
  */
 static bool noll_fields_order_lt(
@@ -253,14 +300,8 @@ static bool compute_markings(
 		NOLL_DEBUG("Node %lu: {", i);
 		for (size_t j = 0; j < noll_vector_size(list); ++j)
 		{
-			const noll_uid_array* mark = noll_vector_at(list, j);
-			NOLL_DEBUG("[");
-			for (size_t k = 0; k < noll_vector_size(mark); ++k)
-			{
-				NOLL_DEBUG("%d, ", noll_vector_at(mark, k));
-			}
-
-			NOLL_DEBUG("], ");
+			noll_debug_print_one_mark(noll_vector_at(list, j));
+			NOLL_DEBUG(", ");
 		}
 		NOLL_DEBUG("}\n");
 	}
@@ -269,6 +310,7 @@ static bool compute_markings(
 	bool is_fine = true;
 	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
 	{
+		NOLL_DEBUG("Going over node %lu\n", i);
 		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
 		assert(NULL != list);
 		if (0 == noll_vector_size(list))
@@ -277,21 +319,38 @@ static bool compute_markings(
 			break;
 		}
 
+		assert(noll_vector_size(list) > 0);
 		noll_uid_array** ptr_least_marking = &noll_vector_at(list, 0);
 		assert(NULL != ptr_least_marking);
 		assert(NULL != *ptr_least_marking);
 		for (size_t j = 1; j < noll_vector_size(list); ++j)
 		{
-			noll_uid_array* mark = noll_vector_at(list, j);
+			noll_uid_array** mark = &noll_vector_at(list, j);
 			assert(NULL != mark);
-			if (noll_marking_order_lt(mark, *ptr_least_marking))
+			assert(NULL != *mark);
+			if (noll_marking_order_lt(*mark, *ptr_least_marking))
 			{
-				ptr_least_marking = &mark;
+				ptr_least_marking = mark;
 			}
 		}
 
 		noll_vector_at(markings, i) = *ptr_least_marking;
 		*ptr_least_marking = NULL;
+	}
+
+	NOLL_DEBUG("Before killing\n");
+	// print the computed markings
+	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	{
+		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		assert(NULL != list);
+		NOLL_DEBUG("Node %lu: {", i);
+		for (size_t j = 0; j < noll_vector_size(list); ++j)
+		{
+			noll_debug_print_one_mark(noll_vector_at(list, j));
+			NOLL_DEBUG(", ");
+		}
+		NOLL_DEBUG("}\n");
 	}
 
 	// delete markings
@@ -321,6 +380,13 @@ static bool compute_markings(
  * be achieved by extending the marking @p pred_marking of its predecessor @p p
  * with the symbol @p symbol. This is used to check whether @p symbol denotes
  * the @p backbone edge from @p n to @p p.
+ *
+ * @param[in]  node_marking  Marking of node @p n
+ * @param[in]  pred_marking  Marking of node @p p
+ * @param[in]  symbol        The symbol of the edge between @p p and @p n
+ *
+ * @returns  @p true if @p node_marking is the successor of @p prev_marking
+ *           over the edge labelled with @p symbol
  */
 bool noll_marking_is_succ_of_via(
 	const noll_uid_array*     node_marking,
@@ -435,17 +501,7 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	NOLL_DEBUG("Least markings:\n");
 
 	// print the computed markings
-	for (size_t i = 0; i < noll_vector_size(markings); ++i)
-	{
-		const noll_uid_array* mark = noll_vector_at(markings, i);
-		assert(NULL != mark);
-		NOLL_DEBUG("Node %lu: [", i);
-		for (size_t j = 0; j < noll_vector_size(mark); ++j)
-		{
-			NOLL_DEBUG("%d, ", noll_vector_at(mark, j));
-		}
-		NOLL_DEBUG("]\n");
-	}
+	noll_debug_print_markings(markings);
 
 	NOLL_DEBUG("Generating the TA for the graph\n");
   vata_ta_t* ta = NULL;
@@ -462,8 +518,6 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	// state 'i'
 	for (size_t i = 0; i < g->nodes_size; ++i)
 	{
-		NOLL_DEBUG("Processing node %lu\n", i);
-
 		const noll_uid_array* edges = g->mat[i];
 		if (NULL == edges)
 		{	// if there are no edges leaving 'i'
@@ -489,9 +543,11 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			uid_t next_child = noll_vector_at(ed->args, 1);
 			NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
 
-			NOLL_DEBUG("Now, we check whether we are on the backbone or not\n");
-			if (noll_marking_is_succ_of_via(noll_vector_at(markings, next_child),
-				noll_vector_at(markings, i), ed->label))
+			NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", field_name, i, next_child);
+			if (noll_marking_is_succ_of_via(
+				noll_vector_at(markings, next_child),
+				noll_vector_at(markings, i),
+				ed->label))
 			{
 				NOLL_DEBUG("We are on the backbone!\n");
 			}
@@ -547,6 +603,8 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 		assert(noll_vector_at(ed->args, 0) == initial_node );
 		NOLL_DEBUG("Neighbour of the initial node: %u\n", noll_vector_at(ed->args, 1));
 	}
+
+
 
 
 
