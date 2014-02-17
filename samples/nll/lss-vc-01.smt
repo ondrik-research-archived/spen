@@ -6,13 +6,13 @@
 (declare-fun next2 () (Field Sll_t Sll_t))
 
 ; singly-linked list
-(define-fun lsso ((?in SLL_t) (?out SLL_t))
+(define-fun lsso ((?in Sll_t) (?out Sll_t))
   Space (tospace (or (= ?in ?out) 
-    (exists ((?u SLL_t)) (tobool (ssep
+    (exists ((?u Sll_t)) (tobool (ssep
       (pto ?in (sref
 				(ref next1 ?u)
 				(ref next2 ?u)))
-      (lso ?u ?out))
+      (lsso ?u ?out))
 )))))
 
 (declare-fun x_emp () Sll_t)
