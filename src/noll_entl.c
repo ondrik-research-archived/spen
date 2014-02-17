@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #include "noll.h"
+#include "noll_form.h"
 #include "noll_entl.h"
 #include "noll2bool.h" // for old normalization call
 #include "noll2graph.h"
@@ -530,8 +531,7 @@ int noll_entl_to_homomorphism(void) {
 	fprintf (stdout, "*** check-sat: test homomorphism:\n");
 #endif
 
-	res = noll_graph_homomorphism(noll_vector_at(noll_prob->ngraph,0), // TODO: change for \/
-			noll_prob->pgraph);
+	res = noll_graph_homomorphism();
 
 #ifndef NDEBUG
 	fprintf (stdout, "*** check-sat: homomorphism found = \n");
@@ -563,24 +563,23 @@ int noll_entl_to_homomorphism(void) {
  * @return 1 if satisfiable, 0 if unsat, -1 if not known
  */
 int noll_entl_solve_special(void) {
-// commented out becase noll_form_is_unsat() could not be found
-//	if (((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform))
-//			|| ((noll_prob->nform != NULL)
-//					&& noll_form_array_is_valid(noll_prob->nform))) {
-//#ifndef NDEBUG
-//		fprintf (stdout, "*** check-sat: special case 0 ...\n");
-//#endif
-//		return 0;
-//	}
-//
-//	if ((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform)
-//			&& ((noll_prob->nform == NULL)
-//					|| noll_form_array_is_unsat(noll_prob->nform))) {
-//#ifndef NDEBUG
-//		fprintf (stdout, "*** check-sat: special case 1 ...\n");
-//#endif
-//		return 1;
-//	}
+	if (((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform))
+			|| ((noll_prob->nform != NULL)
+					&& noll_form_array_is_valid(noll_prob->nform))) {
+#ifndef NDEBUG
+		fprintf (stdout, "*** check-sat: special case 0 ...\n");
+#endif
+		return 0;
+	}
+
+	if ((noll_prob->pform != NULL) && noll_form_is_unsat(noll_prob->pform)
+			&& ((noll_prob->nform == NULL)
+					|| noll_form_array_is_unsat(noll_prob->nform))) {
+#ifndef NDEBUG
+		fprintf (stdout, "*** check-sat: special case 1 ...\n");
+#endif
+		return 1;
+	}
 	if (((noll_prob->nform != NULL)
 			&& (!noll_form_array_is_valid(noll_prob->nform))
 			&& (noll_prob->pform == NULL))
@@ -659,9 +658,9 @@ int noll_entl_solve(void) {
 	/*
 	 * Check graph homomorphism
 	 */
-// build homomorphism from right to left
+	/* build homomorphism from right to left */
 	res = noll_entl_to_homomorphism();
-// sharing constraints in pos_graph are updated and tested!
+    /* sharing constraints in pos_graph are updated and tested! */
 	if (!res)
 		goto check_end;
 

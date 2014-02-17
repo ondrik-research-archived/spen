@@ -37,13 +37,39 @@
 /* Datatypes */
 /* ====================================================================== */
 
-// TODO: extract homomorphism type
-#define noll_hom_t  void
+typedef struct noll_shom_s {
+	size_t ngraph;              /* idx of the negative graph in prob */
+	
+	bool is_empty;              /* true if no hom found */
+	                            /* if false, the elements below are empty */
+	/* the fields below maps 
+	 * an element from ngraph 
+	 * to one or a set of elements from pgraph */
+	uint_t           *node_hom; /* node mapping */
+	noll_uid_array   *pto_hom;  /* pto edge mapping */
+	noll_graph_array *ls_hom;   /* list segment (predicate) edge mapping */
+	
+	noll_uid_array   *pused;    /* edges of pgraph used in this hom 
+								 * of size size(noll_prob->pgraph->edges) */
+	
+} noll_shom_t;
+
+NOLL_VECTOR_DECLARE (noll_shom_array, noll_shom_t *);
+
+typedef struct noll_hom_s { 
+	bool is_empty;              /* true if no hom found */
+	                            /* if false, the array below is not complete */
+	                                    
+	noll_shom_array* shom;      /* array of size ngraph of simple hom */
+} noll_hom_t;
+	
 
 /* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
 
+noll_hom_t* noll_hom_alloc(void);
+/* Allocate a homomorphism for the crt problem. */
 
 /* ====================================================================== */
 /* Getters/Setters */
@@ -60,8 +86,9 @@ void noll_hom_fprint(FILE* f, noll_hom_t* h);
 /* Solver */
 /* ====================================================================== */
 
-int noll_graph_homomorphism(noll_graph_t* g1, noll_graph_t* g2);
-/* Search an homomorphism from g1 (neg) to g2 (pos) to prove g2 |= g1. */
+int noll_graph_homomorphism(void);
+/* Search a homomorphism to prove noll_prob 
+ * from prob->ngraph to noll_prob->pgraph. */
 /*TODO
  * Returns 0 if there is no homomorphism from g1 to g2,
  * otherwise (a homomorphism exists) it updates

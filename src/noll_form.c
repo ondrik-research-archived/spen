@@ -420,6 +420,18 @@ void noll_form_fill_type(noll_space_t* form, noll_uid_array* flds,
 /* Getters/Setters */
 /* ====================================================================== */
 
+int noll_form_is_unsat (noll_form_t * phi) {
+    return phi->kind == NOLL_FORM_UNSAT;
+}
+ 
+int noll_form_is_sat (noll_form_t * phi) {
+    return phi->kind == NOLL_FORM_SAT;
+}
+
+int noll_form_is_valid (noll_form_t * phi) {
+    return phi->kind == NOLL_FORM_VALID;
+}
+
 int noll_form_array_is_unsat(noll_form_array* phi1_phiN) {
 	assert (phi1_phiN != NULL);
 
