@@ -39,6 +39,7 @@
  */
 vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   assert(NULL != p);
+	assert(NULL != p->pname);
 
   vata_ta_t* ta = NULL;
   if ((ta = vata_create_ta()) == NULL)
@@ -60,36 +61,60 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   //   q2 -> [out]
   //
 
-	NOLL_DEBUG("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
-  vata_set_state_root(ta, 1);
+	NOLL_DEBUG("Exposing the predicate structure\n");
+	assert(NULL != p->pname);
+	NOLL_DEBUG("Name: %s\n", p->pname);
+	const noll_pred_binding_t* def = p->def;
+	assert(NULL != def);
+	NOLL_DEBUG("definition:\n");
+	NOLL_DEBUG("  arguments: %lu\n", def->pargs);
+	NOLL_DEBUG("  formal arguments: %u\n", def->fargs);
+	assert(NULL != def->sigma_0);
 
-	noll_uid_array* children = noll_uid_array_new();
-	noll_uid_array_push(children, 2);
+	// just one points-to!
+	assert(NULL == def->sigma_1);
 
-  // here, we should add the symbols into a list (tree? some other set?)
+	NOLL_DEBUG("Sigma_0 kind: %u\n", def->sigma_0->kind);
+	NOLL_DEBUG("Sigma_0 is precise: %s\n", def->sigma_0->is_precise? "true":"false");
 
-  /* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
-  /* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
-  /* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
-  /* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
-  /* vata_symbol_t* symbol_out       = "<> [out]"; */
+	if (0 == strcmp(p->pname, "lso"))
+	{	// this is the "ls" predicate
+		NOLL_DEBUG("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
+		vata_set_state_root(ta, 1);
 
-	// this works only for the lso predicate
-	uid_t f_uid = noll_field_array_find("f");
-	assert(UNDEFINED_ID != f_uid);
+		noll_uid_array* children = noll_uid_array_new();
+		noll_uid_array_push(children, 2);
 
-	noll_uid_array* selectors = noll_uid_array_new();
-	noll_uid_array_push(selectors, f_uid);
+		// here, we should add the symbols into a list (tree? some other set?)
 
-	const noll_ta_symbol_t* symbol_f = noll_ta_symbol_create(selectors);
+		/* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
+		/* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
+		/* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
+		/* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
+		/* vata_symbol_t* symbol_out       = "<> [out]"; */
 
-  vata_add_transition(ta, 1, symbol_f  , children);
-  /* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
-  vata_add_transition(ta, 2, symbol_f  , children);
-  /* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
+		// this works only for the lso predicate
+		uid_t f_uid = noll_field_array_find("f");
+		assert(UNDEFINED_ID != f_uid);
 
-	noll_uid_array_delete(children);
-	noll_uid_array_delete(selectors);
+		noll_uid_array* selectors = noll_uid_array_new();
+		noll_uid_array_push(selectors, f_uid);
+
+		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_create(selectors);
+
+		vata_add_transition(ta, 1, symbol_f  , children);
+		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
+		vata_add_transition(ta, 2, symbol_f  , children);
+		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
+
+		noll_uid_array_delete(children);
+		noll_uid_array_delete(selectors);
+	}
+	else
+	{
+		NOLL_DEBUG("translation for predicate %s not implemented!\n", p->pname);
+		assert(false);
+	}
 
 	return ta;
 }
