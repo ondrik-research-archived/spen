@@ -667,6 +667,12 @@ int noll_entl_solve(void) {
 
 	// we should now check graphs that match using the homomorphism
 
+	NOLL_DEBUG("\n");
+	NOLL_DEBUG("================================================================================\n");
+	NOLL_DEBUG("=                    Translating a graph to a TA                               =\n");
+	NOLL_DEBUG("================================================================================\n");
+	NOLL_DEBUG("\n");
+
 	// Ondra's experiments follow:
 	assert(NULL != noll_prob);
 	assert(NULL != noll_prob->pgraph);
@@ -743,6 +749,11 @@ int noll_entl_solve(void) {
 
 
 
+	NOLL_DEBUG("\n");
+	NOLL_DEBUG("================================================================================\n");
+	NOLL_DEBUG("=                    Translating a predicate to a TA                           =\n");
+	NOLL_DEBUG("================================================================================\n");
+	NOLL_DEBUG("\n");
 
 	noll_ta_t* pred_ta = noll_pred2ta(pred);
 	assert(NULL != pred_ta);
