@@ -41,31 +41,31 @@ typedef enum
 /* Type for edges */
 typedef struct noll_edge_s
 {
-  noll_edge_e kind;		// kind of edge
-  noll_uid_array *args;		// array of nodes args[0] = src node, args[1] = dst node
-  uint_t label;			// index of the field or of the predicate
-  uint_t bound_svar;		// index of the set variable in slocs_array bounded to the edge, or UNDEFINED_ID
-  uint_t id;			// TODO: id of this edge
-  noll_uid_array *impl;		// array of edges implying this one or NULL
-  noll_uid_array *ssep;		// array of edges strongly separated from this one or NULL
+  noll_edge_e kind;       // kind of edge
+  noll_uid_array *args;   // array of nodes args[0] = src node, args[1] = dst node
+  uint_t label;           // index of the field or of the predicate
+  uint_t bound_svar;      // index of the set variable in slocs_array bounded to the edge, or UNDEFINED_ID
+  uint_t id;              // TODO: id of this edge
+  noll_uid_array *impl;   // array of edges implying this one or NULL (related to overlapping)
+  noll_uid_array *ssep;   // array of edges strongly separated from this one or NULL
 } noll_edge_t;
 
 NOLL_VECTOR_DECLARE (noll_edge_array, noll_edge_t *);
 
 typedef struct noll_graph_t
 {
-  uint_t nodes_size;		// the number of nodes in the graph
-  noll_var_array *lvars;	// graph environment
+  uint_t nodes_size;        // the number of nodes in the graph
+  noll_var_array *lvars;    // graph environment
   noll_var_array *svars;
-  uint_t *var2node;		// variables to node labels, array of size of lvars
-  noll_edge_array *edges;	// the set of edges in the graph, excluding difference
-  noll_uid_array **mat;		// adjacency matrix, mat[i] is the list of edge identifiers from node i
-  noll_uid_array **rmat;	// reverse adjacency matrix, rmat[i] is the list of edge identifiers to node i
-  bool **diff;			// low-diagonal matrix, diff[n1][n2] = true iff n1 != n2 and n1 > n2
-  uint_t *sloc2edge;		// mapping set variables to edges in graph
-  noll_share_array *share;	// TODO: sharing constraints (on set variables)
-  bool isComplete;		// if all implicit constraints have been computed
-  bool is_precise;		// if graph is precise
+  uint_t *var2node;         // variables to node labels, array of size of lvars
+  noll_edge_array *edges;   // the set of edges in the graph, excluding difference
+  noll_uid_array **mat;     // adjacency matrix, mat[i] is the list of edge identifiers from node i
+  noll_uid_array **rmat;    // reverse adjacency matrix, rmat[i] is the list of edge identifiers to node i
+  bool **diff;              // low-diagonal matrix, diff[n1][n2] = true iff n1 != n2 and n1 > n2
+  uint_t *sloc2edge;        // mapping set variables to edges in graph
+  noll_share_array *share;  // TODO: sharing constraints (on set variables) (related to overlapping)
+  bool isComplete;          // if all implicit constraints have been computed
+  bool is_precise;          // if graph is precise
 } noll_graph_t;
 
 NOLL_VECTOR_DECLARE (noll_graph_array, noll_graph_t *);
