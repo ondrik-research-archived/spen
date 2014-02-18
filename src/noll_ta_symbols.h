@@ -36,7 +36,7 @@ extern "C"
 /* Data types */
 /* ====================================================================== */
 
-typedef struct noll_ta_symbol_t noll_ta_symbol_t;
+typedef struct noll_ta_symbol noll_ta_symbol_t;
 
 /* ====================================================================== */
 /* Functionz */

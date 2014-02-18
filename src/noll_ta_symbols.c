@@ -28,10 +28,19 @@
 /* Data typez */
 /* ====================================================================== */
 
-typedef struct noll_ta_symbol_t
+typedef struct noll_tree_node_label
+{
+
+} noll_tree_node_label_t;
+
+typedef struct noll_ta_symbol
 {
 	/// The selectors
 	noll_uid_array* sels;
+
+	/// The tree node label of the corresponding node
+	noll_tree_node_label_t* tree_node_lb;
+
 	/// The string representation (for humans)
 	char* str;
 } noll_ta_symbol_t;
@@ -59,7 +68,7 @@ static noll_ta_symbol_array* g_ta_symbols;
  *
  * @returns  @p true if @p lhs and @p rhs match, @p false otherwise
  */
-bool noll_ta_symbol_match(
+static bool noll_ta_symbol_match(
 	const noll_ta_symbol_t*       lhs,
 	const noll_ta_symbol_t*       rhs)
 {
@@ -68,6 +77,9 @@ bool noll_ta_symbol_match(
 	assert(NULL != rhs);
 	assert(NULL != lhs->sels);
 	assert(NULL != rhs->sels);
+
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": ignoring tree node labels\n");
 
 	if (noll_vector_size(lhs->sels) != noll_vector_size(rhs->sels))
 	{
@@ -99,20 +111,20 @@ const char* noll_ta_symbol_get_str(
 
 
 /**
- * @brief  Generates a string for a TA symbol from selectors
+ * @brief  Generates a string for a selectors
  *
  * This function generates a human-readable string for a textual representation
- * of a TA symbol composed from a vector of selectors. The function returns a
- * non-shared dynamically allocated memory block---it is the responsibility of
- * the caller to dispose of it.
+ * of a vector of selectors. The function returns a non-shared dynamically
+ * allocated memory block---it is the responsibility of the caller to dispose
+ * of it.
  *
  * @param[in]  sels  The selectors from which the symbol is to be composed
  *
  * @returns  Pointer to a dynamically allocated memory block with the
- *           human-readable representation of the symbol. After the return, the
- *           caller is responsible for deallocating this block.
+ *           human-readable representation of the selectors. After the return,
+ *           the caller is responsible for deallocating this block.
  */
-char* noll_sels_to_string_symbol(
+static char* noll_sels_to_string_symbol(
 	const noll_uid_array*           sels)
 {
 	// check that the caller is not mischievous
@@ -159,6 +171,32 @@ char* noll_sels_to_string_symbol(
 }
 
 
+/**
+ * @brief  Generates a string for a tree node label
+ *
+ * This functions generates a human-readable string for a textual
+ * representation of a tree node label. The function returns a non-shared
+ * dynamically allocated memory block---it is the responsibility of the caller
+ * to dispose of it.
+ *
+ * @param[in]  node_lb  The tree node label
+ *
+ * @returns  Pointer to a dynamically allocated memory block with the
+ *           human-readable representation of the tree node label. After the
+ *           return, the caller is responsible for deallocating this block.
+ */
+static char* noll_node_label_to_string(
+	const noll_tree_node_label_t*     node_lb)
+{
+	assert(NULL != node_lb);
+
+	char* str = malloc(strlen("NOT IMPLEMENTED") + 1);
+	strcpy(str, "NOT IMPLEMENTED");
+
+	return str;
+}
+
+
 void noll_ta_symbol_init()
 {
 	g_ta_symbols = noll_ta_symbol_array_new();
@@ -170,6 +208,9 @@ void noll_ta_symbol_destroy()
 {
 	assert(NULL != g_ta_symbols);
 
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": ignoring tree node labels\n");
+
 	for (size_t i = 0; i < noll_vector_size(g_ta_symbols); ++i)
 	{
 		noll_ta_symbol_t* smb = noll_vector_at(g_ta_symbols, i);
@@ -180,7 +221,6 @@ void noll_ta_symbol_destroy()
 		free(smb);
 	}
 
-	// NOT IMPLEMENTED!!!!
 	noll_ta_symbol_array_delete(g_ta_symbols);
 }
 
@@ -193,7 +233,7 @@ void noll_ta_symbol_destroy()
  * @returns  Either a pointer to the unique representation of the symbol @p
  *           symb if it exists, or @p NULL if it does not exist
  */
-const noll_ta_symbol_t* noll_ta_symbol_find(
+static const noll_ta_symbol_t* noll_ta_symbol_find(
 	const noll_ta_symbol_t*           symb)
 {
 	assert(NULL != symb);
@@ -211,12 +251,70 @@ const noll_ta_symbol_t* noll_ta_symbol_find(
 	return NULL;
 }
 
+
+/**
+ * @brief  Fills the string representation for a symbol
+ *
+ * This function fills in the string representation data field of a symbol
+ * according to the stored selectors and node labels.
+ *
+ * @param[in,out]  sym  The symbol to be modified
+ */
+static void noll_ta_symbol_fill_str(
+	noll_ta_symbol_t*            sym)
+{
+	assert(NULL != sym);
+	assert(NULL != sym->sels);
+	assert(NULL != sym->tree_node_lb);
+	assert(NULL == sym->str);     // we want the string to be empty
+
+	char* str_node_lb = noll_node_label_to_string(sym->tree_node_lb);
+	char* str_sels = noll_sels_to_string_symbol(sym->sels);
+
+	// TODO: the following might not have to be done if we return the length of
+	// the strings from the respective function calls
+	size_t len_node_lb = strlen(str_node_lb);
+	size_t len_sels = strlen(str_sels);
+	size_t total_len =
+		1 /* '[' */ +
+		1 /* '(' */ +
+		len_node_lb +
+		1 /* ')' */ +
+		1 /* ':' */ +
+		1 /* ' ' */ +
+		len_sels +
+		1 /* ']' */ +
+		1 /* '\0' */;
+
+	sym->str = malloc(total_len);
+	size_t index = 0;
+	sym->str[index++] = '[';
+	sym->str[index++] = '(';
+	strcpy(&sym->str[index], str_node_lb);
+	index += len_node_lb;
+	sym->str[index++] = ')';
+	sym->str[index++] = ':';
+	sym->str[index++] = ' ';
+	strcpy(&sym->str[index], str_sels);
+	index += len_sels;
+	sym->str[index++] = ']';
+	assert(index == total_len - 1);
+	sym->str[index] = '\0';
+
+	NOLL_DEBUG("WARNING: ");
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": ignoring tree node labels\n");
+}
+
 const noll_ta_symbol_t* noll_ta_symbol_create(
 	const noll_uid_array*            sels)
 {
 	// check for the input parameters
 	assert(NULL != sels);
 	assert(NULL != g_ta_symbols);
+
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": ignoring tree node labels\n");
 
 	noll_ta_symbol_t symb;
 
@@ -231,12 +329,13 @@ const noll_ta_symbol_t* noll_ta_symbol_create(
 
 	noll_ta_symbol_t* alloc_symb = malloc(sizeof(*alloc_symb));
 	assert(NULL != alloc_symb);
+	alloc_symb->str = NULL;                       // clear the string
 	noll_uid_array* alloc_sels = noll_uid_array_new();
 	assert(NULL != alloc_sels);
-	noll_uid_array_copy(alloc_sels, sels);
+	noll_uid_array_copy(alloc_sels, sels);        // copy selectors
 	alloc_symb->sels = alloc_sels;
 
-	alloc_symb->str = noll_sels_to_string_symbol(sels);
+	noll_ta_symbol_fill_str(alloc_symb);          // compute the string
 	assert(NULL != alloc_symb->str);
 
 	NOLL_DEBUG("Inserting new symbol: %s\n", alloc_symb->str);
