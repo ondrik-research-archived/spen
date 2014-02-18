@@ -221,18 +221,9 @@ extern "C"
 /* Getters/Setters */
 /* ====================================================================== */
 
-  inline int noll_form_is_unsat (noll_form_t * phi)
-  {
-    return phi->kind == NOLL_FORM_UNSAT;
-  }
-  inline int noll_form_is_sat (noll_form_t * phi)
-  {
-    return phi->kind == NOLL_FORM_SAT;
-  }
-  inline int noll_form_is_valid (noll_form_t * phi)
-  {
-    return phi->kind == NOLL_FORM_VALID;
-  }
+  int noll_form_is_unsat (noll_form_t * phi);
+  int noll_form_is_sat (noll_form_t * phi);
+  int noll_form_is_valid (noll_form_t * phi);
 
   int noll_form_array_is_unsat (noll_form_array * phi1_phiN);
 /* All formulae shall be unsat */

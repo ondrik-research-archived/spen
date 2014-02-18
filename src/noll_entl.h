@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include "noll_form.h"
 #include "noll_graph.h"
+#include "noll_hom.h"
 #include "noll2sat.h"
 
 
@@ -66,7 +67,7 @@ typedef struct noll_entl_t {
 	noll_graph_t*     pgraph;   // graph for positive formula
 	noll_graph_array* ngraph;   // graphs for negative formulae
 
-	// TODO: add homomorphisms
+	noll_hom_t*       hom;      // homomorphism found
 } noll_entl_t;
 
 /* ====================================================================== */

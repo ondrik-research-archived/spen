@@ -25,10 +25,30 @@
  */
 
 #include "noll_hom.h"
+#include "noll_entl.h"
+
+NOLL_VECTOR_DEFINE (noll_shom_array, noll_shom_t*);
 
 /* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
+
+/* Allocate a homomorphism for the crt problem. */
+noll_hom_t* 
+noll_hom_alloc(void) {
+	
+	assert (noll_prob != NULL);
+	
+	noll_hom_t* h = (noll_hom_t*) malloc(sizeof(noll_hom_t));
+	h->is_empty = false;
+	h->shom = noll_shom_array_new();
+	size_t sz = noll_vector_size(noll_prob->ngraph);
+	assert (sz >= 1);
+	noll_shom_array_reserve(h->shom, noll_vector_size(noll_prob->ngraph));
+	
+	return h;
+}
+
 
 /* ====================================================================== */
 /* Getters/Setters */
@@ -791,16 +811,39 @@ int noll_graph_check_acyclicity(noll_graph_t* g, noll_uid_array* edge_set) {
 }
 
 /**
- * Find a homomorphism from g1 to g2.
- * If precise=true then it checks the additional conditions
- * required by the precise semantics
+ * Search a homomorphism to prove noll_prob.
+ * Store the homomorphism found in noll_prob->hom.
  */
-int noll_graph_homomorphism(noll_graph_t* g1, noll_graph_t* g2) {
+int noll_graph_shom(noll_hom_t* h, size_t i);
+int noll_graph_homomorphism(void) {
 
-	/*	for (uint_t i = 0; i < noll_vector_size (locs_array); i++)
-	 printf("%s(n%d),", noll_var_name(locs_array, i, NOLL_TYP_RECORD),
-	 g2->var2node[i]);
-	 printf("\n");*/
+	assert (noll_prob != NULL);
+	
+	/* allocate the homomorphism */
+	noll_hom_t* h = noll_hom_alloc();
+	
+	/* compute a simple homomorphism for each negative graph */
+	/* TODO: update with the algo for disjunctions */
+	int res = 1;
+	for (size_t i = 0; i < noll_vector_size(noll_prob->ngraph); i++) {
+		res = noll_graph_shom(h, i);
+		if (res == 0) {
+			break;
+		}
+	}
+	noll_prob->hom = h;
+	return res;
+}
+
+int 
+noll_graph_shom(noll_hom_t* hs, size_t i) {
+	
+	assert (hs != NULL);
+	
+    /* Only to make the code to compile */
+	noll_graph_t* g1 = noll_vector_at(noll_prob->ngraph,i);
+	noll_graph_t* g2 = noll_prob->pgraph;
+	
 
 	int res = 1;
 	uint_t* h = NULL; // for homomorphism,
