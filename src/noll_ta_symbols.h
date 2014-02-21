@@ -70,19 +70,69 @@ void noll_ta_symbol_destroy(void);
 const char* noll_ta_symbol_get_str(
 	const noll_ta_symbol_t*       symb);
 
+
 /**
- * @brief  Creates a TA symbol
+ * @brief  Creates a unique TA symbol of a non-aliased node
  *
  * The TA symbols are managed in a global database and the procedure first
  * attempts to find the given symbol in the database and only in the case it is
  * not present there it creates a new record and inserts it into the database.
  *
- * @todo fill the rest of parameters
+ * @param[in]  sels     The selectors (note that the order is important)
+ * @param[in]  vars     The variables aliased to the node (may be unordered,
+ *                      they will be sorted internally)
+ * @param[in]  marking  The marking of the node
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_create(
-	const noll_uid_array*            sels);
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_non_aliased(
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking);
+
+
+/**
+ * @brief  Creates a unique TA symbol of a node aliased to a variable
+ *
+ * The TA symbols are managed in a global database and the procedure first
+ * attempts to find the given symbol in the database and only in the case it is
+ * not present there it creates a new record and inserts it into the database.
+ *
+ * @param[in]  sels       The selectors (note that the order is important)
+ * @param[in]  vars       The variables aliased to the node (may be unordered,
+ *                        they will be sorted internally)
+ * @param[in]  marking    The marking of the node
+ * @param[in]  alias_var  The variable to which the node is aliased
+ *
+ * @returns  A unique pointer to the symbol
+ */
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking,
+	uid_t                            alias_var);
+
+
+/**
+ * @brief  Creates a unique TA symbol of a node aliased using a marking
+ *
+ * The TA symbols are managed in a global database and the procedure first
+ * attempts to find the given symbol in the database and only in the case it is
+ * not present there it creates a new record and inserts it into the database.
+ *
+ * @param[in]  sels           The selectors (note that the order is important)
+ * @param[in]  vars           The variables aliased to the node (may be unordered,
+ *                            they will be sorted internally)
+ * @param[in]  marking        The marking of the node
+ * @param[in]  alias_marking  The marking to which the node is aliased
+ *
+ * @returns  A unique pointer to the symbol
+ */
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking,
+	const noll_uid_array*            alias_marking);
 
 
 #ifdef	__cplusplus

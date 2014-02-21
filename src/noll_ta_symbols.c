@@ -28,9 +28,36 @@
 /* Data typez */
 /* ====================================================================== */
 
+/// Enumeration of possible aliasing of nodes
+enum
+{
+	NOLL_TREE_LABEL_ALIASING_NO,      ///< no aliasing is used
+	NOLL_TREE_LABEL_ALIASING_VARIABLE,///< a node with a program variable is aliased
+	NOLL_TREE_LABEL_ALIASING_MARKING, ///< marking is used as the relation
+};
+
 typedef struct noll_tree_node_label
 {
+	/// Variables that might alias with the node
+	noll_uid_array* vars;
 
+	/// The (least) marking of the node
+	noll_uid_array* marking;
+
+	/// The type of aliasing used
+	unsigned char aliasing_type;
+
+	union {
+		/// Marking of the aliased node (for aliasing type ==
+		/// NOLL_TREE_LABEL_ALIASING_MARKING)
+		/// TODO: would it be possible to store this in 'marking'? We might not
+		/// need both valid...
+		noll_uid_array* alias_marking;
+
+		/// Name of the variable the node is aliased to (for aliasing_type ==
+		/// NOLL_TREE_LABEL_ALIASING_VARIABLE)
+		uid_t alias_var;
+	};
 } noll_tree_node_label_t;
 
 typedef struct noll_ta_symbol
@@ -39,7 +66,7 @@ typedef struct noll_ta_symbol
 	noll_uid_array* sels;
 
 	/// The tree node label of the corresponding node
-	noll_tree_node_label_t* tree_node_lb;
+	noll_tree_node_label_t tree_node_lb;
 
 	/// The string representation (for humans)
 	char* str;
@@ -190,10 +217,147 @@ static char* noll_node_label_to_string(
 {
 	assert(NULL != node_lb);
 
-	char* str = malloc(strlen("NOT IMPLEMENTED") + 1);
-	strcpy(str, "NOT IMPLEMENTED");
+	static const size_t BUFFER_SIZE = 1024;
 
-	return str;
+	char* buffer = malloc(BUFFER_SIZE);
+	size_t index = 0;
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '{';
+
+	// first, let's print the variables
+	const noll_uid_array* vars = node_lb->vars;
+	assert(NULL != vars);
+	for (size_t i = 0; i < noll_vector_size(vars); ++i)
+	{
+		assert(index < BUFFER_SIZE);
+		index += snprintf(
+			&buffer[index],
+			BUFFER_SIZE - index,
+			"%u, ",
+			noll_vector_at(vars, i));
+	}
+
+	if (noll_vector_size(vars) > 0)
+	{
+		index -= 2;   // move at the position of the last ','
+	}
+
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '}';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ',';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ' ';
+
+	// second, let's print the marking
+	const noll_uid_array* marking = node_lb->marking;
+	assert(NULL != marking);
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '[';
+	for (size_t i = 0; i < noll_vector_size(marking); ++i)
+	{
+		assert(index < BUFFER_SIZE);
+		index += snprintf(
+			&buffer[index],
+			BUFFER_SIZE - index,
+			"%d, ",
+			noll_vector_at(marking, i));
+	}
+
+	if (noll_vector_size(marking) > 0)
+	{
+		index -= 2;   // move at the position of the last ','
+	}
+
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ']';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ',';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ' ';
+
+	switch (node_lb->aliasing_type)
+	{
+		case NOLL_TREE_LABEL_ALIASING_NO:
+		{
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '_';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '|';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '_';
+
+			break;
+		}
+
+		case NOLL_TREE_LABEL_ALIASING_VARIABLE:
+		{
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = 's';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '0';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '(';
+
+			assert(index < BUFFER_SIZE);
+			index += snprintf(
+				&buffer[index],
+				BUFFER_SIZE - index,
+				"%u, ",
+				node_lb->alias_var);
+
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = ')';
+
+			break;
+		}
+
+		case NOLL_TREE_LABEL_ALIASING_MARKING:
+		{
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = 's';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '(';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '[';
+
+			const noll_uid_array* marking = node_lb->alias_marking;
+			assert(NULL != marking);
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = '[';
+			for (size_t i = 0; i < noll_vector_size(marking); ++i)
+			{
+				assert(index < BUFFER_SIZE);
+				index += snprintf(
+					&buffer[index],
+					BUFFER_SIZE - index,
+					"%d, ",
+					noll_vector_at(marking, i));
+			}
+
+			if (noll_vector_size(marking) > 0)
+			{
+				index -= 2;   // move at the position of the last ','
+			}
+
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = ']';
+			assert(index < BUFFER_SIZE);
+			buffer[index++] = ')';
+
+			break;
+		}
+
+		default:
+		{
+			NOLL_DEBUG("ERROR: Invalid value of node_lb->aliasing_type\n");
+			assert(false);
+		}
+	}
+
+	// just to make sure the string is always NULL-terminated
+	buffer[BUFFER_SIZE-1] = '\0';
+	return buffer;
 }
 
 
@@ -204,21 +368,70 @@ void noll_ta_symbol_init()
 }
 
 
+/**
+ * @brief  A function to safely deallocate a TA symbol
+ *
+ * This function releases the memory allocated by a TA symbol. After the call
+ * to the function, @p sym is invalid and the memory deallocated.
+ *
+ * @param[in,out]  sym  The symbol to be killed
+ */
+static void noll_ta_symbol_kill(
+	noll_ta_symbol_t*       sym)
+{
+	assert(NULL != sym);
+
+	assert(NULL != sym->sels);
+	noll_uid_array_delete(sym->sels);
+	if (NULL != sym->str)
+	{	// the string may not be allocated
+		free(sym->str);
+	}
+
+	assert(NULL != sym->tree_node_lb.vars);
+	noll_uid_array_delete(sym->tree_node_lb.vars);
+	assert(NULL != sym->tree_node_lb.marking);
+	noll_uid_array_delete(sym->tree_node_lb.marking);
+
+	switch (sym->tree_node_lb.aliasing_type)
+	{
+		case NOLL_TREE_LABEL_ALIASING_NO:
+		case NOLL_TREE_LABEL_ALIASING_VARIABLE:
+		{
+			// no reason to handle
+			break;
+		}
+
+		case NOLL_TREE_LABEL_ALIASING_MARKING:
+		{
+			assert(NULL != sym->tree_node_lb.alias_marking);
+			noll_uid_array_delete(sym->tree_node_lb.alias_marking);
+
+			break;
+		}
+
+		default:
+		{
+			NOLL_DEBUG("Invalid value of aliasing type\n");
+			assert(false);
+
+			break;
+		}
+	}
+
+	free(sym);
+}
+
+
 void noll_ta_symbol_destroy()
 {
 	assert(NULL != g_ta_symbols);
-
-	NOLL_DEBUG(__func__);
-	NOLL_DEBUG(": ignoring tree node labels\n");
 
 	for (size_t i = 0; i < noll_vector_size(g_ta_symbols); ++i)
 	{
 		noll_ta_symbol_t* smb = noll_vector_at(g_ta_symbols, i);
 		assert(NULL != smb);
-		assert(NULL != smb->sels);
-		noll_uid_array_delete(smb->sels);
-		free(smb->str);
-		free(smb);
+		noll_ta_symbol_kill(smb);
 	}
 
 	noll_ta_symbol_array_delete(g_ta_symbols);
@@ -265,10 +478,9 @@ static void noll_ta_symbol_fill_str(
 {
 	assert(NULL != sym);
 	assert(NULL != sym->sels);
-	assert(NULL != sym->tree_node_lb);
 	assert(NULL == sym->str);     // we want the string to be empty
 
-	char* str_node_lb = noll_node_label_to_string(sym->tree_node_lb);
+	char* str_node_lb = noll_node_label_to_string(&sym->tree_node_lb);
 	char* str_sels = noll_sels_to_string_symbol(sym->sels);
 
 	// TODO: the following might not have to be done if we return the length of
@@ -301,46 +513,174 @@ static void noll_ta_symbol_fill_str(
 	assert(index == total_len - 1);
 	sym->str[index] = '\0';
 
+	// remove the temporary strings
+	free(str_node_lb);
+	free(str_sels);
+
 	NOLL_DEBUG("WARNING: ");
 	NOLL_DEBUG(__func__);
 	NOLL_DEBUG(": ignoring tree node labels\n");
 }
 
-const noll_ta_symbol_t* noll_ta_symbol_create(
-	const noll_uid_array*            sels)
+
+static void noll_ta_symbol_fill_non_aliased(
+	noll_ta_symbol_t*                sym,
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking)
 {
-	// check for the input parameters
+	assert(NULL != sym);
 	assert(NULL != sels);
-	assert(NULL != g_ta_symbols);
+	assert(NULL != vars);
+	assert(NULL != marking);
 
-	NOLL_DEBUG(__func__);
-	NOLL_DEBUG(": ignoring tree node labels\n");
+	sym->tree_node_lb.aliasing_type = NOLL_TREE_LABEL_ALIASING_NO;
 
-	noll_ta_symbol_t symb;
-
-	// this issues a warning because of the -Wcast-qual flag of GCC
-	symb.sels = (noll_uid_array*)sels;
-
-	const noll_ta_symbol_t* ret_symb;
-	if ((ret_symb = noll_ta_symbol_find(&symb)) != NULL)
-	{
-		return ret_symb;
-	}
-
-	noll_ta_symbol_t* alloc_symb = malloc(sizeof(*alloc_symb));
-	assert(NULL != alloc_symb);
-	alloc_symb->str = NULL;                       // clear the string
+	sym->str = NULL;                       // clear the string
 	noll_uid_array* alloc_sels = noll_uid_array_new();
 	assert(NULL != alloc_sels);
 	noll_uid_array_copy(alloc_sels, sels);        // copy selectors
-	alloc_symb->sels = alloc_sels;
+	sym->sels = alloc_sels;
 
-	noll_ta_symbol_fill_str(alloc_symb);          // compute the string
-	assert(NULL != alloc_symb->str);
+	sym->tree_node_lb.vars = noll_uid_array_new();
+	assert(NULL != sym->tree_node_lb.vars);
+	sym->tree_node_lb.marking = noll_uid_array_new();
+	assert(NULL != sym->tree_node_lb.marking);
+	// implicit is no aliasing
+	sym->tree_node_lb.aliasing_type = NOLL_TREE_LABEL_ALIASING_NO;
 
-	NOLL_DEBUG("Inserting new symbol: %s\n", alloc_symb->str);
+	NOLL_DEBUG("WARNING: Creating fake tree node label\n");
 
-	noll_ta_symbol_array_push(g_ta_symbols, alloc_symb);
+	noll_uid_array_push(sym->tree_node_lb.vars, 1);
+	noll_uid_array_push(sym->tree_node_lb.vars, 2);
+	noll_uid_array_push(sym->tree_node_lb.vars, 3);
+
+	noll_uid_array_push(sym->tree_node_lb.marking, -1);
+	noll_uid_array_push(sym->tree_node_lb.marking, 1);
+	noll_uid_array_push(sym->tree_node_lb.marking, 2);
+	noll_uid_array_push(sym->tree_node_lb.marking, 3);
+}
+
+
+/**
+ * @brief  Allocates and pre-fills a TA symbol
+ *
+ * This function allocates a new TA symbol and pre-fills its data it is the
+ * responsibility of the caller to deallocate the returned symbol.
+ *
+ * @returns  An allocated TA symbol. It is the responsibility of the caller to
+ * deallocate it.
+ */
+static noll_ta_symbol_t* noll_ta_symbol_create(void)
+{
+	noll_ta_symbol_t* alloc_symb = calloc(1, sizeof(*alloc_symb));
+	assert(NULL != alloc_symb);
 
 	return alloc_symb;
+}
+
+
+/**
+ * @brief  Spawns a symbol by either finding in a DB or adding and returning
+ *
+ * This function, given the symbol @p symb, attempts to find @p symb in the
+ * global database of symbols and if it is found, @p symb is deleted and the
+ * found instance is returned, if not, then @p symb is added to the global
+ * database and pointer to the instance is returned.
+ *
+ * @param[in]  symb  The symbol to be spawned
+ *
+ * @returns  The spawned symbol
+ */
+static const noll_ta_symbol_t* noll_symbol_spawn(
+	noll_ta_symbol_t*            symb)
+{
+	assert(NULL != symb);
+
+	const noll_ta_symbol_t* ret_symb;
+	if ((ret_symb = noll_ta_symbol_find(symb)) != NULL)
+	{
+		noll_ta_symbol_kill(symb);
+		return ret_symb;
+	}
+
+	noll_ta_symbol_fill_str(symb);          // compute the string
+	assert(NULL != symb->str);
+
+	NOLL_DEBUG("Inserting new symbol: %s\n", symb->str);
+
+	noll_ta_symbol_array_push(g_ta_symbols, symb);
+
+	return symb;
+}
+
+
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_non_aliased(
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking)
+{
+	// check for the input parameters
+	assert(NULL != sels);
+	assert(NULL != vars);
+	assert(NULL != marking);
+
+	noll_ta_symbol_t* symb = noll_ta_symbol_create();
+	assert(NULL != symb);
+	noll_ta_symbol_fill_non_aliased(symb, sels, vars, marking);
+
+	// get the unique representation of the symbol
+	const noll_ta_symbol_t* ret_sym = noll_symbol_spawn(symb);
+	assert(NULL != ret_sym);
+	return ret_sym;
+}
+
+
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking,
+	uid_t                            alias_var)
+{
+	// check for the input parameters
+	assert(NULL != sels);
+	assert(NULL != vars);
+	assert(NULL != marking);
+
+	noll_ta_symbol_t* symb = noll_ta_symbol_create();
+	assert(NULL != symb);
+	noll_ta_symbol_fill_non_aliased(symb, sels, vars, marking);
+	symb->tree_node_lb.aliasing_type = NOLL_TREE_LABEL_ALIASING_VARIABLE;
+	symb->tree_node_lb.alias_var = alias_var;
+
+	// get the unique representation of the symbol
+	const noll_ta_symbol_t* ret_sym = noll_symbol_spawn(symb);
+	assert(NULL != ret_sym);
+	return ret_sym;
+}
+
+
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
+	const noll_uid_array*            sels,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking,
+	const noll_uid_array*            alias_marking)
+{
+	// check for the input parameters
+	assert(NULL != sels);
+	assert(NULL != vars);
+	assert(NULL != marking);
+
+	noll_ta_symbol_t* symb = noll_ta_symbol_create();
+	assert(NULL != symb);
+	noll_ta_symbol_fill_non_aliased(symb, sels, vars, marking);
+	symb->tree_node_lb.aliasing_type = NOLL_TREE_LABEL_ALIASING_MARKING;
+	symb->tree_node_lb.alias_marking = noll_uid_array_new();
+	assert(NULL != symb->tree_node_lb.alias_marking);
+	noll_uid_array_copy(symb->tree_node_lb.alias_marking, alias_marking);
+
+	// get the unique representation of the symbol
+	const noll_ta_symbol_t* ret_sym = noll_symbol_spawn(symb);
+	assert(NULL != ret_sym);
+	return ret_sym;
 }
