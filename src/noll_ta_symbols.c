@@ -303,7 +303,7 @@ static char* noll_node_label_to_string(
 			index += snprintf(
 				&buffer[index],
 				BUFFER_SIZE - index,
-				"%u, ",
+				"%u",
 				node_lb->alias_var);
 
 			assert(index < BUFFER_SIZE);
@@ -323,8 +323,6 @@ static char* noll_node_label_to_string(
 
 			const noll_uid_array* marking = node_lb->alias_marking;
 			assert(NULL != marking);
-			assert(index < BUFFER_SIZE);
-			buffer[index++] = '[';
 			for (size_t i = 0; i < noll_vector_size(marking); ++i)
 			{
 				assert(index < BUFFER_SIZE);
