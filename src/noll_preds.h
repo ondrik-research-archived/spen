@@ -56,9 +56,10 @@ extern "C"
   typedef struct noll_pred_typing_t
   {
     uid_t ptype0; // typing record for this predicate, index in record_array
-    noll_uid_array* ptypes; // records covered by this predicate
+    noll_uid_array* ptypes;   // records covered by this predicate
     noll_uid_array* pfields0; // fields used in sigma0
     noll_uid_array* pfields1; // fields used in sigma1
+    noll_uid_array* ppreds;   // predicates used inside the definition
   } noll_pred_typing_t;
 
   /** Predicate information:

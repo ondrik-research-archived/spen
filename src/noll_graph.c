@@ -72,6 +72,23 @@ void noll_edge_free(noll_edge_t* e) {
 	free(e);
 }
 
+noll_edge_t* 
+noll_edge_copy (noll_edge_t * e) {
+	/* pre-conditions */
+	assert (e != NULL);
+	
+	uint_t src = noll_vector_at(e->args,0);
+	uint_t dst = noll_vector_at(e->args,1);
+	noll_edge_t* re = noll_edge_alloc(e->kind, src, dst, e->label);
+	/* push the other arguments if there exists */
+	for (uint_t i = 2; i < noll_vector_size (e->args); i++)
+	  noll_uid_array_push(re->args, noll_vector_at(e->args,i));
+	/* TODO: fill the informations for overlapping */
+	
+	return re;
+}
+
+
 noll_graph_t*
 noll_graph_alloc(noll_var_array* lvars, noll_var_array* svars, uint_t nodes,
 		uint_t edges, uint_t* vars) {
@@ -163,6 +180,33 @@ void noll_graph_free(noll_graph_t* g) {
 	free(g);
 }
 
+/**
+ * Copy only node informations.
+ */
+noll_graph_t* 
+noll_graph_copy_nodes(noll_graph_t* g) 
+{
+	if (g == NULL)
+	return NULL;
+	
+	uint_t v_sz = noll_vector_size(g->lvars);
+	uint_t e_sz = noll_vector_size(g->edges);
+	
+	noll_graph_t* rg = noll_graph_alloc(g->lvars, g->svars, g->nodes_size,
+		e_sz, NULL);
+		
+	/* copy var2nodes */
+	uint_t* v2n = (uint_t*) malloc(sizeof(uint_t) * v_sz);
+	for (uint_t i = 0; i < v_sz; i++)
+	  rg->var2node[i] = g->var2node[i];
+
+	rg->isComplete = g->isComplete;
+	rg->is_precise = g->is_precise;
+	
+	return rg;
+}
+
+
 /* ====================================================================== */
 /* Getters/setters */
 /* ====================================================================== */
@@ -174,6 +218,48 @@ uint_t noll_graph_get_var(noll_graph_t* g, uint_t n) {
 	return UNDEFINED_ID;
 }
 
+/** 
+ * Test if the edge @p e has its label in the set of labels 
+ * of the predicate @p pid. 
+ * @param e     edge to be tested
+ * @param pid   index of a predicate in preds_array
+ * @return      1 if test successful, 0 otherwise
+ */
+int noll_edge_in_label (noll_edge_t* e, uint_t pid) {
+	/* pre-conditions */
+	assert (e != NULL);
+	assert (pid < noll_vector_size(preds_array));
+	
+	/* the fields of label are defined in its binding */
+	const noll_pred_t* pred = noll_pred_getpred(pid);
+	noll_pred_typing_t* pdef = pred->typ;
+	int res = 0;
+	if (e->kind == NOLL_EDGE_PTO) {
+		for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->pfields0); i++)
+		{
+			uint_t fid = noll_vector_at(pdef->pfields0,i);
+			if (fid == e->label)
+			  res = 1;
+		}
+		
+		for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->pfields1); i++)
+		{
+			uint_t fid = noll_vector_at(pdef->pfields1,i);
+			if (fid == e->label)
+			  res = 1;
+		}
+	}
+	else {
+		// it is a predicate edge
+		for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->ppreds); i++)
+		{
+			uint_t pi = noll_vector_at(pdef->ppreds,i);
+			if (pi == e->label)
+			  res = 1;
+		}
+	}
+	return res;
+}
 
 /* ====================================================================== */
 /* Printing */
