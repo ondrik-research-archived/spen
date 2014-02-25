@@ -5,7 +5,7 @@ TOOL=../../src/nolldp
 OPTION=-n
 
 clean:
-	rm *out.txt result.txt
+	rm *out.txt result.txt *.dot
 
 purge: clean
 	rm *.log
