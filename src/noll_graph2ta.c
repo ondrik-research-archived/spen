@@ -44,6 +44,12 @@ NOLL_VECTOR_DECLARE( noll_nodes_to_markings , noll_marking_list* )
 NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 
 /* ====================================================================== */
+/* Macros */
+/* ====================================================================== */
+
+#define MIN(x, y) (((x) > (y))? (y) : (x))
+
+/* ====================================================================== */
 /* Constants */
 /* ====================================================================== */
 
@@ -55,7 +61,7 @@ static const uid_t initial_node = 0;
 /* Debugging functions */
 /* ====================================================================== */
 
-void noll_debug_print_one_mark(const noll_uid_array* mark)
+static void noll_debug_print_one_mark(const noll_uid_array* mark)
 {
 	if (NULL == mark)
 	{
@@ -82,7 +88,7 @@ void noll_debug_print_one_mark(const noll_uid_array* mark)
  *
  * @param[in]  markings  The markings to be printed
  */
-void noll_debug_print_markings(const noll_marking_list* markings)
+static void noll_debug_print_markings(const noll_marking_list* markings)
 {
 	assert(NULL != markings);
 
@@ -100,6 +106,70 @@ void noll_debug_print_markings(const noll_marking_list* markings)
 /* ====================================================================== */
 /* Auxiliary functions */
 /* ====================================================================== */
+
+
+/**
+ * @brief  Determines the longest common prefix of a pair of markings
+ *
+ * @param[in]  lhs  The first marking
+ * @param[in]  rhs  The other marking
+ *
+ * @returns  The longest common prefix of @p lhs and @p rhs. The caller is
+ *           responsible for the deallocation of the returned structure.
+ */
+static noll_uid_array* noll_longest_common_prefix(
+	const noll_uid_array*   lhs,
+	const noll_uid_array*   rhs)
+{
+	assert(NULL != lhs);
+	assert(NULL != rhs);
+
+	noll_uid_array* lcp = noll_uid_array_new();
+	assert(NULL != lcp);
+
+	size_t size_shorter = MIN(noll_vector_size(lhs), noll_vector_size(rhs));
+
+	for (size_t i = 0; i < size_shorter; ++i)
+	{
+		if (noll_vector_at(lhs, i) != noll_vector_at(rhs, i))
+		{
+			break;
+		}
+
+		noll_uid_array_push(lcp, noll_vector_at(lhs, i));
+	}
+
+	return lcp;
+}
+
+
+/**
+ * @brief  Does the array contain the given element?
+ *
+ * Checks for the presence of the element @p elem in the (unordered) array @p
+ * arr.
+ *
+ * @param[in]  arr   The array to check
+ * @param[in]  elem  The element to check for
+ *
+ * @returns  @p true iff @p arr contains @p elem, @p false otherwise
+ */
+static bool noll_uid_array_contains(
+	const noll_uid_array*     arr,
+	uid_t                     elem)
+{
+	assert(NULL != arr);
+
+	for (size_t i = 0; i < noll_vector_size(arr); ++i)
+	{
+		if (noll_vector_at(arr, i) == elem)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
 
 
 /**
@@ -161,6 +231,42 @@ static bool noll_marking_order_lt(
 	}
 
 	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
+
+	return true;
+}
+
+
+/**
+ * @brief  The "marking is a prefix or equal" predicate
+ *
+ * This binary predicate holds true iff @p pred is a prefix (not necessarily
+ * proper) of @p succ.
+ *
+ * @param[in]  pred  The potential predecessor
+ * @param[in]  succ  The potential successor
+ *
+ * @returns  @p true iff @p pred is a prefix of @p succ
+ */
+bool noll_marking_is_prefix_or_equal(
+	const noll_uid_array*      pred,
+	const noll_uid_array*      succ)
+{
+	// check for sanity of the inputs
+	assert(NULL != pred);
+	assert(NULL != succ);
+
+	if (noll_vector_size(pred) > noll_vector_size(succ))
+	{	// if the lengths are wrong
+		return false;
+	}
+
+	for (size_t i = 0; i < noll_vector_size(pred); ++i)
+	{	// check that 'succ' is the same as 'pred' up to the length of 'pred'
+		if (noll_vector_at(pred, i) != noll_vector_at(succ, i))
+		{
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -388,7 +494,7 @@ static bool compute_markings(
  * @returns  @p true if @p node_marking is the successor of @p prev_marking
  *           over the edge labelled with @p symbol
  */
-bool noll_marking_is_succ_of_via(
+static bool noll_marking_is_succ_of_via(
 	const noll_uid_array*     node_marking,
 	const noll_uid_array*     pred_marking,
 	uid_t                     symbol)
@@ -436,6 +542,95 @@ bool noll_marking_is_succ_of_via(
 	NOLL_DEBUG("true\n");
 	return true;
 }
+
+
+/**
+ * @brief  A function checking that node @p dst is reachable from node @p src
+ *
+ * This function checks whether the node @p dst is reachable from the node @p
+ * src in the @p graph along a path where the marker @p mark is not used (while
+ * not including @p dst to this check).
+ *
+ * @param[in]  graph     The graph
+ * @param[in]  markings  The markings of nodes of @p graph
+ * @param[in]  dst       The destination node
+ * @param[in]  src       The source node
+ * @param[in]  mark      The marking to be checked for
+ *
+ * @returns  @p true iff @p dst is reachable from @p src on a path without @p
+ *           mark
+ */
+static bool reachable_from_through_path_wo_marker(
+	const noll_graph_t*          graph,
+	const noll_marking_list*     markings,
+	uid_t                        dst,
+	uid_t                        src,
+	const noll_uid_array*        mark)
+{
+	assert(NULL != graph);
+	assert(NULL != mark);
+	assert(src < graph->nodes_size);
+	assert(dst < graph->nodes_size);
+
+	noll_uid_array* workstack = noll_uid_array_new();
+	assert(NULL != workstack);
+
+	// an ordinary array for processed nodes
+	noll_uid_array* processed = noll_uid_array_new();
+	assert(NULL != processed);
+
+	noll_uid_array_push(workstack, src);
+
+	bool found_dst = false;
+	while (!noll_vector_empty(workstack) && !found_dst)
+	{
+		uid_t node = noll_vector_last(workstack);
+		noll_uid_array_pop(workstack);
+		assert(node < graph->nodes_size);
+		assert(!noll_uid_array_contains(processed, node));
+		noll_uid_array_push(processed, node);
+
+		NOLL_DEBUG("Testing node %u\n", node);
+
+		const noll_uid_array* edges_from_node = graph->mat[node];
+		if (NULL == edges_from_node)
+		{	// in the case 'node' has no outgoing edges
+			continue;
+		}
+
+		for (size_t i = 0; i < noll_vector_size(edges_from_node); ++i)
+		{
+			uid_t edge_id = noll_vector_at(edges_from_node, i);
+			NOLL_DEBUG("Found edge %u\n", edge_id);
+
+			const noll_edge_t* ed = noll_vector_at(
+				graph->edges,
+				noll_vector_at(edges_from_node, edge_id));
+			assert(NULL != ed);
+			assert(NOLL_EDGE_PTO == ed->kind);
+			assert(2 == noll_vector_size(ed->args));
+			assert(noll_vector_at(ed->args, 0) == node);
+			uid_t post_node = noll_vector_at(ed->args, 1);
+
+			if (post_node == dst)
+			{	// if we found the destination
+				found_dst = true;
+				break;
+			}
+
+			if (noll_uid_array_equal(
+				noll_vector_at(markings, post_node), mark))
+			{	// if we hit 'mark', do not expand
+				continue;
+			}
+		}
+	}
+	noll_uid_array_delete(workstack);
+	noll_uid_array_delete(processed);
+
+	return found_dst;
+}
+
 
 /* ====================================================================== */
 /* Translators */
@@ -527,9 +722,12 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 		noll_uid_array* children = noll_uid_array_new();
 		assert(NULL != children);
-
 		noll_uid_array* selectors = noll_uid_array_new();
 		assert(NULL != selectors);
+		noll_uid_array* vars = noll_uid_array_new();
+		assert(NULL != vars);
+		noll_uid_array* marking = noll_uid_array_new();
+		assert(NULL != marking);
 
 		for (size_t j = 0; j < noll_vector_size(edges); ++j)
 		{
@@ -543,24 +741,108 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			uid_t next_child = noll_vector_at(ed->args, 1);
 			NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
 
+			const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
+			const noll_uid_array* mark_i = noll_vector_at(markings, i);
+
+
+			// adding the selector
+			noll_uid_array_push(selectors, ed->label);
+
 			NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", field_name, i, next_child);
-			if (noll_marking_is_succ_of_via(
-				noll_vector_at(markings, next_child),
-				noll_vector_at(markings, i),
-				ed->label))
-			{
+			if (noll_marking_is_succ_of_via(mark_next_child, mark_i, ed->label))
+			{	// if 'ed' is a backbone edge
 				NOLL_DEBUG("We are on the backbone!\n");
+				noll_uid_array_push(children, next_child);
 			}
 			else
-			{
+			{	// If 'ed' is not a backbone edge. This means that the edge will not be
+				// represented in the direct way, but needs to be represented using a
+				// path that traverses the backbone in an indirect way. So we need to
+				// classify the type of the needed path (there are only some
+				// considered) and use a node labelled by this in the transition
 				NOLL_DEBUG("We are NOT on the backbone...\n");
-			}
 
-			noll_uid_array_push(children, next_child);
-			noll_uid_array_push(selectors, ed->label);
+				NOLL_DEBUG("WARNING: not checking whether the node is marked by a program variable.\n");
+
+				if (noll_marking_is_prefix_or_equal(mark_next_child, mark_i))
+				{	// in the case the source is a predecessor of the target (this is the
+					// case e.g. for a doubly-linked segment)
+					NOLL_DEBUG("The source ");
+					noll_debug_print_one_mark(mark_next_child);
+					NOLL_DEBUG(" is a PREFIX of the target ");
+					noll_debug_print_one_mark(mark_i);
+					NOLL_DEBUG("\n");
+
+					NOLL_DEBUG("Now, we check whether node %lu is reachable from node %u on a path that does not use the marking ", i, next_child);
+					noll_debug_print_one_mark(mark_next_child);
+					NOLL_DEBUG("\n");
+
+					// TODO: first test marking, then the reachability
+					if (reachable_from_through_path_wo_marker(
+						g, markings, i, next_child, mark_next_child))
+					{	// in case 'i' is reachable from 'next_child' via a path where the
+						// marker '\mu(n)' is not used
+						if (!noll_uid_array_equal(mark_next_child, mark_i))
+						{	// in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
+							NOLL_DEBUG("Detected an s1() marker\n");
+							assert(false);
+
+							// TODO: skip what follows
+
+						}
+						else
+						{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
+							NOLL_DEBUG("Detected an s2() marker\n");
+							assert(false);
+
+							// TODO: skip what follows
+						}
+					}
+				}
+
+				NOLL_DEBUG("The source ");
+				noll_debug_print_one_mark(mark_next_child);
+				NOLL_DEBUG(" is NOT a PREFIX of the target ");
+				noll_debug_print_one_mark(mark_i);
+				NOLL_DEBUG("\n");
+
+				// get the longest prefix
+				noll_uid_array* lcp = noll_longest_common_prefix(mark_next_child, mark_i);
+				assert(NULL != lcp);
+				assert(!noll_vector_empty(lcp));
+
+				NOLL_DEBUG("Their longest common prefix is ");
+				noll_debug_print_one_mark(lcp);
+				NOLL_DEBUG("\n");
+
+				// TODO: this hack asserts that the node with the longest common
+				// prefix is the source of the processed edge.
+				// This should work for easier graphs, but will fail for more complex
+				assert(noll_uid_array_equal(lcp, mark_i));
+				noll_uid_array_delete(lcp);
+
+				NOLL_DEBUG("Detected an s3() marker\n");
+
+				// now, we create the corresponding symbol
+				const noll_ta_symbol_t* leaf_symbol =
+					noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
+				assert(NULL != leaf_symbol);
+
+				NOLL_DEBUG("WARNING: inserting invalid states\n");
+				noll_uid_array_push(children, -1);
+			}
 		}
 
-		const noll_ta_symbol_t* symbol = noll_ta_symbol_create(selectors);
+		assert(noll_vector_size(selectors) == noll_vector_size(children));
+
+		NOLL_DEBUG("WARNING: ");
+		NOLL_DEBUG(__func__);
+		NOLL_DEBUG(": ignoring vars and marking\n");
+
+		const noll_ta_symbol_t* symbol = noll_ta_symbol_get_unique_allocated(
+			selectors,
+			vars,
+			marking);
 		assert(NULL != symbol);
 
 		NOLL_DEBUG("Inserting transition q%lu -> %s", i, noll_ta_symbol_get_str(symbol));
@@ -577,19 +859,21 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
+		noll_uid_array_delete(vars);
+		noll_uid_array_delete(marking);
 	}
 
 	NOLL_DEBUG("Starting traversing the edges\n");
 	assert(NULL != g->mat);
 
-	// the work stack that contains nodes to be processed
-	noll_uid_array* workstack = noll_uid_array_new();
-	assert(NULL != workstack);
-	noll_uid_array_reserve(workstack, g->nodes_size);
-	noll_uid_array_push(workstack, initial_node);
-
-
-	noll_uid_array_delete(workstack);
+	/* // the work stack that contains nodes to be processed */
+	/* noll_uid_array* workstack = noll_uid_array_new(); */
+	/* assert(NULL != workstack); */
+	/* noll_uid_array_reserve(workstack, g->nodes_size); */
+	/* noll_uid_array_push(workstack, initial_node); */
+  /*  */
+  /*  */
+	/* noll_uid_array_delete(workstack); */
 
 	const noll_uid_array* edges = g->mat[initial_node];
 	assert(NULL != edges);

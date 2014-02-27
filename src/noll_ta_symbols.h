@@ -72,7 +72,7 @@ const char* noll_ta_symbol_get_str(
 
 
 /**
- * @brief  Creates a unique TA symbol of a non-aliased node
+ * @brief  Creates a unique TA symbol of an allocated node
  *
  * The TA symbols are managed in a global database and the procedure first
  * attempts to find the given symbol in the database and only in the case it is
@@ -85,7 +85,7 @@ const char* noll_ta_symbol_get_str(
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_non_aliased(
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
 	const noll_uid_array*            sels,
 	const noll_uid_array*            vars,
 	const noll_uid_array*            marking);
@@ -98,18 +98,11 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_non_aliased(
  * attempts to find the given symbol in the database and only in the case it is
  * not present there it creates a new record and inserts it into the database.
  *
- * @param[in]  sels       The selectors (note that the order is important)
- * @param[in]  vars       The variables aliased to the node (may be unordered,
- *                        they will be sorted internally)
- * @param[in]  marking    The marking of the node
  * @param[in]  alias_var  The variable to which the node is aliased
  *
  * @returns  A unique pointer to the symbol
  */
 const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
-	const noll_uid_array*            sels,
-	const noll_uid_array*            vars,
-	const noll_uid_array*            marking,
 	uid_t                            alias_var);
 
 
@@ -120,18 +113,13 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
  * attempts to find the given symbol in the database and only in the case it is
  * not present there it creates a new record and inserts it into the database.
  *
- * @param[in]  sels           The selectors (note that the order is important)
- * @param[in]  vars           The variables aliased to the node (may be unordered,
- *                            they will be sorted internally)
- * @param[in]  marking        The marking of the node
+ * @param[in]  id_rel         ID of the relation
  * @param[in]  alias_marking  The marking to which the node is aliased
  *
  * @returns  A unique pointer to the symbol
  */
 const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
-	const noll_uid_array*            sels,
-	const noll_uid_array*            vars,
-	const noll_uid_array*            marking,
+	unsigned char                    id_rel,
 	const noll_uid_array*            alias_marking);
 
 

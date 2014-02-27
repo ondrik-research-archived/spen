@@ -100,7 +100,10 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 		noll_uid_array* selectors = noll_uid_array_new();
 		noll_uid_array_push(selectors, f_uid);
 
-		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_create(selectors);
+		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_get_unique_allocated(
+			selectors,
+			NULL,
+			NULL);
 
 		vata_add_transition(ta, 1, symbol_f  , children);
 		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
@@ -112,7 +115,7 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 	}
 	else
 	{
-		NOLL_DEBUG("translation for predicate %s not implemented!\n", p->pname);
+		NOLL_DEBUG("ERROR: translation for predicate %s not implemented!\n", p->pname);
 		assert(false);
 	}
 
