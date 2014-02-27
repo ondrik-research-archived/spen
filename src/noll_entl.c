@@ -494,9 +494,9 @@ int noll_entl_to_graph(void) {
 	noll_prob->pgraph = noll_graph_of_form(pform);
 
 #ifndef NDEBUG
-	fprintf (stdout, "\n*****pos_graph: file dot_left_graph\n");
+	fprintf (stdout, "\n*****pos_graph: file graph-p.dot\n");
 	noll_graph_fprint (stdout, noll_prob->pgraph);
-//	noll_graph_fprint_dot ("dot_left_graph", pos_graph);
+//	noll_graph_fprint_dot ("graph-p.dot", pos_graph);
 #endif
 
 	if (nform) {
@@ -509,9 +509,9 @@ int noll_entl_to_graph(void) {
 			noll_graph_t* nform_i_graph = noll_graph_of_form(nform_i);
 			noll_vector_at(noll_prob->ngraph,i) = nform_i_graph;
 #ifndef NDEBUG
-			fprintf (stdout, "\n*****neg_graph: file dot_right_graph_%zu\n",i);
+			fprintf (stdout, "\n*****neg_graph: file graph-n%zu.dot\n",i);
 			char fname[20] = "\0";
-			sprintf(fname, "dot_right_graph_%zu", i);
+			sprintf(fname, "graph-n%zu.dot", i);
 			noll_graph_fprint_dot (fname, nform_i_graph);
 			fflush (stdout);
 #endif
@@ -535,7 +535,8 @@ int noll_entl_to_homomorphism(void) {
 
 #ifndef NDEBUG
 	fprintf (stdout, "*** check-sat: homomorphism found = \n");
-	// TODO: print homomorphism found
+	noll_hom_fprint(stdout, noll_prob->hom);
+	fflush(stdout);
 #endif
 
 	/*
@@ -543,11 +544,11 @@ int noll_entl_to_homomorphism(void) {
 	 */
 #ifndef NDEBUG
 	fprintf (stdout, "*** check-sat: test sharing:\n");
-	fprintf (stdout, "\n*****pos_graph: file dot_left_graph_compl\n");
+	fprintf (stdout, "\n*****pos_graph: file graph-p-co.dot\n");
 	noll_graph_fprint (stdout, noll_prob->pgraph);
-	noll_graph_fprint_dot ("dot_left_graph_compl", noll_prob->pgraph);
-	fprintf (stdout, "\n*****neg_graph: file dot_right_graph_compl\n");
-	//noll_graph_fprint_dot ("dot_right_graph_compl", noll_vector_at(nol_prob->ngraph,0));
+	noll_graph_fprint_dot ("graph-p-co.dot", noll_prob->pgraph);
+	fprintf (stdout, "\n*****neg_graph: file graph-n-co.dot\n");
+	//noll_graph_fprint_dot ("graph-n0-co.dot", noll_vector_at(nol_prob->ngraph,0));
 	fflush (stdout);
 #endif
 // TODO: when updated share constraints in graphs

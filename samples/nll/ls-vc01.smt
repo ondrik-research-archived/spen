@@ -2,13 +2,14 @@
 
 (declare-sort Sll_t 0)
 
-(declare-fun f () (Field Sll_t Sll_t))
+(declare-fun next () (Field Sll_t Sll_t))
 
-(define-fun lso ((?in Sll_t) (?out Sll_t)) Space
-(tospace (or (= ?in ?out)
-(exists ((?u Sll_t))
-(tobool
-(ssep (pto ?in (ref f ?u)) (lso ?u ?out))
+; singly-linked list
+(define-fun lso ((?in Sll_t) (?out Sll_t))
+  Space (tospace (or (= ?in ?out) 
+    (exists ((?u Sll_t)) (tobool (ssep
+      (pto ?in (sref (ref next ?u)))
+      (lso ?u ?out))
 )))))
 
 (declare-fun x_emp () Sll_t)
@@ -16,7 +17,10 @@
 (declare-fun z_emp () Sll_t)
 (declare-fun alpha1 () SetLoc)
 (assert
-    (tobool (ssep (pto x_emp (ref f y_emp)) (pto y_emp (ref f z_emp))))
+    (tobool (ssep (pto x_emp (sref (ref next y_emp))) 
+                  (pto y_emp (sref (ref next z_emp)))
+            )
+    )
 )
 (assert
   (not

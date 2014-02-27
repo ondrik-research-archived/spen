@@ -57,7 +57,7 @@ typedef struct noll_shom_s {
 NOLL_VECTOR_DECLARE (noll_shom_array, noll_shom_t *);
 
 typedef struct noll_hom_s { 
-	bool is_empty;              /* true if no hom found */
+	bool is_empty;              /* true if hom is not found */
 	                            /* if false, the array below is not complete */
 	                                    
 	noll_shom_array* shom;      /* array of size ngraph of simple hom */

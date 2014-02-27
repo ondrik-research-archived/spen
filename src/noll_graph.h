@@ -77,11 +77,14 @@ NOLL_VECTOR_DECLARE (noll_graph_array, noll_graph_t *);
 noll_edge_t *noll_edge_alloc (noll_edge_e kind, uint_t src, uint_t dst,
 			      uint_t label);
 void noll_edge_free (noll_edge_t * e);
+noll_edge_t* noll_edge_copy (noll_edge_t * e);
 
 noll_graph_t *noll_graph_alloc (noll_var_array * lvars,
 				noll_var_array * svars, uint_t nodes,
 				uint_t edges, uint_t * vars);
 void noll_graph_free (noll_graph_t * g);
+
+noll_graph_t* noll_graph_copy_nodes(noll_graph_t* g);
 
 /* ====================================================================== */
 /* Getters/setters */
@@ -90,6 +93,10 @@ void noll_graph_free (noll_graph_t * g);
 uint_t noll_graph_get_var (noll_graph_t * g, uint_t n);
 /* Get the first location variable labeling this node */
 
+int noll_edge_in_label (noll_edge_t* e, uint_t label);
+/* Returns 1 if the edge e has its baled in the set of labels 
+ * of the predicate label */
+ 
 /* ====================================================================== */
 /* Printing */
 /* ====================================================================== */
