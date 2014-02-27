@@ -37,21 +37,21 @@
 typedef uint32_t uint_t;
 
 #define NOLL_VECTOR_DECLARE(name, type)                              \
-typedef struct name {                                                   \
-    type *data_;                                                        \
-    uint_t size_;                                                       \
-    uint_t capacity_;                                                   \
-} name;                                                             \
-name * name ## _new(void);                           \
-void name ## _delete(name *v);                      \
-void name ## _push(name *v, type elem);         \
-void name ## _pop(name *v);                         \
-void name ## _cup(name *v, type elem);              \
-void name ## _resize(name *v, uint_t newsz);        \
-void name ## _reserve(name *v, uint_t cap);         \
-void name ## _clear(name *v); \
-void name ## _copy(name *dest, const name *src);      \
-void name ## _swap(name *v1, name *v2);         \
+typedef struct name {                                                \
+    type *data_;                                                     \
+    uint_t size_;                                                    \
+    uint_t capacity_;                                                \
+} name;                                                              \
+name * name ## _new(void);                                           \
+void name ## _delete(name *v);                                       \
+void name ## _push(name *v, type elem);                              \
+void name ## _pop(name *v);                                          \
+void name ## _cup(name *v, type elem);                               \
+void name ## _resize(name *v, uint_t newsz);                         \
+void name ## _reserve(name *v, uint_t cap);                          \
+void name ## _clear(name *v);                                        \
+void name ## _copy(name *dest, const name *src);                     \
+void name ## _swap(name *v1, name *v2);                              \
 bool name ## _equal(const name *v1, const name *v2);
 
 #define NOLL_VECTOR_SIZE(v) ((v)->size_)
