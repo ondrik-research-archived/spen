@@ -521,6 +521,8 @@ void noll_space_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
 			uint_t vi = noll_vector_at (phi->m.ls.args, i);
 			if (lvars == NULL)
 				fprintf(f, " *%d ", vi);
+			else if (vi == VNIL_ID)
+				fprintf(f, " nil ");
 			else
 				fprintf(f, " %s ", noll_vector_at (lvars, vi)->vname);
 		}

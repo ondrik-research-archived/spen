@@ -82,9 +82,11 @@ typedef struct noll_type_t {
  */
 typedef struct noll_record_t {
 	char* name; // declaration name
-	uid_t rid; // record identifier
+	uid_t rid; // record identifier, 0 for void*
 	noll_uid_array* flds; // fields of this record
 } noll_record_t;
+
+#define NOLL_TYP_VOID 0
 
 /** Type of the global array of records. */
 NOLL_VECTOR_DECLARE(noll_record_array, noll_record_t*)

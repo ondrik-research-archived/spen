@@ -49,6 +49,9 @@ noll_field_array* fields_array;
 void noll_record_init() {
 	records_array = noll_record_array_new();
 	noll_record_array_reserve(records_array, 4);
+	
+	/* initialize with void* */
+	noll_record_register("void");
 }
 
 void noll_field_init() {

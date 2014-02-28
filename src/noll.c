@@ -355,7 +355,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    * Check the syntax of predicates while
    * the predicate definition is built
    */
-  /* cond 0:      all the parameters are of record type */
+  /* cond 0: all the parameters are of record type */
   for (uint_t i = 0; i < npar; i++)
     {
       if (noll_var_record (ctx->lvar_env, i) == UNDEFINED_ID)
@@ -543,7 +543,15 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 			}
 			else
 			{
-				assert(NULL != sigma_1);
+				if (NULL == sigma_1) 
+				{
+				  	noll_error (1, "Building predicate definition ", name);
+					noll_error (1, "One points-to not from the first parameter ", 
+						       "(the input)");
+					noll_space_free (sigma_0);
+					noll_space_free (sigma_1);
+					return UNDEFINED_ID;
+				}
 				noll_space_array_push (sigma_1->m.sep, pto);
 			}
 			break;
@@ -678,9 +686,9 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 		/*
 		 * check that the remainder of
 		 * parameters are equal to the formal
-		 * ones
+		 * ones except for dll
 		 */
-		uint_t i = (nrec_p == 2) ? 1 : 2;
+		uint_t i = (nrec_p == 2) ? 1 : 3;
 		for (; i < npar; i++)
 		  {
 		    if (si->args[i]->discr != NOLL_F_LVAR
@@ -1836,8 +1844,9 @@ noll_mk_form_pto (noll_context_t * ctx, noll_exp_t * f)
 	assert (0);
       assert (fv[i]->args[0]->discr == NOLL_F_FIELD);
       uint_t fld = fv[i]->args[0]->p.sid;
-      assert (dest != UNDEFINED_ID && fld != UNDEFINED_ID);
-      //because the term has been built
+      // because the term has been built
+      assert (fld != UNDEFINED_ID);
+      // notice that we may have dest == UNDEFINED_ID == VNIL_ID
       noll_uid_array_push (sigma->m.pto.dest, dest);
       noll_uid_array_push (sigma->m.pto.fields, fld);
     }

@@ -6,11 +6,11 @@
 (declare-fun prev () (Field Dll_t Dll_t))
 
 ; singly-linked list
-(define-fun dll ((?hd Dll_t) (?in Dll_t) (?pr Dll_t) (?ex Dll_t))
+(define-fun dll ((?in Dll_t) (?ex Dll_t) (?pr Dll_t) (?hd Dll_t))
   Space (tospace (or (and (= ?in ?pr) (= ?hd ?ex)) 
     (exists ((?u Dll_t)) (tobool (ssep
       (pto ?in (sref (ref next ?u) (ref prev ?pr)))
-      (dll ?u ?in ?hd ?ex))
+      (dll ?u ?ex ?in ?hd))
 )))))
 
 (declare-fun x_emp () Dll_t)
@@ -28,7 +28,7 @@
 )
 (assert
   (not
-    (tobool (index alpha1 (dll x_emp nil y_emp z_emp)))
+    (tobool (index alpha1 (dll x_emp y_emp nil z_emp)))
 ))
 
 (check-sat)

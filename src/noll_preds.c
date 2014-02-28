@@ -95,11 +95,12 @@ uid_t noll_pred_typecheck_call(uid_t pid, uid_t* actuals_ty, uid_t size) {
 	}
 	for (uint_t i = 0; i < size; i++) {
 		noll_var_t* fi = noll_vector_at (p->def->vars, i);
-		uid_t
-				fi_ty =
-						(fi->vty && fi->vty->kind == NOLL_TYP_RECORD) ? noll_vector_at (fi->vty->args, 0)
+		uid_t fi_ty = NOLL_TYP_VOID;
+		if (fi->vid != VNIL_ID)
+		     fi_ty = (fi->vty && fi->vty->kind == NOLL_TYP_RECORD) ? 
+							noll_vector_at (fi->vty->args, 0)
 								: UNDEFINED_ID;
-		if (actuals_ty[i] != fi_ty) {
+		if ((actuals_ty[i] != NOLL_TYP_VOID) && (actuals_ty[i] != fi_ty)) {
 			// TODO: make error message
 			printf("Predicate call `%s': bad type for the %d-th parameter.\n",
 					p->pname, i);

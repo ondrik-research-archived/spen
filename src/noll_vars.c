@@ -135,7 +135,9 @@ uid_t
 noll_var_record (noll_var_array * a, uid_t vid)
 {
   assert (a);
-  if (vid >= noll_vector_size (a))
+  if (vid == VNIL_ID)
+      return NOLL_TYP_VOID;
+  if (vid != VNIL_ID && vid >= noll_vector_size (a))
     {
       fprintf (stdout, "Incorrect id (%d) for location variable.\n", vid);
       return UNDEFINED_ID;
