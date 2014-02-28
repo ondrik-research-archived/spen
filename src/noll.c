@@ -520,64 +520,68 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
       switch (si->discr)
 	{
 	case NOLL_F_PTO:
-	  {
-	    /*
-	     * may be pto from in or from a variable !=
-	     * in and u
-	     */
-	    noll_space_t *pto = noll_mk_form_pto (ctx, si);
-	    //add to sigma_0 or sigma_1
-	    if (pto->m.pto.sid == 0)
-	      {
-		// 0 is the index of the "in" parameter
-		if (sigma_0 != NULL)
-		  {
-		    noll_error (1, "Building predicate definition ", name);
-		    noll_error (1, "Points-to link",
-				"(more than one from in parameter)");
-		    noll_space_free (sigma_0);
-		    noll_space_free (sigma_1);
-		    return UNDEFINED_ID;
-		  }
-		sigma_0 = pto;
-	      }
-	    else
-	      noll_space_array_push (sigma_1->m.sep, pto);
-	    break;
-	  }
+		{
+			/*
+			 * may be pto from in or from a variable !=
+			 * in and u
+			 */
+			noll_space_t *pto = noll_mk_form_pto (ctx, si);
+			//add to sigma_0 or sigma_1
+			if (pto->m.pto.sid == 0)
+			{
+				// 0 is the index of the "in" parameter
+				if (sigma_0 != NULL)
+				{
+					noll_error (1, "Building predicate definition ", name);
+					noll_error (1, "Points-to link",
+							"(more than one from in parameter)");
+					noll_space_free (sigma_0);
+					noll_space_free (sigma_1);
+					return UNDEFINED_ID;
+				}
+				sigma_0 = pto;
+			}
+			else
+			{
+				assert(NULL != sigma_1);
+				noll_space_array_push (sigma_1->m.sep, pto);
+			}
+			break;
+		}
 	case NOLL_F_LOOP:
-	  {
-	    /* before the non-recursive call of a predicate */
-	    if (si->size != 1 || si->args[0]->discr != NOLL_F_PRED)
-	      {
-		noll_error (1, "Building predicate definition ", name);
-		noll_error (1, "Incorrect loop space formula ",
-			    "(argument not a predicate call)");
-		noll_space_free (sigma_0);
-		noll_space_free (sigma_1);
-		return UNDEFINED_ID;
-	      }
-	    else
-	      {
-		noll_exp_t *fpred = si->args[0];
-		/* shall not be a recursive call */
-		if (fpred->p.sid == UNDEFINED_ID)
-		  {
-		    noll_error (1, "Building predicate definition ", name);
-		    noll_error (1, "Incorrect loop space formula ",
-				"(argumnet a recursive predicate call)");
-		    noll_space_free (sigma_0);
-		    noll_space_free (sigma_1);
-		    return UNDEFINED_ID;
-		  }
-		else
-		  {
-		    noll_space_t *loop = noll_mk_form_loop (ctx, si);
-		    noll_space_array_push (sigma_1->m.sep, loop);
-		  }
-	      }
-	    break;
-	  }
+		{
+			/* before the non-recursive call of a predicate */
+			if (si->size != 1 || si->args[0]->discr != NOLL_F_PRED)
+			{
+				noll_error (1, "Building predicate definition ", name);
+				noll_error (1, "Incorrect loop space formula ",
+						"(argument not a predicate call)");
+				noll_space_free (sigma_0);
+				noll_space_free (sigma_1);
+				return UNDEFINED_ID;
+			}
+			else
+			{
+				noll_exp_t *fpred = si->args[0];
+				/* shall not be a recursive call */
+				if (fpred->p.sid == UNDEFINED_ID)
+				{
+					noll_error (1, "Building predicate definition ", name);
+					noll_error (1, "Incorrect loop space formula ",
+							"(argument a recursive predicate call)");
+					noll_space_free (sigma_0);
+					noll_space_free (sigma_1);
+					return UNDEFINED_ID;
+				}
+				else
+				{
+					noll_space_t *loop = noll_mk_form_loop (ctx, si);
+					assert(NULL != sigma_1);
+					noll_space_array_push (sigma_1->m.sep, loop);
+				}
+			}
+			break;
+		}
 	case NOLL_F_PRED:
 	  {
 	    /* check the predicate call */
