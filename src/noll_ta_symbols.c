@@ -682,9 +682,11 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
 
 	symb->allocated.vars = noll_uid_array_new();
 	assert(NULL != symb->allocated.vars);
+	noll_uid_array_copy(symb->allocated.vars, vars);
+
 	symb->allocated.marking = noll_uid_array_new();
 	assert(NULL != symb->allocated.marking);
-	// implicit is no aliasing
+	noll_uid_array_copy(symb->allocated.marking, marking);
 
 	// get the unique representation of the symbol
 	const noll_ta_symbol_t* ret_sym = noll_symbol_spawn(symb);
