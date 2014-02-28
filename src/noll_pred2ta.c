@@ -94,22 +94,29 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 		/* vata_symbol_t* symbol_out       = "<> [out]"; */
 
 		// this works only for the lso predicate
-		uid_t f_uid = noll_field_array_find("f");
+		uid_t f_uid = noll_field_array_find("next");
 		assert(UNDEFINED_ID != f_uid);
 
 		noll_uid_array* selectors = noll_uid_array_new();
+		assert(NULL != selectors);
 		noll_uid_array_push(selectors, f_uid);
 
+		noll_uid_array* vars = noll_uid_array_new();
+		assert(NULL != vars);
+
+		noll_uid_array* marking = noll_uid_array_new();
+		assert(NULL != marking);
+
 		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_get_unique_allocated(
-			selectors,
-			NULL,
-			NULL);
+			selectors, vars, marking);
 
 		vata_add_transition(ta, 1, symbol_f  , children);
 		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
 		vata_add_transition(ta, 2, symbol_f  , children);
 		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
 
+		noll_uid_array_delete(marking);
+		noll_uid_array_delete(vars);
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
 	}
