@@ -104,6 +104,7 @@ void vata_set_state_root(
  * @param[in]      parent       The parent state of the transition
  * @param[in]      symbol       The symbol of the transition
  * @param[in]      children     Array of children states of the transition
+ *                              (might be @p NULL for an empty array)
  */
 void vata_add_transition(
 	vata_ta_t*                ta,
