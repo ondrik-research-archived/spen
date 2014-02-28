@@ -25,6 +25,8 @@
  * Defines translation between heap graph to tree automata
  */
 
+#include <limits.h>
+
 #include "noll.h"
 #include "noll_graph2ta.h"
 #include "noll_ta_symbols.h"
@@ -55,6 +57,19 @@ NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 
 static const uid_t NOLL_MARKINGS_EPSILON = -1;
 static const uid_t initial_node = 0;
+
+/* ====================================================================== */
+/* Globals */
+/* ====================================================================== */
+
+static size_t noll_unique_cnt = 42;
+
+static size_t noll_get_unique(void)
+{
+	assert(noll_unique_cnt < SSIZE_MAX);
+
+	return noll_unique_cnt++;
+}
 
 
 /* ====================================================================== */
@@ -726,8 +741,9 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 		assert(NULL != selectors);
 		noll_uid_array* vars = noll_uid_array_new();
 		assert(NULL != vars);
-		noll_uid_array* marking = noll_uid_array_new();
-		assert(NULL != marking);
+
+		const noll_uid_array* mark_i = noll_vector_at(markings, i);
+		assert(NULL != mark_i);
 
 		for (size_t j = 0; j < noll_vector_size(edges); ++j)
 		{
@@ -741,9 +757,9 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			uid_t next_child = noll_vector_at(ed->args, 1);
 			NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
 
+			// marking of the child
 			const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
-			const noll_uid_array* mark_i = noll_vector_at(markings, i);
-
+			assert(NULL != mark_next_child);
 
 			// adding the selector
 			noll_uid_array_push(selectors, ed->label);
@@ -829,7 +845,12 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 				assert(NULL != leaf_symbol);
 
 				NOLL_DEBUG("WARNING: inserting invalid states\n");
-				noll_uid_array_push(children, -1);
+
+				// TODO: instead of getting a unique state, we might have only one
+				// state for every used leaf symbol (such as it's done in Forester)
+				size_t leaf_state = noll_get_unique();
+				noll_uid_array_push(children, leaf_state);
+				vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
 			}
 		}
 
@@ -837,12 +858,10 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 		NOLL_DEBUG("WARNING: ");
 		NOLL_DEBUG(__func__);
-		NOLL_DEBUG(": ignoring vars and marking\n");
+		NOLL_DEBUG(": ignoring vars\n");
 
 		const noll_ta_symbol_t* symbol = noll_ta_symbol_get_unique_allocated(
-			selectors,
-			vars,
-			marking);
+			selectors, vars, mark_i);
 		assert(NULL != symbol);
 
 		NOLL_DEBUG("Inserting transition q%lu -> %s", i, noll_ta_symbol_get_str(symbol));
@@ -860,7 +879,6 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
 		noll_uid_array_delete(vars);
-		noll_uid_array_delete(marking);
 	}
 
 	NOLL_DEBUG("Starting traversing the edges\n");
