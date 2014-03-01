@@ -134,6 +134,47 @@ static char* noll_uid_array_tostring(
 
 
 /**
+ * @brief  Checks whether every element of @p lhs is also in @p rhs
+ *
+ * Checks whether the set of elements of @p lhs is a subset (or equal) to the
+ * set of elements of rhs. The number of occurrences of an element is
+ * neglected.
+ *
+ * @param[in]  smaller  The @e smaller array
+ * @param[in]  bigger   The @e bigger array
+ *
+ * @returns  @p true iff every element of @p smaller is also in @p bigger, @p
+ *           false otherwise
+ */
+static bool noll_uid_array_subseteq(
+	const noll_uid_array*           smaller,
+	const noll_uid_array*           bigger)
+{
+	assert(NULL != smaller);
+	assert(NULL != bigger);
+
+	for (size_t i = 0; i < noll_vector_size(smaller); ++i)
+	{	// for every element in 'smaller' ...
+		bool found = false;
+		for (size_t j = 0; j < noll_vector_size(bigger); ++j)
+		{	// ... we check whether it is also in 'bigger'
+			if (noll_vector_at(smaller, i) == noll_vector_at(bigger, j))
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
  * @brief  Checks whether two symbols match
  *
  * @param[in]  lhs  The left-hand side
@@ -165,9 +206,11 @@ static bool noll_ta_symbol_match(
 				return false;
 			}
 
+			// TODO: this might be better if the variables are always sorted
 			assert(NULL != lhs->allocated.vars);
 			assert(NULL != rhs->allocated.vars);
-			if (!noll_uid_array_equal(lhs->allocated.vars, rhs->allocated.vars))
+			if (!noll_uid_array_subseteq(lhs->allocated.vars, rhs->allocated.vars) ||
+				!noll_uid_array_subseteq(rhs->allocated.vars, lhs->allocated.vars))
 			{
 				return false;
 			}
@@ -675,10 +718,6 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
 	assert(NULL != alloc_sels);
 	noll_uid_array_copy(alloc_sels, sels);        // copy selectors
 	symb->allocated.sels = alloc_sels;
-
-	NOLL_DEBUG("WARNING: ");
-	NOLL_DEBUG(__func__);
-	NOLL_DEBUG(": Not sorting the variables!!!!!\n");
 
 	symb->allocated.vars = noll_uid_array_new();
 	assert(NULL != symb->allocated.vars);
