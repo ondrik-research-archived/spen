@@ -8,7 +8,7 @@
 (define-fun lso ((?in Sll_t) (?out Sll_t))
   Space (tospace (or (= ?in ?out) 
     (exists ((?u Sll_t)) (tobool (ssep
-      (pto ?in (sref (ref next ?u)))
+      (pto ?in (ref next ?u))
       (lso ?u ?out))
 )))))
 
@@ -17,10 +17,11 @@
 (declare-fun w_emp () Sll_t)
 (declare-fun z_emp () Sll_t)
 (declare-fun alpha1 () SetLoc)
+(declare-fun alpha2 () SetLoc)
 (assert
-    (tobool (ssep (pto x_emp (sref (ref next y_emp))) 
-                  (lso y_emp w_emp)
-                  (pto w_emp (sref (ref next z_emp)))
+    (tobool (ssep (pto x_emp (ref next y_emp)) 
+                  (index alpha2 (lso y_emp w_emp))
+                  (pto w_emp (ref next z_emp))
             )
     )
 )

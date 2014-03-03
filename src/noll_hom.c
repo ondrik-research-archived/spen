@@ -1308,7 +1308,7 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 	/* check that all arguments have been explored */
 	for (uint_t i = 0; i < noll_vector_size(args); i++) {
 	  if (vg[noll_vector_at(args,i)] != 2) {
-		 fprintf (stdout, "select_ls: Unexplored argument vertex!\n"); 
+		 fprintf (stdout, "select_ls: %dth argument unexplored!\n", i); 
 	     goto return_select_ls_error;
 	  } else {
 		  if (i >= 2)
@@ -1507,9 +1507,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 	  if (e1->kind == NOLL_EDGE_PTO)
 		break; /* because all PTO edges are at the end */
 	  /* translate the arguments of e1 using the node morphism */
-	  noll_uid_array* args2 = noll_hom_apply_size_array(n_hom, 
-													g1->nodes_size,
-													e1->args);
+	  noll_uid_array* args2 = noll_hom_apply_size_array(n_hom, g1->nodes_size, e1->args);
 	  /* select the subgraph for edge e1
 	   * and also set usedg2 with the selected edges */
 	  noll_graph_t* sg2 = noll_graph_select_ls(g2, e1id, e1->label, args2, usedg2);

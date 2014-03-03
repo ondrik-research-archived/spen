@@ -250,12 +250,27 @@ int noll_edge_in_label (noll_edge_t* e, uint_t pid) {
 		}
 	}
 	else {
-		// it is a predicate edge
-		for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->ppreds); i++)
-		{
-			uint_t pi = noll_vector_at(pdef->ppreds,i);
-			if (pi == e->label)
-			  res = 1;
+		/* it is a predicate edge */
+		if (pid == e->label) 
+		{ /* it is the same predicate */
+			res = 1;
+		}
+		else {
+			/* it is an inner predicate */
+		  if (pdef->ppreds != NULL)
+		  {
+		  for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->ppreds); i++)
+		  {
+		  	uint_t pi = noll_vector_at(pdef->ppreds,i);
+		  	if (pi == e->label)
+		  	  res = 1;
+		  }
+			} else {	
+#ifndef NDEBUG
+        fprintf (stderr, "noll_edge_in_label: predcate edge not in ppreds null\n");
+#endif
+        res = 0;
+		  } 
 		}
 	}
 	return res;
@@ -270,22 +285,28 @@ void noll_edge_fprint(FILE* f, noll_var_array* svars, noll_edge_t* e) {
 	assert(e);
 	assert(e->args);
 	switch (e->kind) {
-	case NOLL_EDGE_PTO:
+	case NOLL_EDGE_PTO: {
 		fprintf(f, "%d: n%d.f%d==n%d", e->id, noll_vector_at(e->args,0),
 				e->label, noll_vector_at(e->args,1));
 		break;
-	case NOLL_EDGE_PRED:
+	}
+	case NOLL_EDGE_PRED: {
+	  char* svarname = (e->bound_svar < noll_vector_size(svars)) ?
+	      noll_vector_at(svars,e->bound_svar)->vname :
+	      "";
 		fprintf(f, "%d: %s_%s(n%d,n%d", e->id, noll_pred_name(e->label),
-				noll_vector_at(svars,e->bound_svar)->vname,
+				svarname,
 				noll_vector_at(e->args,0), noll_vector_at(e->args,1));
 		if (e && e->args)
 			for (uint_t i = 2; i < noll_vector_size (e->args); i++)
 				fprintf(f, ",n%d", noll_vector_at (e->args, i));
 		fprintf(f, ")");
 		break;
-	default:
+	}
+	default: {
 		fprintf(f, "%d: error", e->id);
 		break;
+	}
 	}
 }
 
