@@ -41,6 +41,10 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   assert(NULL != p);
 	assert(NULL != p->pname);
 
+	NOLL_DEBUG("********************************************************************************\n");
+	NOLL_DEBUG("*                                 PRED -> TA                                   *\n");
+	NOLL_DEBUG("********************************************************************************\n");
+
   vata_ta_t* ta = NULL;
   if ((ta = vata_create_ta()) == NULL)
   {
