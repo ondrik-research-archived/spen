@@ -423,7 +423,7 @@ void noll_form_fill_type(noll_space_t* form, noll_uid_array* flds,
 int noll_form_is_unsat (noll_form_t * phi) {
     return phi->kind == NOLL_FORM_UNSAT;
 }
- 
+
 int noll_form_is_sat (noll_form_t * phi) {
     return phi->kind == NOLL_FORM_SAT;
 }
@@ -516,7 +516,11 @@ void noll_space_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
 		if (svars == NULL)
 			fprintf(f, "*%d", phi->m.ls.sid);
 		else
+		{
+			assert(noll_vector_size(svars) > phi->m.ls.sid);
+
 			fprintf(f, "%s", noll_vector_at (svars, phi->m.ls.sid)->vname);
+		}
 		for (uid_t i = 0; i < noll_vector_size (phi->m.ls.args); i++) {
 			uint_t vi = noll_vector_at (phi->m.ls.args, i);
 			if (lvars == NULL)
