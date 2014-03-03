@@ -24,9 +24,6 @@
     (skl2 ?tl ?ex ?border))
 )))))
 
-; pointer to NULL
-(declare-fun nil () SL2_t)
-
 (declare-fun head () SL2_t)
 (declare-fun tail () SL2_t)
 

@@ -94,7 +94,7 @@ uid_t noll_pred_typecheck_call(uid_t pid, uid_t* actuals_ty, uid_t size) {
 		return UNDEFINED_ID;
 	}
 	for (uint_t i = 0; i < size; i++) {
-		noll_var_t* fi = noll_vector_at (p->def->vars, i);
+		noll_var_t* fi = noll_vector_at (p->def->vars, i+1); /* +1 for nil */
 		uid_t fi_ty = NOLL_TYP_VOID;
 		if (fi->vid != VNIL_ID)
 		     fi_ty = (fi->vty && fi->vty->kind == NOLL_TYP_RECORD) ? 

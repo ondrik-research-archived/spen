@@ -78,6 +78,10 @@ noll_record_new(const char* name, noll_uid_array* flds) {
 	return r;
 }
 
+/**
+ * Register a record.
+ * Warning: does not test that the name already exists !
+ */
 noll_type_t*
 noll_record_register(const char* name) {
 	// type expression for the result
@@ -89,6 +93,24 @@ noll_record_register(const char* name) {
 	r->rid = noll_vector_size (records_array) - 1;
 	// the index of the added record is last element of the array
 	noll_vector_at (ty->args, 0) = r->rid;
+	return ty;
+}
+
+/**
+ * Find a record using its name.
+ * @return a type built with this record or NULL if not find
+ */
+noll_type_t* noll_record_find(const char* name) 
+{
+	noll_type_t* ty = NULL;
+	for (uint_t i = 0; i < noll_vector_size(records_array); i++) 
+	{
+		noll_record_t* r = noll_vector_at(records_array,i);
+		if (strcmp(r->name, name) == 0) {
+			ty = 	noll_mk_type_record(UNDEFINED_ID);
+			noll_vector_at (ty->args, 0) = r->rid;
+		}
+	}
 	return ty;
 }
 

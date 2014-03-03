@@ -129,6 +129,8 @@ noll_type_t* noll_record_register(const char* name);
 /* Declares a record and put it in the global array.
  * Returns the entry in the global array.
  */
+noll_type_t* noll_record_find(const char* name);
+
 
 noll_field_t* noll_field_new(const char* name, uid_t ty_src, uid_t ty_dst);
 // uid_t noll_field_array_add (const char* name, uid_t ty_src, uid_t ty_dst);

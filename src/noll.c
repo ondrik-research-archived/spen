@@ -97,12 +97,16 @@ noll_mk_context (void)
   printf ("noll_mk_context reset qstack\n");
 #endif
   /* initialize the stack of location variables to store
-   * empty set of globals (nil is a special symbol) */
+   * one global variable (nil) */
   r->lvar_stack = noll_uint_array_new ();
-  noll_uint_array_push (r->lvar_stack, 0);
+  noll_uint_array_push (r->lvar_stack, 1);
 
-  /* initialize the set of location variables to empty */
+  /* initialize the set of location variables to store
+   * nil */
   r->lvar_env = noll_var_array_new ();
+  noll_var_register(r->lvar_env, "nil", 
+		    noll_record_find("void"), NOLL_SCOPE_GLOBAL);
+
 
   /* initialize the stack of sloc vars to the empy stack */
   r->svar_stack = noll_uint_array_new ();
@@ -148,11 +152,15 @@ noll_pop_context (noll_context_t * ctx)
    * the entries for exists and parameters will be deleted after that
    * by noll_pop_quant no global variables added
    */
-  assert (noll_vector_at (ctx->lvar_stack, 0) == 0);
+  assert (noll_vector_at (ctx->lvar_stack, 0) == 1);
   assert (noll_vector_at (ctx->svar_stack, 0) == 0);
-  //the location array is reused in the function, thus only forget it
+  /* the location array is reused in the function, 
+   * thus only forget it and reenter "nil"
+   */
   ctx->lvar_env = noll_var_array_new ();
-  //unset the predicate name is allocated
+  noll_var_register(ctx->lvar_env, "nil", 
+		    noll_record_find("void"), NOLL_SCOPE_GLOBAL);
+  /* unset the predicate name is allocated */
   ctx->pname = NULL;
 }
 
@@ -189,7 +197,11 @@ noll_set_logic (noll_context_t * ctx, const char *logic)
 
 /**
  * Declare a variable or a field.
- * assert: The name is not yet used and not predefined.
+ * @pre: The @p name is not yet used or predefined.
+ * @param ctx    context of the declaration, only globals
+ * @param name   identifier declared
+ * @param rty    (optionnal) record type
+ * @return       @p rty if correct declaration, NULL otherwise 
  */
 noll_type_t *
 noll_mk_fun_decl (noll_context_t * ctx, const char *name, noll_type_t * rty)
@@ -198,8 +210,9 @@ noll_mk_fun_decl (noll_context_t * ctx, const char *name, noll_type_t * rty)
     {
     case NOLL_TYP_RECORD:
       {
-	//variable declaration
-	// register it in the array of variables
+	/* global variable declaration
+	 * register it in the array of variables
+	 */
 	noll_var_register (ctx->lvar_env, name, rty, NOLL_SCOPE_GLOBAL);
 	if (rty != NULL)
 	  noll_vector_at (ctx->lvar_stack, 0) += 1;
@@ -252,7 +265,7 @@ noll_exp_typecheck_pred_basic_case (const char *name,
 	v1 = fequals->args[0]->p.sid;
       if (fequals->args[1]->discr == NOLL_F_LVAR)
 	v2 = fequals->args[1]->p.sid;
-      if ((v1 != 0 || v2 != 1) && (v1 != 1 || v2 != 0))
+      if ((v1 != 1 || v2 != 2) && (v1 != 2 || v2 != 1))
 	{
 	  noll_error (1, "Building predicate definition ", name);
 	  noll_error (1, "Base case not well defined ",
@@ -304,7 +317,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
   /* assert:name is unique */
   if (strcmp (ctx->pname, name))
     {
-      //name does not correspond to this predicate definition
+      /* name does not correspond to this predicate definition */
       noll_error (1, "Building predicate definition ", name);
       noll_error (1, "Incorrect predicate name in ", name);
       return UNDEFINED_ID;
@@ -315,7 +328,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    * since no global context is kept for the definition of
    * the predicate
    */
-  if (noll_vector_at (ctx->lvar_stack, 0) != 0)
+  if (noll_vector_at (ctx->lvar_stack, 0) >= 2)
     {
       noll_error (1, "Building predicate definition ", name);
       noll_error (1, "Global variables declared before ", name);
@@ -325,7 +338,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    * assert: number of parameters is at least 2 and
    * exactly the ctx->lvar_stack[1]
    */
-  if (noll_vector_size (ctx->lvar_stack) <= 1)
+  if (noll_vector_size (ctx->lvar_env) <= 2)
     {
       noll_error (1, "Building predicate definition ", name);
       noll_error (1, "Empty set of parameters in ", name);
@@ -356,7 +369,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    * the predicate definition is built
    */
   /* cond 0: all the parameters are of record type */
-  for (uint_t i = 0; i < npar; i++)
+  for (uint_t i = 1; i <= npar; i++)
     {
       if (noll_var_record (ctx->lvar_env, i) == UNDEFINED_ID)
 	{
@@ -372,15 +385,15 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    * TODO: for dll, the first four parameters shall have the same sort.
    * TODO: the sort of the remaining parameters shall be checked also!
    */
-  /* first parameters is at position 0 in lvar_env */
-  uint_t pred_ty = noll_var_record (ctx->lvar_env, 0);
-  uint_t nrec_p = 1;
+  /* first parameters is at position 1 in lvar_env */
+  uint_t pred_ty = noll_var_record (ctx->lvar_env, 1);
+  uint_t nrec_p = 0;
   while ((nrec_p < npar)
-	 && (noll_var_record (ctx->lvar_env, nrec_p) == pred_ty))
+	 && (noll_var_record (ctx->lvar_env, nrec_p + 1) == pred_ty))
     nrec_p++;
 #ifndef NDEBUG
-  //fprintf(stderr, "noll_mk_fun_def: Number of recursive parameters %d.\n",
-  //        nrec_p);
+  fprintf(stderr, "noll_mk_fun_def: Number of recursive parameters %d.\n",
+          nrec_p);
 #endif
   if (nrec_p < 2)
     {
@@ -426,7 +439,11 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    */
   if (noll_exp_typecheck_pred_basic_case (name, nrec_p, fequals)
       == UNDEFINED_ID)
-    return UNDEFINED_ID;
+      {
+      noll_error (1, "Building predicate definition ", name);
+      noll_error (1, "Bad type for predicate ", "");
+      return UNDEFINED_ID;
+      }
 
   /*
    * cond 4: < exists > defines variables such that
@@ -440,10 +457,10 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
    */
   noll_var_array *qarr = fexists->p.quant.lvars;
   /* check the starting index of existentially quantified vars */
-  if ((qarr == NULL) || (npar != fexists->p.quant.lstart))
+  if ((qarr == NULL) || ((npar+1) != fexists->p.quant.lstart))
     {
       noll_error (1, "Building predicate definition ", name);
-      noll_error (1, "Exists without variables ", "");
+      noll_error (1, "Exists without variables ", "(or internal error)");
       return UNDEFINED_ID;
     }
   uint_t uid = 0;		/* the identifier of the first recursive variable */
@@ -527,9 +544,9 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 			 */
 			noll_space_t *pto = noll_mk_form_pto (ctx, si);
 			//add to sigma_0 or sigma_1
-			if (pto->m.pto.sid == 0)
+			if (pto->m.pto.sid == VID_FST_PARAM)
 			{
-				// 0 is the index of the "in" parameter
+				// VID_FST_PARAM is the index of the "in" parameter
 				if (sigma_0 != NULL)
 				{
 					noll_error (1, "Building predicate definition ", name);
@@ -667,7 +684,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 		    if (p0 == UNDEFINED_ID || p1 == UNDEFINED_ID
 			|| noll_var_record (ctx->lvar_env, p0) != pred_ty
 			|| noll_var_record (ctx->lvar_env, p1) != pred_ty
-			|| p1 != 1)
+			|| p1 != 2)
 		      {
 			noll_error (1, "Building predicate definition ",
 				    name);
@@ -692,7 +709,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 		for (; i < npar; i++)
 		  {
 		    if (si->args[i]->discr != NOLL_F_LVAR
-			|| ((noll_vector_at (ctx->lvar_env, i))->vid
+			|| ((noll_vector_at (ctx->lvar_env, i + 1))->vid
 			    != si->args[i]->p.sid))
 		      {
 			noll_error (1, "Building predicate definition ",
@@ -926,7 +943,7 @@ noll_exp_t *
 noll_mk_exists (noll_context_t * ctx, noll_exp_t * term)
 {
   //the exist variables are at the end of the stack,
-  //i.e.top of ctx->* var_stack element,
+  //i.e., top of ctx->* var_stack element,
   //in ctx->* _env
 
   uint_t nb_exists_lvar = noll_vector_last (ctx->lvar_stack);
@@ -1012,13 +1029,14 @@ noll_mk_symbol (noll_context_t * ctx, const char *name)
   fprintf (stdout, "mk_symbol: start %s\n", name);
   fflush (stdout);
 #endif
-  // special case of 'nil'?
+  /* special case of 'nil'?
   if (strcmp (name, "nil") == 0)
     {
       ret = noll_mk_op (NOLL_F_LVAR, NULL, 0);
       ret->p.sid = VNIL_ID;
       return ret;
     }
+    */
   //search the variable environment
   // -search in the location env
   assert (ctx->lvar_env != NULL);
@@ -1027,7 +1045,7 @@ noll_mk_symbol (noll_context_t * ctx, const char *name)
     typ = (noll_vector_at (ctx->lvar_env, sid))->vty;
   else
     {
-      //search in the set of location env
+      //search in the sloc env
       assert (ctx->svar_env != NULL);
       sid = noll_var_array_find_local (ctx->svar_env, name);
 
@@ -2176,7 +2194,7 @@ noll_exp_push_top (noll_context_t * ctx, noll_exp_t * e, noll_form_t * form)
     noll_var_array_delete (form->svars);
   form->svars = ctx->svar_env;
 #ifndef NDEBUG
-  fprintf (stdout, "noll_exp_push_top:\n\t");
+  fprintf (stdout, "\nnoll_exp_push_top:\n\t");
   noll_var_array_fprint (stdout, form->lvars, "lvars");
   fprintf (stdout, "\n\t");
   noll_var_array_fprint (stdout, form->svars, "svars");

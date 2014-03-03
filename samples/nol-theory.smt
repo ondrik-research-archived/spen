@@ -51,7 +51,7 @@
         mainly used to be able to type quantifiers in space formulas;
 
       - (ref f v) denotes the tuple used in a points-to constraint, where
-        f is a reference field which value is v;
+        f is a reference field which value is v, type is a set;
 
       - (sref sr sr) denotes the union of sets of tuples used in the points-to
         constraint;

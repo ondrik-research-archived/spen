@@ -142,6 +142,13 @@ extern "C"
     char *pname;
   } noll_context_t;
 
+/**
+ * Constants used for variables & parameters identifiers
+ */
+#define VID_NIL 0
+#define VID_FST_PARAM 1
+#define VID_SND_PARAM 2
+
 /* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
