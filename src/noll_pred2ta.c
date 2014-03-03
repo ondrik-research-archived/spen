@@ -137,3 +137,12 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 
 	return ta;
 }
+
+noll_ta_t* noll_edge2ta(
+	const noll_edge_t*               edge)
+{
+	assert(NULL != edge);
+	assert(NOLL_EDGE_PRED == edge->kind);
+
+	return noll_pred2ta(noll_pred_getpred(edge->label));
+}
