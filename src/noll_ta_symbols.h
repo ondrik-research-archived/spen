@@ -29,6 +29,7 @@ extern "C"
 {
 #endif
 
+#include "noll_preds.h"
 #include "noll_types.h"
 #include "noll_vector.h"
 
@@ -121,6 +122,26 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
 const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
 	unsigned char                    id_rel,
 	const noll_uid_array*            alias_marking);
+
+
+/**
+ * @brief  Creates a unique TA symbol of a node with higher-order predicate
+ *
+ * The TA symbols are managed in a global database and the procedure first
+ * attempts to find the given symbol in the database and only in the case it is
+ * not present there it creates a new record and inserts it into the database.
+ *
+ * @param[in]  pred     The higher-order predicate
+ * @param[in]  vars     The variables aliased to the node (may be unordered,
+ *                      they will be sorted internally)
+ * @param[in]  marking  The marking of the node
+ *
+ * @returns  A unique pointer to the symbol
+ */
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
+	const noll_pred_t*               pred,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking);
 
 
 #ifdef	__cplusplus

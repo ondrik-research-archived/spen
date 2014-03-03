@@ -663,6 +663,10 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	assert(NULL != g->var2node);
 	assert(NULL != g->edges);
 
+	NOLL_DEBUG("********************************************************************************\n");
+	NOLL_DEBUG("*                                 GRAPH -> TA                                  *\n");
+	NOLL_DEBUG("********************************************************************************\n");
+
 	NOLL_DEBUG("g = %p\n", g);
 	NOLL_DEBUG("number of nodes in g = %d\n", g->nodes_size);
 	NOLL_DEBUG("LVars:\n");
