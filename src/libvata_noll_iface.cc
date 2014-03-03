@@ -45,6 +45,8 @@ typedef struct type_noll_ta_t
 } noll_ta_t;
 
 
+// TODO: use sth similar to DirectAlphabet and pass directly pointers to the
+// symbols in SPEN (they are unique!)
 class NollAlphabet : public TreeAut::AbstractAlphabet
 {
 private:  // data members
