@@ -34,6 +34,7 @@ enum noll_tree_label_type_t
 	NOLL_TREE_LABEL_ALLOCATED,        ///< the node is allocated: no aliasing is used
 	NOLL_TREE_LABEL_ALIASING_VARIABLE,///< a node with a program variable is aliased
 	NOLL_TREE_LABEL_ALIASING_MARKING, ///< marking is used as the relation
+	NOLL_TREE_LABEL_HIGHER_PRED,      ///< higher-order predicate
 };
 
 typedef struct noll_ta_symbol
@@ -67,9 +68,22 @@ typedef struct noll_ta_symbol
 			unsigned char id_relation;
 		} alias_marking;
 
-		/// Name of the variable the node is aliased to (for aliasing_type ==
+		/// Name of the variable the node is aliased to (for label_type ==
 		/// NOLL_TREE_LABEL_ALIASING_VARIABLE)
 		uid_t alias_var;
+
+		/// Higher-order predicate (for label_type == NOLL_TREE_LABEL_HIGHER_PRED)
+		struct
+		{
+			/// the higher-order predicate represented by the symbol
+			const noll_pred_t* pred;
+
+			/// Variables that might alias with the node
+			noll_uid_array* vars;
+
+			/// The (least) marking of the node
+			noll_uid_array* marking;
+		} higher_pred;
 	};
 
 	/// The string representation (for humans)
@@ -241,8 +255,35 @@ static bool noll_ta_symbol_match(
 				lhs->alias_marking.marking, rhs->alias_marking.marking);
 		}
 
+		case NOLL_TREE_LABEL_HIGHER_PRED:
+		{
+			if (lhs->higher_pred.pred != rhs->higher_pred.pred)
+			{
+				return false;
+			}
+
+			// TODO: this might be better if the variables are always sorted
+			assert(NULL != lhs->higher_pred.vars);
+			assert(NULL != rhs->higher_pred.vars);
+			if (!noll_uid_array_subseteq(lhs->higher_pred.vars, rhs->higher_pred.vars) ||
+				!noll_uid_array_subseteq(rhs->higher_pred.vars, lhs->higher_pred.vars))
+			{
+				return false;
+			}
+
+			assert(NULL != lhs->higher_pred.marking);
+			assert(NULL != rhs->higher_pred.marking);
+			if (!noll_uid_array_equal(lhs->higher_pred.marking, rhs->higher_pred.marking))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		default:
 		{
+			NOLL_DEBUG("ERROR: invalid symbol label type!\n");
 			assert(false);
 		}
 	}
@@ -366,8 +407,19 @@ static void noll_ta_symbol_kill(
 			break;
 		}
 
+		case NOLL_TREE_LABEL_HIGHER_PRED:
+		{
+			assert(NULL != sym->higher_pred.marking);
+			noll_uid_array_delete(sym->higher_pred.marking);
+			assert(NULL != sym->higher_pred.vars);
+			noll_uid_array_delete(sym->higher_pred.vars);
+
+			break;
+		}
+
 		default:
 		{
+			NOLL_DEBUG("ERROR: invalid symbol label type!\n");
 			assert(false);
 		}
 	}
@@ -496,6 +548,85 @@ static char* noll_ta_symbol_alloc_str(
 
 	// remove the temporary strings
 	free(str_sels);
+	free(str_mark);
+	free(str_vars);
+
+	return str;
+}
+
+
+/**
+ * @brief  Retrieves the string for a higher-order predicate
+ *
+ * @param[in]  sym  The node the string of which is desired
+ *
+ * @returns  The string representation of the symbol. The caller is responsible
+ *           for the deallocation of the returned memory.
+ */
+static char* noll_ta_symbol_higher_pred_str(
+	const noll_ta_symbol_t* sym)
+{
+	assert(NULL != sym);
+	assert(NOLL_TREE_LABEL_HIGHER_PRED == sym->label_type);
+	assert(NULL != sym->higher_pred.pred);
+	assert(NULL != sym->higher_pred.pred->pname);
+	assert(NULL != sym->higher_pred.marking);
+	assert(NULL != sym->higher_pred.vars);
+
+	const char* str_pred = sym->higher_pred.pred->pname;
+	char* str_mark = noll_uid_array_tostring(sym->higher_pred.marking);
+	assert(NULL != str_mark);
+	char* str_vars = noll_uid_array_tostring(sym->higher_pred.vars);
+	assert(NULL != str_vars);
+
+	// TODO: the following might not have to be done if we return the length of
+	// the strings from the respective function calls
+	size_t len_pred = strlen(sym->higher_pred.pred->pname);
+	size_t len_mark = strlen(str_mark);
+	size_t len_vars = strlen(str_vars);
+
+	size_t total_len =
+		1 /* '[' */ +
+		1 /* '<' */ +
+		len_pred +
+		1 /* '>' */ +
+		1 /* ',' */ +
+		1 /* ' ' */ +
+		1 /* '[' */ +
+		len_mark +
+		1 /* ']' */ +
+		1 /* ',' */ +
+		1 /* ' ' */ +
+		1 /* '{' */ +
+		len_vars +
+		1 /* '}' */ +
+		1 /* ']' */ +
+		1 /* '\0' */;
+
+	char* str = malloc(total_len);
+	size_t index = 0;
+	str[index++] = '[';
+	str[index++] = '<';
+	strcpy(&str[index], str_pred);
+	index += len_pred;
+	str[index++] = '>';
+	str[index++] = ',';
+	str[index++] = ' ';
+	str[index++] = '[';
+	strcpy(&str[index], str_mark);
+	index += len_mark;
+	str[index++] = ']';
+	str[index++] = ',';
+	str[index++] = ' ';
+	str[index++] = '{';
+	strcpy(&str[index], str_vars);
+	index += len_vars;
+	str[index++] = '}';
+	str[index++] = ']';
+	assert(index == total_len - 1);
+	str[index] = '\0';
+
+	// remove the temporary strings
 	free(str_mark);
 	free(str_vars);
 
@@ -638,8 +769,15 @@ static void noll_ta_symbol_fill_str(
 			break;
 		}
 
+		case NOLL_TREE_LABEL_HIGHER_PRED:
+		{
+			sym->str = noll_ta_symbol_higher_pred_str(sym);
+			break;
+		}
+
 		default:
 		{
+			NOLL_DEBUG("ERROR: invalid symbol label type!\n");
 			assert(false);
 		}
 	}
@@ -772,4 +910,38 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
 	const noll_ta_symbol_t* ret_sym = noll_symbol_spawn(symb);
 	assert(NULL != ret_sym);
 	return ret_sym;
+}
+
+
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
+	const noll_pred_t*               pred,
+	const noll_uid_array*            vars,
+	const noll_uid_array*            marking)
+{
+	assert(NULL != pred);
+	assert(NULL != vars);
+	assert(NULL != marking);
+
+	noll_ta_symbol_t* symb = noll_ta_symbol_create();
+	assert(NULL != symb);
+
+	symb->str = NULL;                       // clear the string
+	symb->label_type = NOLL_TREE_LABEL_HIGHER_PRED;
+	NOLL_DEBUG("Here, we should set the predicate\n");
+	symb->higher_pred.pred = pred;
+
+	symb->higher_pred.vars = noll_uid_array_new();
+	assert(NULL != symb->higher_pred.vars);
+	noll_uid_array_copy(symb->higher_pred.vars, vars);
+
+	symb->higher_pred.marking = noll_uid_array_new();
+	assert(NULL != symb->higher_pred.marking);
+	noll_uid_array_copy(symb->higher_pred.marking, marking);
+
+	// get the unique representation of the symbol
+	const noll_ta_symbol_t* ret_sym = noll_symbol_spawn(symb);
+	assert(NULL != ret_sym);
+
+	return ret_sym;
+
 }
