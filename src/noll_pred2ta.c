@@ -117,9 +117,11 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 		const noll_ta_symbol_t* symbol_lso = noll_ta_symbol_get_unique_higher_pred(
 			p, vars, marking);
 
-		vata_add_transition(ta, 1, symbol_f  , children);
+		vata_add_transition(ta, 1, symbol_f    , children);
+		vata_add_transition(ta, 1, symbol_lso  , children);
 		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
-		vata_add_transition(ta, 2, symbol_f  , children);
+		vata_add_transition(ta, 2, symbol_f    , children);
+		vata_add_transition(ta, 2, symbol_lso  , children);
 		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
 
 		noll_uid_array_delete(marking);

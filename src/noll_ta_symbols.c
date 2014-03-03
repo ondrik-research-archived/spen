@@ -588,7 +588,13 @@ static char* noll_ta_symbol_higher_pred_str(
 	size_t total_len =
 		1 /* '[' */ +
 		1 /* '<' */ +
+		1 /* '@' */ +
+		1 /* '@' */ +
 		len_pred +
+		1 /* '(' */ +
+		1 /* ')' */ +
+		1 /* '@' */ +
+		1 /* '@' */ +
 		1 /* '>' */ +
 		1 /* ',' */ +
 		1 /* ' ' */ +
@@ -607,8 +613,14 @@ static char* noll_ta_symbol_higher_pred_str(
 	size_t index = 0;
 	str[index++] = '[';
 	str[index++] = '<';
+	str[index++] = '@';
+	str[index++] = '@';
 	strcpy(&str[index], str_pred);
 	index += len_pred;
+	str[index++] = '(';
+	str[index++] = ')';
+	str[index++] = '@';
+	str[index++] = '@';
 	str[index++] = '>';
 	str[index++] = ',';
 	str[index++] = ' ';
