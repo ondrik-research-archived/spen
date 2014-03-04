@@ -382,22 +382,16 @@ void noll_form_fill_type(noll_space_t* form, noll_uid_array* flds,
 		const noll_pred_t* pred = noll_pred_getpred(form->m.ls.pid);
 		if (pred && pred->typ) {
 			// copy pred information in the arrays
-			if (pred->typ->pfields0)
-				for (uid_t i = 0; i < noll_vector_size (pred->typ->pfields0); i++) {
-					uid_t f = noll_vector_at (pred->typ->pfields0, i);
-					if (flds)
-						noll_uid_array_cup(flds, f);
-				}
-			if (pred->typ->pfields1)
-				for (uid_t i = 0; i < noll_vector_size (pred->typ->pfields1); i++) {
-					uid_t f = noll_vector_at (pred->typ->pfields1, i);
+			if (pred->typ->pfields) // TODO: changes of fields infos in preds
+				for (uid_t i = 0; i < noll_vector_size (pred->typ->pfields); i++) {
+					uid_t f = noll_vector_at (pred->typ->pfields, i);
 					if (flds)
 						noll_uid_array_cup(flds, f);
 				}
 			if (pred->typ->ptype0 != UNDEFINED_ID)
 				if (typs)
 					noll_uid_array_cup(typs, pred->typ->ptype0);
-			if (pred->typ->ptypes)
+			if (pred->typ->ptypes) // TODO: changes of fields infos in preds
 				for (uid_t i = 0; i < noll_vector_size (pred->typ->ptypes); i++) {
 					uid_t t = noll_vector_at (pred->typ->ptypes, i);
 					if (typs)

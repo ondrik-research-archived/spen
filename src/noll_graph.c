@@ -235,19 +235,8 @@ int noll_edge_in_label (noll_edge_t* e, uint_t pid) {
 	noll_pred_typing_t* pdef = pred->typ;
 	int res = 0;
 	if (e->kind == NOLL_EDGE_PTO) {
-		for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->pfields0); i++)
-		{
-			uint_t fid = noll_vector_at(pdef->pfields0,i);
-			if (fid == e->label)
-			  res = 1;
-		}
-		
-		for (uint_t i = 0; (res == 0) && i < noll_vector_size(pdef->pfields1); i++)
-		{
-			uint_t fid = noll_vector_at(pdef->pfields1,i);
-			if (fid == e->label)
-			  res = 1;
-		}
+		if (noll_vector_at(pdef->pfields,e->label) != NOLL_PFLD_NONE) 
+		   res = 1;
 	}
 	else {
 		/* it is a predicate edge */

@@ -574,12 +574,13 @@ int bool_abstr_membership(noll_form_t* form, FILE *out) {
 			if (pid >= 0) { //the set of locations variable is bound to a predicate pid
 				const noll_pred_t* pred = noll_pred_getpred(pid);
 				assert(NULL != pred);
-				noll_uid_array* f_array = pred->typ->pfields0;
+				noll_uid_array* f_array = pred->typ->pfields;
 
 				//write x in alpha => disjunction of points-to with no destination
 				int flag = 1; //used to print just once the index of the membership predicate and the 0 at the end of the clause
-				for (uint_t fa = 0; fa <= 1; fa++) {
+				/* for (uint_t fa = 0; fa <= 1; fa++) { */
 					for (uint_t k = 0; k < noll_vector_size (f_array); k++) {
+						if (noll_vector_at(f_array,k) != NOLL_PFLD_NONE) {
 						//get the source type of a pointer field, the statement below does not work
 						uint_t type_source_field =
 								noll_vector_at (fields_array,
@@ -609,9 +610,10 @@ int bool_abstr_membership(noll_form_t* form, FILE *out) {
 									noll_vector_at (form->svars,j)->vname );
 #endif
 						}
+						}
 					}
-					f_array = pred->typ->pfields1;
-				}
+				/*	f_array = pred->typ->pfields1;
+				} */
 				if (!flag) {
 
 					fprintf(out, "0\n");
@@ -834,14 +836,16 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 			const noll_pred_t* pred =
 					noll_pred_getpred(var_ls[j].predicate->pid);
 			assert(NULL != pred);
-			noll_uid_array* fields0 = pred->typ->pfields0;
+			noll_uid_array* fields = pred->typ->pfields;
 			// fields_level0_pred_array[ var_ls[j].predicate->pid ];
 			int flag = 0;
-			for (uint_t f1 = 0; f1 < noll_vector_size (fields0); f1++) {
-				if (field == noll_vector_at (fields0, f1)) {
+			/* for (uint_t f1 = 0; f1 < noll_vector_size (fields); f1++) { */
+			/* change of the fields infos in preds */
+				if (noll_vector_at (fields, field) != NOLL_PFLD_NONE &&
+				    noll_vector_at (fields, field) != NOLL_PFLD_INNER) {
 					flag = 1;
-					break;
-				}
+			/*		break;
+				} */
 
 			}
 			if (flag) {
@@ -937,6 +941,8 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 			assert(NULL != pi);
 			const noll_pred_t* pj = noll_pred_getpred(j);
 			assert(NULL != pj);
+			/* change of the fields infos in preds */
+			/*
 			noll_uid_array* fields01 = pi->typ->pfields0; //fields_level0_pred_array[i];
 			noll_uid_array* fields02 = pj->typ->pfields0; //fields_level0_pred_array[j];
 			for (uint_t t1 = 0; t1 < noll_vector_size (fields01); t1++)
@@ -954,6 +960,22 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 					}
 					break;
 				}
+				*/
+				for (uint_t fid = 0; fid < noll_vector_size(fields_array); fid++)
+				    if ((noll_vector_at(pi->typ->pfields,fid) != NOLL_PFLD_NONE) &&
+				        (noll_vector_at(pi->typ->pfields,fid) != NOLL_PFLD_INNER) &&	        			
+				        (noll_vector_at(pj->typ->pfields,fid) != NOLL_PFLD_NONE) &&
+				        (noll_vector_at(pj->typ->pfields,fid) != NOLL_PFLD_INNER))
+				    {
+						common_fields[i][j] = 1;
+						common_fields[j][i] = 1;
+#ifndef NDEBUG
+						fprintf (stdout, "%s has common fields with %s\n",
+								noll_pred_getpred(i)->pname,
+								noll_pred_getpred(j)->pname);
+#endif
+						break;
+					  }
 		}
 	}
 
@@ -975,10 +997,15 @@ int bool_abstr_det(noll_form_t* form, FILE *out) {
 				const noll_pred_t* pred2p =
 						noll_pred_getpred (var_ls[j].predicate->pid);
 				assert(NULL != pred2p);
+				/* changes of fields infos in prds */
+				/*
 				uint_t type1 = noll_vector_at (fields_array,
 						noll_vector_at (pred1p->typ->pfields0, 0))->src_r;
 				uint_t type2 = noll_vector_at (fields_array,
 						noll_vector_at (pred2p->typ->pfields0, 0))->src_r;
+				*/
+				uint_t type1 = pred1p->typ->ptype0;
+				uint_t type2 = pred2p->typ->ptype0;
 				assert(type1 == type2);
 				for (uint_t k = 0; k < form->pure->size; k++)
 					for (uint_t t = k + 1; t < form->pure->size; t++) // MS: why not t = k ?

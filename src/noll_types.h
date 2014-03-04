@@ -92,6 +92,17 @@ typedef struct noll_record_t {
 NOLL_VECTOR_DECLARE(noll_record_array, noll_record_t*)
 ;
 
+/** Kind of fields wrt their use in predicate definitions.
+ */
+typedef enum {
+  NOLL_PFLD_NONE = 0,
+  NOLL_PFLD_BCKBONE,
+  NOLL_PFLD_INNER,
+  NOLL_PFLD_NULL,  /* needed? */
+  NOLL_PFLD_BORDER,
+  NOLL_PFLD_OTHER
+} noll_field_e;
+
 /** Field information:
  * - the name of the field declared in the program
  * - the source record
@@ -102,7 +113,11 @@ typedef struct noll_field_t {
 	uid_t fid; // field identifier
 	uid_t src_r; // identifier of the source record
 	uid_t pto_r; // identifier of the target record
-} noll_field_t;
+	uid_t order; // order number wrt use in predicates
+	uid_t pid; // predicate where the fields is used in the matrix
+	noll_field_e kind; // kind of the field wrt predicate pid
+} noll_field_t; 
+
 
 /** Type of the global array of fields.
  */

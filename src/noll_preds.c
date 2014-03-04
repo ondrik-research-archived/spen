@@ -52,13 +52,13 @@ noll_pred_new(const char* name, uid_t pid, noll_pred_binding_t* def) {
 	p->def = def;
 	// compute typing information
 	p->typ = (noll_pred_typing_t*) malloc(sizeof(struct noll_pred_typing_t));
-	p->typ->ptype0 = noll_var_record(p->def->vars, 0);
+	p->typ->ptype0 = noll_var_record(p->def->vars, 1);
 	p->typ->ptypes = noll_uid_array_new();
-	p->typ->pfields0 = noll_uid_array_new();
-	p->typ->pfields1 = noll_uid_array_new();
-	noll_form_fill_type(p->def->sigma_0, p->typ->pfields0, NULL);
+	p->typ->pfields = noll_uid_array_new();
+	p->typ->ppreds = noll_uid_array_new();
+	noll_form_fill_type(p->def->sigma_0, p->typ->pfields, NULL);
 	noll_form_fill_type(p->def->sigma_0, NULL, p->typ->ptypes);
-	noll_form_fill_type(p->def->sigma_1, p->typ->pfields1, p->typ->ptypes);
+	noll_form_fill_type(p->def->sigma_1, p->typ->pfields, p->typ->ptypes);
 	return p;
 }
 
@@ -132,6 +132,19 @@ noll_pred_name(uid_t pid) {
 	return pred->pname;
 }
 
+
+/** 
+ * Total ordering of predicates using their call. 
+ * Used the reverse ordering of identifiers, due
+ * to the parsing.
+ * @return true if not (rhs calls lhs)
+ */
+bool 
+noll_pred_order_lt(uid_t lhs, uid_t rhs)
+{
+	return lhs > rhs;
+}
+
 /* ====================================================================== */
 /* Printing */
 /* ====================================================================== */
@@ -157,17 +170,11 @@ void noll_pred_array_fprint(FILE* f, noll_pred_array* a, const char* msg) {
 						pi->typ->ptypes, ti)));
 		fprintf(f, "], ");
 		fprintf(f, "\n\t\trec fields [");
-		if (pi->typ->pfields0 != NULL)
-			for (uint_t fi = 0; fi < noll_vector_size(pi->typ->pfields0); fi++)
-				fprintf(f, "%s, ", noll_field_name(noll_vector_at(
-						pi->typ->pfields0, fi)));
-		fprintf(f, "], ");
-		fprintf(f, "\n\t\tnested fields [");
-		if (pi->typ->pfields1 != NULL)
-			for (uint_t fi = 0; fi < noll_vector_size(pi->typ->pfields1); fi++)
-				fprintf(f, "%s, ", noll_field_name(noll_vector_at(
-						pi->typ->pfields1, fi)));
-		fprintf(f, "]\n ");
+		if (pi->typ->pfields != NULL)
+			for (uint_t fi = 0; fi < noll_vector_size(pi->typ->pfields); fi++)
+				fprintf(f, "%s(%d), ", noll_field_name(fi), noll_vector_at(
+						pi->typ->pfields, fi));
+		fprintf(f, "]\n");
 	}
 	fprintf(f, " - ]");
 	fflush(f);

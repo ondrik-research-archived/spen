@@ -71,15 +71,6 @@ extern "C"
      */
     noll_uid_array* ppreds;   
   } noll_pred_typing_t;
-
-  typedef enum {
-    NOLL_PFLD_NONE = 0,
-    NOLL_PFLD_BCKBONE,
-    NOLL_PFLD_INNER,
-    NOLL_PFLD_NULL,
-    NOLL_PFLD_BORDER,
-    NOLL_PFLD_OTHER
-  } noll_pfld_t;
   
   /** Predicate information:
    * - the name of the predicate
@@ -132,6 +123,9 @@ extern "C"
 
   const char* noll_pred_name (uid_t pid);
   /* Accessors */
+  
+  bool noll_pred_order_lt(uid_t lhs, uid_t rhs);
+  /* Total ordering of predicates using their call */
 
   /* ====================================================================== */
   /* Printing */

@@ -779,10 +779,16 @@ noll_graph_paths_fields (noll_graph_t * g, noll_uid_array * edge_set)
 	{
 	  const noll_pred_t *pred = noll_pred_getpred (label);
 	  assert (NULL != pred);
+	  /* changes in infos of fields in preds */
+	  /*
 	  noll_uid_array *fields0 = pred->typ->pfields0;
 	  for (uint_t fi = 0; fi < noll_vector_size (fields0); fi++)
 	    {
 	      uint_t f = noll_vector_at (fields0, fi);
+	  */
+	  for (uint_t f = 0; f < noll_vector_size(fields_array); f++) 
+	    if (noll_vector_at(pred->typ->pfields, f) != NOLL_PFLD_NONE &&
+	        noll_vector_at(pred->typ->pfields, f) != NOLL_PFLD_INNER) {
 	      paths[f][src][dst] = in_set[ei] ? 2 : 1;
 	      for (uint_t ni = 0; ni < g->nodes_size; ni++)
 		if (paths[label][ni][src])
@@ -790,7 +796,7 @@ noll_graph_paths_fields (noll_graph_t * g, noll_uid_array * edge_set)
 		    paths[label][ni][dst] = ((paths[label][ni][src] == 2)
 					     && in_set[ei]) ? 2 : 1;
 		  }
-
+	     
 	    }
 	}
       else
@@ -1411,7 +1417,7 @@ return_select_ls:
 
 /**
  * Check that the graph in @p g2 is an unfolding of the edge @p e1.
- * The mapping of the arguments of @p e1 on nodes of @p g2 are given by @p args2.
+ * The mapping of the arguments of @p e1 on nodes of @p g2 are given by @p h.
  */
 int
 noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
