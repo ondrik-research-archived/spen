@@ -34,18 +34,31 @@
 /* Datatypes */
 /* ====================================================================== */
 
-/**
- * Type for tree automaton format used here.
- * TODO: define tree automaton type here or anywhere
- */
-//#define noll_ta_t  void
-
 
 /* ====================================================================== */
 /* Translators */
 /* ====================================================================== */
 
-noll_ta_t* noll_graph2ta(noll_graph_t* g);
-/* Translates g into a tree automaton. */
+/**
+ * @brief  Translates a graph into a TA
+ *
+ * Given a graph @p graph and a homomorphism @p homo, this function transforms
+ * @p graph into a tree automaton accepting a singleton set the element of
+ * which corresponds to @p graph. This is to be used when checking whether the
+ * graph is a model of a predicate edge. The @p homo array maps the arguments
+ * of the predicate edge to nodes of the graph, namely @p homo[0] corresponds
+ * to the source of the edge, @p homo[1] to the destination of the edge, and
+ * the rest of @p homo are the arguments in the same order as in the
+ * instantiation of the predicate.
+ *
+ * @param[in]  graph  The graph to be translated to a TA
+ * @param[in]  homo   The mapping of arguments of a predicate edge to nodes of
+ *                    @p graph
+ *
+ * @returns  The TA encoding @p graph
+ */
+noll_ta_t* noll_graph2ta(
+	const noll_graph_t*       graph,
+	const noll_uid_array*     homo);
 
 #endif /* NOLL_GRAPH2TA_H_ */

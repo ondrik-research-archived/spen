@@ -660,7 +660,22 @@ static char* noll_ta_symbol_alias_var_str(
 	assert(NULL != sym);
 	assert(NOLL_TREE_LABEL_ALIASING_VARIABLE == sym->label_type);
 
-	assert(false);
+	static const size_t BUFFER_SIZE = 16;
+
+	char* buffer = malloc(BUFFER_SIZE);
+	size_t index = 0;
+
+	assert(index < BUFFER_SIZE);
+	index += snprintf(
+		&buffer[index],
+		BUFFER_SIZE - index,
+		"|var(%u)|",
+		sym->alias_var);
+
+	assert(index < BUFFER_SIZE);
+	buffer[index] = '\0';
+
+	return buffer;
 }
 
 
