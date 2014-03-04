@@ -82,7 +82,7 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 
 	for (uint_t i = 0; i < noll_vector_size (h->shom); i++) {
 		noll_shom_t* shi = noll_vector_at(h->shom, i);
-		fprintf (f, "Simple Hom %d for n-graph %d: \n", i, shi->ngraph);
+		fprintf (f, "Simple Hom %d for n-graph %lu: \n", i, shi->ngraph);
 		noll_graph_t* ngi = noll_vector_at(noll_prob->ngraph, i);
 
 		/* print node mapping */
