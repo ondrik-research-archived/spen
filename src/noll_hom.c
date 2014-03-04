@@ -1420,8 +1420,12 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1) {
 
 	/* TODO: select the method of checking entailment using the option */
 
+	noll_uid_array* homo = noll_uid_array_new();
+	assert(NULL != homo);
+	noll_uid_array_push(homo, 0);
+	noll_uid_array_push(homo, 2);
 	/* HERE follows the TA based procedure */
-	noll_ta_t* g2_ta = noll_graph2ta(g2);
+	noll_ta_t* g2_ta = noll_graph2ta(g2, homo);
 	assert(NULL != g2_ta);
 #ifndef NDEBUG
     NOLL_DEBUG("\nGraph TA:\n");
