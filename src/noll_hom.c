@@ -76,39 +76,39 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 	if (h->is_empty) {
       fprintf (f, "EMPTY\n");
 	}
-	
-	if (h->shom == NULL) 
+
+	if (h->shom == NULL)
 	return;
-	
+
 	for (uint_t i = 0; i < noll_vector_size (h->shom); i++) {
 		noll_shom_t* shi = noll_vector_at(h->shom, i);
 		fprintf (f, "Simple Hom %d for n-graph %d: \n", i, shi->ngraph);
 		noll_graph_t* ngi = noll_vector_at(noll_prob->ngraph, i);
-		
+
 		/* print node mapping */
-		fprintf (f, "\tNode mapping (n -> p): ");		
+		fprintf (f, "\tNode mapping (n -> p): ");
 		if (shi->node_hom == NULL)
 			fprintf (f, "NULL\n");
 		else {
 			fprintf (f, "[");
-			for (uint_t j = 0; j < ngi->nodes_size; j++) 
+			for (uint_t j = 0; j < ngi->nodes_size; j++)
 				fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
 			fprintf (f, "]");
 		}
-		
+
 		/* print edge mapping */
-		fprintf (f, "\tEdge mapping (p -> n): ");		
+		fprintf (f, "\tEdge mapping (p -> n): ");
 		if (shi->pused == NULL)
 			fprintf (f, "NULL\n");
 		else {
 			fprintf (f, "[");
-			for (uint_t j = 0; j < noll_vector_size(shi->pused); j++) 
+			for (uint_t j = 0; j < noll_vector_size(shi->pused); j++)
 				fprintf (f, "e%d --> e%d,", j, noll_vector_at(shi->pused,j));
 			fprintf (f, "]");
 		}
 	}
-	
-	
+
+
 }
 
 /* ====================================================================== */
@@ -971,7 +971,7 @@ int noll_graph_shom (noll_hom_t * h, size_t i);
 /**
  * Search a homomorphism to prove noll_prob.
  * Store the homomorphism found in noll_prob->hom.
- * @return 1 if hom found, < 1 otherwise 
+ * @return 1 if hom found, < 1 otherwise
  */
 int
 noll_graph_homomorphism (void)
@@ -998,11 +998,11 @@ noll_graph_homomorphism (void)
 }
 
 /**
- * Build node_hom component by mapping 
- * all nodes in @p g1 to nodes in @p g2 
+ * Build node_hom component by mapping
+ * all nodes in @p g1 to nodes in @p g2
  * such that the labeling with reference vars is respected
  * and the difference constraints of g1 are in g2.
- * 
+ *
  * @param g1  domain graph for the homomorphism
  * @param g2  co-domain graph
  * @return    the mapping built, NULL otherwise
@@ -1038,7 +1038,7 @@ noll_graph_shom_nodes (noll_graph_t * g1, noll_graph_t * g2)
 	}
     }
   /* Check that all nodes of g1 are mapped,
-   * assert: all nodes of g1 are labeled by reference vars 
+   * assert: all nodes of g1 are labeled by reference vars
    */
   for (uint_t i = 0; i < g1->nodes_size; i++)
     if (n_hom[i] == UNDEFINED_ID)
@@ -1096,11 +1096,11 @@ return_shom_nodes:
 }
 
 /**
- * Build pto_hom component by mapping 
- * all pto edges in @p g1 to pto edges in @p g2 
+ * Build pto_hom component by mapping
+ * all pto edges in @p g1 to pto edges in @p g2
  * such that the labeling with fields is respected.
  * Mark the mapped edges of @p g2 in usedg2.
- * 
+ *
  * @param g1     domain graph for the homomorphism
  * @param g2     co-domain graph
  * @param n_hom  node mapping
@@ -1119,8 +1119,8 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
   noll_uid_array *pto_hom = noll_uid_array_new ();
   noll_uid_array_reserve (pto_hom, noll_vector_size (g1->edges));
 
-  /* go through the pto edges of g1 and see edges of g2 
-   * stop when a pto edge is not mapped 
+  /* go through the pto edges of g1 and see edges of g2
+   * stop when a pto edge is not mapped
    */
   bool isHom = true;
   for (uint_t ei1 = 0;
@@ -1147,7 +1147,7 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
       if (g2->mat[nsrc_e2] != NULL)
 	{
 	  for (uint_t i = 0;
-	       (i < noll_vector_size (g2->mat[nsrc_e2])) && (isHom == false); 
+	       (i < noll_vector_size (g2->mat[nsrc_e2])) && (isHom == false);
 	       i++)
 	    {
 	      uint_t ei2 = noll_vector_at (g2->mat[nsrc_e2], i);
@@ -1178,8 +1178,8 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
 	}
       /* else, continue */
     }
-  /* mapping succeded if isHom = true, 
-   * otherwise free the allocated structures and return NULL 
+  /* mapping succeded if isHom = true,
+   * otherwise free the allocated structures and return NULL
    */
   if (isHom == false)
     {
@@ -1190,32 +1190,32 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
 }
 
 /**
- * Select the subgraph of g mapping the predicate 
+ * Select the subgraph of g mapping the predicate
  * with name @p label and arguments @p args.
  * The selected subgraph is put in a copy of @p g, say g2, where
  * only the edges encoding the predicate are presented.
- * 
- * First, a set of nodes Vg in g is computed as the set of nodes 
- * reachable using the edges of g labeled by 
+ *
+ * First, a set of nodes Vg in g is computed as the set of nodes
+ * reachable using the edges of g labeled by
  * L2 = set of fields in @p label and predicate labels usied in @p label
- * on the paths from args[0] to args[1..] or 
+ * on the paths from args[0] to args[1..] or
  * on cyclic paths from args[0].
  * (Nodes used as arguments on predicate edges are also marked.)
  * Then, edges outgoing from Vg \ args[2..] (border) are all marked
  * as used (even not labeled by labels in l2) because they cannot be
  * used by another predicate (from the * semantics).
  * The subgraph g2 is defined as the set of edges labeled with L2
- * and outgoing from Vg \ args[2..], and the set of difference edges 
+ * and outgoing from Vg \ args[2..], and the set of difference edges
  * between these vertices.
- * 
+ *
  * @param g      the graph in which the selection is done
  * @param eid    identifier of the edge with label
  * @param label  label of the predicate
  * @param args   nodes used as argument of the predicate
  * @param used   set of already used edges of g2
  */
-noll_graph_t* 
-noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label, 
+noll_graph_t*
+noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 					 noll_uid_array* args,
                      noll_uid_array* used)
 {
@@ -1236,10 +1236,10 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 #endif
 
 	/*
-	 * Allocate the result 
+	 * Allocate the result
 	 */
 	noll_graph_t* rg = noll_graph_copy_nodes(g);
-	
+
 	/*
 	 * Build the set of nodes vg
 	 */
@@ -1263,14 +1263,14 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 	int* eg = (int*) malloc(eg_size * sizeof(int));
 	for (uint_t i = 0; i < eg_size; i++)
 	  eg[i] = 0; /* not marked */
-	/* exploration */	
+	/* exploration */
 	while (noll_vector_size(vqueue) >= 1) {
 		uint_t v = noll_vector_last(vqueue);
 		noll_uid_array_pop(vqueue);
 		/* test that there is not an already marked node */
 		if (vg[v] >= 1) {
-		  /* mark it again as explored */	  
-          vg[v] = 2; 
+		  /* mark it again as explored */
+          vg[v] = 2;
 		}
 		else {
 		    /* mark the node */
@@ -1282,11 +1282,11 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 					uint_t ei = noll_vector_at(out_v, i);
 					/* if this edge has been already used, then error and stop */
 					if (noll_vector_at(used,ei) != UNDEFINED_ID) {
-						fprintf (stdout, "select_ls: Explored edge already used (1)!\n"); 
+						fprintf (stdout, "select_ls: Explored edge already used (1)!\n");
 						goto return_select_ls_error;
 					}
 					noll_edge_t* e = noll_vector_at(g->edges, ei);
-					/* if the label is in the L2 set, 
+					/* if the label is in the L2 set,
 					* then add the successors to the queue */
 					if (!noll_edge_in_label(e, label))
 						continue; /* the for loop */
@@ -1298,17 +1298,17 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 				}
 			}
 		}
-	} 
+	}
 	noll_uid_array_delete(vqueue);
 
 #ifndef NDEBUG
     fprintf (stdout, "\t- exploration done, check arguments\n");
 #endif
-	
+
 	/* check that all arguments have been explored */
 	for (uint_t i = 0; i < noll_vector_size(args); i++) {
 	  if (vg[noll_vector_at(args,i)] != 2) {
-		 fprintf (stdout, "select_ls: %dth argument unexplored!\n", i); 
+		 fprintf (stdout, "select_ls: %dth argument unexplored!\n", i);
 	     goto return_select_ls_error;
 	  } else {
 		  if (i >= 2)
@@ -1319,20 +1319,20 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 #ifndef NDEBUG
     fprintf (stdout, "\t- mark used edges, build the graph\n");
 #endif
-	
-	/* 
+
+	/*
 	 * Mark the edges outgoing from vg (except from border) as used.
-	 * Insert the edges labeled by labels in L2 in the result. 
+	 * Insert the edges labeled by labels in L2 in the result.
 	 */
 	for (uint_t v = 0; v < vg_size; v++) {
 		if (vg[v] >= 0 && vg[v] <= 2) {
 			/* outgoing edges from i */
-			noll_uid_array* out_v = g->mat[v]; 
+			noll_uid_array* out_v = g->mat[v];
 			if (out_v != NULL) {
 			for (uint_t i = 0; i < noll_vector_size(out_v); i++) {
 				uint_t ei = noll_vector_at(out_v, i);
 				if (noll_vector_at(used, ei) != UNDEFINED_ID) {
-					fprintf (stdout, "select_ls: Explored edge already used (2)!\n"); 
+					fprintf (stdout, "select_ls: Explored edge already used (2)!\n");
 					goto return_select_ls_error;
 				}
 				noll_vector_at(used, ei) = eid;
@@ -1352,7 +1352,7 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 					noll_uid_array_push(rg->mat[src], new_id);
 					if (rg->rmat[dst] == NULL)
 					   rg->rmat[dst] = noll_uid_array_new();
-					noll_uid_array_push(rg->rmat[dst], new_id);	
+					noll_uid_array_push(rg->rmat[dst], new_id);
 				}
 			}
 			}
@@ -1362,7 +1362,7 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 #ifndef NDEBUG
     fprintf (stdout, "\t- insert difference edges inside the graph selected\n");
 #endif
-	
+
 	/*
 	 * Insert the difference edges between the marked vertices.
 	 */
@@ -1373,13 +1373,13 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 		}
 	}
 	goto return_select_ls;
- 
+
 return_select_ls_error:
     /* redo the used edges */
 	for (uint_t v = 0; v < vg_size; v++) {
 		if (vg[v] >= 0 && vg[v] <= 2) {
 			/* outgoing edges from i */
-			noll_uid_array* out_v = g->mat[v]; 
+			noll_uid_array* out_v = g->mat[v];
 			if (out_v != NULL) {
 			for (uint_t i = 0; i < noll_vector_size(out_v); i++) {
 				uint_t ei = noll_vector_at(out_v, i);
@@ -1391,21 +1391,21 @@ return_select_ls_error:
     /* deallocate the result */
     noll_graph_free(rg);
     rg = NULL;
- 
+
 #ifndef NDEBUG
     fprintf (stdout, "\t- return NULL\n");
 #endif
- 
+
 return_select_ls:
     /* correct return, free the auxiliary memory */
     if (vg != NULL) free (vg);
     if (eg != NULL) free (eg);
- 
+
 #ifndef NDEBUG
     fprintf (stdout, "\t- return graph\n");
     noll_graph_fprint (stdout, rg);
 #endif
-    
+
     return rg;
 }
 
@@ -1432,6 +1432,7 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
 
     noll_ta_t* e1_ta = noll_edge2ta(e1); 
     assert(NULL != e1_ta);  
+
 #ifndef NDEBUG
     NOLL_DEBUG("\nEdge TA:\n");
     vata_print_ta(e1_ta);
@@ -1451,13 +1452,13 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
 
 /**
  * Build the ls_hom component of the homomorphism
- * which maps all ls edges in @p g1 to subgraphs in @p g2 
+ * which maps all ls edges in @p g1 to subgraphs in @p g2
  * such that the labeling with fields is respected.
  * Mark the mapped edges of @p g2 in usedg2.
- * 
- * The graphs is the @return are subgraphs of g2 
+ *
+ * The graphs is the @return are subgraphs of g2
  * such that they contain only the edges mapped.
- * 
+ *
  * @param g1     domain graph for the homomorphism
  * @param g2     co-domain graph
  * @param n_hom  node mapping
@@ -1471,19 +1472,19 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
   assert (g2 != NULL);
   assert (n_hom != NULL);
   assert (usedg2 != NULL);
-  
+
   /* initialize the result with undefined identifiers */
   noll_graph_array *ls_hom = noll_graph_array_new ();
   noll_graph_array_reserve (ls_hom, noll_vector_size (g1->edges));
 
-  /* Go through the predicate edges of g1 such that 
-   * edges with greatest predicate are visited first  
+  /* Go through the predicate edges of g1 such that
+   * edges with greatest predicate are visited first
    */
   /* sort the predicate edges of g1 using insertion sort */
   uint_t sz = noll_vector_size(g1->edges);
   /* the permutation generated by the sorting */
   uint_t* t = (uint_t*) malloc(sizeof(uint_t) * sz);
-  for (uint_t i = 0; i < sz; i++) 
+  for (uint_t i = 0; i < sz; i++)
 	  t[i] = i;
   for (uint_t i = 1; i < sz; i++) {
 	  for (uint_t j = i; j >= 1; j--) {
@@ -1517,14 +1518,14 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 	  ls_hom = NULL;
 #ifndef NDEBUG
 		fprintf (stdout, "shom_ls: fails!\n");
-#endif 
+#endif
 	  // Warning: usedg2 is deselected also
 	  goto return_shom_ls;
 	   }
 	  /* otherwise, set the graph in the corresponding entry of ls_hom */
 	  noll_vector_at(ls_hom,e1id) = sg2;
-  } 
-  
+  }
+
 return_shom_ls:
   free (t);
   return ls_hom;
@@ -1533,7 +1534,7 @@ return_shom_ls:
 /**
  * Search an homomorphism from noll_prob->ngraph[i] and noll_prob->pgraph.
  * Store the found mapping in hs->shom[i].
- * 
+ *
  * @param hs   the homomorphism to be built
  * @param i    the source graph to be considered
  * @return     1 if found, -1 if incomplete, 0 otherwise
@@ -1558,12 +1559,12 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
   assert (g2->var2node != NULL);
   assert (g2->edges != NULL);
 
-  /* 
-   * Set the result code and hom 
+  /*
+   * Set the result code and hom
    */
   int res = 1;
 
-  /* 
+  /*
    * Build the mapping of nodes wrt variable labeling,
    * n_hom[n1] = n2 with n1 in g1, n2 in g2, n1, n2 node ids
    */
@@ -1574,9 +1575,9 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
       goto return_shom;
     }
 
-  /* 
+  /*
    * While building the mapping for edges,
-   * check the separation property of the mapping found 
+   * check the separation property of the mapping found
    * (i.e., an edge of g2 is not used in the mapping of two edges in g1)
    * by storing for each edge of g2, the edges of g1 mapped by the hom
    * usedg2[e2] = e1 or UNDEFINED_ID
@@ -1589,9 +1590,9 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
       noll_uid_array_push (usedg2, UNDEFINED_ID);
     }
 
-  /* 
+  /*
    * Build the mapping of points-to edges to points-to edges
-   * pto_hom[e1] = e2 
+   * pto_hom[e1] = e2
    * with ei pto edge in gi, i=1,2
    */
   noll_uid_array *pto_hom = noll_graph_shom_pto (g1, g2, n_hom, usedg2);
@@ -1601,10 +1602,10 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
       goto return_shom;
     }
 
-  /* 
+  /*
    * Build the mapping of predicate edges to subgraphs
-   * ls_hom[e1] = g2' 
-   * with e1 predicate edge id in g1, 
+   * ls_hom[e1] = g2'
+   * with e1 predicate edge id in g1,
    *      g2' subgraph of g2
    */
   noll_graph_array *ls_hom = noll_graph_shom_ls (g1, g2, n_hom, usedg2);
@@ -1693,7 +1694,7 @@ noll_graph_homomorphism_old (noll_entl_t * q)
 
   /*
    * Map all nodes in g1 to nodes in g2 such that labeling with
-   * variables is preserved 
+   * variables is preserved
    */
   h = (uint_t *) malloc (g1->nodes_size * sizeof (uint_t));
   // initialize entries by default
@@ -1734,7 +1735,7 @@ noll_graph_homomorphism_old (noll_entl_t * q)
 #endif
 
   /*
-   * Verify difference edges from g1 mapped to diff edges in g2 
+   * Verify difference edges from g1 mapped to diff edges in g2
    */
   for (uint_t ni1 = 1; ni1 < g1->nodes_size; ni1++)
     {

@@ -41,6 +41,10 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
   assert(NULL != p);
 	assert(NULL != p->pname);
 
+	NOLL_DEBUG("********************************************************************************\n");
+	NOLL_DEBUG("*                                 PRED -> TA                                   *\n");
+	NOLL_DEBUG("********************************************************************************\n");
+
   vata_ta_t* ta = NULL;
   if ((ta = vata_create_ta()) == NULL)
   {
@@ -110,9 +114,14 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_get_unique_allocated(
 			selectors, vars, marking);
 
-		vata_add_transition(ta, 1, symbol_f  , children);
+		const noll_ta_symbol_t* symbol_lso = noll_ta_symbol_get_unique_higher_pred(
+			p, vars, marking);
+
+		vata_add_transition(ta, 1, symbol_f    , children);
+		vata_add_transition(ta, 1, symbol_lso  , children);
 		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
-		vata_add_transition(ta, 2, symbol_f  , children);
+		vata_add_transition(ta, 2, symbol_f    , children);
+		vata_add_transition(ta, 2, symbol_lso  , children);
 		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
 
 		noll_uid_array_delete(marking);
@@ -127,4 +136,13 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 	}
 
 	return ta;
+}
+
+noll_ta_t* noll_edge2ta(
+	const noll_edge_t*               edge)
+{
+	assert(NULL != edge);
+	assert(NOLL_EDGE_PRED == edge->kind);
+
+	return noll_pred2ta(noll_pred_getpred(edge->label));
 }

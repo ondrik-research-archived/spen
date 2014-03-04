@@ -47,4 +47,14 @@
 noll_ta_t* noll_pred2ta(const noll_pred_t* p);
 /* Translates predicate p to a ta with formal parameters */
 
+/**
+ * @brief  Translates a higher-order predicate dedge into a TA
+ *
+ * @param[in]  edge  The edge to be translated
+ *
+ * @returns  A TA representing all models that the edge denotes
+ */
+noll_ta_t* noll_edge2ta(
+	const noll_edge_t*               edge);
+
 #endif /* NOLL_PRED2TA_H_ */
