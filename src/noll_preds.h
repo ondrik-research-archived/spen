@@ -55,13 +55,32 @@ extern "C"
    */
   typedef struct noll_pred_typing_t
   {
-    uid_t ptype0; // typing record for this predicate, index in record_array
-    noll_uid_array* ptypes;   // records covered by this predicate
-    noll_uid_array* pfields0; // fields used in sigma0
-    noll_uid_array* pfields1; // fields used in sigma1
-    noll_uid_array* ppreds;   // predicates used inside the definition
+    /* typing record for this predicate, index in record_array
+     */
+    uid_t ptype0; 
+    /* array of size @global records_array 
+     * with 1 for records covered by pred
+     */
+    noll_uid_array* ptypes;   
+    /* array of size @global fields_array 
+     * with values of @type noll_pfld_t for each field used in pred
+     */
+    noll_uid_array* pfields;  
+    /* array of size @global preds_array
+     * with values 1 for predicates called inside the definition of pred
+     */
+    noll_uid_array* ppreds;   
   } noll_pred_typing_t;
 
+  typedef enum {
+    NOLL_PFLD_NONE = 0,
+    NOLL_PFLD_BCKBONE,
+    NOLL_PFLD_INNER,
+    NOLL_PFLD_NULL,
+    NOLL_PFLD_BORDER,
+    NOLL_PFLD_OTHER
+  } noll_pfld_t;
+  
   /** Predicate information:
    * - the name of the predicate
    * - the type(s) of the variable

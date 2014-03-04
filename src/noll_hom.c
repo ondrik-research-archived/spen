@@ -1411,26 +1411,26 @@ return_select_ls:
 
 /**
  * Check that the graph in @p g2 is an unfolding of the edge @p e1.
+ * The mapping of the arguments of @p e1 on nodes of @p g2 are given by @p args2.
  */
 int
-noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1) {
-	/* pre-conditions */
-	assert (g2 != NULL);
-	assert (e1 != NULL);
+noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
+    /* pre-conditions */
+    assert (g2 != NULL);
+    assert (e1 != NULL);
 	
-	/* TODO: select the method of checking entailment using the option */
+    /* TODO: select the method of checking entailment using the option */
 	
-	/* HERE follows the TA based procedure */
-	noll_ta_t* g2_ta = noll_graph2ta(g2);
-	assert(NULL != g2_ta);
+    /* HERE follows the TA based procedure */
+    noll_ta_t* g2_ta = noll_graph2ta(g2);
+    assert(NULL != g2_ta);
 #ifndef NDEBUG
     NOLL_DEBUG("\nGraph TA:\n");
     vata_print_ta(g2_ta);
     NOLL_DEBUG("\n");
 #endif
 
-    noll_ta_t* e1_ta = noll_pred2ta(noll_pred_getpred(e1->label)); 
-    /* TODO: instantiate with args, i.e., use noll_pred2ta(e1)*/
+    noll_ta_t* e1_ta = noll_edge2ta(e1); 
     assert(NULL != e1_ta);  
 #ifndef NDEBUG
     NOLL_DEBUG("\nEdge TA:\n");
@@ -1511,7 +1511,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 	  /* select the subgraph for edge e1
 	   * and also set usedg2 with the selected edges */
 	  noll_graph_t* sg2 = noll_graph_select_ls(g2, e1id, e1->label, args2, usedg2);
-	  if (sg2 == NULL || !noll_graph_shom_entl(sg2, e1)) 
+	  if (sg2 == NULL || !noll_graph_shom_entl(sg2, e1, args2)) 
 	  { /* free the allocated memory */
 	  noll_graph_array_delete(ls_hom);
 	  ls_hom = NULL;
