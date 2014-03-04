@@ -702,6 +702,15 @@ noll_ta_t* noll_graph2ta(
 			edge->label);
 	}
 
+	NOLL_DEBUG("The homo morphism:\n");
+	NOLL_DEBUG("  src -> %u\n", noll_vector_at(homo, 0));
+	NOLL_DEBUG("  dst -> %u\n", noll_vector_at(homo, 1));
+	for (size_t i = 2; i < noll_vector_size(homo); ++i)
+	{
+		NOLL_DEBUG("  param_%lu -> %u\n", i, noll_vector_at(homo, i));
+	}
+
+
 	// Now, we compute for every node 'n' a set of markings 'pi(n)'. These is a
 	// least fix point computation.
 
@@ -712,6 +721,9 @@ noll_ta_t* noll_graph2ta(
 	assert(graph->nodes_size > initial_node);
 	uint_t end_node = noll_vector_at(homo, 1);
 	assert(graph->nodes_size > end_node);
+
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG("(): WARNING: ignoring the rest of the parameters in the homo morphism\n");
 
 	noll_marking_list* markings = noll_marking_list_new();
 	assert(NULL != markings);
