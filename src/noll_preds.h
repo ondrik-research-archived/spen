@@ -127,6 +127,18 @@ extern "C"
   bool noll_pred_order_lt(uid_t lhs, uid_t rhs);
   /* Total ordering of predicates using their call */
 
+  bool  noll_pred_is_field(uid_t pid, uid_t fid, noll_field_e kind);
+  /* Search the field in the predicate with a role of at most kind.
+   */
+   
+  int  noll_pred_type(void);
+  /* Type the predicate definitions.
+   */
+   
+  int  noll_field_order(void);
+  /* Order the fields using the predicate order.
+   */
+   
   /* ====================================================================== */
   /* Printing */
   /* ====================================================================== */

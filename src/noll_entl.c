@@ -414,6 +414,44 @@ int noll_share_check(noll_var_array* lvars, noll_var_array* svars,
 }
 
 /**
+ * Type the predicates, fields, formulas in noll_prob.
+ * @return 1 if typing is ok
+ */
+int noll_entl_type()
+{
+	/*
+	 * Type predicate definitions,
+	 * it has side effects on the typing infos on preds_array 
+	 */
+	if (noll_pred_type() == 0) 
+		return 0;
+		
+	/*
+	 * Order fields,
+	 * it has side effects on the fields_array, adds oredeing infos
+	 */
+	if (noll_field_order() == 0)
+	   return 0;
+	 
+	/*
+	 * Type formulas inside the problem.
+	 */
+	if (noll_form_type(noll_prob->pform) == 0)
+	   return 0;
+	   
+	for (uint_t i = 0; i < noll_vector_size(noll_prob->nform); i++) 
+	  if (noll_form_type(noll_vector_at(noll_prob->nform, i)) == 0) {
+#ifndef NDEBUG
+			fprintf (stdout, "*** noll_entl_type: type error in %d nform.\n", i);
+	    fflush (stdout);
+#endif
+	    return 0;	
+		}
+	    
+	return 1;
+}
+
+/**
  * Normalize the formulae.
  * @return 1 if ok, 0 otherwise
  */
@@ -624,6 +662,11 @@ int noll_entl_solve(void) {
 	fflush (stdout);
 #endif
 
+  /*
+   * Compute typing infos
+   */
+  noll_entl_type();
+  
 	/*
 	 * Normalize both formulas (which also test satisfiability)
 	 */

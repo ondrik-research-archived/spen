@@ -602,28 +602,19 @@ noll_sat_t* noll2sat_fill_bvar(noll_form_t* form, char* fname) {
 				noll_space_t * ls =
 						((noll_sat_space_t*) noll_vector_at(res->var_pred,lsi))->forig;
 				uint_t ls_pid = ls->m.ls.pid;
-				const noll_pred_t* ls_pred = noll_pred_getpred(ls_pid);
-				assert(NULL != ls_pred);
 				// see all fields 
-				/* changes in fields infos for preds */
-				/* for (uint_t level = 0; level <= 1; level++) {
-					noll_uid_array* ls_flds =
-							(level == 0) ?
-									ls_pred->typ->pfields0 :
-									ls_pred->typ->pfields1;
-					for (uint_t i = 0; i < noll_vector_size(ls_flds); i++) {
-						uint_t fldi = noll_vector_at(ls_flds, i); */
-				for (uint_t fldi = 0; fldi < noll_vector_size(fields_array); fldi++) { 
-					if (noll_vector_at(ls_pred->typ->pfields, fldi) != NOLL_PFLD_NONE) {
+				/* MS: change of info on fields */
+				for (uint_t fid = 0; fid < noll_vector_size(fields_array); fid++) { 
+					if (noll_pred_is_field(ls_pid, fid, NOLL_PFLD_NESTED)) {
 						uint_t fld_tid_src =
-								noll_vector_at(fields_array, fldi)->src_r;
+								noll_vector_at(fields_array, fid)->src_r;
 						if (tid_x == fld_tid_src) {
 							noll_sat_space_t* new_sat =
 									(noll_sat_space_t*) malloc(
 											sizeof(noll_sat_space_t));
 							new_sat->forig = ls;
 							new_sat->m.p.var = xi;
-							new_sat->m.p.fld = fldi;
+							new_sat->m.p.fld = fid;
 							noll_sat_space_array_push(res->var_apto, new_sat);
 							res->size_apto++;
 						}
@@ -1371,20 +1362,11 @@ int noll2sat_membership(noll_sat_t* fsat) {
 				assert(NULL != pred);
 				int flag = 0; //used to print just once the index of the membership predicate
 				// and the 0 at the end of the clause
-				/* changes in infos on fields in preds */
-				/*
-				for (uint_t f = 0; f <= 1; f++) {
-					noll_uid_array* f_array =
-							(f == 0) ?
-									pred->typ->pfields0 : pred->typ->pfields1;
-					for (uint_t k = 0; k < noll_vector_size (f_array); k++) {
-						//get the source type of a pointer field, the statement below does not work
-						uint_t f_k = noll_vector_at (f_array, k);
-				*/
+				/* MS: change of infos on fields */
 				for (uint_t f_k = 0; f_k < noll_vector_size(fields_array); f_k++) {
-					if (noll_vector_at(pred->typ->pfields,f_k) == NOLL_PFLD_NONE) {
-						uint_t typ_src_fk = noll_vector_at (fields_array,
-								f_k)->src_r;
+					if (noll_pred_is_field (pid_i, f_k, NOLL_PFLD_NESTED)) {
+						/* if the field is defined in pid_i, get the source of f_k */
+						uint_t typ_src_fk = noll_vector_at (fields_array, f_k)->src_r;
 						if (typ_j == typ_src_fk) {
 							uint_t bvar_apto_j_k = noll2sat_get_bvar_apto(fsat,
 									x_j, f_k, ls_i->forig);
@@ -1548,23 +1530,10 @@ int noll2sat_det_pto_pred(noll_sat_t* fsat) {
 			uid_t alpha_j = sat_j->forig->m.ls.sid;
 			const noll_pred_t* pred_j = noll_pred_getpred(pid_j);
 			assert(NULL != pred_j);
-			noll_uid_array* fields0 = pred_j->typ->pfields;
-			// find if f_i is in fields0
-			/* changes in infos about fields in preds */
-			/*
-			int flag = 0;
-			for (uint_t k = 0; k < noll_vector_size (fields0) && (flag == 0);
-					k++) {
-				if (f_i == noll_vector_at (fields0, k))
-					flag = 1;
-			}
-			*/
-			if (noll_vector_at(fields0,f_i) == NOLL_PFLD_NONE ||
-					noll_vector_at(fields0,f_i) == NOLL_PFLD_INNER)
+			/* test if f_i is in fieldsof level 0 for pred_j */
+			/* MS: change of info on fields */
+			if (!noll_pred_is_field(pid_j, f_i, NOLL_PFLD_BORDER))
 					 continue;
-			
-			/* if (flag == 0)
-				continue; */
 
 			// f_i is in fields0, write constraint for any x
 			// with the same type as x_i (to optimize the number of constraints)
@@ -1616,10 +1585,6 @@ int noll2sat_det_pred_pred(noll_sat_t* fsat) {
 			const noll_pred_t* pred_i = noll_pred_getpred(pid_i);
 			assert(NULL != pred_i);
 			uid_t typ0_i = pred_i->typ->ptype0;
-			/* changes in field infos for preds */
-			// noll_uid_array* fields0_i = pred_i->typ->pfields0;
-			noll_uid_array* fields0_i = pred_i->typ->pfields;
-
 
 			uid_t alpha_i = sat_i->forig->m.ls.sid;
 			uid_t pid_j = sat_j->forig->m.ls.pid;
@@ -1627,35 +1592,19 @@ int noll2sat_det_pred_pred(noll_sat_t* fsat) {
 			const noll_pred_t* pred_j = noll_pred_getpred(pid_j);
 			assert(NULL != pred_j);
 			uid_t typ0_j = pred_i->typ->ptype0;
-			// noll_uid_array* fields0_j = pred_j->typ->pfields0;
-			noll_uid_array* fields0_j = pred_j->typ->pfields;
-
 
 			// the predicates have the same type at level 0
 			if (typ0_i != typ0_j)
 				continue;
 
 			// find if they have common fields at level 0
+			/* MS: change of info on fields */
 			int flag = 0;
-			/*
-			for (uint_t fi = 0; fi < noll_vector_size(fields0_i) && !flag;
-					fi++) {
-				uint_t fidi = noll_vector_at(fields0_i,fi);
-				for (uint_t fj = 0; fj < noll_vector_size(fields0_j) && !flag;
-						fj++) {
-					uint_t fidj = noll_vector_at(fields0_j,fj);
-					if (fidi == fidj)
-						flag = 1;
-				}
-			}
-			*/
 			for (uint_t fi = 0; 
 					fi < noll_vector_size(fields_array) && (flag == 0); 
 					fi++) {
-				if ((noll_vector_at(fields0_i,fi) != NOLL_PFLD_NONE) &&
-						(noll_vector_at(fields0_i,fi) != NOLL_PFLD_INNER) &&
-				    (noll_vector_at(fields0_j,fi) != NOLL_PFLD_NONE) &&
-						(noll_vector_at(fields0_j,fi) != NOLL_PFLD_INNER))
+				if (noll_pred_is_field(pid_i, fi, NOLL_PFLD_BORDER) &&
+						noll_pred_is_field(pid_j, fi, NOLL_PFLD_BORDER))
 					flag = 1;
 			}
 			if (flag == 0)

@@ -82,7 +82,7 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 
 	for (uint_t i = 0; i < noll_vector_size (h->shom); i++) {
 		noll_shom_t* shi = noll_vector_at(h->shom, i);
-		fprintf (f, "Simple Hom %d for n-graph %d: \n", i, shi->ngraph);
+		fprintf (f, "Simple Hom %d for n-graph %zu: \n", i, shi->ngraph);
 		noll_graph_t* ngi = noll_vector_at(noll_prob->ngraph, i);
 
 		/* print node mapping */
@@ -779,16 +779,10 @@ noll_graph_paths_fields (noll_graph_t * g, noll_uid_array * edge_set)
 	{
 	  const noll_pred_t *pred = noll_pred_getpred (label);
 	  assert (NULL != pred);
-	  /* changes in infos of fields in preds */
-	  /*
-	  noll_uid_array *fields0 = pred->typ->pfields0;
-	  for (uint_t fi = 0; fi < noll_vector_size (fields0); fi++)
-	    {
-	      uint_t f = noll_vector_at (fields0, fi);
-	  */
+	  /* put each field of level0 on the path */
+	  /* MS: change of infos on fields */
 	  for (uint_t f = 0; f < noll_vector_size(fields_array); f++) 
-	    if (noll_vector_at(pred->typ->pfields, f) != NOLL_PFLD_NONE &&
-	        noll_vector_at(pred->typ->pfields, f) != NOLL_PFLD_INNER) {
+	    if (noll_pred_is_field(label, f, NOLL_PFLD_BORDER)) {
 	      paths[f][src][dst] = in_set[ei] ? 2 : 1;
 	      for (uint_t ni = 0; ni < g->nodes_size; ni++)
 		if (paths[label][ni][src])
@@ -1424,6 +1418,7 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
     /* pre-conditions */
     assert (g2 != NULL);
     assert (e1 != NULL);
+    assert (h != NULL);
 	
     /* TODO: select the method of checking entailment using the option */
 	

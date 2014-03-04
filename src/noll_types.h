@@ -100,7 +100,7 @@ typedef enum {
   NOLL_PFLD_INNER,
   NOLL_PFLD_NULL,  /* needed? */
   NOLL_PFLD_BORDER,
-  NOLL_PFLD_OTHER
+  NOLL_PFLD_NESTED
 } noll_field_e;
 
 /** Field information:

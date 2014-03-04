@@ -410,6 +410,19 @@ void noll_form_fill_type(noll_space_t* form, noll_uid_array* flds,
 	return;
 }
 
+/**
+ * Type the formula @p form.
+ * @return 0 if incorrect typing
+ */
+int 
+noll_form_type (noll_form_t * form)
+{
+	assert (form != NULL);
+	/* TODO: redo typin here */
+	return 1;
+}
+
+
 /* ====================================================================== */
 /* Getters/Setters */
 /* ====================================================================== */

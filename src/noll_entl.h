@@ -116,6 +116,9 @@ void noll_entl_fprint(FILE* f);
 /* Solver */
 /* ====================================================================== */
 
+int noll_entl_type(void);
+/* Type the predicates, fields, formulas in noll_prob */
+
 int noll_entl_normalize(void);
 /* Normalize the formulae in noll_prob */
 

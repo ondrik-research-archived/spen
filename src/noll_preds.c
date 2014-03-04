@@ -145,6 +145,52 @@ noll_pred_order_lt(uid_t lhs, uid_t rhs)
 	return lhs > rhs;
 }
 
+/**
+ * Search @p fid inside the fields of predicate @p pid with a role of
+ * at most kind.
+ * 
+ * @param pid  procedd identifier in preds_array
+ * @param fid  field identifier in fields_array
+ * @param kind max kind to be found for @p fid
+ * @return     true if fid has a role at least kind
+ */
+bool  
+noll_pred_is_field(uid_t pid, uid_t fid, noll_field_e kind)
+{
+	assert (pid < noll_vector_size(preds_array));
+	assert (fid < noll_vector_size(fields_array));
+	
+	noll_pred_t* pred = noll_vector_at(preds_array, pid);
+	noll_field_e k = noll_vector_at(pred->typ->pfields, fid);
+	return (k <= kind) && 
+	       ((kind == NOLL_PFLD_NONE) || (k > NOLL_PFLD_NONE));
+}
+
+/**
+ * Type the predicate definitions.
+ * @return 0 for incorrect typing
+ */
+int  
+noll_pred_type()
+{
+	/* TODO: fill infos on type, fields, etc. */
+	return 1;
+}
+
+/**
+ * Order the fields using the predicate definitions.
+ * @return 0 for incorrect ordering
+ */
+int  
+noll_field_order()
+{
+	/* TODO: build the orde using preds_array */
+	return 1;
+}
+   
+   
+ 
+
 /* ====================================================================== */
 /* Printing */
 /* ====================================================================== */

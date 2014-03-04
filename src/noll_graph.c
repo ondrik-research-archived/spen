@@ -235,7 +235,7 @@ int noll_edge_in_label (noll_edge_t* e, uint_t pid) {
 	noll_pred_typing_t* pdef = pred->typ;
 	int res = 0;
 	if (e->kind == NOLL_EDGE_PTO) {
-		if (noll_vector_at(pdef->pfields,e->label) != NOLL_PFLD_NONE) 
+		if (noll_pred_is_field(pid, e->label, NOLL_PFLD_NESTED)) 
 		   res = 1;
 	}
 	else {

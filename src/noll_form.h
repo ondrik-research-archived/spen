@@ -217,6 +217,9 @@ extern "C"
 /* Fill the typing information about the formula used in the predicate.
  */
 
+  int noll_form_type (noll_form_t * form);
+  /* Type the formula */
+
 /* ====================================================================== */
 /* Getters/Setters */
 /* ====================================================================== */
