@@ -271,6 +271,31 @@ noll_record_name(uid_t rid) {
 	return noll_vector_at (records_array, rid)->name;
 }
 
+/**
+ * Ordering using the ordering of predicates.
+ */
+bool
+noll_field_lt(uid_t lhs, uid_t rhs) {
+	
+	assert (lhs < noll_vector_size(fields_array));
+	assert (rhs < noll_vector_size(fields_array));
+	
+	noll_field_t* fl = noll_vector_at(fields_array, lhs);
+	noll_field_t* fr = noll_vector_at(fields_array, rhs);
+	
+	assert (fl->order != UNDEFINED_ID);
+	assert (fr->order != UNDEFINED_ID);
+	assert (fl->order != fr->order);
+	
+	return (fl->order < fr->order);
+}
+
+
+/* ====================================================================== */
+/* Printing */
+/* ====================================================================== */
+
+
 void noll_fields_array_fprint(FILE* f, const char* msg) {
 	fprintf(f, "\n%s: ", msg);
 	if (!fields_array) {
@@ -281,8 +306,9 @@ void noll_fields_array_fprint(FILE* f, const char* msg) {
 	uint_t length = noll_vector_size (fields_array);
 	for (uint_t i = 0; i < length; i++) {
 		noll_field_t* fi = noll_vector_at (fields_array, i);
-		fprintf(f, " %s:%s->%s,", fi->name, noll_record_name(fi->src_r),
-				noll_record_name(fi->pto_r));
+		fprintf(f, " %s:%s->%s (%d-th, in pid-%d),", 
+		    fi->name, noll_record_name(fi->src_r), noll_record_name(fi->pto_r),
+		    fi->order, fi->pid);
 	}
 	fprintf(f, " - ]");
 }

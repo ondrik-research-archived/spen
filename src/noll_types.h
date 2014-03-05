@@ -180,6 +180,9 @@ char* noll_field_name(uid_t fid);
 char* noll_record_name(uid_t rid);
 /* Accessors */
 
+bool noll_field_lt(uid_t lhs, uid_t rhs);
+/* Ordering */
+
 /* ====================================================================== */
 /* Printing */
 /* ====================================================================== */

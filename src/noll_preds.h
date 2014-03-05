@@ -130,7 +130,10 @@ extern "C"
   bool  noll_pred_is_field(uid_t pid, uid_t fid, noll_field_e kind);
   /* Search the field in the predicate with a role of at most kind.
    */
-   
+  
+  bool noll_pred_is_backbone_field(uid_t fid);
+  /* Test if fid is a backbone for some predicate */
+
   int  noll_pred_type(void);
   /* Type the predicate definitions.
    */
