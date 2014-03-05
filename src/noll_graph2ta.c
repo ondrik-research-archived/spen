@@ -29,6 +29,7 @@
 
 #include "noll.h"
 #include "noll_graph2ta.h"
+#include "noll_preds.h"
 #include "noll_ta_symbols.h"
 #include "noll_vector.h"
 #include "libvata_noll_iface.h"
@@ -208,14 +209,7 @@ static bool noll_fields_order_lt(
 static bool noll_fields_is_backbone(
 	uid_t            field)
 {
-	if (&field != &field)
-	{
-		assert(false);
-	}
-
-	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
-
-	return true;
+	return noll_pred_is_backbone_field(field);
 }
 
 
