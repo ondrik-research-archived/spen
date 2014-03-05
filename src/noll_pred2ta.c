@@ -129,6 +129,58 @@ vata_ta_t* noll_pred2ta(const noll_pred_t* p) {
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
 	}
+	else if (0 == strcmp(p->pname, "lsso"))
+	{
+		NOLL_DEBUG("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
+		vata_set_state_root(ta, 1);
+
+		noll_uid_array* children = noll_uid_array_new();
+		noll_uid_array_push(children, 2);
+		noll_uid_array_push(children, 3);
+
+		// here, we should add the symbols into a list (tree? some other set?)
+
+		/* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
+		/* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
+		/* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
+		/* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
+		/* vata_symbol_t* symbol_out       = "<> [out]"; */
+
+		// this works only for the lso predicate
+		uid_t next1_uid = noll_field_array_find("next1");
+		assert(UNDEFINED_ID != next1_uid);
+		uid_t next2_uid = noll_field_array_find("next2");
+		assert(UNDEFINED_ID != next2_uid);
+
+		noll_uid_array* selectors = noll_uid_array_new();
+		assert(NULL != selectors);
+		noll_uid_array_push(selectors, next1_uid);
+		noll_uid_array_push(selectors, next2_uid);
+
+		noll_uid_array* vars = noll_uid_array_new();
+		assert(NULL != vars);
+
+		noll_uid_array* marking = noll_uid_array_new();
+		assert(NULL != marking);
+
+		const noll_ta_symbol_t* symbol_alloc = noll_ta_symbol_get_unique_allocated(
+			selectors, vars, marking);
+
+		const noll_ta_symbol_t* symbol_lsso = noll_ta_symbol_get_unique_higher_pred(
+			p, vars, marking);
+
+		vata_add_transition(ta, 1, symbol_alloc    , children);
+		vata_add_transition(ta, 1, symbol_lsso  , children);
+		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
+		vata_add_transition(ta, 2, symbol_alloc    , children);
+		vata_add_transition(ta, 2, symbol_lsso  , children);
+		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
+
+		noll_uid_array_delete(marking);
+		noll_uid_array_delete(vars);
+		noll_uid_array_delete(children);
+		noll_uid_array_delete(selectors);
+	}
 	else
 	{
 		NOLL_DEBUG("ERROR: translation for predicate %s not implemented!\n", p->pname);
