@@ -507,17 +507,11 @@ static bool noll_marking_is_succ_of_via(
 	assert(0 != noll_vector_size(node_marking));
 	assert(0 != noll_vector_size(pred_marking));
 
-	NOLL_DEBUG("Testing whether marking [");
-	for (size_t i = 0; i < noll_vector_size(node_marking); ++i)
-	{
-		NOLL_DEBUG("%d, ", noll_vector_at(node_marking, i));
-	}
-	NOLL_DEBUG("] is a successor of [");
-	for (size_t i = 0; i < noll_vector_size(pred_marking); ++i)
-	{
-		NOLL_DEBUG("%d, ", noll_vector_at(pred_marking, i));
-	}
-	NOLL_DEBUG("] via %u: ", symbol);
+	NOLL_DEBUG("Testing whether marking ");
+	noll_debug_print_one_mark(node_marking);
+	NOLL_DEBUG(" is a successor of ");
+	noll_debug_print_one_mark(pred_marking);
+	NOLL_DEBUG(" via %s: ", noll_field_name(symbol));
 
 	if (noll_vector_last(node_marking) != symbol)
 	{	// in the case the last symbol of the marking is not the checked symbol
