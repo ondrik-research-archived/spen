@@ -117,9 +117,16 @@ static void noll_debug_print_markings(const noll_marking_list* markings)
 	for (size_t j = 0; j < noll_vector_size(markings); ++j)
 	{
 		const noll_uid_array* mark = noll_vector_at(markings, j);
-		assert(NULL != mark);
+
 		NOLL_DEBUG("Node %lu: ", j);
-		noll_debug_print_one_mark(mark);
+		if (NULL == mark)
+		{
+			NOLL_DEBUG("empty");
+		}
+		else
+		{
+			noll_debug_print_one_mark(mark);
+		}
 		NOLL_DEBUG("\n");
 	}
 }
@@ -441,9 +448,9 @@ static bool compute_markings(
 		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
 		assert(NULL != list);
 		if (0 == noll_vector_size(list))
-		{	// if there is a node with no marking
-			is_fine = false;
-			break;
+		{	// if there is a node with no marking, this means that it is not reachable
+			noll_vector_at(markings, i) = NULL;
+			continue;
 		}
 
 		assert(noll_vector_size(list) > 0);
