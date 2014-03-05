@@ -159,7 +159,7 @@ void noll_graph_free(noll_graph_t* g) {
 	g->svars = NULL;
 	if (g->var2node != NULL)
 		free(g->var2node);
-	for (uint_t i = 0; i < noll_vector_size(g->edges); i++) {
+	for (uint_t i = 0; i < g->nodes_size; i++) {
 		if (g->mat[i] != NULL)
 			noll_uid_array_delete(g->mat[i]);
 		if (g->rmat[i] != NULL)

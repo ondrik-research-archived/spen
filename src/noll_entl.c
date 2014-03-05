@@ -657,7 +657,7 @@ int noll_entl_solve(void) {
 		return res;
 
 #ifndef NDEBUG
-	fprintf (stdout, "*** check-%ssat: not special case\n",
+	fprintf (stdout, "\n*** check-%ssat: not special case\n",
 			(noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
 	fflush (stdout);
 #endif
@@ -667,11 +667,19 @@ int noll_entl_solve(void) {
    */
   noll_entl_type();
   
+#ifndef NDEBUG
+  fprintf(stdout, "\n*** noll_entl_solve: after typing problem:\n");
+	noll_records_array_fprint(stdout, "records:");
+	noll_fields_array_fprint(stdout, "fields:");
+	noll_pred_array_fprint(stdout, preds_array, "predicates:");
+	fflush(stdout);
+#endif
+
 	/*
 	 * Normalize both formulas (which also test satisfiability)
 	 */
 #ifndef NDEBUG
-	fprintf (stdout, "*** check-%ssat: normalize\n",
+	fprintf (stdout, "\n*** check-%ssat: normalize\n",
 			(noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
 #endif
 

@@ -79,7 +79,7 @@ name *name ## _new(void)                                \
                                                                         \
 void name ## _delete(name *v)                           \
 {                                                                       \
-    if (v->data_) {                                                     \
+    if (v->data_ != NULL) {                                             \
         free(v->data_);                                                 \
     }                                                                   \
     free(v);                                                            \
