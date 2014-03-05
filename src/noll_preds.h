@@ -45,7 +45,7 @@ extern "C"
   typedef struct noll_pred_binding_t
   {
     size_t pargs; // type of list = number of arguments of this record type 2 or 4
-    noll_var_array* vars; // nil + formal arguments and local variables
+    noll_var_array* vars; // nil + formal arguments + local variables
     uint_t fargs; // number of formal arguments in the array above
     noll_space_t* sigma_0; // points-to part
     noll_space_t* sigma_1; // nested part
@@ -61,15 +61,15 @@ extern "C"
     /* array of size @global records_array 
      * with 1 for records covered by pred
      */
-    noll_uid_array* ptypes;   
+    noll_uint_array* ptypes;   
     /* array of size @global fields_array 
      * with values of @type noll_pfld_t for each field used in pred
      */
-    noll_uid_array* pfields;  
+    noll_uint_array* pfields;  
     /* array of size @global preds_array
      * with values 1 for predicates called inside the definition of pred
      */
-    noll_uid_array* ppreds;   
+    noll_uint_array* ppreds;   
   } noll_pred_typing_t;
   
   /** Predicate information:

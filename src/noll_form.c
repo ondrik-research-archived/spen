@@ -355,60 +355,6 @@ void noll_pure_add_neq(noll_form_t* f, uid_t v1, uid_t v2) {
 /* Typing */
 /* ====================================================================== */
 
-/**
- * Fill the arguments flds and typs, if not null, with the
- * fields resp. record ids, obtained from formula form.
- * @param form   formula
- * @param flds   array of fields to be filled
- * @param typs   array of types to be filled
- */
-void noll_form_fill_type(noll_space_t* form, noll_uid_array* flds,
-		noll_uid_array* typs) {
-	if (!form || form->kind == NOLL_SPACE_EMP)
-		return;
-	switch (form->kind) {
-	case NOLL_SPACE_PTO: {
-		for (uid_t i = 0; i < noll_vector_size (form->m.pto.fields); i++) {
-			uid_t fid = noll_vector_at (form->m.pto.fields, i);
-			noll_field_t* f = noll_vector_at (fields_array, fid);
-			if (flds)
-				noll_uid_array_cup(flds, fid);
-			if (typs)
-				noll_uid_array_cup(typs, f->src_r);
-		}
-		break;
-	}
-	case NOLL_SPACE_LS: {
-		const noll_pred_t* pred = noll_pred_getpred(form->m.ls.pid);
-		if (pred && pred->typ) {
-			// copy pred information in the arrays
-			if (pred->typ->pfields) // TODO: changes of fields infos in preds
-				for (uid_t i = 0; i < noll_vector_size (pred->typ->pfields); i++) {
-					uid_t f = noll_vector_at (pred->typ->pfields, i);
-					if (flds)
-						noll_uid_array_cup(flds, f);
-				}
-			if (pred->typ->ptype0 != UNDEFINED_ID)
-				if (typs)
-					noll_uid_array_cup(typs, pred->typ->ptype0);
-			if (pred->typ->ptypes) // TODO: changes of fields infos in preds
-				for (uid_t i = 0; i < noll_vector_size (pred->typ->ptypes); i++) {
-					uid_t t = noll_vector_at (pred->typ->ptypes, i);
-					if (typs)
-						noll_uid_array_cup(typs, t);
-				}
-		}
-		break;
-	}
-	default: {
-		// separation formula
-		for (uid_t i = 0; i < noll_vector_size (form->m.sep); i++)
-			noll_form_fill_type(noll_vector_at (form->m.sep, i), flds, typs);
-		break;
-	}
-	}
-	return;
-}
 
 /**
  * Type the formula @p form.
@@ -418,7 +364,7 @@ int
 noll_form_type (noll_form_t * form)
 {
 	assert (form != NULL);
-	/* TODO: redo typin here */
+	/* TODO: redo typing here */
 	return 1;
 }
 

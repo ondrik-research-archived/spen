@@ -96,10 +96,10 @@ NOLL_VECTOR_DECLARE(noll_record_array, noll_record_t*)
  */
 typedef enum {
   NOLL_PFLD_NONE = 0,
-  NOLL_PFLD_BCKBONE,
-  NOLL_PFLD_INNER,
-  NOLL_PFLD_NULL,  /* needed? */
-  NOLL_PFLD_BORDER,
+  NOLL_PFLD_BCKBONE, /* F^0 */
+  NOLL_PFLD_INNER,   /* F^1 */
+  NOLL_PFLD_NULL,    /* F^2 needed? */
+  NOLL_PFLD_BORDER,  /* F^2 */
   NOLL_PFLD_NESTED
 } noll_field_e;
 

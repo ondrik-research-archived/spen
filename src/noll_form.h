@@ -212,11 +212,6 @@ extern "C"
 /* Typing */
 /* ====================================================================== */
 
-  void noll_form_fill_type (noll_space_t * form, noll_uid_array * flds,
-			    noll_uid_array * typs);
-/* Fill the typing information about the formula used in the predicate.
- */
-
   int noll_form_type (noll_form_t * form);
   /* Type the formula */
 

@@ -50,15 +50,9 @@ noll_pred_new(const char* name, uid_t pid, noll_pred_binding_t* def) {
 	p->pname = strdup(name);
 	p->pid = pid;
 	p->def = def;
-	// compute typing information
-	p->typ = (noll_pred_typing_t*) malloc(sizeof(struct noll_pred_typing_t));
-	p->typ->ptype0 = noll_var_record(p->def->vars, 1);
-	p->typ->ptypes = noll_uid_array_new();
-	p->typ->pfields = noll_uid_array_new();
-	p->typ->ppreds = noll_uid_array_new();
-	noll_form_fill_type(p->def->sigma_0, p->typ->pfields, NULL);
-	noll_form_fill_type(p->def->sigma_0, NULL, p->typ->ptypes);
-	noll_form_fill_type(p->def->sigma_1, p->typ->pfields, p->typ->ptypes);
+	p->typ = NULL;
+	/* typing info is computed after syntax analysis, @see noll_pred_type */
+	
 	return p;
 }
 
@@ -166,6 +160,9 @@ noll_pred_is_field(uid_t pid, uid_t fid, noll_field_e kind)
 	       ((kind == NOLL_PFLD_NONE) || (k > NOLL_PFLD_NONE));
 }
 
+
+int noll_pred_fill_type (noll_pred_t* p, uint_t level, noll_space_t * form);
+			   
 /**
  * Type the predicate definitions.
  * @return 0 for incorrect typing
@@ -173,7 +170,139 @@ noll_pred_is_field(uid_t pid, uid_t fid, noll_field_e kind)
 int  
 noll_pred_type()
 {
-	/* TODO: fill infos on type, fields, etc. */
+  assert (preds_array != NULL);
+  assert (fields_array != NULL);
+  assert (records_array != NULL);
+  
+  int res = 1;
+  /* go through all predicates starting with the simpler ones */
+  for (uint_t pid = 0; pid < noll_vector_size(preds_array) && (res == 1); pid ++) {
+			noll_pred_t* p = noll_vector_at(preds_array, pid);
+			/* alloc typing info field */
+		  p->typ = (noll_pred_typing_t*) malloc(sizeof(struct noll_pred_typing_t));
+		  
+		  /* predicate type = type of the first parameter */
+		  p->typ->ptype0 = noll_var_record(p->def->vars, 1);
+		  
+		  /* types covered */
+		  p->typ->ptypes = noll_uint_array_new();
+		  /* resize the array to cover all the records, filled with 0 */
+		  noll_uint_array_resize(p->typ->ptypes, noll_vector_size(records_array));
+		  noll_vector_at(p->typ->ptypes, p->typ->ptype0) = 1;
+		  
+		  /* fields used */
+		  p->typ->pfields = noll_uint_array_new();	
+		  /* resize the array to cover all the fields, filled with 0 = NOLL_PFLD_NONE */
+		  noll_uint_array_resize(p->typ->pfields, noll_vector_size(fields_array));
+
+      /* predicates called */
+	    p->typ->ppreds = noll_uint_array_new();
+	    /* resize the array to cover all the predicates called */
+	    noll_uint_array_resize(p->typ->ppreds, noll_vector_size(preds_array));
+
+		  /* go through the formulas to fill the infos */
+		  res = noll_pred_fill_type(p, 0, p->def->sigma_0);
+		  if (res == 0) break;
+		  // TODO: no need to for level 1 formulas? */
+		  res = noll_pred_fill_type(p, 1, p->def->sigma_1);
+	}
+  
+	return res;
+}
+
+/**
+ * Fill the arguments flds and typs, if not null, with the
+ * fields resp. record ids, obtained from formula form.
+ * @param p      predicate 
+ * @param level  level (0 or 1) of the analyzed formulas 
+ * @param form   analyzed formula
+ */
+int 
+noll_pred_fill_type (noll_pred_t* p, uint_t level, noll_space_t * form)
+{
+	if (!form || form->kind == NOLL_SPACE_EMP)
+		return 1;
+	switch (form->kind) {
+	case NOLL_SPACE_PTO: {
+		if (level == 1)
+		    return 0; /* no pto in inner formulas! */
+		if (form->m.pto.sid != 1) 
+		    /* only pto from first argument */
+		    return 0; /* TODO: already checked? */
+		for (uid_t i = 0; i < noll_vector_size (form->m.pto.fields); i++) {
+			uid_t fid = noll_vector_at (form->m.pto.fields, i);
+			uid_t dst = noll_vector_at (form->m.pto.dest, i);
+			
+			/* fill type infos with type of dst */
+			uid_t dst_r = noll_var_record (p->def->vars, dst);
+			noll_vector_at(p->typ->ptypes, dst_r) = 1;
+			
+			/* fill field info depending on dst */
+			/* dst is in 0 -- NULL -- to noll_vector_size(p->def->vars) */
+			if (dst == 0) {
+				/* dst == NULL */
+				noll_vector_at(p->typ->pfields, fid) = NOLL_PFLD_NULL;
+			}
+      else if (dst <= p->def->fargs) {
+				/* to the arguments */
+				noll_vector_at(p->typ->pfields, fid) = NOLL_PFLD_BORDER;
+			}
+      else if (dst == (p->def->fargs+1)) {
+			  /* dst == first existential var, then level 0 */
+        noll_vector_at(p->typ->pfields, fid) = NOLL_PFLD_BCKBONE;
+			}
+      else {
+				/* dst == other existentials */
+				for (uint_t ex = p->def->fargs + 2; 
+						ex < noll_vector_size(p->def->vars); 
+						ex++)
+						if (dst == ex) {
+							noll_vector_at(p->typ->pfields, fid) = NOLL_PFLD_INNER;
+							break;
+						}
+			}
+			if (noll_vector_at(p->typ->pfields, fid) == NOLL_PFLD_NONE)
+			   return 0; /* the field info is not filled correctly */
+		}
+		break;
+	}
+	case NOLL_SPACE_LS: {
+		uint_t cpid = form->m.ls.pid;
+		const noll_pred_t* cp = noll_pred_getpred(cpid);
+		/* fill pred info */
+		if (cpid != p->pid)
+		  noll_vector_at (p->typ->ppreds, cpid) = 1;
+		if (cp && cp->typ) {
+			// copy called pred information in the arrays
+			if (cp->typ->pfields)
+				for (uid_t fid = 0; fid < noll_vector_size (fields_array); fid++) {
+					if (noll_vector_at(cp->typ->pfields, fid) != NOLL_PFLD_NONE) {
+						if (noll_pred_is_field(p->pid, fid, NOLL_PFLD_BORDER)) 
+						{
+							/* error, shared field between predicates : stop ! */
+							fprintf (stderr, "Errot in predicate typing: shared backbone field!\n"); 
+							// TODO: put in form
+							return 0; 
+						}
+						noll_vector_at(p->typ->pfields, fid) = NOLL_PFLD_NESTED;
+					}
+				}
+			if (cp->typ->ptypes)
+				for (uid_t rid = 0; rid < noll_vector_size (records_array); rid++) {
+					if (noll_vector_at (cp->typ->ptypes, rid) == 1)
+					   noll_vector_at (p->typ->ptypes, rid) = 1;
+				}
+		}
+		break;
+	}
+	default: {
+		// separation formula
+		for (uid_t i = 0; i < noll_vector_size (form->m.sep); i++)
+			if (0 == noll_pred_fill_type(p, level, noll_vector_at (form->m.sep, i)))
+			  return 0;
+		break;
+	}
+	}
 	return 1;
 }
 
@@ -184,7 +313,42 @@ noll_pred_type()
 int  
 noll_field_order()
 {
-	/* TODO: build the orde using preds_array */
+	uint_t no = 0;
+	/* go through the predicates -- in reverse order --
+	 * and fill the infos on fields */
+	for (uint_t pid = noll_vector_size(preds_array) - 1; (pid+1) >= 1 ; pid--) {
+		noll_pred_t* p = noll_vector_at(preds_array, pid);
+		/* search the backbones and order them */
+		for (uint_t fid = 0; fid < noll_vector_size(fields_array); fid++)
+		   if (noll_vector_at(p->typ->pfields, fid) == NOLL_PFLD_BCKBONE) {
+				 noll_field_t* f = noll_vector_at(fields_array, fid);
+				 f->order = no ++; /* TODO test that it is not already filled ! */
+				 f->pid = pid;
+			 }
+		/* search for inner fields */
+		for (uint_t fid = 0; fid < noll_vector_size(fields_array); fid++)
+		   if (noll_vector_at(p->typ->pfields, fid) == NOLL_PFLD_INNER) {
+				 noll_field_t* f = noll_vector_at(fields_array, fid);
+				 f->order = no ++; /* TODO test that it is not already filled ! */
+				 f->pid = pid;
+			 }
+		/* search for NULL fields */
+		for (uint_t fid = 0; fid < noll_vector_size(fields_array); fid++)
+		   if (noll_vector_at(p->typ->pfields, fid) == NOLL_PFLD_NULL) {
+				 noll_field_t* f = noll_vector_at(fields_array, fid);
+				 f->order = no ++; /* TODO test that it is not already filled ! */
+				 f->pid = pid;
+			 }			
+		/* search for to border fields */
+		for (uint_t fid = 0; fid < noll_vector_size(fields_array); fid++)
+		   if (noll_vector_at(p->typ->pfields, fid) == NOLL_PFLD_BORDER) {
+				 noll_field_t* f = noll_vector_at(fields_array, fid);
+				 f->order = no ++; /* TODO test that it is not already filled ! */
+				 f->pid = pid;
+			 }
+	}
+#ifndef NDEBUG
+#endif
 	return 1;
 }
    
