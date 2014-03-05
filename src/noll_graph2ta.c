@@ -91,7 +91,15 @@ static void noll_debug_print_one_mark(const noll_uid_array* mark)
 			NOLL_DEBUG(", ");
 		}
 
-		NOLL_DEBUG("%d", noll_vector_at(mark, i));
+		if (noll_vector_at(mark, i) == NOLL_MARKINGS_EPSILON)
+		{
+			assert(0 == i);
+			NOLL_DEBUG("e");
+		}
+		else
+		{
+			NOLL_DEBUG("%s", noll_field_name(noll_vector_at(mark, i)));
+		}
 	}
 	NOLL_DEBUG("]");
 }
