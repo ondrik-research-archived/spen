@@ -56,13 +56,12 @@ NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 /* ====================================================================== */
 
 static const uid_t NOLL_MARKINGS_EPSILON = -1;
-static const uid_t initial_node = 0;
 
 /* ====================================================================== */
 /* Globals */
 /* ====================================================================== */
 
-static size_t noll_unique_cnt = 42;
+static size_t noll_unique_cnt = 10000;
 
 static size_t noll_get_unique(void)
 {
@@ -296,17 +295,20 @@ bool noll_marking_is_prefix_or_equal(
  * graph), the function returns @p false, otherwise (if the computation was
  * successful), the function returns @p true.
  *
- * @param[in]   graph     The input graph
- * @param[out]  markings  The computed markings
+ * @param[in]   graph         The input graph
+ * @param[in]   initial_node  The initial node of @p graph
+ * @param[out]  markings      The computed markings
  *
  * @returns  @p true if the computation was successful, @p false otherwise
  */
 static bool compute_markings(
 	const noll_graph_t*     graph,
+	uint_t                  initial_node,
 	noll_marking_list*      markings)
 {
 	assert(NULL != graph);
 	assert(NULL != markings);
+	assert(initial_node < graph->nodes_size);
 
 	size_t num_nodes = graph->nodes_size;
 	assert(0 < num_nodes);
@@ -321,10 +323,6 @@ static bool compute_markings(
 		noll_vector_at(nodes_to_markings, i) = noll_marking_list_new();
 		assert(NULL != noll_vector_at(nodes_to_markings, i));
 	}
-
-	// TODO: consider other initial node that the one with number 0
-	NOLL_DEBUG("WARNING: we assume the index of the initial node of the graph is 0\n");
-	assert(initial_node < num_nodes);
 
 	NOLL_DEBUG("Computing marking of nodes of the graph\n");
 
@@ -655,41 +653,46 @@ static bool reachable_from_through_path_wo_marker(
  *  Translates g into a tree automaton.
  *  @return TA built or NULL
  */
-noll_ta_t* noll_graph2ta(noll_graph_t* g) {
+noll_ta_t* noll_graph2ta(
+	const noll_graph_t*       graph,
+	const noll_uid_array*     homo)
+{
 	// check sanity of input parameters
-	assert(NULL != g);
-	assert(NULL != g->lvars);
-	assert(NULL != g->svars);
-	assert(NULL != g->var2node);
-	assert(NULL != g->edges);
+	assert(NULL != graph);
+	assert(NULL != graph->lvars);
+	assert(NULL != graph->svars);
+	assert(NULL != graph->var2node);
+	assert(NULL != graph->edges);
+	assert(NULL != homo);
+	assert(2 <= noll_vector_size(homo));
 
 	NOLL_DEBUG("********************************************************************************\n");
 	NOLL_DEBUG("*                                 GRAPH -> TA                                  *\n");
 	NOLL_DEBUG("********************************************************************************\n");
 
-	NOLL_DEBUG("g = %p\n", g);
-	NOLL_DEBUG("number of nodes in g = %d\n", g->nodes_size);
+	NOLL_DEBUG("graph = %p\n", graph);
+	NOLL_DEBUG("number of nodes in graph = %d\n", graph->nodes_size);
 	NOLL_DEBUG("LVars:\n");
-	for (size_t i = 0; i < noll_vector_size(g->lvars); ++i)
+	for (size_t i = 0; i < noll_vector_size(graph->lvars); ++i)
 	{
-		NOLL_DEBUG("  (*g->lvars)[%lu] = %p, ", i, noll_vector_at(g->lvars, i));
-		const noll_var_t* var = noll_vector_at(g->lvars, i);
+		NOLL_DEBUG("  (*graph->lvars)[%lu] = %p, ", i, noll_vector_at(graph->lvars, i));
+		const noll_var_t* var = noll_vector_at(graph->lvars, i);
 		assert(NULL != var);
 		NOLL_DEBUG("name = %s, vid = %u, ", var->vname, var->vid);
-		NOLL_DEBUG("points to node -> %u\n", g->var2node[i]);
+		NOLL_DEBUG("points to node -> %u\n", graph->var2node[i]);
 	}
 	NOLL_DEBUG("SVars:\n");
-	for (size_t i = 0; i < noll_vector_size(g->svars); ++i)
+	for (size_t i = 0; i < noll_vector_size(graph->svars); ++i)
 	{
-		NOLL_DEBUG("  (*g->svars)[%lu] = %p, ", i, noll_vector_at(g->svars, i));
-		const noll_var_t* var = noll_vector_at(g->svars, i);
+		NOLL_DEBUG("  (*graph->svars)[%lu] = %p, ", i, noll_vector_at(graph->svars, i));
+		const noll_var_t* var = noll_vector_at(graph->svars, i);
 		assert(NULL != var);
 		NOLL_DEBUG("name = %s, vid = %u, \n", var->vname, var->vid);
 	}
 	NOLL_DEBUG("Edges:\n");
-	for (size_t i = 0; i < noll_vector_size(g->edges); ++i) {
-		NOLL_DEBUG("  (*g->edges)[%lu] = %p, ", i, noll_vector_at(g->edges, i));
-		const noll_edge_t* edge = noll_vector_at(g->edges, i);
+	for (size_t i = 0; i < noll_vector_size(graph->edges); ++i) {
+		NOLL_DEBUG("  (*graph->edges)[%lu] = %p, ", i, noll_vector_at(graph->edges, i));
+		const noll_edge_t* edge = noll_vector_at(graph->edges, i);
 		assert(NULL != edge);
 		NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
 			noll_vector_at(edge->args, 0),
@@ -699,15 +702,32 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 			edge->label);
 	}
 
+	NOLL_DEBUG("The homo morphism:\n");
+	NOLL_DEBUG("  src -> %u\n", noll_vector_at(homo, 0));
+	NOLL_DEBUG("  dst -> %u\n", noll_vector_at(homo, 1));
+	for (size_t i = 2; i < noll_vector_size(homo); ++i)
+	{
+		NOLL_DEBUG("  param_%lu -> %u\n", i, noll_vector_at(homo, i));
+	}
+
+
 	// Now, we compute for every node 'n' a set of markings 'pi(n)'. These is a
 	// least fix point computation.
 
 	// first, let's prepare a map of nodes to their markings, nodes are labelled
 	// from 0, so let that be a vector
 
+	uint_t initial_node = noll_vector_at(homo, 0);
+	assert(graph->nodes_size > initial_node);
+	uint_t end_node = noll_vector_at(homo, 1);
+	assert(graph->nodes_size > end_node);
+
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG("(): WARNING: ignoring the rest of the parameters in the homo morphism\n");
+
 	noll_marking_list* markings = noll_marking_list_new();
 	assert(NULL != markings);
-	if (!compute_markings(g, markings))
+	if (!compute_markings(graph, initial_node, markings))
 	{	// in the case the computation of markings was not successful
 		assert(false);            // fail gracefully
 	}
@@ -730,12 +750,38 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	// we transform the graph into a TA represting a tree (i.e. the language of
 	// the TA is a singleton set) such that node 'i' is represented by the TA
 	// state 'i'
-	for (size_t i = 0; i < g->nodes_size; ++i)
+	for (size_t i = 0; i < graph->nodes_size; ++i)
 	{
-		const noll_uid_array* edges = g->mat[i];
+		const noll_uid_array* edges = graph->mat[i];
 		if (NULL == edges)
 		{	// if there are no edges leaving 'i'
-			NOLL_DEBUG("No edges leaving node %lu\n", i);
+			if (i == end_node)
+			{	// in the case 'i' is a boundary node on some tree branch
+				NOLL_DEBUG("Found a boundary node %lu\n", i);
+
+				noll_uid_array* selectors = noll_uid_array_new();
+				assert(NULL != selectors);
+				noll_uid_array* vars = noll_uid_array_new();
+				assert(NULL != vars);
+
+				// TODO: there should be a variable, but how to get it?
+				const noll_ta_symbol_t* symbol =
+					noll_ta_symbol_get_unique_aliased_var(end_node);
+				vata_add_transition(
+					ta,       // the TA
+					i,        // the parent
+					symbol,   // the symbol
+					NULL);    // the children
+
+				noll_uid_array_delete(selectors);
+				noll_uid_array_delete(vars);
+			}
+			else
+			{
+				NOLL_DEBUG("No edges leaving a non-boundary node %lu\n", i);
+				assert(false);
+			}
+
 			continue;
 		}
 
@@ -751,7 +797,7 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 		for (size_t j = 0; j < noll_vector_size(edges); ++j)
 		{
-			const noll_edge_t* ed = noll_vector_at(g->edges, noll_vector_at(edges, j));
+			const noll_edge_t* ed = noll_vector_at(graph->edges, noll_vector_at(edges, j));
 			assert(NULL != ed);
 			assert(NOLL_EDGE_PTO == ed->kind);
 			const char* field_name = noll_field_name(ed->label);
@@ -799,7 +845,7 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 					// TODO: first test marking, then the reachability
 					if (reachable_from_through_path_wo_marker(
-						g, markings, i, next_child, mark_next_child))
+						graph, markings, i, next_child, mark_next_child))
 					{	// in case 'i' is reachable from 'next_child' via a path where the
 						// marker '\mu(n)' is not used
 						if (!noll_uid_array_equal(mark_next_child, mark_i))
@@ -886,7 +932,7 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 	}
 
 	NOLL_DEBUG("Starting traversing the edges\n");
-	assert(NULL != g->mat);
+	assert(NULL != graph->mat);
 
 	/* // the work stack that contains nodes to be processed */
 	/* noll_uid_array* workstack = noll_uid_array_new(); */
@@ -897,12 +943,12 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
   /*  */
 	/* noll_uid_array_delete(workstack); */
 
-	const noll_uid_array* edges = g->mat[initial_node];
+	const noll_uid_array* edges = graph->mat[initial_node];
 	assert(NULL != edges);
 
 	for (size_t i = 0; i < noll_vector_size(edges); ++i)
 	{
-		const noll_edge_t* ed = noll_vector_at(g->edges, noll_vector_at(edges, i));
+		const noll_edge_t* ed = noll_vector_at(graph->edges, noll_vector_at(edges, i));
 		assert(NULL != ed);
 		NOLL_DEBUG("Edge from the initial node: %p\n", ed);
 		assert(2 == noll_vector_size(ed->args));
@@ -923,9 +969,9 @@ noll_ta_t* noll_graph2ta(noll_graph_t* g) {
 
 	noll_marking_list_delete(markings);
 
-	for (size_t i = 0; i < noll_vector_size(g->edges); ++i) {
-		NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, noll_vector_at(g->edges, i));
-		const noll_edge_t* edge = noll_vector_at(g->edges, i);
+	for (size_t i = 0; i < noll_vector_size(graph->edges); ++i) {
+		NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, noll_vector_at(graph->edges, i));
+		const noll_edge_t* edge = noll_vector_at(graph->edges, i);
 		assert(NULL != edge);
 		NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u, field name = %s\n",
 			noll_vector_at(edge->args, 0),

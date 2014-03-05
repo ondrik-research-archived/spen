@@ -781,7 +781,7 @@ noll_graph_paths_fields (noll_graph_t * g, noll_uid_array * edge_set)
 	  assert (NULL != pred);
 	  /* put each field of level0 on the path */
 	  /* MS: change of infos on fields */
-	  for (uint_t f = 0; f < noll_vector_size(fields_array); f++) 
+	  for (uint_t f = 0; f < noll_vector_size(fields_array); f++)
 	    if (noll_pred_is_field(label, f, NOLL_PFLD_BORDER)) {
 	      paths[f][src][dst] = in_set[ei] ? 2 : 1;
 	      for (uint_t ni = 0; ni < g->nodes_size; ni++)
@@ -790,7 +790,7 @@ noll_graph_paths_fields (noll_graph_t * g, noll_uid_array * edge_set)
 		    paths[label][ni][dst] = ((paths[label][ni][src] == 2)
 					     && in_set[ei]) ? 2 : 1;
 		  }
-	     
+
 	    }
 	}
       else
@@ -1419,11 +1419,11 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
     assert (g2 != NULL);
     assert (e1 != NULL);
     assert (h != NULL);
-	
+
     /* TODO: select the method of checking entailment using the option */
-	
+
     /* HERE follows the TA based procedure */
-    noll_ta_t* g2_ta = noll_graph2ta(g2);
+    noll_ta_t* g2_ta = noll_graph2ta(g2, h);
     assert(NULL != g2_ta);
 #ifndef NDEBUG
     NOLL_DEBUG("\nGraph TA:\n");
@@ -1431,8 +1431,8 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
     NOLL_DEBUG("\n");
 #endif
 
-    noll_ta_t* e1_ta = noll_edge2ta(e1); 
-    assert(NULL != e1_ta);  
+    noll_ta_t* e1_ta = noll_edge2ta(e1);
+    assert(NULL != e1_ta);
 
 #ifndef NDEBUG
     NOLL_DEBUG("\nEdge TA:\n");
@@ -1513,7 +1513,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 	  /* select the subgraph for edge e1
 	   * and also set usedg2 with the selected edges */
 	  noll_graph_t* sg2 = noll_graph_select_ls(g2, e1id, e1->label, args2, usedg2);
-	  if (sg2 == NULL || !noll_graph_shom_entl(sg2, e1, args2)) 
+	  if (sg2 == NULL || !noll_graph_shom_entl(sg2, e1, args2))
 	  { /* free the allocated memory */
 	  noll_graph_array_delete(ls_hom);
 	  ls_hom = NULL;
