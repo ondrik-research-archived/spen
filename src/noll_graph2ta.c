@@ -51,11 +51,6 @@ NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
 
 #define MIN(x, y) (((x) > (y))? (y) : (x))
 
-/* ====================================================================== */
-/* Constants */
-/* ====================================================================== */
-
-static const uid_t NOLL_MARKINGS_EPSILON = -1;
 
 /* ====================================================================== */
 /* Globals */
@@ -83,25 +78,10 @@ static void noll_debug_print_one_mark(const noll_uid_array* mark)
 		return;
 	}
 
-	NOLL_DEBUG("[");
-	for (size_t i = 0; i < noll_vector_size(mark); ++i)
-	{
-		if (i != 0)
-		{
-			NOLL_DEBUG(", ");
-		}
-
-		if (noll_vector_at(mark, i) == NOLL_MARKINGS_EPSILON)
-		{
-			assert(0 == i);
-			NOLL_DEBUG("e");
-		}
-		else
-		{
-			NOLL_DEBUG("%s", noll_field_name(noll_vector_at(mark, i)));
-		}
-	}
-	NOLL_DEBUG("]");
+	char* str = noll_marking_tostring(mark);
+	assert(NULL != str);
+	NOLL_DEBUG("%s", str);
+	free(str);
 }
 
 
@@ -793,8 +773,7 @@ noll_ta_t* noll_graph2ta(
 			}
 			else
 			{
-				NOLL_DEBUG("No edges leaving a non-boundary node %lu\n", i);
-				assert(false);
+				NOLL_DEBUG("WARNING: found a non-boundary node %lu without output edges\n", i);
 			}
 
 			continue;

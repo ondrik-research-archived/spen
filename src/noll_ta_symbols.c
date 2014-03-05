@@ -106,6 +106,54 @@ static noll_ta_symbol_array* g_ta_symbols;
 /* Functionz */
 /* ====================================================================== */
 
+char* noll_marking_tostring(
+	const noll_uid_array*    marking)
+{
+	assert(NULL != marking);
+
+	static const size_t BUFFER_SIZE = 128;
+
+	char* buffer = malloc(BUFFER_SIZE);
+	size_t index = 0;
+
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '[';
+
+	for (size_t i = 0; i < noll_vector_size(marking); ++i)
+	{
+		if (noll_vector_at(marking, i) == NOLL_MARKINGS_EPSILON)
+		{
+			assert(0 == i);
+			assert(index < BUFFER_SIZE);
+			index += snprintf(
+				&buffer[index],
+				BUFFER_SIZE - index,
+				"e, ");
+		}
+		else
+		{
+			assert(index < BUFFER_SIZE);
+			index += snprintf(
+				&buffer[index],
+				BUFFER_SIZE - index,
+				"%s, ",
+				noll_field_name(noll_vector_at(marking, i)));
+		}
+	}
+
+	if (noll_vector_size(marking) > 0)
+	{
+		index -= 2;   // move at the position of the last ','
+	}
+
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ']';
+	assert(index < BUFFER_SIZE);
+	buffer[index] = '\0';
+
+	return buffer;
+}
+
 
 /**
  * @brief  Gets a string for an UID array
@@ -494,7 +542,7 @@ static char* noll_ta_symbol_alloc_str(
 
 	char* str_sels = noll_sels_to_string_symbol(sym->allocated.sels);
 	assert(NULL != str_sels);
-	char* str_mark = noll_uid_array_tostring(sym->allocated.marking);
+	char* str_mark = noll_marking_tostring(sym->allocated.marking);
 	assert(NULL != str_mark);
 	char* str_vars = noll_uid_array_tostring(sym->allocated.vars);
 	assert(NULL != str_vars);
@@ -512,9 +560,7 @@ static char* noll_ta_symbol_alloc_str(
 		1 /* '>' */ +
 		1 /* ',' */ +
 		1 /* ' ' */ +
-		1 /* '[' */ +
 		len_mark +
-		1 /* ']' */ +
 		1 /* ',' */ +
 		1 /* ' ' */ +
 		1 /* '{' */ +
@@ -532,10 +578,8 @@ static char* noll_ta_symbol_alloc_str(
 	str[index++] = '>';
 	str[index++] = ',';
 	str[index++] = ' ';
-	str[index++] = '[';
 	strcpy(&str[index], str_mark);
 	index += len_mark;
-	str[index++] = ']';
 	str[index++] = ',';
 	str[index++] = ' ';
 	str[index++] = '{';

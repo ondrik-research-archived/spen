@@ -40,6 +40,12 @@ extern "C"
 typedef struct noll_ta_symbol noll_ta_symbol_t;
 
 /* ====================================================================== */
+/* Constants */
+/* ====================================================================== */
+
+#define NOLL_MARKINGS_EPSILON ((uid_t)-1)
+
+/* ====================================================================== */
 /* Functionz */
 /* ====================================================================== */
 
@@ -70,6 +76,20 @@ void noll_ta_symbol_destroy(void);
  */
 const char* noll_ta_symbol_get_str(
 	const noll_ta_symbol_t*       symb);
+
+
+/**
+ * @brief  Gets a string for a marking
+ *
+ * Gets a string representing the @p marking. It is the responsibility of the
+ * caller to deallocate the returned memory.
+ *
+ * @param[in]  marking   The marking to be transformed into a string
+ *
+ * @returns  A string representing @p marking
+ */
+char* noll_marking_tostring(
+	const noll_uid_array*    marking);
 
 
 /**
