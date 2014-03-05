@@ -738,7 +738,7 @@ static char* noll_ta_symbol_alias_marking_str(
 	assert(NOLL_TREE_LABEL_ALIASING_MARKING == sym->label_type);
 	assert(NULL != sym->alias_marking.marking);
 
-	char* str_mark = noll_uid_array_tostring(sym->alias_marking.marking);
+	char* str_mark = noll_marking_tostring(sym->alias_marking.marking);
 	assert(NULL != str_mark);
 	size_t len_mark = strlen(str_mark);
 
@@ -747,9 +747,7 @@ static char* noll_ta_symbol_alias_marking_str(
 		1 /* 's' */ +
 		1 /* 'X' */ +
 		1 /* '(' */ +
-		1 /* '[' */ +
 		len_mark +
-		1 /* ']' */ +
 		1 /* ')' */ +
 		1 /* ']' */ +
 		1 /* '\0' */;
@@ -792,10 +790,8 @@ static char* noll_ta_symbol_alias_marking_str(
 	}
 
 	str[index++] = '(';
-	str[index++] = '[';
 	strcpy(&str[index], str_mark);
 	index += len_mark;
-	str[index++] = ']';
 	str[index++] = ')';
 	str[index++] = ']';
 	str[index++] = '\0';
