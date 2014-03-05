@@ -605,6 +605,8 @@ static bool reachable_from_through_path_wo_marker(
 			assert(NULL != ed);
 			assert(NOLL_EDGE_PTO == ed->kind);
 			assert(2 == noll_vector_size(ed->args));
+			NOLL_DEBUG("  src = %u\n", noll_vector_at(ed->args, 0));
+			NOLL_DEBUG("  dst = %u\n", noll_vector_at(ed->args, 1));
 			assert(noll_vector_at(ed->args, 0) == node);
 			uid_t post_node = noll_vector_at(ed->args, 1);
 
