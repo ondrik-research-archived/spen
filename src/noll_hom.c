@@ -1337,8 +1337,9 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 				}
 				noll_vector_at(used, ei) = eid;
 				if (eg[eid] == 1) {
+					noll_edge_t* e = noll_vector_at(g->edges, ei);
 					/* edge using the label, copy in the result */
-					noll_edge_t* ecopy = noll_edge_copy(noll_vector_at(g->edges, ei));
+					noll_edge_t* ecopy = noll_edge_copy(e);
 					/* the source node */
 					uint_t src = noll_vector_at(ecopy->args, 0);
 					/* the destination node */
@@ -1346,6 +1347,7 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 					/* the edge index */
 					uint_t new_id = noll_vector_size(rg->edges);
 					noll_edge_array_push(rg->edges, ecopy);
+					ecopy->id = new_id;
 					/* update the the adjacency matrices */
 					if (rg->mat[src] == NULL)
 					   rg->mat[src] = noll_uid_array_new();

@@ -351,7 +351,22 @@ void noll_graph_fprint(FILE* f, noll_graph_t* g) {
 		noll_edge_fprint(f, g->svars, noll_vector_at (g->edges, eid));
 		fprintf(f, "\n");
 	}
-
+#ifndef NDEBUG
+	fprintf(f, "Matrices: mat = [");
+	for (uint_t vi = 0; vi < g->nodes_size; vi++) {
+	   if (g->mat[vi] != NULL) {
+		   fprintf (f, "\n\tv%d --> ", vi);
+		   for (uint_t i = 0; i < noll_vector_size(g->mat[vi]); i++)
+			fprintf (f, "e%d, ", noll_vector_at(g->mat[vi],i));
+	   }
+	   if (g->rmat[vi] != NULL) {
+		   fprintf (f, "\n\tv%d <-- ", vi);
+		   for (uint_t i = 0; i < noll_vector_size(g->rmat[vi]); i++)
+			fprintf (f, "e%d, ", noll_vector_at(g->rmat[vi],i));
+	   }
+	}
+	fprintf (f, "\n");
+#endif
 	fprintf(f, "Graph sharing constraints: \n");
 	if (g->share) {
 		noll_share_fprint(f, g->lvars, g->svars, g->share);
