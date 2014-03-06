@@ -107,41 +107,54 @@ noll_ta_t* noll_edge2ta(
 		/* vata_symbol_t* symbol_out       = "<> [out]"; */
 
 		// this works only for the lso predicate
-		uid_t f_uid = noll_field_array_find("next");
-		assert(UNDEFINED_ID != f_uid);
+		uid_t next_uid = noll_field_array_find("next");
+		assert(UNDEFINED_ID != next_uid);
 
 		noll_uid_array* selectors = noll_uid_array_new();
 		assert(NULL != selectors);
-		noll_uid_array_push(selectors, f_uid);
+		noll_uid_array_push(selectors, next_uid);
 
 		noll_uid_array* vars = noll_uid_array_new();
 		assert(NULL != vars);
 
-		noll_uid_array* marking = noll_uid_array_new();
-		assert(NULL != marking);
+		noll_uid_array* marking1 = noll_uid_array_new();
+		assert(NULL != marking1);
+		noll_uid_array_push(marking1, NOLL_MARKINGS_EPSILON);
 
-		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_get_unique_allocated(
-			selectors, vars, marking);
-		assert(NULL != symbol_f);
+		noll_uid_array* marking2 = noll_uid_array_new();
+		assert(NULL != marking2);
+		noll_uid_array_copy(marking2, marking1);
+		noll_uid_array_push(marking2, next_uid);
 
-		const noll_ta_symbol_t* symbol_lso = noll_ta_symbol_get_unique_higher_pred(
-			pred, vars, marking);
-		assert(NULL != symbol_lso);
+		const noll_ta_symbol_t* symbol_next1 = noll_ta_symbol_get_unique_allocated(
+			selectors, vars, marking1);
+		assert(NULL != symbol_next1);
+
+		const noll_ta_symbol_t* symbol_next2 = noll_ta_symbol_get_unique_allocated(
+			selectors, vars, marking2);
+		assert(NULL != symbol_next2);
+
+		const noll_ta_symbol_t* symbol_lso1 = noll_ta_symbol_get_unique_higher_pred(
+			pred, vars, marking1);
+		assert(NULL != symbol_lso1);
+
+		const noll_ta_symbol_t* symbol_lso2 = noll_ta_symbol_get_unique_higher_pred(
+			pred, vars, marking2);
+		assert(NULL != symbol_lso2);
 
 		const noll_ta_symbol_t* symbol_end = noll_ta_symbol_get_unique_aliased_var(
 			end_node);
 		assert(NULL != symbol_end);
 
-		vata_add_transition(ta, 1, symbol_f    , children);
-		vata_add_transition(ta, 1, symbol_lso  , children);
-		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
-		vata_add_transition(ta, 2, symbol_f    , children);
-		vata_add_transition(ta, 2, symbol_lso  , children);
+		vata_add_transition(ta, 1, symbol_next1, children);
+		vata_add_transition(ta, 1, symbol_lso1 , children);
+		vata_add_transition(ta, 2, symbol_next2, children);
+		vata_add_transition(ta, 2, symbol_lso2 , children);
 		vata_add_transition(ta, 2, symbol_end  , NULL);
-		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
 
 
-		noll_uid_array_delete(marking);
+		noll_uid_array_delete(marking1);
+		noll_uid_array_delete(marking2);
 		noll_uid_array_delete(vars);
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
