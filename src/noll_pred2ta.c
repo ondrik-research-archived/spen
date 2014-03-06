@@ -43,6 +43,8 @@ noll_ta_t* noll_edge2ta(
 	const noll_pred_t* pred = noll_pred_getpred(edge->label);
 	assert(NULL != pred);
 	assert(NULL != pred->pname);
+	assert(NULL != pred->def);
+	assert(noll_vector_size(edge->args) == pred->def->fargs);
 
 	NOLL_DEBUG("********************************************************************************\n");
 	NOLL_DEBUG("*                                 EDGE -> TA                                   *\n");
@@ -53,20 +55,6 @@ noll_ta_t* noll_edge2ta(
   {
     return NULL;
   }
-
-  // now, we translate the 'lso(in, out)' predicate (see
-  // ../samples/nll/ls-vc01.smt)
-  //
-  //   lso(in, out) = \exists u . in -> {(f, u)} * ((u = out) \/ lso(u, out))
-  //
-  // to a TA (q1 is a root state):
-  //
-  //   q1 -> [f, in, m(f)](q2)
-  //   q1 -> [lso, in, m(f)](q2)
-  //   q2 -> [f, m(f)](q2)
-  //   q2 -> [lso, m(f)](q2)
-  //   q2 -> [out]
-  //
 
 	NOLL_DEBUG("Edge: args = %u\n", noll_vector_size(edge->args));
 	NOLL_DEBUG("  args[0] = %u\n", noll_vector_at(edge->args, 0));
@@ -93,6 +81,20 @@ noll_ta_t* noll_edge2ta(
 	if (0 == strcmp(pred->pname, "lso"))
 	{	// this is the "ls" predicate
 		NOLL_DEBUG("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
+
+		// now, we translate the 'lso(in, out)' predicate (see
+		// ../samples/nll/ls-vc01.smt)
+		//
+		//   lso(in, out) = \exists u . in -> {(f, u)} * ((u = out) \/ lso(u, out))
+		//
+		// to a TA (q1 is a root state):
+		//
+		//   q1 -> [f, in, m(f)](q2)
+		//   q1 -> [lso, in, m(f)](q2)
+		//   q2 -> [f, m(f)](q2)
+		//   q2 -> [lso, m(f)](q2)
+		//   q2 -> [out]
+
 		vata_set_state_root(ta, 1);
 
 		noll_uid_array* children = noll_uid_array_new();
@@ -165,9 +167,19 @@ noll_ta_t* noll_edge2ta(
 		NOLL_DEBUG("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
 		vata_set_state_root(ta, 1);
 
-		noll_uid_array* children = noll_uid_array_new();
-		noll_uid_array_push(children, 2);
-		noll_uid_array_push(children, 3);
+		noll_uid_array* children1next = noll_uid_array_new();
+		noll_uid_array_push(children1next, 3);
+		noll_uid_array_push(children1next, 2);
+
+		noll_uid_array* children1lsso = noll_uid_array_new();
+		noll_uid_array_push(children1lsso, 2);
+
+		noll_uid_array* children2next = noll_uid_array_new();
+		noll_uid_array_push(children2next, 3);
+		noll_uid_array_push(children2next, 2);
+
+		noll_uid_array* children2lsso = noll_uid_array_new();
+		noll_uid_array_push(children2lsso, 2);
 
 		// here, we should add the symbols into a list (tree? some other set?)
 
@@ -177,7 +189,7 @@ noll_ta_t* noll_edge2ta(
 		/* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
 		/* vata_symbol_t* symbol_out       = "<> [out]"; */
 
-		// this works only for the lso predicate
+		// this works only for the lsso predicate where next2 < next1
 		uid_t next1_uid = noll_field_array_find("next1");
 		assert(UNDEFINED_ID != next1_uid);
 		uid_t next2_uid = noll_field_array_find("next2");
@@ -188,28 +200,57 @@ noll_ta_t* noll_edge2ta(
 		noll_uid_array_push(selectors, next1_uid);
 		noll_uid_array_push(selectors, next2_uid);
 
-		noll_uid_array* vars = noll_uid_array_new();
-		assert(NULL != vars);
+		noll_uid_array* vars1 = noll_uid_array_new();
+		assert(NULL != vars1);
+		noll_uid_array_push(vars1, initial_node);
 
-		noll_uid_array* marking = noll_uid_array_new();
-		assert(NULL != marking);
+		noll_uid_array* marking1 = noll_uid_array_new();
+		assert(NULL != marking1);
+		noll_uid_array_push(marking1, NOLL_MARKINGS_EPSILON);
 
-		const noll_ta_symbol_t* symbol_alloc = noll_ta_symbol_get_unique_allocated(
-			selectors, vars, marking);
+		noll_uid_array* marking2 = noll_uid_array_new();
+		assert(NULL != marking2);
+		noll_uid_array_copy(marking2, marking1);
+		noll_uid_array_push(marking2, next2_uid);
 
-		const noll_ta_symbol_t* symbol_lsso = noll_ta_symbol_get_unique_higher_pred(
-			pred, vars, marking);
+		const noll_ta_symbol_t* symbol_alloc1 = noll_ta_symbol_get_unique_allocated(
+			selectors, vars1, marking1);
+		assert(NULL != symbol_alloc1);
 
-		vata_add_transition(ta, 1, symbol_alloc    , children);
-		vata_add_transition(ta, 1, symbol_lsso  , children);
-		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
-		vata_add_transition(ta, 2, symbol_alloc    , children);
-		vata_add_transition(ta, 2, symbol_lsso  , children);
-		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
+		const noll_ta_symbol_t* symbol_lsso1 = noll_ta_symbol_get_unique_higher_pred(
+			pred, vars1, marking1);
+		assert(NULL != symbol_lsso1);
 
-		noll_uid_array_delete(marking);
-		noll_uid_array_delete(vars);
-		noll_uid_array_delete(children);
+		const noll_ta_symbol_t* symbol_alloc2 = noll_ta_symbol_get_unique_allocated(
+			selectors, NULL, marking2);
+		assert(NULL != symbol_alloc2);
+
+		const noll_ta_symbol_t* symbol_lsso2 = noll_ta_symbol_get_unique_higher_pred(
+			pred, NULL, marking2);
+		assert(NULL != symbol_lsso2);
+
+		const noll_ta_symbol_t* symbol_end = noll_ta_symbol_get_unique_aliased_var(
+			end_node);
+		assert(NULL != symbol_end);
+
+		const noll_ta_symbol_t* symbol_ref = noll_ta_symbol_get_unique_aliased_marking(
+			3, marking2);
+		assert(NULL != symbol_ref);
+
+		vata_add_transition(ta, 1, symbol_alloc1    , children1next);
+		vata_add_transition(ta, 1, symbol_lsso1  , children1lsso);
+		vata_add_transition(ta, 2, symbol_alloc2    , children2next);
+		vata_add_transition(ta, 2, symbol_lsso2  , children2lsso);
+		vata_add_transition(ta, 2, symbol_end  , NULL);
+		vata_add_transition(ta, 3, symbol_ref  , NULL);
+
+		noll_uid_array_delete(marking1);
+		noll_uid_array_delete(marking2);
+		noll_uid_array_delete(vars1);
+		noll_uid_array_delete(children1next);
+		noll_uid_array_delete(children1lsso);
+		noll_uid_array_delete(children2next);
+		noll_uid_array_delete(children2lsso);
 		noll_uid_array_delete(selectors);
 	}
 	else
