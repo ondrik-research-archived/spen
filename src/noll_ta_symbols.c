@@ -618,7 +618,7 @@ static char* noll_ta_symbol_higher_pred_str(
 	assert(NULL != sym->higher_pred.vars);
 
 	const char* str_pred = sym->higher_pred.pred->pname;
-	char* str_mark = noll_uid_array_tostring(sym->higher_pred.marking);
+	char* str_mark = noll_marking_tostring(sym->higher_pred.marking);
 	assert(NULL != str_mark);
 	char* str_vars = noll_uid_array_tostring(sym->higher_pred.vars);
 	assert(NULL != str_vars);
@@ -642,9 +642,7 @@ static char* noll_ta_symbol_higher_pred_str(
 		1 /* '>' */ +
 		1 /* ',' */ +
 		1 /* ' ' */ +
-		1 /* '[' */ +
 		len_mark +
-		1 /* ']' */ +
 		1 /* ',' */ +
 		1 /* ' ' */ +
 		1 /* '{' */ +
@@ -668,10 +666,8 @@ static char* noll_ta_symbol_higher_pred_str(
 	str[index++] = '>';
 	str[index++] = ',';
 	str[index++] = ' ';
-	str[index++] = '[';
 	strcpy(&str[index], str_mark);
 	index += len_mark;
-	str[index++] = ']';
 	str[index++] = ',';
 	str[index++] = ' ';
 	str[index++] = '{';
