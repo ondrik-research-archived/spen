@@ -36,7 +36,8 @@
 (declare-fun x3 () NLL_lvl1_t)
 (declare-fun x4 () NLL_lvl1_t)
 (declare-fun x5 () NLL_lvl1_t)
-(declare-fun nil () NLL_lvl1_t)
+(declare-fun nil_lvl1 () NLL_lvl1_t)
+(declare-fun nil_lvl2 () NLL_lvl2_t)
 
 (declare-fun alpha1 () SetLoc)
 
@@ -46,16 +47,16 @@
     (ref down x1)))
   (pto x1 (ref next1 x4))
   (pto x4 (ref next1 x5))
-  (pto x5 (ref next1 nil))
+  (pto x5 (ref next1 nil_lvl1))
   (pto last (sref
-    (ref next2 nil)
+    (ref next2 nil_lvl2)
     (ref down x2)))
   (pto x2 (ref next1 x3))
-  (pto x3 (ref next1 nil))
+  (pto x3 (ref next1 nil_lvl1))
 )))
 
 (assert (not (tobool (index alpha1
-  (nll first last nil)
+  (nll first last nil_lvl1)
 ))))
 
 (check-sat)
