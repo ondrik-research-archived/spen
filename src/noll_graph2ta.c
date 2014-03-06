@@ -594,14 +594,19 @@ static bool reachable_from_through_path_wo_marker(
 			continue;
 		}
 
+		NOLL_DEBUG("In mat[%u], we find the following: ", node);
+		for (size_t i = 0; i < noll_vector_size(edges_from_node); ++i)
+		{
+			NOLL_DEBUG("e%u, ", noll_vector_at(edges_from_node, i));
+		}
+		NOLL_DEBUG("\n");
+
 		for (size_t i = 0; i < noll_vector_size(edges_from_node); ++i)
 		{
 			uid_t edge_id = noll_vector_at(edges_from_node, i);
 			NOLL_DEBUG("Found edge %u\n", edge_id);
 
-			const noll_edge_t* ed = noll_vector_at(
-				graph->edges,
-				noll_vector_at(edges_from_node, edge_id));
+			const noll_edge_t* ed = noll_vector_at(graph->edges, edge_id);
 			assert(NULL != ed);
 			assert(NOLL_EDGE_PTO == ed->kind);
 			assert(2 == noll_vector_size(ed->args));
