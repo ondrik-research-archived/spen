@@ -114,8 +114,9 @@ noll_ta_t* noll_edge2ta(
 		assert(NULL != selectors);
 		noll_uid_array_push(selectors, next_uid);
 
-		noll_uid_array* vars = noll_uid_array_new();
-		assert(NULL != vars);
+		noll_uid_array* vars1 = noll_uid_array_new();
+		assert(NULL != vars1);
+		noll_uid_array_push(vars1, initial_node);
 
 		noll_uid_array* marking1 = noll_uid_array_new();
 		assert(NULL != marking1);
@@ -127,7 +128,7 @@ noll_ta_t* noll_edge2ta(
 		noll_uid_array_push(marking2, next_uid);
 
 		const noll_ta_symbol_t* symbol_next1 = noll_ta_symbol_get_unique_allocated(
-			selectors, vars, marking1);
+			selectors, vars1, marking1);
 		assert(NULL != symbol_next1);
 
 		const noll_ta_symbol_t* symbol_next2 = noll_ta_symbol_get_unique_allocated(
@@ -135,7 +136,7 @@ noll_ta_t* noll_edge2ta(
 		assert(NULL != symbol_next2);
 
 		const noll_ta_symbol_t* symbol_lso1 = noll_ta_symbol_get_unique_higher_pred(
-			pred, vars, marking1);
+			pred, vars1, marking1);
 		assert(NULL != symbol_lso1);
 
 		const noll_ta_symbol_t* symbol_lso2 = noll_ta_symbol_get_unique_higher_pred(
@@ -155,7 +156,7 @@ noll_ta_t* noll_edge2ta(
 
 		noll_uid_array_delete(marking1);
 		noll_uid_array_delete(marking2);
-		noll_uid_array_delete(vars);
+		noll_uid_array_delete(vars1);
 		noll_uid_array_delete(children);
 		noll_uid_array_delete(selectors);
 	}
