@@ -902,7 +902,12 @@ noll_ta_t* noll_graph2ta(
 
 		NOLL_DEBUG("WARNING: ");
 		NOLL_DEBUG(__func__);
-		NOLL_DEBUG(": ignoring vars\n");
+		NOLL_DEBUG(": ignoring boundary vars\n");
+
+		if (i == initial_node)
+		{
+			noll_uid_array_push(vars, i);
+		}
 
 		const noll_ta_symbol_t* symbol = noll_ta_symbol_get_unique_allocated(
 			selectors, vars, mark_i);
@@ -974,15 +979,7 @@ noll_ta_t* noll_graph2ta(
 			edge->kind,
 			edge->label,
 			noll_field_name(edge->label));
-
-		/* vata_symbol_t* symbol       = "symbol"; */
-		/* assert(NOLL_EDGE_PTO == edge->kind); */
-		/* assert(2 == noll_vector_size(edge->args)); */
-		/* vata_state_t children[] = {noll_vector_at(edge->args, 1)}; */
-		/* vata_add_transition(ta, noll_vector_at(edge->args, 0), symbol, children, 1); */
 	}
-
-	// TODO
 
 	return ta;
 }
