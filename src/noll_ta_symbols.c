@@ -991,7 +991,6 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
 
 	symb->str = NULL;                       // clear the string
 	symb->label_type = NOLL_TREE_LABEL_HIGHER_PRED;
-	NOLL_DEBUG("Here, we should set the predicate\n");
 	symb->higher_pred.pred = pred;
 
 	symb->higher_pred.vars = noll_uid_array_new();

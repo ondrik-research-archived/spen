@@ -786,6 +786,15 @@ noll_ta_t* noll_graph2ta(
 		noll_uid_array* vars = noll_uid_array_new();
 		assert(NULL != vars);
 
+		NOLL_DEBUG("WARNING: ");
+		NOLL_DEBUG(__func__);
+		NOLL_DEBUG(": ignoring boundary vars\n");
+
+		if (i == initial_node)
+		{
+			noll_uid_array_push(vars, i);
+		}
+
 		const noll_uid_array* mark_i = noll_vector_at(markings, i);
 		assert(NULL != mark_i);
 
@@ -964,15 +973,6 @@ noll_ta_t* noll_graph2ta(
 		}
 
 		assert(noll_vector_size(selectors) == noll_vector_size(children));
-
-		NOLL_DEBUG("WARNING: ");
-		NOLL_DEBUG(__func__);
-		NOLL_DEBUG(": ignoring boundary vars\n");
-
-		if (i == initial_node)
-		{
-			noll_uid_array_push(vars, i);
-		}
 
 		const noll_ta_symbol_t* symbol = noll_ta_symbol_get_unique_allocated(
 			selectors, vars, mark_i);
