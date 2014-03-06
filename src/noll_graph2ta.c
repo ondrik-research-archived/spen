@@ -195,14 +195,17 @@ static bool noll_fields_order_lt(
 	uid_t            lhs,
 	uid_t            rhs)
 {
-	if ((&rhs != &rhs) || (&lhs != &lhs))
+	if (NOLL_MARKINGS_EPSILON == lhs)
 	{
-		assert(false);
+		return true;
+	}
+	else if (NOLL_MARKINGS_EPSILON == rhs)
+	{
+		return false;
 	}
 
-	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
-
-	return true;
+	NOLL_DEBUG("Calling noll_field_lt() with %u and %u\n", lhs, rhs);
+	return noll_field_lt(lhs, rhs);
 }
 
 
@@ -308,7 +311,6 @@ static bool compute_markings(
 	noll_nodes_to_markings_resize(nodes_to_markings, num_nodes); // resize should allocate enough mem
 	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
 	{	// we allocate empty list of markings for every node now
-		NOLL_DEBUG("Allocating marking for node %lu\n", i);
 		noll_vector_at(nodes_to_markings, i) = noll_marking_list_new();
 		assert(NULL != noll_vector_at(nodes_to_markings, i));
 	}
@@ -368,8 +370,11 @@ static bool compute_markings(
 					noll_uid_array_push(new_marking, edge->label);
 				}
 				else
-				{
-					assert(false);       // fail gracefully
+				{	// in the case the 'edge->label' is greater than the last of
+					// new_marking, this marking will surely be removed so we do not need
+					// to add it
+					noll_uid_array_delete(new_marking);
+					continue;
 				}
 
 				bool found = false;
