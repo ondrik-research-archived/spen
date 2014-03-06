@@ -789,113 +789,178 @@ noll_ta_t* noll_graph2ta(
 		const noll_uid_array* mark_i = noll_vector_at(markings, i);
 		assert(NULL != mark_i);
 
+		bool inserted = false;
 		for (size_t j = 0; j < noll_vector_size(edges); ++j)
 		{
 			const noll_edge_t* ed = noll_vector_at(graph->edges, noll_vector_at(edges, j));
 			assert(NULL != ed);
-			assert(NOLL_EDGE_PTO == ed->kind);
-			const char* field_name = noll_field_name(ed->label);
-			NOLL_DEBUG("Edge from the node %lu: %p, %s\n", i, ed, field_name);
-			assert(2 == noll_vector_size(ed->args));
-			assert(noll_vector_at(ed->args, 0) == i);
-			uid_t next_child = noll_vector_at(ed->args, 1);
-			NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
+			if (NOLL_EDGE_PTO == ed->kind)
+			{
+				const char* field_name = noll_field_name(ed->label);
+				NOLL_DEBUG("Points-to edge from the node %lu: %p, %s\n", i, ed, field_name);
+				assert(2 == noll_vector_size(ed->args));
+				assert(noll_vector_at(ed->args, 0) == i);
+				uid_t next_child = noll_vector_at(ed->args, 1);
+				NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
 
-			// marking of the child
-			const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
-			assert(NULL != mark_next_child);
+				// marking of the child
+				const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
+				assert(NULL != mark_next_child);
 
-			// adding the selector
-			noll_uid_array_push(selectors, ed->label);
+				// adding the selector
+				noll_uid_array_push(selectors, ed->label);
 
-			NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", field_name, i, next_child);
-			if (noll_marking_is_succ_of_via(mark_next_child, mark_i, ed->label))
-			{	// if 'ed' is a backbone edge
-				NOLL_DEBUG("We are on the backbone!\n");
-				noll_uid_array_push(children, next_child);
-			}
-			else
-			{	// If 'ed' is not a backbone edge. This means that the edge will not be
-				// represented in the direct way, but needs to be represented using a
-				// path that traverses the backbone in an indirect way. So we need to
-				// classify the type of the needed path (there are only some
-				// considered) and use a node labelled by this in the transition
-				NOLL_DEBUG("We are NOT on the backbone...\n");
+				NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", field_name, i, next_child);
+				if (noll_marking_is_succ_of_via(mark_next_child, mark_i, ed->label))
+				{	// if 'ed' is a backbone edge
+					NOLL_DEBUG("We are on the backbone!\n");
+					noll_uid_array_push(children, next_child);
+				}
+				else
+				{	// If 'ed' is not a backbone edge. This means that the edge will not be
+					// represented in the direct way, but needs to be represented using a
+					// path that traverses the backbone in an indirect way. So we need to
+					// classify the type of the needed path (there are only some
+					// considered) and use a node labelled by this in the transition
+					NOLL_DEBUG("We are NOT on the backbone...\n");
 
-				NOLL_DEBUG("WARNING: not checking whether the node is marked by a program variable.\n");
+					NOLL_DEBUG("WARNING: not checking whether the node is marked by a program variable.\n");
 
-				if (noll_marking_is_prefix_or_equal(mark_next_child, mark_i))
-				{	// in the case the source is a predecessor of the target (this is the
-					// case e.g. for a doubly-linked segment)
+					if (noll_marking_is_prefix_or_equal(mark_next_child, mark_i))
+					{	// in the case the source is a predecessor of the target (this is the
+						// case e.g. for a doubly-linked segment)
+						NOLL_DEBUG("The source ");
+						noll_debug_print_one_mark(mark_next_child);
+						NOLL_DEBUG(" is a PREFIX of the target ");
+						noll_debug_print_one_mark(mark_i);
+						NOLL_DEBUG("\n");
+
+						NOLL_DEBUG("Now, we check whether node %lu is reachable from node %u on a path that does not use the marking ", i, next_child);
+						noll_debug_print_one_mark(mark_next_child);
+						NOLL_DEBUG("\n");
+
+						// TODO: first test marking, then the reachability
+						if (reachable_from_through_path_wo_marker(
+							graph, markings, i, next_child, mark_next_child))
+						{	// in case 'i' is reachable from 'next_child' via a path where the
+							// marker '\mu(n)' is not used
+							if (!noll_uid_array_equal(mark_next_child, mark_i))
+							{	// in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
+								NOLL_DEBUG("Detected an s1() marker\n");
+								assert(false);
+
+								// TODO: skip what follows
+
+							}
+							else
+							{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
+								NOLL_DEBUG("Detected an s2() marker\n");
+								assert(false);
+
+								// TODO: skip what follows
+							}
+						}
+					}
+
 					NOLL_DEBUG("The source ");
 					noll_debug_print_one_mark(mark_next_child);
-					NOLL_DEBUG(" is a PREFIX of the target ");
+					NOLL_DEBUG(" is NOT a PREFIX of the target ");
 					noll_debug_print_one_mark(mark_i);
 					NOLL_DEBUG("\n");
 
-					NOLL_DEBUG("Now, we check whether node %lu is reachable from node %u on a path that does not use the marking ", i, next_child);
-					noll_debug_print_one_mark(mark_next_child);
+					// get the longest prefix
+					noll_uid_array* lcp = noll_longest_common_prefix(mark_next_child, mark_i);
+					assert(NULL != lcp);
+					assert(!noll_vector_empty(lcp));
+
+					NOLL_DEBUG("Their longest common prefix is ");
+					noll_debug_print_one_mark(lcp);
 					NOLL_DEBUG("\n");
 
-					// TODO: first test marking, then the reachability
-					if (reachable_from_through_path_wo_marker(
-						graph, markings, i, next_child, mark_next_child))
-					{	// in case 'i' is reachable from 'next_child' via a path where the
-						// marker '\mu(n)' is not used
-						if (!noll_uid_array_equal(mark_next_child, mark_i))
-						{	// in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
-							NOLL_DEBUG("Detected an s1() marker\n");
-							assert(false);
+					// TODO: this hack asserts that the node with the longest common
+					// prefix is the source of the processed edge.
+					// This should work for easier graphs, but will fail for more complex
+					assert(noll_uid_array_equal(lcp, mark_i));
+					noll_uid_array_delete(lcp);
 
-							// TODO: skip what follows
+					NOLL_DEBUG("Detected an s3() marker\n");
 
-						}
-						else
-						{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
-							NOLL_DEBUG("Detected an s2() marker\n");
-							assert(false);
+					// now, we create the corresponding symbol
+					const noll_ta_symbol_t* leaf_symbol =
+						noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
+					assert(NULL != leaf_symbol);
 
-							// TODO: skip what follows
-						}
-					}
+					NOLL_DEBUG("WARNING: inserting invalid states\n");
+
+					// TODO: instead of getting a unique state, we might have only one
+					// state for every used leaf symbol (such as it's done in Forester)
+					size_t leaf_state = noll_get_unique();
+					noll_uid_array_push(children, leaf_state);
+					vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+				}
+			}
+			else if (NOLL_EDGE_PRED == ed->kind)
+			{
+				// TODO: should this be the only edge leaving src?
+				assert(1 == noll_vector_size(edges));
+
+				const char* pred_name = noll_pred_name(ed->label);
+				NOLL_DEBUG("Predicate edge from the node %lu: %p, %s\n", i, ed, pred_name);
+				assert(2 == noll_vector_size(ed->args));
+				assert(noll_vector_at(ed->args, 0) == i);
+				uid_t next_child = noll_vector_at(ed->args, 1);
+				NOLL_DEBUG("Neighbour of the node %lu: %u\n", i, next_child);
+
+				// marking of the child
+				const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
+				assert(NULL != mark_next_child);
+
+				// adding the selector
+				noll_uid_array_push(selectors, ed->label);
+
+				NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", pred_name, i, next_child);
+				if (noll_marking_is_succ_of_via(mark_next_child, mark_i, ed->label))
+				{	// if 'ed' is a backbone edge
+					NOLL_DEBUG("We are on the backbone!\n");
+					noll_uid_array_push(children, next_child);
+				}
+				else
+				{
+					NOLL_DEBUG("Predicate on non-backbone!\n");
+					assert(false);
 				}
 
-				NOLL_DEBUG("The source ");
-				noll_debug_print_one_mark(mark_next_child);
-				NOLL_DEBUG(" is NOT a PREFIX of the target ");
-				noll_debug_print_one_mark(mark_i);
-				NOLL_DEBUG("\n");
+				const noll_ta_symbol_t* symbol = noll_ta_symbol_get_unique_higher_pred(
+					noll_pred_getpred(ed->label),
+					vars,
+					mark_i);
+				assert(NULL != symbol);
 
-				// get the longest prefix
-				noll_uid_array* lcp = noll_longest_common_prefix(mark_next_child, mark_i);
-				assert(NULL != lcp);
-				assert(!noll_vector_empty(lcp));
+				vata_add_transition(ta, i, symbol, children);
+				inserted = true;
 
-				NOLL_DEBUG("Their longest common prefix is ");
-				noll_debug_print_one_mark(lcp);
-				NOLL_DEBUG("\n");
+				NOLL_DEBUG("Inserting transition q%lu -> %s", i, noll_ta_symbol_get_str(symbol));
+				NOLL_DEBUG("(");
+				for (size_t j = 0; j < noll_vector_size(children); ++j)
+				{
+					NOLL_DEBUG("q%u, ", noll_vector_at(children, j));
+				}
+				NOLL_DEBUG(")\n");
 
-				// TODO: this hack asserts that the node with the longest common
-				// prefix is the source of the processed edge.
-				// This should work for easier graphs, but will fail for more complex
-				assert(noll_uid_array_equal(lcp, mark_i));
-				noll_uid_array_delete(lcp);
+				NOLL_DEBUG("Adding transition over %s\n", noll_ta_symbol_get_str(symbol));
 
-				NOLL_DEBUG("Detected an s3() marker\n");
-
-				// now, we create the corresponding symbol
-				const noll_ta_symbol_t* leaf_symbol =
-					noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
-				assert(NULL != leaf_symbol);
-
-				NOLL_DEBUG("WARNING: inserting invalid states\n");
-
-				// TODO: instead of getting a unique state, we might have only one
-				// state for every used leaf symbol (such as it's done in Forester)
-				size_t leaf_state = noll_get_unique();
-				noll_uid_array_push(children, leaf_state);
-				vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+				break;
 			}
+			else
+			{
+				NOLL_DEBUG("Unsupported edge type\n");
+				assert(false);
+			}
+		}
+
+		if (inserted)
+		{
+			continue;
 		}
 
 		assert(noll_vector_size(selectors) == noll_vector_size(children));
@@ -930,57 +995,7 @@ noll_ta_t* noll_graph2ta(
 		noll_uid_array_delete(vars);
 	}
 
-	NOLL_DEBUG("Starting traversing the edges\n");
-	assert(NULL != graph->mat);
-
-	/* // the work stack that contains nodes to be processed */
-	/* noll_uid_array* workstack = noll_uid_array_new(); */
-	/* assert(NULL != workstack); */
-	/* noll_uid_array_reserve(workstack, g->nodes_size); */
-	/* noll_uid_array_push(workstack, initial_node); */
-  /*  */
-  /*  */
-	/* noll_uid_array_delete(workstack); */
-
-	const noll_uid_array* edges = graph->mat[initial_node];
-	assert(NULL != edges);
-
-	for (size_t i = 0; i < noll_vector_size(edges); ++i)
-	{
-		const noll_edge_t* ed = noll_vector_at(graph->edges, noll_vector_at(edges, i));
-		assert(NULL != ed);
-		NOLL_DEBUG("Edge from the initial node: %p\n", ed);
-		assert(2 == noll_vector_size(ed->args));
-		assert(noll_vector_at(ed->args, 0) == initial_node );
-		NOLL_DEBUG("Neighbour of the initial node: %u\n", noll_vector_at(ed->args, 1));
-	}
-
-
-
-
-
-
-
-
-
-
-
-
 	noll_marking_list_delete(markings);
-
-	for (size_t i = 0; i < noll_vector_size(graph->edges); ++i) {
-		NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, noll_vector_at(graph->edges, i));
-		const noll_edge_t* edge = noll_vector_at(graph->edges, i);
-		assert(NULL != edge);
-		NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u, field name = %s\n",
-			noll_vector_at(edge->args, 0),
-			noll_vector_at(edge->args, 1),
-			edge->id,
-			edge->kind,
-			edge->label,
-			noll_field_name(edge->label));
-	}
 
 	return ta;
 }
-
