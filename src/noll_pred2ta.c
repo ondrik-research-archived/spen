@@ -38,6 +38,7 @@ noll_ta_t* noll_edge2ta(
 {
 	assert(NULL != edge);
 	assert(NOLL_EDGE_PRED == edge->kind);
+	assert(2 <= noll_vector_size(edge->args));
 
 	const noll_pred_t* pred = noll_pred_getpred(edge->label);
 	assert(NULL != pred);
@@ -66,6 +67,13 @@ noll_ta_t* noll_edge2ta(
   //   q2 -> [lso, m(f)](q2)
   //   q2 -> [out]
   //
+
+	NOLL_DEBUG("Edge: args = %u\n", noll_vector_size(edge->args));
+	NOLL_DEBUG("  args[0] = %u\n", noll_vector_at(edge->args, 0));
+	NOLL_DEBUG("  args[1] = %u\n", noll_vector_at(edge->args, 1));
+
+	uid_t initial_node = noll_vector_at(edge->args, 0);
+	uid_t end_node = noll_vector_at(edge->args, 1);
 
 	NOLL_DEBUG("Exposing the predicate structure\n");
 	NOLL_DEBUG("Name: %s\n", pred->pname);
@@ -114,16 +122,24 @@ noll_ta_t* noll_edge2ta(
 
 		const noll_ta_symbol_t* symbol_f = noll_ta_symbol_get_unique_allocated(
 			selectors, vars, marking);
+		assert(NULL != symbol_f);
 
 		const noll_ta_symbol_t* symbol_lso = noll_ta_symbol_get_unique_higher_pred(
 			pred, vars, marking);
+		assert(NULL != symbol_lso);
+
+		const noll_ta_symbol_t* symbol_end = noll_ta_symbol_get_unique_aliased_var(
+			end_node);
+		assert(NULL != symbol_end);
 
 		vata_add_transition(ta, 1, symbol_f    , children);
 		vata_add_transition(ta, 1, symbol_lso  , children);
 		/* vata_add_transition(ta, 1, symbol_lso_in_mf, children, 1); */
 		vata_add_transition(ta, 2, symbol_f    , children);
 		vata_add_transition(ta, 2, symbol_lso  , children);
+		vata_add_transition(ta, 2, symbol_end  , NULL);
 		/* vata_add_transition(ta, 2, symbol_lso_mf   , children, 1); */
+
 
 		noll_uid_array_delete(marking);
 		noll_uid_array_delete(vars);
