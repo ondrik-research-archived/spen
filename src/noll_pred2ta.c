@@ -131,7 +131,7 @@ noll_ta_t* noll_edge2ta(
 		assert(NULL != symbol_next1);
 
 		const noll_ta_symbol_t* symbol_next2 = noll_ta_symbol_get_unique_allocated(
-			selectors, vars, marking2);
+			selectors, NULL, marking2);
 		assert(NULL != symbol_next2);
 
 		const noll_ta_symbol_t* symbol_lso1 = noll_ta_symbol_get_unique_higher_pred(
@@ -139,7 +139,7 @@ noll_ta_t* noll_edge2ta(
 		assert(NULL != symbol_lso1);
 
 		const noll_ta_symbol_t* symbol_lso2 = noll_ta_symbol_get_unique_higher_pred(
-			pred, vars, marking2);
+			pred, NULL, marking2);
 		assert(NULL != symbol_lso2);
 
 		const noll_ta_symbol_t* symbol_end = noll_ta_symbol_get_unique_aliased_var(

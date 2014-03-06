@@ -907,7 +907,6 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
 {
 	// check for the input parameters
 	assert(NULL != sels);
-	assert(NULL != vars);
 	assert(NULL != marking);
 
 	noll_ta_symbol_t* symb = noll_ta_symbol_create();
@@ -922,7 +921,10 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
 
 	symb->allocated.vars = noll_uid_array_new();
 	assert(NULL != symb->allocated.vars);
-	noll_uid_array_copy(symb->allocated.vars, vars);
+	if (NULL != vars)
+	{	// if there were some variables, copy
+		noll_uid_array_copy(symb->allocated.vars, vars);
+	}
 
 	symb->allocated.marking = noll_uid_array_new();
 	assert(NULL != symb->allocated.marking);
@@ -982,7 +984,6 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
 	const noll_uid_array*            marking)
 {
 	assert(NULL != pred);
-	assert(NULL != vars);
 	assert(NULL != marking);
 
 	noll_ta_symbol_t* symb = noll_ta_symbol_create();
@@ -995,7 +996,10 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
 
 	symb->higher_pred.vars = noll_uid_array_new();
 	assert(NULL != symb->higher_pred.vars);
-	noll_uid_array_copy(symb->higher_pred.vars, vars);
+	if (NULL != vars)
+	{	// if there were some variables, copy
+		noll_uid_array_copy(symb->allocated.vars, vars);
+	}
 
 	symb->higher_pred.marking = noll_uid_array_new();
 	assert(NULL != symb->higher_pred.marking);
