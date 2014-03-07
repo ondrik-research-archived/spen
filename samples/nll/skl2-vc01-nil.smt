@@ -34,7 +34,7 @@
 (assert (tobool (ssep
   (pto head (sref (ref n2 tail) (ref n1 tail)))
   (pto tail (sref (ref n2 nil) (ref n1 nil)))
-)
+)))
 
 (assert (not
   (tobool (index alpha1 (skl2 head tail)))
