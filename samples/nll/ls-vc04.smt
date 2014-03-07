@@ -16,8 +16,7 @@
 (declare-fun y_emp () Sll_t)
 (declare-fun alpha1 () SetLoc)
 (assert
-    (tobool (ssep (pto x_emp (ref next y_emp)) 
-            )
+    (tobool (pto x_emp (ref next y_emp)) 
     )
 )
 (assert
