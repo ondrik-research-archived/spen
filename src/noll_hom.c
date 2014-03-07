@@ -1268,9 +1268,12 @@ noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
 		uint_t v = noll_vector_last(vqueue);
 		noll_uid_array_pop(vqueue);
 		/* test that there is not an already marked node */
-		if (vg[v] >= 1) {
+		/* TODO: last condition is to deal with dll, 
+		 * better condition */
+		if (vg[v] >= 2) 
+		{
 		  /* mark it again as explored */
-          vg[v] = 2;
+		  vg[v] = 2;
 		}
 		else {
 		    /* mark the node */

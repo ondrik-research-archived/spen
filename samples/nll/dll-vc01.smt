@@ -22,7 +22,6 @@
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 
                   (pto w_emp (sref (ref next y_emp) (ref prev x_emp)))
                   (pto y_emp (sref (ref next z_emp) (ref prev w_emp)))
-                  (pto z_emp (sref (ref next nil) (ref prev y_emp)))
             )
     )
 )
