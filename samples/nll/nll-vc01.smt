@@ -19,14 +19,14 @@
 )))))
 
 ; singly-linked list of singly-linked lists
-(define-fun nll ((?in NLL_lvl2_t) (?out NLL_lvl2_t) (?boundary NLL_lvl1_t)
+(define-fun nll ((?in NLL_lvl2_t) (?out NLL_lvl2_t) (?boundary NLL_lvl1_t))
   Space (tospace (or (= ?in ?out)
     (exists ((?u NLL_lvl2_t) (?Z1 NLL_lvl1_t)) (tobool (ssep
       (pto ?in (sref
         (ref next2 ?u)
         (ref down ?Z1)))
       (lso ?Z1 ?boundary)
-      (nll ?u ?out))
+      (nll ?u ?out ?boundary))
 )))))
 
 (declare-fun first () NLL_lvl2_t)
