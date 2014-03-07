@@ -62,6 +62,7 @@ bool name ## _equal(const name *v1, const name *v2);
 #define noll_vector_capacity(v) NOLL_VECTOR_CAPACITY(v)
 #define noll_vector_at(v, i) (NOLL_VECTOR_ARRAY(v)[(i)])
 #define noll_vector_last(v) noll_vector_at(v, NOLL_VECTOR_SIZE(v)-1)
+#define noll_vector_first(v) noll_vector_at(v, 0)
 #define noll_vector_array(v) NOLL_VECTOR_ARRAY(v)
 #define noll_vector_empty(v) (0 == noll_vector_size(v))
 
