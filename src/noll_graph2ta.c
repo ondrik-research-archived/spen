@@ -923,13 +923,23 @@ noll_ta_t* noll_graph2ta(
 							graph, markings, i, next_child, mark_next_child))
 						{	// in case 'i' is reachable from 'next_child' via a path where the
 							// marker '\mu(n)' is not used
+							NOLL_DEBUG("  reachable\n");
 							if (!noll_uid_array_equal(mark_next_child, mark_i))
 							{	// in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
 								NOLL_DEBUG("Detected an s1() marker\n");
-								assert(false);
 
-								// TODO: skip what follows
+								// now, we create the corresponding symbol
+								const noll_ta_symbol_t* leaf_symbol =
+									noll_ta_symbol_get_unique_aliased_marking(1, mark_next_child);
+								assert(NULL != leaf_symbol);
 
+								// TODO: instead of getting a unique state, we might have only one
+								// state for every used leaf symbol (such as it's done in Forester)
+								size_t leaf_state = noll_get_unique();
+								noll_uid_array_push(children, leaf_state);
+								vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+
+								continue;
 							}
 							else
 							{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
@@ -950,6 +960,8 @@ noll_ta_t* noll_graph2ta(
 							}
 						}
 					}
+
+					NOLL_DEBUG("  unreachable\n");
 
 					NOLL_DEBUG("The source ");
 					noll_debug_print_one_mark(mark_next_child);
