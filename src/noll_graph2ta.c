@@ -199,8 +199,14 @@ static bool noll_fields_order_lt(
 	{
 		return true;
 	}
-	else if (NOLL_MARKINGS_EPSILON == rhs)
+
+	if (NOLL_MARKINGS_EPSILON == rhs)
 	{
+		return false;
+	}
+
+	if (lhs == rhs)
+	{	// noll_field_lt does not allow lhs == rhs
 		return false;
 	}
 
@@ -213,6 +219,43 @@ static bool noll_fields_is_backbone(
 	uid_t            field)
 {
 	return noll_pred_is_backbone_field(field);
+}
+
+
+/**
+ * @brief  The lexicographic ordering on markings
+ *
+ * @param[in]  lhs  The left-hand side
+ * @param[in]  rhs  The left-hand side
+ *
+ * @returns  @p true iff lhs < rhs lexicographically, @p false otherwise
+ */
+static bool noll_marking_lexico_lt(
+	const noll_uid_array*      lhs,
+	const noll_uid_array*      rhs)
+{
+	assert(NULL != lhs);
+	assert(NULL != rhs);
+
+	assert(0 < noll_vector_size(lhs));
+	assert(0 < noll_vector_size(rhs));
+
+	assert(NOLL_MARKINGS_EPSILON == noll_vector_first(lhs));
+	assert(NOLL_MARKINGS_EPSILON == noll_vector_first(rhs));
+
+	size_t limit = MIN(noll_vector_size(lhs), noll_vector_size(rhs));
+	for (size_t i = 1; i < limit; ++i)
+	{
+		if (noll_fields_order_lt(noll_vector_at(lhs, i), noll_vector_at(rhs, i)))
+		{
+			return true;
+		}
+	}
+
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": treating lexical ordering as strict\n");
+
+	return noll_vector_size(lhs) < noll_vector_size(rhs);
 }
 
 
@@ -231,14 +274,41 @@ static bool noll_marking_order_lt(
 {
 	assert(NULL != lhs);
 	assert(NULL != rhs);
-	if ((&rhs != &rhs) || (&lhs != &lhs))
-	{
-		assert(false);
+
+	assert(!noll_vector_empty(lhs));
+	assert(!noll_vector_empty(rhs));
+	assert(NOLL_MARKINGS_EPSILON == noll_vector_first(lhs));
+	assert(NOLL_MARKINGS_EPSILON == noll_vector_first(rhs));
+
+	NOLL_DEBUG("Checking whether ");
+	noll_debug_print_one_mark(lhs);
+	NOLL_DEBUG(" < ");
+	noll_debug_print_one_mark(rhs);
+	NOLL_DEBUG(": ");
+
+	if ((1 == noll_vector_size(lhs)) && (2 <= noll_vector_size(rhs)))
+	{	// lhs = e != rhs
+		NOLL_DEBUG("true 1\n");
+		return true;
 	}
 
-	NOLL_DEBUG("WARNING: %s() approximating to TRUE\n", __func__);
+	if ((2 <= noll_vector_size(lhs)) && (2 <= noll_vector_size(rhs)))
+	{	// lhs != e != rhs
+		if (noll_fields_order_lt(noll_vector_last(lhs), noll_vector_last(rhs)))
+		{	// last(lhs) < last(rhs)
+			NOLL_DEBUG("true 2\n");
+			return true;
+		}
 
-	return true;
+		if (noll_marking_lexico_lt(lhs, rhs))
+		{	// lhs < rhs (lexicographically)
+			NOLL_DEBUG("true 3\n");
+			return true;
+		}
+	}
+
+	NOLL_DEBUG("false\n");
+	return false;
 }
 
 
@@ -864,9 +934,19 @@ noll_ta_t* noll_graph2ta(
 							else
 							{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
 								NOLL_DEBUG("Detected an s2() marker\n");
-								assert(false);
 
-								// TODO: skip what follows
+								// now, we create the corresponding symbol
+								const noll_ta_symbol_t* leaf_symbol =
+									noll_ta_symbol_get_unique_aliased_marking(2, mark_next_child);
+								assert(NULL != leaf_symbol);
+
+								// TODO: instead of getting a unique state, we might have only one
+								// state for every used leaf symbol (such as it's done in Forester)
+								size_t leaf_state = noll_get_unique();
+								noll_uid_array_push(children, leaf_state);
+								vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+
+								continue;
 							}
 						}
 					}
@@ -898,8 +978,6 @@ noll_ta_t* noll_graph2ta(
 					const noll_ta_symbol_t* leaf_symbol =
 						noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
 					assert(NULL != leaf_symbol);
-
-					NOLL_DEBUG("WARNING: inserting invalid states\n");
 
 					// TODO: instead of getting a unique state, we might have only one
 					// state for every used leaf symbol (such as it's done in Forester)
