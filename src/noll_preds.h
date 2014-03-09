@@ -137,7 +137,17 @@ extern "C"
   int  noll_pred_type(void);
   /* Type the predicate definitions.
    */
-   
+
+	/**
+	 * @brief  Retrieves the minimum field of a predicate
+	 *
+	 * @param[in]  pid  ID of the predicate
+	 *
+	 * @returns  The minimum field of the predicate with the ID @p pid
+	 */
+	uid_t noll_pred_get_minfield(
+		uid_t                         pid);
+
   int  noll_field_order(void);
   /* Order the fields using the predicate order.
    */
