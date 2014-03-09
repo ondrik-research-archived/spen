@@ -419,6 +419,22 @@ static bool compute_markings(
 			assert(noll_vector_at(edge->args, 0) < num_nodes);
 			assert(noll_vector_at(edge->args, 1) < num_nodes);
 
+			uid_t edge_lab;
+			if (NOLL_EDGE_PTO == edge->kind)
+			{	// for points-to edges
+				edge_lab = edge->label;
+			}
+			else
+			{	// for higher-order predicate edges
+				assert(NOLL_EDGE_PRED == edge->kind);
+
+				edge_lab = noll_pred_get_minfield(edge->label);
+
+				NOLL_DEBUG("The minimum field for predicate %s is %s\n",
+					noll_pred_name(edge->label), noll_field_name(edge_lab));
+			}
+
+
 			// get markings of the source and destination nodes
 			const noll_marking_list* src_markings = noll_vector_at(nodes_to_markings,
 				noll_vector_at(edge->args, 0));
@@ -429,18 +445,18 @@ static bool compute_markings(
 				noll_uid_array* new_marking = noll_uid_array_new();
 				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
 				assert(0 < noll_vector_size(new_marking));
-				if ((noll_vector_last(new_marking) == edge->label)
-					&& noll_fields_is_backbone(edge->label))
+				if ((noll_vector_last(new_marking) == edge_lab)
+					&& noll_fields_is_backbone(edge_lab))
 				{
 					// we keep the same marking
 				}
-				else if (noll_fields_order_lt(noll_vector_last(new_marking), edge->label))
+				else if (noll_fields_order_lt(noll_vector_last(new_marking), edge_lab))
 				{
 					// we add the field at the end of the marking
-					noll_uid_array_push(new_marking, edge->label);
+					noll_uid_array_push(new_marking, edge_lab);
 				}
 				else
-				{	// in the case the 'edge->label' is greater than the last of
+				{	// in the case the 'edge_lab' is greater than the last of
 					// new_marking, this marking will surely be removed so we do not need
 					// to add it
 					noll_uid_array_delete(new_marking);
@@ -661,20 +677,11 @@ static bool reachable_from_through_path_wo_marker(
 		assert(!noll_uid_array_contains(processed, node));
 		noll_uid_array_push(processed, node);
 
-		NOLL_DEBUG("Testing node %u\n", node);
-
 		const noll_uid_array* edges_from_node = graph->mat[node];
 		if (NULL == edges_from_node)
 		{	// in the case 'node' has no outgoing edges
 			continue;
 		}
-
-		NOLL_DEBUG("In mat[%u], we find the following: ", node);
-		for (size_t i = 0; i < noll_vector_size(edges_from_node); ++i)
-		{
-			NOLL_DEBUG("e%u, ", noll_vector_at(edges_from_node, i));
-		}
-		NOLL_DEBUG("\n");
 
 		for (size_t i = 0; i < noll_vector_size(edges_from_node); ++i)
 		{
@@ -803,11 +810,8 @@ noll_ta_t* noll_graph2ta(
 	noll_debug_print_markings(markings);
 
 	NOLL_DEBUG("Generating the TA for the graph\n");
-  vata_ta_t* ta = NULL;
-  if ((ta = vata_create_ta()) == NULL)
-  {
-    return NULL;
-  }
+  vata_ta_t* ta = vata_create_ta();
+	assert(NULL != ta);
 
 	// set the initial node as the root state
 	vata_set_state_root(ta, initial_node);
@@ -860,8 +864,9 @@ noll_ta_t* noll_graph2ta(
 		NOLL_DEBUG(__func__);
 		NOLL_DEBUG(": ignoring boundary vars\n");
 
-		if (i == initial_node)
-		{
+		if (noll_uid_array_contains(homo, i))
+		{	// in the case 'i' is pointed by a variable
+			NOLL_DEBUG("  adding variable ref %lu\n", i);
 			noll_uid_array_push(vars, i);
 		}
 
@@ -904,6 +909,24 @@ noll_ta_t* noll_graph2ta(
 					NOLL_DEBUG("We are NOT on the backbone...\n");
 
 					NOLL_DEBUG("WARNING: not checking whether the node is marked by a program variable.\n");
+
+					if (noll_uid_array_contains(homo, next_child))
+					{	// if next_child is pointed by a variable
+						NOLL_DEBUG("Detected aliasing of variable (node) %u\n", next_child);
+
+						// now, we create the corresponding symbol
+						const noll_ta_symbol_t* leaf_symbol =
+							noll_ta_symbol_get_unique_aliased_var(next_child);
+						assert(NULL != leaf_symbol);
+
+						// TODO: instead of getting a unique state, we might have only one
+						// state for every used leaf symbol (such as it's done in Forester)
+						size_t leaf_state = noll_get_unique();
+						noll_uid_array_push(children, leaf_state);
+						vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+
+						continue;
+					}
 
 					if (noll_marking_is_prefix_or_equal(mark_next_child, mark_i))
 					{	// in the case the source is a predecessor of the target (this is the
