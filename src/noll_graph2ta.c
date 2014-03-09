@@ -690,7 +690,6 @@ static bool reachable_from_through_path_wo_marker(
 
 			const noll_edge_t* ed = noll_vector_at(graph->edges, edge_id);
 			assert(NULL != ed);
-			assert(NOLL_EDGE_PTO == ed->kind);
 			assert(2 == noll_vector_size(ed->args));
 			NOLL_DEBUG("  src = %u\n", noll_vector_at(ed->args, 0));
 			NOLL_DEBUG("  dst = %u\n", noll_vector_at(ed->args, 1));
@@ -791,8 +790,6 @@ noll_ta_t* noll_graph2ta(
 
 	uint_t initial_node = noll_vector_at(homo, 0);
 	assert(graph->nodes_size > initial_node);
-	uint_t end_node = noll_vector_at(homo, 1);
-	assert(graph->nodes_size > end_node);
 
 	NOLL_DEBUG(__func__);
 	NOLL_DEBUG("(): WARNING: ignoring the rest of the parameters in the homo morphism\n");
@@ -824,7 +821,7 @@ noll_ta_t* noll_graph2ta(
 		const noll_uid_array* edges = graph->mat[i];
 		if (NULL == edges)
 		{	// if there are no edges leaving 'i'
-			if (i == end_node)
+			if (noll_uid_array_contains(homo, i))
 			{	// in the case 'i' is a boundary node on some tree branch
 				NOLL_DEBUG("Found a boundary node %lu\n", i);
 
@@ -835,7 +832,7 @@ noll_ta_t* noll_graph2ta(
 
 				// TODO: there should be a variable, but how to get it?
 				const noll_ta_symbol_t* symbol =
-					noll_ta_symbol_get_unique_aliased_var(end_node);
+					noll_ta_symbol_get_unique_aliased_var(i);
 				vata_add_transition(
 					ta,       // the TA
 					i,        // the parent
