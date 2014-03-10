@@ -29,34 +29,34 @@
       (nll ?u ?out ?boundary))
 )))))
 
-(declare-fun first () NLL_lvl2_t)
-(declare-fun last () NLL_lvl2_t)
-(declare-fun x1 () NLL_lvl1_t)
-(declare-fun x2 () NLL_lvl1_t)
-(declare-fun x3 () NLL_lvl1_t)
-(declare-fun x4 () NLL_lvl1_t)
-(declare-fun x5 () NLL_lvl1_t)
+(declare-fun x1 () NLL_lvl2_t)
+(declare-fun x1_1 () NLL_lvl1_t)
+(declare-fun x1_2 () NLL_lvl1_t)
+(declare-fun x1_3 () NLL_lvl1_t)
+(declare-fun x2 () NLL_lvl2_t)
+(declare-fun x2_1 () NLL_lvl1_t)
+(declare-fun x2_2 () NLL_lvl1_t)
 (declare-fun nil_lvl1 () NLL_lvl1_t)
 (declare-fun nil_lvl2 () NLL_lvl2_t)
 
 (declare-fun alpha1 () SetLoc)
 
 (assert (tobool (ssep
-  (pto first (sref
-    (ref next2 last)
-    (ref down x1)))
-  (pto x1 (ref next1 x4))
-  (pto x4 (ref next1 x5))
-  (pto x5 (ref next1 nil_lvl1))
-  (pto last (sref
+  (pto x1 (sref
+    (ref next2 x2)
+    (ref down x1_1)))
+  (pto x1_1 (ref next1 x1_2))
+  (pto x1_2 (ref next1 x1_3))
+  (pto x1_3 (ref next1 nil_lvl1))
+  (pto x2 (sref
     (ref next2 nil_lvl2)
-    (ref down x2)))
-  (pto x2 (ref next1 x3))
-  (pto x3 (ref next1 nil_lvl1))
+    (ref down x2_1)))
+  (pto x2_1 (ref next1 x2_2))
+  (pto x2_2 (ref next1 nil_lvl1))
 )))
 
 (assert (not (tobool (index alpha1
-  (nll first last nil_lvl1)
+  (nll x1 x2 nil_lvl1)
 ))))
 
 (check-sat)
