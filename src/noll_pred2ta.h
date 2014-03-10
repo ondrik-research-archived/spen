@@ -27,18 +27,9 @@
 #ifndef NOLL_PRED2TA_H_
 #define NOLL_PRED2TA_H_
 
-//#include "ta.h" // Tree automata library
 #include "noll_preds.h"
 #include "noll_graph2ta.h"
 
-/* ====================================================================== */
-/* Datatypes */
-/* ====================================================================== */
-
-/**
- * Type for tree automaton format used here.
- * TODO: define tree automaton type here or anywhere
- */
 
 /* ====================================================================== */
 /* Translators */
@@ -51,7 +42,6 @@
  *
  * @returns  A TA representing all models that the edge denotes
  */
-noll_ta_t* noll_edge2ta(
-	const noll_edge_t*               edge);
+noll_ta_t *noll_edge2ta (const noll_edge_t * edge);
 
 #endif /* NOLL_PRED2TA_H_ */
