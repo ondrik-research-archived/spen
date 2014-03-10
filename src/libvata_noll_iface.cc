@@ -36,8 +36,9 @@
 /* Datatypes */
 /* ====================================================================== */
 
-using TreeAut       = VATA::ExplicitTreeAut;
-using TreeAutSymbol = VATA::ExplicitTreeAut::SymbolType;
+using TreeAut           = VATA::ExplicitTreeAut;
+using TreeAutSymbol     = TreeAut::SymbolType;
+using StringSymbolType  = TreeAut::StringSymbolType;
 
 typedef struct type_noll_ta_t
 {
@@ -51,24 +52,53 @@ class NollAlphabet : public TreeAut::AbstractAlphabet
 {
 private:  // data members
 
-	TreeAut::SymbolDict symbolDict_{};
-	TreeAutSymbol nextSymbol_ = 0;
+	// TreeAut::SymbolDict symbolDict_{};
+	// TreeAutSymbol nextSymbol_ = 0;
 
 public:   // methods
 
+	static const noll_ta_symbol_t* vata_to_noll_symbol(const TreeAutSymbol& vata_symb)
+	{
+		const noll_ta_symbol_t* noll_symb =
+			reinterpret_cast<const noll_ta_symbol_t*>(vata_symb);
+		assert(nullptr != noll_symb);
+		return noll_symb;
+	}
+
+	static TreeAutSymbol noll_to_vata_symbol(const noll_ta_symbol_t* noll_symb)
+	{
+		assert(nullptr != noll_symb);
+		TreeAutSymbol vata_symb = reinterpret_cast<TreeAutSymbol>(noll_symb);
+		return vata_symb;
+	}
+
 	virtual FwdTranslatorPtr GetSymbolTransl() override
 	{
-		FwdTranslator* fwdTransl = new
-			TreeAut::StringSymbolToSymbolTranslWeak{symbolDict_,
-			[&](const TreeAut::StringSymbolType&){return nextSymbol_++;}};
-
-		return FwdTranslatorPtr(fwdTransl);
+		assert(false);
+		// FwdTranslator* fwdTransl = new
+		// 	TreeAut::StringSymbolToSymbolTranslWeak{symbolDict_,
+		// 	[&](const TreeAut::StringSymbolType&){return nextSymbol_++;}};
+    //
+		// return FwdTranslatorPtr(fwdTransl);
 	}
 
 	virtual BwdTranslatorPtr GetSymbolBackTransl() override
 	{
-		BwdTranslator* bwdTransl =
-			new TreeAut::SymbolBackTranslStrict(symbolDict_.GetReverseMap());
+		class NollBackTranslator : public NollAlphabet::BwdTranslator
+		{
+			virtual StringSymbolType operator()(const TreeAutSymbol& value) override
+			{
+				return const_cast<const NollBackTranslator*>(this)->operator()(value);
+			}
+
+			virtual StringSymbolType operator()(const TreeAutSymbol& value) const override
+			{
+				return StringSymbolType(noll_ta_symbol_get_str(
+					vata_to_noll_symbol(value)), 0);
+			}
+		};
+
+		BwdTranslator* bwdTransl = new NollBackTranslator();
 
 		return BwdTranslatorPtr(bwdTransl);
 	}
@@ -130,11 +160,7 @@ void vata_add_transition(
 			noll_vector_array(children) + numChildren);
 	}
 
-	TreeAut::StringSymbolType vataStringSymbol(
-		noll_ta_symbol_get_str(symbol),
-		numChildren);
-
-	TreeAutSymbol taSym = (*ta->ta.GetAlphabet()->GetSymbolTransl())(vataStringSymbol);
+	TreeAutSymbol taSym = NollAlphabet::noll_to_vata_symbol(symbol);
 
 	ta->ta.AddTransition(tupChildren, taSym, parent);
 }
