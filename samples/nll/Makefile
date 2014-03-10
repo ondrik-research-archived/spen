@@ -18,4 +18,4 @@ purge: clean
 
 
 %.log: %.smt
-	$(TOOL) $(OPTION) $< &> $@
+	$(TOOL) $(OPTION) $< &> log/$@

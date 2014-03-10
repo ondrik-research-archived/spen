@@ -5,7 +5,7 @@
 (declare-fun next () (Field Dll_t Dll_t))
 (declare-fun prev () (Field Dll_t Dll_t))
 
-; singly-linked list
+; doubly-linked list
 (define-fun dll ((?in Dll_t) (?ex Dll_t) (?pr Dll_t) (?hd Dll_t))
   Space (tospace (or (and (= ?in ?pr) (= ?hd ?ex)) 
     (exists ((?u Dll_t)) (tobool (ssep

@@ -73,40 +73,44 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
       return;
     }
 
-	if (h->is_empty) {
+  if (h->is_empty)
+    {
       fprintf (f, "EMPTY\n");
+    }
+
+  if (h->shom == NULL)
+    return;
+
+  for (uint_t i = 0; i < noll_vector_size (h->shom); i++)
+    {
+      noll_shom_t *shi = noll_vector_at (h->shom, i);
+      fprintf (f, "Simple Hom %d for n-graph %zu: \n", i, shi->ngraph);
+      noll_graph_t *ngi = noll_vector_at (noll_prob->ngraph, i);
+
+      /* print node mapping */
+      fprintf (f, "\tNode mapping (n -> p): ");
+      if (shi->node_hom == NULL)
+	fprintf (f, "NULL\n");
+      else
+	{
+	  fprintf (f, "[");
+	  for (uint_t j = 0; j < ngi->nodes_size; j++)
+	    fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
+	  fprintf (f, "]");
 	}
 
-	if (h->shom == NULL)
-	return;
-
-	for (uint_t i = 0; i < noll_vector_size (h->shom); i++) {
-		noll_shom_t* shi = noll_vector_at(h->shom, i);
-		fprintf (f, "Simple Hom %d for n-graph %zu: \n", i, shi->ngraph);
-		noll_graph_t* ngi = noll_vector_at(noll_prob->ngraph, i);
-
-		/* print node mapping */
-		fprintf (f, "\tNode mapping (n -> p): ");
-		if (shi->node_hom == NULL)
-			fprintf (f, "NULL\n");
-		else {
-			fprintf (f, "[");
-			for (uint_t j = 0; j < ngi->nodes_size; j++)
-				fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
-			fprintf (f, "]");
-		}
-
-		/* print edge mapping */
-		fprintf (f, "\tEdge mapping (p -> n): ");
-		if (shi->pused == NULL)
-			fprintf (f, "NULL\n");
-		else {
-			fprintf (f, "[");
-			for (uint_t j = 0; j < noll_vector_size(shi->pused); j++)
-				fprintf (f, "e%d --> e%d,", j, noll_vector_at(shi->pused,j));
-			fprintf (f, "]");
-		}
+      /* print edge mapping */
+      fprintf (f, "\tEdge mapping (p -> n): ");
+      if (shi->pused == NULL)
+	fprintf (f, "NULL\n");
+      else
+	{
+	  fprintf (f, "[");
+	  for (uint_t j = 0; j < noll_vector_size (shi->pused); j++)
+	    fprintf (f, "e%d --> e%d,", j, noll_vector_at (shi->pused, j));
+	  fprintf (f, "]");
 	}
+    }
 
 
 }
@@ -781,17 +785,18 @@ noll_graph_paths_fields (noll_graph_t * g, noll_uid_array * edge_set)
 	  assert (NULL != pred);
 	  /* put each field of level0 on the path */
 	  /* MS: change of infos on fields */
-	  for (uint_t f = 0; f < noll_vector_size(fields_array); f++)
-	    if (noll_pred_is_field(label, f, NOLL_PFLD_BORDER)) {
-	      paths[f][src][dst] = in_set[ei] ? 2 : 1;
-	      for (uint_t ni = 0; ni < g->nodes_size; ni++)
-		if (paths[label][ni][src])
-		  {
-		    paths[label][ni][dst] = ((paths[label][ni][src] == 2)
-					     && in_set[ei]) ? 2 : 1;
-		  }
+	  for (uint_t f = 0; f < noll_vector_size (fields_array); f++)
+	    if (noll_pred_is_field (label, f, NOLL_PFLD_BORDER))
+	      {
+		paths[f][src][dst] = in_set[ei] ? 2 : 1;
+		for (uint_t ni = 0; ni < g->nodes_size; ni++)
+		  if (paths[label][ni][src])
+		    {
+		      paths[label][ni][dst] = ((paths[label][ni][src] == 2)
+					       && in_set[ei]) ? 2 : 1;
+		    }
 
-	    }
+	      }
 	}
       else
 	{
@@ -1024,8 +1029,9 @@ noll_graph_shom_nodes (noll_graph_t * g1, noll_graph_t * g2)
       // TODO: incorrect now with local vars, check the name of the variable
       uint_t n1v = g1->var2node[v];
       uint_t v2 = noll_var_array_find_local (g2->lvars,
-					      noll_var_name (g1->lvars, v, NOLL_TYP_RECORD));
-	  uint_t n2v = g2->var2node[v2];
+					     noll_var_name (g1->lvars, v,
+							    NOLL_TYP_RECORD));
+      uint_t n2v = g2->var2node[v2];
       if (n1v != UNDEFINED_ID)
 	{
 	  if (n2v != UNDEFINED_ID)
@@ -1214,204 +1220,228 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
  * @param args   nodes used as argument of the predicate
  * @param used   set of already used edges of g2
  */
-noll_graph_t*
-noll_graph_select_ls(noll_graph_t* g, uint_t eid, uint_t label,
-					 noll_uid_array* args,
-                     noll_uid_array* used)
+noll_graph_t *
+noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
+		      noll_uid_array * args, noll_uid_array * used)
 {
-	/* pre-conditions */
-	assert (g != NULL);
-	/* - valid predicate label */
-	assert (label < noll_vector_size(preds_array));
-	/* - valid predicate arguments */
-	assert (args != NULL);
-	// TODO: pargs is not correctly filled
-	// assert (noll_vector_size(args) == noll_vector_at(preds_array,label)->def->pargs);
-	/* - valid used set */
-	assert (used != NULL);
-	assert (noll_vector_size(used) == noll_vector_size(g->edges));
+  /* pre-conditions */
+  assert (g != NULL);
+  /* - valid predicate label */
+  assert (label < noll_vector_size (preds_array));
+  /* - valid predicate arguments */
+  assert (args != NULL);
+  // TODO: pargs is not correctly filled
+  // assert (noll_vector_size(args) == noll_vector_at(preds_array,label)->def->pargs);
+  /* - valid used set */
+  assert (used != NULL);
+  assert (noll_vector_size (used) == noll_vector_size (g->edges));
 
 #ifndef NDEBUG
-    fprintf (stdout, "select_ls: for predicate %d\n", label);
+  fprintf (stdout, "select_ls: for predicate %d\n", label);
 #endif
 
-	/*
-	 * Allocate the result
-	 */
-	noll_graph_t* rg = noll_graph_copy_nodes(g);
+  /*
+   * Allocate the result
+   */
+  noll_graph_t *rg = noll_graph_copy_nodes (g);
 
-	/*
-	 * Build the set of nodes vg
-	 */
-	/* bit set of nodes in @p g selected */
-	uint_t vg_size = g->nodes_size;
-	int* vg = (int*) malloc(vg_size * sizeof(int));
-	for (uint_t i = 0; i < vg_size; i++)
-	  vg[i] = -1; /* not marked */
-	/* mark the starting node */
-	vg[noll_vector_at(args,0)] = 0; /* starting */
-	/* mark the ending node */
-	vg[noll_vector_at(args,1)] = 1; /* ending */
-	/* mark the border nodes */
-	for (uint_t i = 2; i < noll_vector_size(args); i++)
-	  vg[noll_vector_at(args,i)] = 3; /* border */
-	/* the queue of nodes to be explored */
-	noll_uid_array* vqueue = noll_uid_array_new();
-	noll_uid_array_push(vqueue, noll_vector_at(args,0));
-	/* sets also the edges explored and labeled in L2 */
-	uint_t eg_size = noll_vector_size(g->edges);
-	int* eg = (int*) malloc(eg_size * sizeof(int));
-	for (uint_t i = 0; i < eg_size; i++)
-	  eg[i] = 0; /* not marked */
-	/* exploration */
-	while (noll_vector_size(vqueue) >= 1) {
-		uint_t v = noll_vector_last(vqueue);
-		noll_uid_array_pop(vqueue);
-		/* test that there is not an already marked node */
-		/* TODO: last condition is to deal with dll, 
-		 * better condition */
-		if (vg[v] >= 2) 
+  /*
+   * Build the set of nodes vg
+   */
+  /* bit set of nodes in @p g selected */
+  uint_t vg_size = g->nodes_size;
+  int *vg = (int *) malloc (vg_size * sizeof (int));
+  for (uint_t i = 0; i < vg_size; i++)
+    vg[i] = -1;			/* not marked */
+  /* mark the starting node */
+  vg[noll_vector_at (args, 0)] = 0;	/* starting */
+  /* mark the ending node */
+  vg[noll_vector_at (args, 1)] = 1;	/* ending */
+  /* mark the border nodes */
+  for (uint_t i = 2; i < noll_vector_size (args); i++)
+    vg[noll_vector_at (args, i)] = 3;	/* border */
+  /* the queue of nodes to be explored */
+  noll_uid_array *vqueue = noll_uid_array_new ();
+  noll_uid_array_push (vqueue, noll_vector_at (args, 0));
+  /* sets also the edges explored and labeled in L2 */
+  uint_t eg_size = noll_vector_size (g->edges);
+  int *eg = (int *) malloc (eg_size * sizeof (int));
+  for (uint_t i = 0; i < eg_size; i++)
+    eg[i] = 0;			/* not marked */
+  /* exploration */
+  while (noll_vector_size (vqueue) >= 1)
+    {
+      uint_t v = noll_vector_last (vqueue);
+      noll_uid_array_pop (vqueue);
+      /* test that there is not an already marked node */
+      /* TODO: last condition is to deal with dll, 
+       * better condition */
+      if (vg[v] >= 2)
+	{
+	  /* mark it again as explored */
+	  vg[v] = 2;
+	}
+      else
+	{
+	  /* mark the node */
+	  vg[v] = 2;		/* internal */
+	  /* look at its successors labeled in L2 */
+	  noll_uid_array *out_v = g->mat[v];
+	  if (out_v != NULL)
+	    {
+	      for (uint_t i = 0; i < noll_vector_size (out_v); i++)
 		{
-		  /* mark it again as explored */
-		  vg[v] = 2;
+		  uint_t ei = noll_vector_at (out_v, i);
+		  /* if this edge has been already used, then error and stop */
+		  if (noll_vector_at (used, ei) != UNDEFINED_ID)
+		    {
+		      fprintf (stdout,
+			       "select_ls: Explored edge already used (1)!\n");
+		      goto return_select_ls_error;
+		    }
+		  noll_edge_t *e = noll_vector_at (g->edges, ei);
+		  /* if the label is in the L2 set,
+		   * then add the successors to the queue */
+		  if (!noll_edge_in_label (e, label))
+		    continue;	/* the for loop */
+		  eg[ei] = 1;
+		  /* insert the destination and the border nodes into the queue */
+		  for (uint_t p = 1; p < noll_vector_size (e->args); p++)
+		    {
+		      noll_uid_array_push (vqueue,
+					   noll_vector_at (e->args, p));
+		    }
 		}
-		else {
-		    /* mark the node */
-			vg[v] = 2; /* internal */
-			/* look at its successors labeled in L2 */
-			noll_uid_array* out_v = g->mat[v];
-			if (out_v != NULL) {
-				for (uint_t i = 0; i < noll_vector_size(out_v); i++) {
-					uint_t ei = noll_vector_at(out_v, i);
-					/* if this edge has been already used, then error and stop */
-					if (noll_vector_at(used,ei) != UNDEFINED_ID) {
-						fprintf (stdout, "select_ls: Explored edge already used (1)!\n");
-						goto return_select_ls_error;
-					}
-					noll_edge_t* e = noll_vector_at(g->edges, ei);
-					/* if the label is in the L2 set,
-					* then add the successors to the queue */
-					if (!noll_edge_in_label(e, label))
-						continue; /* the for loop */
-					eg[ei] = 1;
-					/* insert the destination and the border nodes into the queue */
-					for (uint_t p = 1; p < noll_vector_size(e->args); p++)  {
-						noll_uid_array_push(vqueue, noll_vector_at(e->args,p));
-					}
-				}
-			}
-		}
+	    }
 	}
-	noll_uid_array_delete(vqueue);
+    }
+  noll_uid_array_delete (vqueue);
 
 #ifndef NDEBUG
-    fprintf (stdout, "\t- exploration done, check arguments\n");
+  fprintf (stdout, "\t- exploration done, check arguments\n");
 #endif
 
-	/* check that all arguments have been explored */
-	for (uint_t i = 0; i < noll_vector_size(args); i++) {
-	  if (vg[noll_vector_at(args,i)] != 2) {
-		 fprintf (stdout, "select_ls: %dth argument unexplored!\n", i);
-	     goto return_select_ls_error;
-	  } else {
-		  if (i >= 2)
-		    vg[noll_vector_at(args,i)] = 3;
-	  }
+  /* check that all arguments have been explored */
+  for (uint_t i = 0; i < noll_vector_size (args); i++)
+    {
+      if (vg[noll_vector_at (args, i)] != 2)
+	{
+	  fprintf (stdout, "select_ls: %dth argument unexplored!\n", i);
+	  goto return_select_ls_error;
 	}
+    }
+  /* redo marking of border arguments */
+  for (uint_t i = 2; i < noll_vector_size (args); i++)
+     vg[noll_vector_at (args, i)] = 3;
 
 #ifndef NDEBUG
-    fprintf (stdout, "\t- mark used edges, build the graph\n");
+  fprintf (stdout, "\t- mark used edges, build the graph\n");
 #endif
 
-	/*
-	 * Mark the edges outgoing from vg (except from border) as used.
-	 * Insert the edges labeled by labels in L2 in the result.
-	 */
-	for (uint_t v = 0; v < vg_size; v++) {
-		if (vg[v] >= 0 && vg[v] <= 2) {
-			/* outgoing edges from i */
-			noll_uid_array* out_v = g->mat[v];
-			if (out_v != NULL) {
-			for (uint_t i = 0; i < noll_vector_size(out_v); i++) {
-				uint_t ei = noll_vector_at(out_v, i);
-				if (noll_vector_at(used, ei) != UNDEFINED_ID) {
-					fprintf (stdout, "select_ls: Explored edge already used (2)!\n");
-					goto return_select_ls_error;
-				}
-				noll_vector_at(used, ei) = eid;
-				if (eg[eid] == 1) {
-					noll_edge_t* e = noll_vector_at(g->edges, ei);
-					/* edge using the label, copy in the result */
-					noll_edge_t* ecopy = noll_edge_copy(e);
-					/* the source node */
-					uint_t src = noll_vector_at(ecopy->args, 0);
-					/* the destination node */
-					uint_t dst = noll_vector_at(ecopy->args, 1);
-					/* the edge index */
-					uint_t new_id = noll_vector_size(rg->edges);
-					noll_edge_array_push(rg->edges, ecopy);
-					ecopy->id = new_id;
-					/* update the the adjacency matrices */
-					if (rg->mat[src] == NULL)
-					   rg->mat[src] = noll_uid_array_new();
-					noll_uid_array_push(rg->mat[src], new_id);
-					if (rg->rmat[dst] == NULL)
-					   rg->rmat[dst] = noll_uid_array_new();
-					noll_uid_array_push(rg->rmat[dst], new_id);
-				}
-			}
-			}
+  /*
+   * Mark the edges outgoing from vg (except from border) as used.
+   * Insert the edges labeled by labels in L2 in the result.
+   */
+  for (uint_t v = 0; v < vg_size; v++)
+    {
+      if (vg[v] >= 0 && vg[v] <= 2)
+	{
+	  /* outgoing edges from i */
+	  noll_uid_array *out_v = g->mat[v];
+	  if (out_v != NULL)
+	    {
+	      for (uint_t i = 0; i < noll_vector_size (out_v); i++)
+		{
+		  uint_t ei = noll_vector_at (out_v, i);
+		  if (noll_vector_at (used, ei) != UNDEFINED_ID)
+		    {
+		      fprintf (stdout,
+			       "select_ls: Explored edge already used (2)!\n");
+		      goto return_select_ls_error;
+		    }
+		  noll_vector_at (used, ei) = eid;
+		  if (eg[eid] == 1)
+		    {
+		      noll_edge_t *e = noll_vector_at (g->edges, ei);
+		      /* edge using the label, copy in the result */
+		      noll_edge_t *ecopy = noll_edge_copy (e);
+		      /* the source node */
+		      uint_t src = noll_vector_at (ecopy->args, 0);
+		      /* the destination node */
+		      uint_t dst = noll_vector_at (ecopy->args, 1);
+		      /* the edge index */
+		      uint_t new_id = noll_vector_size (rg->edges);
+		      noll_edge_array_push (rg->edges, ecopy);
+		      ecopy->id = new_id;
+		      /* update the the adjacency matrices */
+		      if (rg->mat[src] == NULL)
+			rg->mat[src] = noll_uid_array_new ();
+		      noll_uid_array_push (rg->mat[src], new_id);
+		      if (rg->rmat[dst] == NULL)
+			rg->rmat[dst] = noll_uid_array_new ();
+		      noll_uid_array_push (rg->rmat[dst], new_id);
+		    }
 		}
+	    }
 	}
+    }
 
 #ifndef NDEBUG
-    fprintf (stdout, "\t- insert difference edges inside the graph selected\n");
+  fprintf (stdout, "\t- insert difference edges inside the graph selected\n");
 #endif
 
-	/*
-	 * Insert the difference edges between the marked vertices.
-	 */
-	for (uint_t i = 0; i < vg_size; i++) {
-		for (uint_t j = 0; j <= i; j++) {
-			if (vg[i] >= 0 && vg[j] >= 0)
-			   rg->diff[i][j] = g->diff[i][j];
-		}
+  /*
+   * Insert the difference edges between the marked vertices.
+   */
+  for (uint_t i = 0; i < vg_size; i++)
+    {
+      for (uint_t j = 0; j <= i; j++)
+	{
+	  if (vg[i] >= 0 && vg[j] >= 0)
+	    rg->diff[i][j] = g->diff[i][j];
 	}
-	goto return_select_ls;
+    }
+  goto return_select_ls;
 
 return_select_ls_error:
-    /* redo the used edges */
-	for (uint_t v = 0; v < vg_size; v++) {
-		if (vg[v] >= 0 && vg[v] <= 2) {
-			/* outgoing edges from i */
-			noll_uid_array* out_v = g->mat[v];
-			if (out_v != NULL) {
-			for (uint_t i = 0; i < noll_vector_size(out_v); i++) {
-				uint_t ei = noll_vector_at(out_v, i);
-				noll_vector_at(used,ei) = UNDEFINED_ID;
-			}
-			}
+  /* redo the used edges */
+  for (uint_t v = 0; v < vg_size; v++)
+    {
+      if (vg[v] >= 0 && vg[v] <= 2)
+	{
+	  /* outgoing edges from i */
+	  noll_uid_array *out_v = g->mat[v];
+	  if (out_v != NULL)
+	    {
+	      for (uint_t i = 0; i < noll_vector_size (out_v); i++)
+		{
+		  uint_t ei = noll_vector_at (out_v, i);
+		  noll_vector_at (used, ei) = UNDEFINED_ID;
 		}
+	    }
 	}
-    /* deallocate the result */
-    noll_graph_free(rg);
-    rg = NULL;
+    }
+  /* deallocate the result */
+  noll_graph_free (rg);
+  rg = NULL;
 
 #ifndef NDEBUG
-    fprintf (stdout, "\t- return NULL\n");
+  fprintf (stdout, "\t- return NULL\n");
 #endif
 
 return_select_ls:
-    /* correct return, free the auxiliary memory */
-    if (vg != NULL) free (vg);
-    if (eg != NULL) free (eg);
+  /* correct return, free the auxiliary memory */
+  if (vg != NULL)
+    free (vg);
+  if (eg != NULL)
+    free (eg);
 
 #ifndef NDEBUG
-    fprintf (stdout, "\t- return graph\n");
-    noll_graph_fprint (stdout, rg);
+  fprintf (stdout, "\t- return graph\n");
+  noll_graph_fprint (stdout, rg);
 #endif
 
-    return rg;
+  return rg;
 }
 
 /**
@@ -1419,41 +1449,42 @@ return_select_ls:
  * The mapping of the arguments of @p e1 on nodes of @p g2 are given by @p h.
  */
 int
-noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
-    /* pre-conditions */
-    assert (g2 != NULL);
-    assert (e1 != NULL);
-    assert (h != NULL);
+noll_graph_shom_entl (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
+{
+  /* pre-conditions */
+  assert (g2 != NULL);
+  assert (e1 != NULL);
+  assert (h != NULL);
 
-    /* TODO: select the method of checking entailment using the option */
+  /* TODO: select the method of checking entailment using the option */
 
-    /* HERE follows the TA based procedure */
-    noll_ta_t* g2_ta = noll_graph2ta(g2, h);
-    assert(NULL != g2_ta);
+  /* HERE follows the TA based procedure */
+  noll_ta_t *g2_ta = noll_graph2ta (g2, h);
+  assert (NULL != g2_ta);
 #ifndef NDEBUG
-    NOLL_DEBUG("\nGraph TA:\n");
-    vata_print_ta(g2_ta);
-    NOLL_DEBUG("\n");
+  NOLL_DEBUG ("\nGraph TA:\n");
+  vata_print_ta (g2_ta);
+  NOLL_DEBUG ("\n");
 #endif
 
-    noll_ta_t* e1_ta = noll_edge2ta(e1);
-    assert(NULL != e1_ta);
+  noll_ta_t *e1_ta = noll_edge2ta (e1);
+  assert (NULL != e1_ta);
 
 #ifndef NDEBUG
-    NOLL_DEBUG("\nEdge TA:\n");
-    vata_print_ta(e1_ta);
-    NOLL_DEBUG("\n");
+  NOLL_DEBUG ("\nEdge TA:\n");
+  vata_print_ta (e1_ta);
+  NOLL_DEBUG ("\n");
 #endif
 
-    bool inclRes = vata_check_inclusion(g2_ta, e1_ta);
-    vata_free_ta(g2_ta);
-    vata_free_ta(e1_ta);
+  bool inclRes = vata_check_inclusion (g2_ta, e1_ta);
+  vata_free_ta (g2_ta);
+  vata_free_ta (e1_ta);
 
 #ifndef NDEBUG
-    NOLL_DEBUG("\nResult of inclusion check: %d\n", inclRes);
+  NOLL_DEBUG ("\nResult of inclusion check: %d\n", inclRes);
 #endif
 
-    return (inclRes) ? 1 : 0;
+  return (inclRes) ? 1 : 0;
 }
 
 /**
@@ -1472,7 +1503,7 @@ noll_graph_shom_entl(noll_graph_t* g2, noll_edge_t* e1, noll_uid_array* h) {
  */
 noll_graph_array *
 noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
-		     uint_t * n_hom, noll_uid_array * usedg2)
+		    uint_t * n_hom, noll_uid_array * usedg2)
 {
   assert (g1 != NULL);
   assert (g2 != NULL);
@@ -1487,50 +1518,56 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
    * edges with greatest predicate are visited first
    */
   /* sort the predicate edges of g1 using insertion sort */
-  uint_t sz = noll_vector_size(g1->edges);
+  uint_t sz = noll_vector_size (g1->edges);
   /* the permutation generated by the sorting */
-  uint_t* t = (uint_t*) malloc(sizeof(uint_t) * sz);
+  uint_t *t = (uint_t *) malloc (sizeof (uint_t) * sz);
   for (uint_t i = 0; i < sz; i++)
-	  t[i] = i;
-  for (uint_t i = 1; i < sz; i++) {
-	  for (uint_t j = i; j >= 1; j--) {
-		  noll_edge_t* eig = noll_vector_at(g1->edges,t[j]);
-		  noll_edge_t* eil = noll_vector_at(g1->edges,t[j-1]);
-		  if ((eig->kind == NOLL_EDGE_PTO && eil->kind == NOLL_EDGE_PRED) ||
-		      (eig->kind == NOLL_EDGE_PRED && eil->kind == NOLL_EDGE_PRED &&
-		        eig->label < eil->label)) {
-				// swap values
-			uint_t tmp = t[j-1];
-			t[j-1] = t[j];
-			t[j] = tmp;
-		 }
-	  }
-  }
+    t[i] = i;
+  for (uint_t i = 1; i < sz; i++)
+    {
+      for (uint_t j = i; j >= 1; j--)
+	{
+	  noll_edge_t *eig = noll_vector_at (g1->edges, t[j]);
+	  noll_edge_t *eil = noll_vector_at (g1->edges, t[j - 1]);
+	  if ((eig->kind == NOLL_EDGE_PTO && eil->kind == NOLL_EDGE_PRED) ||
+	      (eig->kind == NOLL_EDGE_PRED && eil->kind == NOLL_EDGE_PRED &&
+	       eig->label < eil->label))
+	    {
+	      // swap values
+	      uint_t tmp = t[j - 1];
+	      t[j - 1] = t[j];
+	      t[j] = tmp;
+	    }
+	}
+    }
   /* Go in the reverse order using t over the predicate edges */
-  for (uint_t i = 0; i < sz; i--) {
-	  // the edge to be mapped is at position t[sz - 1 - i]
-	  uint_t e1id = t[sz - 1 - i];
-	  noll_edge_t* e1 = noll_vector_at(g1->edges,e1id);
-	  if (e1->kind == NOLL_EDGE_PTO)
-		break; /* because all PTO edges are at the end */
-	  /* translate the arguments of e1 using the node morphism */
-	  noll_uid_array* args2 = noll_hom_apply_size_array(n_hom, g1->nodes_size, e1->args);
-	  /* select the subgraph for edge e1
-	   * and also set usedg2 with the selected edges */
-	  noll_graph_t* sg2 = noll_graph_select_ls(g2, e1id, e1->label, args2, usedg2);
-	  if (sg2 == NULL || !noll_graph_shom_entl(sg2, e1, args2))
-	  { /* free the allocated memory */
-	  noll_graph_array_delete(ls_hom);
+  for (uint_t i = 0; i < sz; i--)
+    {
+      // the edge to be mapped is at position t[sz - 1 - i]
+      uint_t e1id = t[sz - 1 - i];
+      noll_edge_t *e1 = noll_vector_at (g1->edges, e1id);
+      if (e1->kind == NOLL_EDGE_PTO)
+	break;			/* because all PTO edges are at the end */
+      /* translate the arguments of e1 using the node morphism */
+      noll_uid_array *args2 =
+	noll_hom_apply_size_array (n_hom, g1->nodes_size, e1->args);
+      /* select the subgraph for edge e1
+       * and also set usedg2 with the selected edges */
+      noll_graph_t *sg2 =
+	noll_graph_select_ls (g2, e1id, e1->label, args2, usedg2);
+      if (sg2 == NULL || !noll_graph_shom_entl (sg2, e1, args2))
+	{			/* free the allocated memory */
+	  noll_graph_array_delete (ls_hom);
 	  ls_hom = NULL;
 #ifndef NDEBUG
-		fprintf (stdout, "shom_ls: fails!\n");
+	  fprintf (stdout, "shom_ls: fails!\n");
 #endif
 	  // Warning: usedg2 is deselected also
 	  goto return_shom_ls;
-	   }
-	  /* otherwise, set the graph in the corresponding entry of ls_hom */
-	  noll_vector_at(ls_hom,e1id) = sg2;
-  }
+	}
+      /* otherwise, set the graph in the corresponding entry of ls_hom */
+      noll_vector_at (ls_hom, e1id) = sg2;
+    }
 
 return_shom_ls:
   free (t);
@@ -1680,7 +1717,7 @@ int
 noll_graph_homomorphism_old (noll_entl_t * q)
 {
   assert (q != NULL);
-  noll_graph_t *g1 = noll_vector_at(q->ngraph,0);
+  noll_graph_t *g1 = noll_vector_at (q->ngraph, 0);
   noll_graph_t *g2 = q->pgraph;
 
   /* pre-condition: graphs are not empty,

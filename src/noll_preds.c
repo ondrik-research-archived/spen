@@ -208,7 +208,7 @@ noll_pred_is_main_backbone_field (uid_t fid)
   assert (fid < noll_vector_size (fields_array));
 
   noll_field_t *f = noll_vector_at (fields_array, fid);
-	assert(NULL != f);
+  assert (NULL != f);
   assert (f->pid < noll_vector_size (preds_array));
 
   return noll_pred_is_field (f->pid, fid, NOLL_PFLD_BCKBONE);
@@ -467,31 +467,32 @@ noll_field_order ()
 }
 
 
-uid_t noll_pred_get_minfield(
-	uid_t                         pid)
+uid_t
+noll_pred_get_minfield (uid_t pid)
 {
-	const noll_pred_t* pred = noll_pred_getpred(pid);
-	assert(NULL != pred);
-	assert(NULL != pred->typ);
-	const noll_uint_array* fields = pred->typ->pfields;
-	assert(NULL != fields);
+  const noll_pred_t *pred = noll_pred_getpred (pid);
+  assert (NULL != pred);
+  assert (NULL != pred->typ);
+  const noll_uint_array *fields = pred->typ->pfields;
+  assert (NULL != fields);
 
-	uid_t minfield_candidate = (uid_t)-1;
-	for (size_t i = 0; i < noll_vector_size(fields); ++i)
-	{
-		if (1 == noll_vector_at(fields, i))
-		{	// if the field is used in the predicate
-			if (((uid_t)-1 == minfield_candidate) || noll_field_lt(i, minfield_candidate))
-			{
-				minfield_candidate = i;
-			}
-		}
+  uid_t minfield_candidate = (uid_t) - 1;
+  for (size_t i = 0; i < noll_vector_size (fields); ++i)
+    {
+      if (1 == noll_vector_at (fields, i))
+	{			// if the field is used in the predicate
+	  if (((uid_t) - 1 == minfield_candidate)
+	      || noll_field_lt (i, minfield_candidate))
+	    {
+	      minfield_candidate = i;
+	    }
 	}
+    }
 
-	// make sure that there was some minimum field
-	assert((uid_t)-1 != minfield_candidate);
+  // make sure that there was some minimum field
+  assert ((uid_t) - 1 != minfield_candidate);
 
-	return minfield_candidate;
+  return minfield_candidate;
 }
 
 
