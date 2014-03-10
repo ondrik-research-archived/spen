@@ -215,10 +215,10 @@ static bool noll_fields_order_lt(
 }
 
 
-static bool noll_fields_is_backbone(
+static bool noll_fields_is_main_backbone(
 	uid_t            field)
 {
-	return noll_pred_is_backbone_field(field);
+	return noll_pred_is_main_backbone_field(field);
 }
 
 
@@ -446,7 +446,7 @@ static bool compute_markings(
 				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
 				assert(0 < noll_vector_size(new_marking));
 				if ((noll_vector_last(new_marking) == edge_lab)
-					&& noll_fields_is_backbone(edge_lab))
+					&& noll_fields_is_main_backbone(edge_lab))
 				{
 					// we keep the same marking
 				}
