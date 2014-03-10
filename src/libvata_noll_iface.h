@@ -48,7 +48,9 @@ typedef vata_ta_t noll_ta_t;
 
 typedef size_t vata_state_t;
 
-// TODO: change from const char to something we will use
+/// Function pointer type for function translating symbols of TA
+typedef const noll_ta_symbol_t* (*vata_symbol_translate_fncptr)(const noll_ta_symbol_t*);
+
 typedef noll_ta_symbol_t vata_symbol_t;
 
 /* ====================================================================== */
@@ -109,7 +111,7 @@ void vata_set_state_root(
 void vata_add_transition(
 	vata_ta_t*                ta,
 	vata_state_t              parent,
-	const vata_symbol_t*      symbol,
+	const noll_ta_symbol_t*   symbol,
 	const noll_uid_array*     children);
 
 
@@ -137,6 +139,21 @@ void vata_print_ta(
 bool vata_check_inclusion(
 	const vata_ta_t*        smaller_ta,
 	const vata_ta_t*        bigger_ta);
+
+
+/**
+ * @brief  Translates symbols of the automaton
+ *
+ * This function translates all symbols of the tree automaton @p ta according
+ * to the @p transl function passed.
+ *
+ * @param[in,out]  ta      The TA to have its symbols translated (also the output)
+ * @param[in]      transl  The translation function
+ */
+void vata_translate_symbols(
+	vata_ta_t*                        ta,
+	vata_symbol_translate_fncptr      transl);
+
 
 
 #ifdef __cplusplus

@@ -192,3 +192,43 @@ bool vata_check_inclusion(
 	VATA::InclParam params;
 	return TreeAut::CheckInclusion(smaller_ta->ta, bigger_ta->ta, params);
 }
+
+
+void vata_translate_symbols(
+	vata_ta_t*                        ta,
+	vata_symbol_translate_fncptr      transl)
+{
+	assert(nullptr != ta);
+	assert(nullptr != transl);
+
+	class Translator : public TreeAut::AbstractSymbolTranslateF
+	{
+	private:
+
+		vata_symbol_translate_fncptr translFunc_;
+
+	public:
+
+		virtual TreeAutSymbol operator()(const TreeAutSymbol& symb) override
+		{
+			assert(nullptr != translFunc_);
+			assert(nullptr != &symb);
+
+			return NollAlphabet::noll_to_vata_symbol(
+				translFunc_(
+					NollAlphabet::vata_to_noll_symbol(symb)
+				));
+		}
+
+	public:
+
+		explicit Translator(vata_symbol_translate_fncptr translFunc) :
+			translFunc_(translFunc)
+		{
+			assert(nullptr != translFunc_);
+		}
+	};
+
+	Translator symTransl(transl);
+	ta->ta = ta->ta.TranslateSymbols(symTransl);
+}
