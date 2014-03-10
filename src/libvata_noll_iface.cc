@@ -134,7 +134,7 @@ void vata_set_state_root(
 	vata_state_t        state)
 {
 	// check whether the input is sane
-	assert(NULL != ta);
+	assert(nullptr != ta);
 
 	ta->ta.SetStateFinal(state);
 }
@@ -148,11 +148,11 @@ void vata_add_transition(
 	// check that the input is sane
 	assert(nullptr != ta);
 	assert(nullptr != ta->ta.GetAlphabet());
-	assert(NULL != symbol);
+	assert(nullptr != symbol);
 
 	size_t numChildren = 0;
 	TreeAut::StateTuple tupChildren;
-	if (NULL != children)
+	if (nullptr != children)
 	{
 		size_t numChildren = noll_vector_size(children);
 		tupChildren = TreeAut::StateTuple(
@@ -170,7 +170,7 @@ void vata_print_ta(
 	const vata_ta_t*        ta)
 {
 	// check that the input is sane
-	assert(NULL != ta);
+	assert(nullptr != ta);
 
 	//std::cout << "\nTreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n\n";
 
@@ -184,8 +184,8 @@ bool vata_check_inclusion(
 	const vata_ta_t*        bigger_ta)
 {
 	// check the sanity of passed paremeters
-	assert(NULL != smaller_ta);
-	assert(NULL != bigger_ta);
+	assert(nullptr != smaller_ta);
+	assert(nullptr != bigger_ta);
 
 	// the params may be used to specify the exact inclusion checking
 	// algorithm
