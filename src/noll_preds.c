@@ -202,6 +202,17 @@ noll_pred_is_backbone_field (uid_t fid)
   return noll_pred_is_field (f->pid, fid, NOLL_PFLD_BORDER);
 }
 
+bool
+noll_pred_is_main_backbone_field (uid_t fid)
+{
+  assert (fid < noll_vector_size (fields_array));
+
+  noll_field_t *f = noll_vector_at (fields_array, fid);
+	assert(NULL != f);
+  assert (f->pid < noll_vector_size (preds_array));
+
+  return noll_pred_is_field (f->pid, fid, NOLL_PFLD_BCKBONE);
+}
 
 int noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form);
 

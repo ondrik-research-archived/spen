@@ -134,6 +134,22 @@ extern "C"
   bool noll_pred_is_backbone_field(uid_t fid);
   /* Test if fid is a backbone for some predicate */
 
+	/**
+	 * @brief  Checks whether the field as the main backbone field of a predicate
+	 *
+	 * Checks whether @p fid denoters the main backbone firld of some predicate.
+	 * That is, the least backbone field (w.r.t. the field ordering) that goes to
+	 * @p X_tl.
+	 *
+	 * @param[in]  fid  The field identifier
+	 *
+	 * @returns  @p true iff @p fid denotes the main backbone field of some
+	 *           predicate, @p false otherwise
+	 */
+	bool noll_pred_is_main_backbone_field(
+		uid_t                        fid);
+
+
   int  noll_pred_type(void);
   /* Type the predicate definitions.
    */
