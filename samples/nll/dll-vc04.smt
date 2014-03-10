@@ -21,7 +21,7 @@
 (declare-fun alpha2 () SetLoc)
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 
-                  (dll w_emp y_emp x_emp z_emp)
+                  (index alpha2 (dll w_emp y_emp x_emp z_emp))
                   (pto y_emp (sref (ref next z_emp) (ref prev w_emp)))
             )
     )
