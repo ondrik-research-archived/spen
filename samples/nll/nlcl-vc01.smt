@@ -30,11 +30,11 @@
       (nlcl ?u ?out))
 )))))
 
-(declare-fun x1 () NLL_lvl1_t)
+(declare-fun x1 () NLL_lvl2_t)
 (declare-fun x1_1 () NLL_lvl1_t)
 (declare-fun x1_2 () NLL_lvl1_t)
 (declare-fun x1_3 () NLL_lvl1_t)
-(declare-fun x2 () NLL_lvl1_t)
+(declare-fun x2 () NLL_lvl2_t)
 (declare-fun x2_1 () NLL_lvl1_t)
 (declare-fun x2_2 () NLL_lvl1_t)
 (declare-fun nil_lvl2 () NLL_lvl2_t)
