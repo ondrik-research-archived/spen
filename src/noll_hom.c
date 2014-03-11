@@ -122,16 +122,19 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 
 /**
  * Return the image of args by the mapping h of size size.
+ * Add 'nil' at the end if the predicate used 'nil'.
  */
 noll_uid_array *
-noll_hom_apply_size_array (uint_t * h, uint_t size, noll_uid_array * args)
+noll_hom_apply_size_array (uint_t * h, uint_t hsize, 
+     noll_uid_array * args, bool useNil)
 {
   noll_uid_array *res = noll_uid_array_new ();
-  noll_uid_array_reserve (res, noll_vector_size (args));
+  uint_t sz = noll_vector_size (args);
+  noll_uid_array_reserve (res, sz);  
   for (uint_t i = 0; i < noll_vector_size (args); i++)
     {
       uint_t n1 = noll_vector_at (args, i);
-      if (n1 >= size)
+      if (n1 >= hsize)
 	{
 	  noll_uid_array_delete (res);
 	  res = NULL;
@@ -140,6 +143,11 @@ noll_hom_apply_size_array (uint_t * h, uint_t size, noll_uid_array * args)
       uint_t n2 = h[n1];
       noll_uid_array_push (res, n2);
     }
+  if (useNil) {
+    /* add nil at the end of args */
+    assert (h[0] == 0); // TODO: check that nil node is always 0
+    noll_uid_array_push(res, h[0]);
+  }
   return res;
 }
 
@@ -1496,9 +1504,9 @@ noll_graph_shom_entl (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
  * The graphs is the @return are subgraphs of g2
  * such that they contain only the edges mapped.
  *
- * @param g1     domain graph for the homomorphism
- * @param g2     co-domain graph
- * @param n_hom  node mapping
+ * @param g1     domain graph for the homomorphism (in)
+ * @param g2     co-domain graph (in)
+ * @param n_hom  node mapping (in)
  * @return       the mapping built, NULL otherwise
  */
 noll_graph_array *
@@ -1549,8 +1557,10 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
       if (e1->kind == NOLL_EDGE_PTO)
 	break;			/* because all PTO edges are at the end */
       /* translate the arguments of e1 using the node morphism */
+      /* if predicate uses 'nil' then add nil as last (border) argument */
       noll_uid_array *args2 =
-	noll_hom_apply_size_array (n_hom, g1->nodes_size, e1->args);
+	noll_hom_apply_size_array (n_hom, g1->nodes_size, e1->args,
+	noll_pred_use_nil(e1->label));
       /* select the subgraph for edge e1
        * and also set usedg2 with the selected edges */
       noll_graph_t *sg2 =
@@ -1575,7 +1585,7 @@ return_shom_ls:
 }
 
 /**
- * Search an homomorphism from noll_prob->ngraph[i] and noll_prob->pgraph.
+ * Search a homomorphism from noll_prob->ngraph[i] and noll_prob->pgraph.
  * Store the found mapping in hs->shom[i].
  *
  * @param hs   the homomorphism to be built
@@ -1833,7 +1843,8 @@ noll_graph_homomorphism_old (noll_entl_t * q)
       noll_edge_t *edge_i1 = noll_vector_at (g1->edges, ei1);
       // apply the h on the args of this edge
       noll_uid_array *args2 = noll_hom_apply_size_array (h, g1->nodes_size,
-							 edge_i1->args);
+							 edge_i1->args,
+							 false);
       // search the mapping of ei1 into a (list of) edge(s),
       // by, if needed, saturating g2
       noll_uid_array *lei2 = noll_graph_get_edge (g2, edge_i1->kind, args2,
