@@ -16,6 +16,7 @@
          (par (A B) (ref (Field A B) B (SetRef A)))
          (par (A) (sref (SetRef A) (SetRef A) (SetRef A) :left-assoc))
          (index SetLoc Space Space)
+         (loop Space)
          (par (A) (sloc A SetLoc))
          (unloc SetLoc SetLoc SetLoc :left-assoc)
          (par (A) (inloc A SetLoc Bool))
@@ -58,7 +59,10 @@
 
       - (index a sp) bounds a to be the set of locations of sp;
 
-      - (sloc v) denotes the signleton set of locations build on v;
+      - (loop sp) denotes the space formula represeting a loop and
+        using the predicate called in sp;
+
+      - (sloc v) denotes the singleton set of locations build on v;
 
       - (unloc sl sl) denotes the union of two sets;
 

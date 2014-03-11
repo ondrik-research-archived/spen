@@ -21,12 +21,12 @@
 ; singly-linked list of cyclic singly-linked lists
 (define-fun nlcl ((?in NLL_lvl2_t) (?out NLL_lvl2_t))
   Space (tospace (or (= ?in ?out)
-    (exists ((?u NLL_lvl2_t) (?Z1 NLL_lvl1_t) (?Zprime NLL_lvl1_t)) (tobool (ssep
+    (exists ((?u NLL_lvl2_t) (?Z1 NLL_lvl1_t)) 
+      (tobool (ssep
       (pto ?in (sref
         (ref next2 ?u)
         (ref down ?Z1)))
-      (pto ?Z1 (ref next1 ?Zprime))
-      (lso ?Zprime ?Z1)
+      (loop (lso ?Z1 ?Z1)) 
       (nlcl ?u ?out))
 )))))
 

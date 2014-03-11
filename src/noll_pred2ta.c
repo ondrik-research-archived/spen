@@ -511,7 +511,7 @@ noll_edge2ta_dll (const noll_edge_t * edge)
    * Transition: q2 -> [<next,prev>, {out}, m(next)](q4,q3)
    */
   const noll_ta_symbol_t *symbol_q2_2 =
-    noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_out, mark_eps);
+    noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_out, mark_next);
   assert (NULL != symbol_q2_2);
   succ_q2 = noll_uid_array_new ();
   noll_uid_array_push (succ_q2, 4);
@@ -560,7 +560,7 @@ noll_edge2ta_dll (const noll_edge_t * edge)
    * Transition: q6 -> [<next>, {out}, m(next)](q4)
    */
   const noll_ta_symbol_t *symbol_q6 =
-    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_eps);
+    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_next);
   assert (NULL != symbol_q6);
   noll_uid_array *succ_q6 = noll_uid_array_new ();
   noll_uid_array_push (succ_q6, 4);
@@ -582,7 +582,7 @@ noll_edge2ta_dll (const noll_edge_t * edge)
    * Transition: q7 -> [<next>, {out}, m(next)](q4)
    */
   const noll_ta_symbol_t *symbol_q7_2 =
-    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_eps);
+    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_next);
   assert (NULL != symbol_q7_2);
   succ_q7 = noll_uid_array_new ();
   noll_uid_array_push (succ_q7, 4);
