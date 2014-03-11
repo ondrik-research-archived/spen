@@ -334,25 +334,39 @@ noll_edge2ta_lss (const noll_edge_t * edge)
  * to the TA (q1 is a root state):
  * 
  *  -- only simple fields --
- *  q1 -> [<next,prev>, {in,out}, m(next)](q4,q5)
+ *  q1 -> [<next,prev>, {in,out}, eps](q4,q5)
+ *        -- one cell list 
+ *  q1 -> [<next,prev>, {in}, eps](q2,q5)
+ *        -- at least two cell list 
+ *  q2 -> [<next,prev>, {out}, m(next)](q4,q6)
+ *        -- exactly two cells
+ *  q2 -> [<next,prev>, , m(next)](q3,q6)
+ *        -- more than two cells
+ *  q3 -> [<next,prev>, , m(next)](q3,q7)
+ *        -- inner cells after two
+ *  q3 -> [<next,prev>, {out}, m(next)](q4,q7)
+ *        -- end cell after two
  *  q4 -> [,{fw},]()
+ *        -- ref to foward var
  *  q5 -> [,{pv},]()
- *  q1 -> [<next,prev>, {in}, m(next)](q2,q5)
- *  q2 -> [<next,prev>, , m(next)](q2,q3)
- *  q3 -> [,s2(m(next)),]()
- *  q2 -> [<next,prev>, {out}, m(next)](q4,q3)
+ *        -- ref to prev var
+ *  q6 -> [,s2(eps),]()
+ *        -- ref to the input of the list
+ *  q7 -> [,s2(m(next)),]()
+ *        -- ref to the previous inside the list
  *  
  *  -- only predicate segments --
- *  q1 -> [<dll>, {in}, m(next)](q6,q5)
- *  q6 -> [<next>, {out}, m(next)](q4)
- *  q1 -> [<dll>, {in}, m(next)](q7,q5)
- *  q7 -> [<next>, , m(next)](q8)
- *  q7 -> [<next>, {out}, m(next)](q4)
- *  q8 -> [<dll>, , m(next)](q7,q3)
+ *  q1 -> [<dll>, {in}, eps](q8,q5)
+ *        -- one list segment from in location
+ *  q8 -> [<next>, {out}, m(next)](q4)
+ *        -- end of list segment dll
+ *  q8 -> [<next>, , m(next)](q9)
+ *        -- link by next to another dll cell
+ *  q9 -> [<dll>, , m(next)](q8,q7)
  * 
  *  -- mixed fileds/dll --- 
- *  q7 -> [<next>, , m(next)](q2)
- *  q2 -> [<next>, , m(next)](q8)
+ *  q9 -> [<next>, , m(next)](q3)
+ *  q3 -> [<next>, , m(next)](q9)
  * 
  * @param edge   An edge using the 'lsso' predicate
  * @return       The TA recognizing unfolding of this edge
@@ -447,7 +461,8 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   vata_set_state_root (ta, 1);
 
   /* 
-   * Transition: q1 -> [<next,prev>, {in,out}, m(next)](q4,q5)
+   * Transition: q1 -> [<next,prev>, {in,out}, eps](q4,q5)
+   *        -- one cell list 
    */
   const noll_ta_symbol_t *symbol_q1_1 =
     noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_in_out,
@@ -460,7 +475,8 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   noll_uid_array_delete (succ_q1);
 
   /*
-   * Transition: q1 -> [<next,prev>, {in}, m(next)](q2,q5)
+   * Transition: q1 -> [<next,prev>, {in}, eps](q2,q5)
+   *        -- at least two cell list 
    */
   const noll_ta_symbol_t *symbol_q1_2 =
     noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_in, mark_eps);
@@ -472,146 +488,168 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   noll_uid_array_delete (succ_q1);
 
   /*
-   * Transition: q1 -> [<dll>, {in}, m(next)](q6,q5)
+   * Transition: q1 -> [<dll>, {in}, eps](q8,q5)
+   *        -- one list segment from in location
    */
   const noll_ta_symbol_t *symbol_q1_3 =
     noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_eps);
   assert (NULL != symbol_q1_3);
   succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, 6);
+  noll_uid_array_push (succ_q1, 8);
   noll_uid_array_push (succ_q1, 5);
   vata_add_transition (ta, 1, symbol_q1_3, succ_q1);
   noll_uid_array_delete (succ_q1);
 
   /*
-   * Transition: q1 -> [<dll>, {in}, m(next)](q7,q5)
-   */
-  const noll_ta_symbol_t *symbol_q1_4 =
-    noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_eps);
-  assert (NULL != symbol_q1_4);
-  succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, 7);
-  noll_uid_array_push (succ_q1, 5);
-  vata_add_transition (ta, 1, symbol_q1_4, succ_q1);
-  noll_uid_array_delete (succ_q1);
-
-  /*
-   * Transition: q2 -> [<next,prev>, , m(next)](q2,q3)
+   * Transition: q2 -> [<next,prev>, {out}, m(next)](q4,q6)
+   *        -- exactly two cells
    */
   const noll_ta_symbol_t *symbol_q2_1 =
-    noll_ta_symbol_get_unique_allocated (sel_next_prev, NULL, mark_next);
+    noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_out, mark_next);
   assert (NULL != symbol_q2_1);
   noll_uid_array *succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, 2);
-  noll_uid_array_push (succ_q2, 3);
+  noll_uid_array_push (succ_q2, 4);
+  noll_uid_array_push (succ_q2, 6);
   vata_add_transition (ta, 2, symbol_q2_1, succ_q2);
   noll_uid_array_delete (succ_q2);
 
   /*
-   * Transition: q2 -> [<next,prev>, {out}, m(next)](q4,q3)
+   * Transition: q2 -> [<next,prev>, , m(next)](q3,q6)
+   *         -- more than two cells
    */
   const noll_ta_symbol_t *symbol_q2_2 =
-    noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_out, mark_next);
+    noll_ta_symbol_get_unique_allocated (sel_next_prev, NULL, mark_next);
   assert (NULL != symbol_q2_2);
   succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, 4);
   noll_uid_array_push (succ_q2, 3);
+  noll_uid_array_push (succ_q2, 6);
   vata_add_transition (ta, 2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
   /* 
-   * Transition:  q2 -> [<next>, , m(next)](q8)
+   * Transition: q3 -> [<next,prev>, , m(next)](q3,q7)
+   *        -- inner cells after two
    */
-  const noll_ta_symbol_t *symbol_q2_3 =
-    noll_ta_symbol_get_unique_allocated (sel_next, NULL, mark_next);
-  assert (NULL != symbol_q2_3);
-  succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, 8);
-  vata_add_transition (ta, 2, symbol_q2_3, succ_q2);
-  noll_uid_array_delete (succ_q2);
+  const noll_ta_symbol_t *symbol_q3_1 =
+    noll_ta_symbol_get_unique_allocated (sel_next_prev, NULL, mark_next);
+  assert (NULL != symbol_q3_1);
+  noll_uid_array* succ_q3 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q3, 3);
+  noll_uid_array_push (succ_q3, 7);
+  vata_add_transition (ta, 3, symbol_q3_1, succ_q3);
+  noll_uid_array_delete (succ_q3);
 
   /*
-   * Transition: q3 -> [,s2(m(next)),]()
+   * Transition: q3 -> [<next,prev>, {out}, m(next)](q4,q7)
+   *        -- end cell after two
    */
-  const noll_ta_symbol_t *symbol_q3 =
-    noll_ta_symbol_get_unique_aliased_marking (2, mark_next);
-  assert (NULL != symbol_q3);
-  noll_uid_array *succ_empty = noll_uid_array_new ();
-  vata_add_transition (ta, 3, symbol_q3, succ_empty);
+  const noll_ta_symbol_t *symbol_q3_2 =
+    noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_out, mark_next);
+  assert (NULL != symbol_q3_2);
+  succ_q3 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q3, 4);
+  noll_uid_array_push (succ_q3, 7);
+  vata_add_transition (ta, 3, symbol_q3_2, succ_q3);
+  noll_uid_array_delete (succ_q3);
 
+  /*
+   * Transition: q3 -> [<next>, , m(next)](q9)
+   *        -- start a list segment
+   */
+  const noll_ta_symbol_t *symbol_q3_3 =
+    noll_ta_symbol_get_unique_allocated (sel_next, NULL, mark_next);
+  assert (NULL != symbol_q3_3);
+  succ_q3 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q3, 9);
+  vata_add_transition (ta, 3, symbol_q3_3, succ_q3);
+  noll_uid_array_delete (succ_q3);
+  
   /*
    * Transition: q4 -> [,{fw},]()
+   *        -- ref to forward var
    */
   const noll_ta_symbol_t *symbol_q4 =
     noll_ta_symbol_get_unique_aliased_var (fw_node);
   assert (NULL != symbol_q4);
+  noll_uid_array *succ_empty = noll_uid_array_new ();
   vata_add_transition (ta, 4, symbol_q4, succ_empty);
 
   /*
    * Transition: q5 -> [,{pv},]()
+   *        -- ref to prev var
    */
   const noll_ta_symbol_t *symbol_q5 =
     noll_ta_symbol_get_unique_aliased_var (pv_node);
   assert (NULL != symbol_q5);
   vata_add_transition (ta, 5, symbol_q5, succ_empty);
-  noll_uid_array_delete (succ_empty);
 
   /*
-   * Transition: q6 -> [<next>, {out}, m(next)](q4)
+   * Transition: q6 -> [,s2(eps),]()
+   *        -- ref to the input of the list
+   * TODO: change as before when it is done one graph
    */
   const noll_ta_symbol_t *symbol_q6 =
-    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_next);
+    // noll_ta_symbol_get_unique_aliased_marking (2, mark_eps);
+    noll_ta_symbol_get_unique_aliased_var(in_node);
   assert (NULL != symbol_q6);
-  noll_uid_array *succ_q6 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q6, 4);
-  vata_add_transition (ta, 6, symbol_q6, succ_q6);
-  noll_uid_array_delete (succ_q6);
-
+  vata_add_transition (ta, 6, symbol_q6, succ_empty);
+ 
   /*
-   * Transition: q7 -> [<next>, , m(next)](q8)
+   * Transition: q7 -> [,s2(m(next)),]()
+   *        -- ref to the previous inside the list
    */
-  const noll_ta_symbol_t *symbol_q7_1 =
+  const noll_ta_symbol_t *symbol_q7 =
+    noll_ta_symbol_get_unique_aliased_marking (2, mark_next);
+  assert (NULL != symbol_q7);
+  vata_add_transition (ta, 7, symbol_q7, succ_empty);
+  noll_uid_array_delete(succ_empty);
+  
+  /*
+   * Transition: q8 -> [<next>, , m(next)](q9)
+   *        -- link by next to another dll cell
+   */
+  const noll_ta_symbol_t *symbol_q8_1 =
     noll_ta_symbol_get_unique_allocated (sel_next, NULL, mark_next);
-  assert (NULL != symbol_q7_1);
-  noll_uid_array *succ_q7 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q7, 8);
-  vata_add_transition (ta, 7, symbol_q7_1, succ_q7);
-  noll_uid_array_delete (succ_q7);
-
-  /*
-   * Transition: q7 -> [<next>, {out}, m(next)](q4)
-   */
-  const noll_ta_symbol_t *symbol_q7_2 =
-    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_next);
-  assert (NULL != symbol_q7_2);
-  succ_q7 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q7, 4);
-  vata_add_transition (ta, 7, symbol_q7_2, succ_q7);
-  noll_uid_array_delete (succ_q7);
-
-  /*
-   * Transition: q7 -> [<next>, , m(next)](q2)
-   */
-  const noll_ta_symbol_t *symbol_q7_3 =
-    noll_ta_symbol_get_unique_allocated (sel_next, NULL, mark_next);
-  assert (NULL != symbol_q7_3);
-  succ_q7 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q7, 2);
-  vata_add_transition (ta, 7, symbol_q7_3, succ_q7);
-  noll_uid_array_delete (succ_q7);
-
-  /*
-   * Transition: q8 -> [<dll>, , m(next)](q7,q3)
-   */
-  const noll_ta_symbol_t *symbol_q8 =
-    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_next);
-  assert (NULL != symbol_q8);
+  assert (NULL != symbol_q8_1);
   noll_uid_array *succ_q8 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q8, 7);
-  noll_uid_array_push (succ_q8, 3);
-  vata_add_transition (ta, 8, symbol_q8, succ_q8);
+  noll_uid_array_push (succ_q8, 9);
+  vata_add_transition (ta, 8, symbol_q8_1, succ_q8);
   noll_uid_array_delete (succ_q8);
 
+  /*
+   * Transition: q8 -> [<next>, {out}, m(next)](q4)
+   *        -- end of list segment dll
+   */
+  const noll_ta_symbol_t *symbol_q8_2 =
+    noll_ta_symbol_get_unique_allocated (sel_next, vars_out, mark_next);
+  assert (NULL != symbol_q8_2);
+  succ_q8 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q8, 4);
+  vata_add_transition (ta, 8, symbol_q8_2, succ_q8);
+  noll_uid_array_delete (succ_q8);
+ 
+  /*
+   * Transition: q9 -> [<dll>, , m(next)](q8,q7)
+   */
+  const noll_ta_symbol_t *symbol_q9_1 =
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_next);
+  assert (NULL != symbol_q9_1);
+  noll_uid_array *succ_q9 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q9, 8);
+  noll_uid_array_push (succ_q9, 7);
+  vata_add_transition (ta, 9, symbol_q9_1, succ_q9);
+  noll_uid_array_delete (succ_q9);
+
+  /*
+   * Transition: q9 -> [<next>, , m(next)](q3)
+   */
+  const noll_ta_symbol_t *symbol_q9_2 =
+    noll_ta_symbol_get_unique_allocated (sel_next, NULL, mark_next);
+  assert (NULL != symbol_q9_2);
+  succ_q9 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q9, 3);
+  vata_add_transition (ta, 9, symbol_q9_2, succ_q9);
+  noll_uid_array_delete (succ_q9);
 
   noll_uid_array_delete (mark_eps);
   noll_uid_array_delete (mark_next);
