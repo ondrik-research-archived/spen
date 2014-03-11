@@ -2,28 +2,30 @@
 
 (declare-sort SL2_t 0)
 
+; fields
 (declare-fun n1 () (Field SL2_t SL2_t))
 (declare-fun n2 () (Field SL2_t SL2_t))
 
 ; one-level skip list (i.e. a SLL)
-(define-fun skl1 ((?hd SL2_t) (?ex SL2_t) (?border SL2_t)) Space
+(define-fun skl1 ((?hd SL2_t) (?ex SL2_t)) Space
   (tospace (or (= ?hd ?ex)
   (exists ((?tl SL2_t))
   (tobool (ssep
-    (pto ?hd (sref (ref n2 ?border) (ref n1 ?tl)))
-    (skl1 ?tl ?ex ?border))
+    (pto ?hd (sref (ref n2 nil) (ref n1 ?tl)))
+    (skl1 ?tl ?ex))
 )))))
 
 ; two-level skip list
-(define-fun skl2 ((?hd SL2_t) (?ex SL2_t) (?border SL2_t)) Space
+(define-fun skl2 ((?hd SL2_t) (?ex SL2_t)) Space
   (tospace (or (= ?hd ?ex)
   (exists ((?tl SL2_t) (?Z1 SL2_t))
   (tobool (ssep
     (pto ?hd (sref (ref n2 ?tl) (ref n1 ?Z1)))
-    (skl1 ?Z1 ?tl ?border)
-    (skl2 ?tl ?ex ?border))
+    (skl1 ?Z1 ?tl)
+    (skl2 ?tl ?ex))
 )))))
 
+; variables
 (declare-fun head () SL2_t)
 (declare-fun tail () SL2_t)
 
@@ -35,7 +37,7 @@
 )))
 
 (assert (not
-  (tobool (index alpha1 (skl2 head tail nil)))
+  (tobool (index alpha1 (skl2 head tail)))
 ))
 
 ; check whether the negation of the entailment is satisfiable
