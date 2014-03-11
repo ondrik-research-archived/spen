@@ -329,6 +329,8 @@ noll_edge2ta_lss (const noll_edge_t * edge)
  *                 (in != fw and out != pv and
  *                 exists u. in -> {(next, u),(prev, pv)} * dll(u,out,in,fw))
  *
+ * (Notice: both int and out are 'allocated' on the list segment!)
+ * 
  * to the TA (q1 is a root state):
  * 
  *  -- only simple fields --
@@ -429,14 +431,6 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   assert (NULL != vars_in_out);
   noll_uid_array_push (vars_in_out, in_node);
   noll_uid_array_push (vars_in_out, out_node);
-
-  noll_uid_array *vars_pv = noll_uid_array_new ();
-  assert (NULL != vars_pv);
-  noll_uid_array_push (vars_pv, pv_node);
-
-  noll_uid_array *vars_fw = noll_uid_array_new ();
-  assert (NULL != vars_fw);
-  noll_uid_array_push (vars_fw, fw_node);
 
   /* the marking [eps] */
   noll_uid_array *mark_eps = noll_uid_array_new ();
@@ -549,7 +543,7 @@ noll_edge2ta_dll (const noll_edge_t * edge)
    * Transition: q4 -> [,{fw},]()
    */
   const noll_ta_symbol_t *symbol_q4 =
-    noll_ta_symbol_get_unique_allocated (NULL, vars_fw, mark_eps);
+    noll_ta_symbol_get_unique_aliased_var (fw_node);
   assert (NULL != symbol_q4);
   vata_add_transition (ta, 4, symbol_q4, succ_empty);
 
@@ -557,7 +551,7 @@ noll_edge2ta_dll (const noll_edge_t * edge)
    * Transition: q5 -> [,{pv},]()
    */
   const noll_ta_symbol_t *symbol_q5 =
-    noll_ta_symbol_get_unique_allocated (NULL, vars_pv, mark_eps);
+    noll_ta_symbol_get_unique_aliased_var (pv_node);
   assert (NULL != symbol_q5);
   vata_add_transition (ta, 5, symbol_q5, succ_empty);
   noll_uid_array_delete (succ_empty);
@@ -613,8 +607,8 @@ noll_edge2ta_dll (const noll_edge_t * edge)
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_next);
   assert (NULL != symbol_q8);
   noll_uid_array *succ_q8 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, 7);
-  noll_uid_array_push (succ_q1, 3);
+  noll_uid_array_push (succ_q8, 7);
+  noll_uid_array_push (succ_q8, 3);
   vata_add_transition (ta, 8, symbol_q8, succ_q8);
   noll_uid_array_delete (succ_q8);
 
@@ -624,8 +618,6 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   noll_uid_array_delete (vars_in);
   noll_uid_array_delete (vars_out);
   noll_uid_array_delete (vars_in_out);
-  noll_uid_array_delete (vars_fw);
-  noll_uid_array_delete (vars_pv);
   noll_uid_array_delete (sel_next);
   noll_uid_array_delete (sel_next_prev);
   noll_uid_array_delete (sel_prev);
