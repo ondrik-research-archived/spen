@@ -27,12 +27,14 @@
 
 ; variables
 (declare-fun x1 () SL2_t)
+(declare-fun x1_1 () SL2_t)
 (declare-fun x2 () SL2_t)
 
 (declare-fun alpha1 () SetLoc)
 
 (assert (tobool (ssep
-  (pto x1 (sref (ref n2 x2) (ref n1 x2)))
+  (pto x1 (sref (ref n2 x2) (ref n1 x1_1)))
+    (pto x1_1 (sref (ref n2 nil) (ref n1 x2)))
   (pto x2 (sref (ref n2 nil) (ref n1 nil)))
 )))
 
