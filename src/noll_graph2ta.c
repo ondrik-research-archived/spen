@@ -707,6 +707,12 @@ static bool reachable_from_through_path_wo_marker(
 			{	// if we hit 'mark', do not expand
 				continue;
 			}
+
+			if (!noll_uid_array_contains(processed, post_node) &&
+				!noll_uid_array_contains(workstack, post_node))
+			{	// if it has sense to add 'post_node' to processing
+				noll_uid_array_push(workstack, post_node);
+			}
 		}
 	}
 	noll_uid_array_delete(workstack);
@@ -979,9 +985,11 @@ noll_ta_t* noll_graph2ta(
 								continue;
 							}
 						}
+						else
+						{
+							NOLL_DEBUG("  unreachable\n");
+						}
 					}
-
-					NOLL_DEBUG("  unreachable\n");
 
 					NOLL_DEBUG("The source ");
 					noll_debug_print_one_mark(mark_next_child);
