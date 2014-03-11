@@ -153,6 +153,20 @@ noll_pred_order_lt (uid_t lhs, uid_t rhs)
 {
   return lhs > rhs;
 }
+  
+/**
+ * Retrun true if pid uses nil internally.
+ * Information computed by the typing.
+ */
+bool 
+noll_pred_use_nil(uid_t pid)
+{
+  assert (pid < noll_vector_size (preds_array));
+
+  noll_pred_t *pred = noll_vector_at (preds_array, pid);
+  
+  return (NULL != pred->typ) ? pred->typ->useNil : false;
+}
 
 /**
  * Search @p fid inside the fields of predicate @p pid with a role of
@@ -253,6 +267,9 @@ noll_pred_type ()
       noll_uint_array_resize (p->typ->pfields,
 			      noll_vector_size (fields_array));
 
+      /* used 'nil' */
+      p->typ->useNil = false;
+      
       /* predicates called */
       p->typ->ppreds = noll_uint_array_new ();
       /* resize the array to cover all the predicates called */
@@ -304,6 +321,7 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
 	      {
 		/* dst == NULL */
 		noll_vector_at (p->typ->pfields, fid) = NOLL_PFLD_NULL;
+		p->typ->useNil = true;
 	      }
 	    else if (dst <= p->def->fargs)
 	      {
