@@ -34,7 +34,10 @@
 /* Edge translators */
 /* ====================================================================== */
 
-
+uint_t noll_pred2ta_ls(noll_ta_t* ta, noll_pred_t* pred, uid_t fid,
+           uint_t qinit, 
+           noll_uid_array* vars_in, noll_uid_array* mark_in,
+           noll_uid_array* vars_out);
 /**
  * Get the TA for the edge built with predicate 'ls'
  * by instantiating the definition of the 
@@ -79,87 +82,193 @@ noll_edge2ta_ls (const noll_edge_t * edge)
       }
   assert (UNDEFINED_ID != next_uid);
 
+  /* build the TA */
   vata_ta_t *ta = NULL;
   if ((ta = vata_create_ta ()) == NULL)
     {
       return NULL;
     }
-
-  /* the set of selectors */
-  noll_uid_array *selectors = noll_uid_array_new ();
-  assert (NULL != selectors);
-  noll_uid_array_push (selectors, next_uid);
-
-  /* generic set of variables */
-  noll_uid_array *vars1 = noll_uid_array_new ();
+  vata_set_state_root (ta, 1);
 
   /* identifiers for arguments */
   uid_t initial_node = noll_vector_at (edge->args, 0);
   uid_t end_node = noll_vector_at (edge->args, 1);
 
-  /* fill the set of vars markings */
-  assert (NULL != vars1);
-  noll_uid_array_push (vars1, initial_node);
+  /* label of in variables */
+  noll_uid_array *vars_in = noll_uid_array_new ();
+  assert (NULL != vars_in);
+  noll_uid_array_push (vars_in, initial_node);
 
-  /* marking1 = [eps] */
-  noll_uid_array *marking1 = noll_uid_array_new ();
-  assert (NULL != marking1);
-  noll_uid_array_push (marking1, NOLL_MARKINGS_EPSILON);
+  /* label of out variables */
+  noll_uid_array *vars_out = noll_uid_array_new ();
+  assert (NULL != vars_out);
+  noll_uid_array_push (vars_out, end_node);
 
-  /* marking2 = [next, eps] */
-  noll_uid_array *marking2 = noll_uid_array_new ();
-  assert (NULL != marking2);
-  noll_uid_array_copy (marking2, marking1);
-  noll_uid_array_push (marking2, next_uid);
+  /* empty marking for first state, mark_eps = [eps] */
+  noll_uid_array *mark_eps = noll_uid_array_new ();
+  assert (NULL != mark_eps);
+  noll_uid_array_push (mark_eps, NOLL_MARKINGS_EPSILON);
 
-  /* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
-  const noll_ta_symbol_t *symbol_next1 =
-    noll_ta_symbol_get_unique_allocated (selectors, vars1, marking1);
-  assert (NULL != symbol_next1);
+  uint_t qend = noll_pred2ta_ls(ta, pred, next_uid, 1, vars_in, mark_eps, vars_out); 
+  
+  ///* the set of selectors */
+  //noll_uid_array *selectors = noll_uid_array_new ();
+  //assert (NULL != selectors);
+  //noll_uid_array_push (selectors, next_uid);
 
-  /* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
-  const noll_ta_symbol_t *symbol_next2 =
-    noll_ta_symbol_get_unique_allocated (selectors, NULL, marking2);
-  assert (NULL != symbol_next2);
+  ///* marking2 = [next, eps] */
+  //noll_uid_array *marking2 = noll_uid_array_new ();
+  //assert (NULL != marking2);
+  //noll_uid_array_copy (marking2, marking1);
+  //noll_uid_array_push (marking2, next_uid);
 
-  /* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
-  const noll_ta_symbol_t *symbol_lso1 =
-    noll_ta_symbol_get_unique_higher_pred (pred, vars1, marking1);
-  assert (NULL != symbol_lso1);
+  ///* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
+  //const noll_ta_symbol_t *symbol_next1 =
+    //noll_ta_symbol_get_unique_allocated (selectors, vars1, marking1);
+  //assert (NULL != symbol_next1);
 
-  /* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
-  const noll_ta_symbol_t *symbol_lso2 =
-    noll_ta_symbol_get_unique_higher_pred (pred, NULL, marking2);
-  assert (NULL != symbol_lso2);
+  ///* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
+  //const noll_ta_symbol_t *symbol_next2 =
+    //noll_ta_symbol_get_unique_allocated (selectors, NULL, marking2);
+  //assert (NULL != symbol_next2);
 
-  /* vata_symbol_t* symbol_out       = "<> [out]"; */
-  const noll_ta_symbol_t *symbol_end =
-    noll_ta_symbol_get_unique_aliased_var (end_node);
-  assert (NULL != symbol_end);
+  ///* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
+  //const noll_ta_symbol_t *symbol_lso1 =
+    //noll_ta_symbol_get_unique_higher_pred (pred, vars1, marking1);
+  //assert (NULL != symbol_lso1);
 
-  /* build the TA */
-  vata_set_state_root (ta, 1);
+  ///* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
+  //const noll_ta_symbol_t *symbol_lso2 =
+    //noll_ta_symbol_get_unique_higher_pred (pred, NULL, marking2);
+  //assert (NULL != symbol_lso2);
 
-  noll_uid_array *children = noll_uid_array_new ();
-  noll_uid_array_push (children, 2);
+  ///* vata_symbol_t* symbol_out       = "<> [out]"; */
+  //const noll_ta_symbol_t *symbol_end =
+    //noll_ta_symbol_get_unique_aliased_var (end_node);
+  //assert (NULL != symbol_end);
 
-  vata_add_transition (ta, 1, symbol_next1, children);
-  vata_add_transition (ta, 1, symbol_lso1, children);
-  vata_add_transition (ta, 2, symbol_next2, children);
-  vata_add_transition (ta, 2, symbol_lso2, children);
-  vata_add_transition (ta, 2, symbol_end, NULL);
+  ///* build the TA */
+  //vata_set_state_root (ta, 1);
 
-  noll_uid_array_delete (marking1);
-  noll_uid_array_delete (marking2);
-  noll_uid_array_delete (vars1);
-  noll_uid_array_delete (children);
-  noll_uid_array_delete (selectors);
+  //noll_uid_array *children = noll_uid_array_new ();
+  //noll_uid_array_push (children, 2);
 
+  //vata_add_transition (ta, 1, symbol_next1, children);
+  //vata_add_transition (ta, 1, symbol_lso1, children);
+  //vata_add_transition (ta, 2, symbol_next2, children);
+  //vata_add_transition (ta, 2, symbol_lso2, children);
+  //vata_add_transition (ta, 2, symbol_end, NULL);
+
+  //noll_uid_array_delete (marking1);
+  //noll_uid_array_delete (marking2);
+  //noll_uid_array_delete (vars1);
+  //noll_uid_array_delete (children);
+  //noll_uid_array_delete (selectors);
+
+  noll_uid_array_delete (mark_eps);
+  noll_uid_array_delete (vars_in);
+  noll_uid_array_delete (vars_out);
+  
   return ta;
 }
 
+
 /**
- * Get the TA for the edge built with predicate 'ls'
+ * Add to the @p ta the transitions encoding the ls predicate,
+ * starting from state @p qinit, labeling the first state by @p vars_in,
+ * ending in @p vars_out, and marking the first state by @p mark_in.
+ * 
+ * @param ta       the TA to which transitions are added
+ * @param pred     the predicate generated
+ * @param fid      the field to be used as selector
+ * @param qinit    the initial state to which transitions are added
+ * @param vars_in  labeling of initial state
+ * @param mark_in  marking of the initial state
+ * @param vars_out labeling of output state
+ * @return         the number of the last state generated for @p ta
+ */
+uint_t 
+noll_pred2ta_ls(noll_ta_t* ta, noll_pred_t* pred, uid_t fid,
+                uint_t qinit, 
+                noll_uid_array* vars_in, noll_uid_array* mark_in,
+                noll_uid_array* vars_out)
+{
+  assert (NULL != ta);
+  assert (NULL != mark_in); // at least eps
+  assert (NULL != vars_out); // at least one marking
+  assert (noll_vector_size(vars_out) >= 1);
+  
+  uint_t q = qinit;
+  
+  /* the selectors */
+  noll_uid_array *selectors = noll_uid_array_new ();
+  assert (NULL != selectors);
+  noll_uid_array_push (selectors, fid);
+
+  /* the marking used mark_in_fld = mark_in . fld */
+  noll_uid_array *mark_in_fld = noll_uid_array_new ();
+  assert (NULL != mark_in_fld);
+  noll_uid_array_copy (mark_in_fld, mark_in);
+  noll_uid_array_push (mark_in_fld, fid);
+
+  q = q+1; /* next state is qinit + 1 */
+  noll_uid_array *children = noll_uid_array_new ();
+  noll_uid_array_push (children, q);
+
+  /* 
+   * Transition: q1 -> [<fid>, {in}, mark_in](q2) 
+   *       -- one cell
+   */
+  const noll_ta_symbol_t *symbol_next1 =
+    noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
+  assert (NULL != symbol_next1);
+  vata_add_transition (ta, qinit, symbol_next1, children);
+
+  /* 
+   * Transition: q1 -> [<ls>, {in}, mark_in](q2) 
+   *       -- one list segment
+   */
+  const noll_ta_symbol_t *symbol_lso1 =
+    noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_in);
+  assert (NULL != symbol_lso1);
+  vata_add_transition (ta, qinit, symbol_lso1, children);
+
+  /* 
+   * Transition: q2 -> [<fid>, {}, mark_in_fld](q2) 
+   *       -- one list segment
+   */  
+  const noll_ta_symbol_t *symbol_next2 =
+    noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_fld);
+  assert (NULL != symbol_next2);
+  vata_add_transition (ta, q, symbol_next2, children);
+
+  /* 
+   * Transition: q2 -> [<ls>, {}, mark_in_fld](q2) 
+   *       -- one list segment
+   */  
+  const noll_ta_symbol_t *symbol_lso2 =
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_fld);
+  assert (NULL != symbol_lso2);
+  vata_add_transition (ta, q, symbol_lso2, children);
+
+  /* 
+   * Transition: q2 -> [, {out}, ]() 
+   *       -- one list segment
+   */  
+  const noll_ta_symbol_t *symbol_end =
+    noll_ta_symbol_get_unique_aliased_var (noll_vector_at(vars_out,0));
+  assert (NULL != symbol_end);
+  vata_add_transition (ta, q, symbol_end, NULL);
+
+  noll_uid_array_delete (mark_in_fld);
+  noll_uid_array_delete (children);
+  noll_uid_array_delete (selectors);
+
+  return q;
+}
+    
+/**
+ * Get the TA for the edge built with predicate 'lss'
  * by instantiating the definition of the
  * 'lsso(in, out)' predicate (see ../samples/nll/lss-vc01.smt)
  *
@@ -663,6 +772,35 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   return ta;
 }
 
+/**
+ * Get the TA for the edge built with predicate 'nll'
+ * by instantiating the definition of the
+ * 'nll(in, out, brd)' predicate (see ../samples/nll/nll-vc01.smt)
+ *
+ * nll(in,out,brd) = (in = out) or
+ *                 (in != out and exists u,z. 
+ *                       in -> {(s, u),(h, z)} * 
+ *                       ls (z,brd) * nll(u,out))
+ * 
+ * to the TA (q1 is a root state):
+ * 
+ * -- only simple fields --
+ * q1 -> [<s,h>, {in}, [e]] (q2,q3)
+ *       -- first cell
+ * q2 -> [<s,h>, {}, [e::s]] (q2,qn)
+ *       -- from cell two 
+ * q2 -> [, {out}, ]()
+ *       -- end
+ * 
+ * -- list segments --
+ * q1 -> [<nll(brd)>, {in}, [e]] (q2)
+ * q2 -> [<nll(brd)>, , [e::s]] (q2)
+ * 
+ * -- imported transitions --
+ * k = ls(f, q3, {}, [e::h], {brd})
+ * n = k+1
+ *     ls(f, qn, {}, [e::s::h], {brd})
+ */
 noll_ta_t *
 noll_edge2ta_nll (const noll_edge_t * edge)
 {
