@@ -366,7 +366,8 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
 		  noll_field_e cpfkind =
 		    noll_vector_at (cp->typ->pfields, fid);
 		  noll_field_e pfkind = noll_vector_at (p->typ->pfields, fid);
-		  if (cpfkind != NOLL_PFLD_NONE && cpfkind != NOLL_PFLD_NULL)
+		  if (cpfkind != NOLL_PFLD_NONE && 
+		      cpfkind != NOLL_PFLD_NULL)
 		    {
 		      /* the field is used in cpid and 
 		       * it shall not be reused as backbone (level 0) in caller pids */
@@ -382,8 +383,11 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
 			  // TODO: put in form
 			  return 0;
 			}
-		      noll_vector_at (p->typ->pfields, fid) =
-			NOLL_PFLD_NESTED;
+		      // set to nested only if the field has not another
+		      // function in p
+		      if (pfkind == NOLL_PFLD_NONE)
+		        noll_vector_at (p->typ->pfields, fid) =
+			  NOLL_PFLD_NESTED;
 		    }
 		}
 	    if (cp->typ->useNil)
@@ -418,8 +422,31 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
 int
 noll_field_order ()
 {
+  
+  /* pre-analysis: 
+   * go through the predicates and 
+   * set owner for backbone fields */
+  for (uint_t pid = 0; pid < noll_vector_size (preds_array); pid++)
+    {
+      noll_pred_t *p = noll_vector_at (preds_array, pid);
+      /* search the backbones and set owner */
+      for (uint_t fid = 0; fid < noll_vector_size (fields_array); fid++)
+	if (noll_vector_at (p->typ->pfields, fid) == NOLL_PFLD_BCKBONE)
+	  {
+	    noll_field_t *f = noll_vector_at (fields_array, fid);
+	    if (f->pid == UNDEFINED_ID)
+	      f->pid = pid;
+	    else {
+#ifndef NDEBUG
+	      fprintf (stdout, "Error: shared backbone field %d!\n", fid);
+#endif
+	      assert (false);
+	    }
+	  }
+    }
+   
   uint_t no = 0;
-  /* go through the predicates -- in reverse order --
+  /* go through the predicates, in reverse order,
    * and fill the infos on fields */
   for (uint_t pid = noll_vector_size (preds_array) - 1; (pid + 1) >= 1; pid--)
     {
@@ -429,8 +456,11 @@ noll_field_order ()
 	if (noll_vector_at (p->typ->pfields, fid) == NOLL_PFLD_BCKBONE)
 	  {
 	    noll_field_t *f = noll_vector_at (fields_array, fid);
-	    f->order = no++;	/* TODO test that it is not already filled ! */
-	    f->pid = pid;
+	    if (f->order == UNDEFINED_ID)
+	    { /* test that it is not already filled ! */
+	      f->order = no++;	
+	      f->pid = pid;
+	    }
 #ifndef NDEBUG
 	    fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
 		     f->name, pid,
@@ -442,8 +472,11 @@ noll_field_order ()
 	if (noll_vector_at (p->typ->pfields, fid) == NOLL_PFLD_INNER)
 	  {
 	    noll_field_t *f = noll_vector_at (fields_array, fid);
-	    f->order = no++;	/* TODO test that it is not already filled ! */
-	    f->pid = pid;
+	    if (f->order == UNDEFINED_ID && f->pid == UNDEFINED_ID)
+	    { /* test that it is not already filled ! */
+	      f->order = no++;	
+	      f->pid = pid;
+	    }
 #ifndef NDEBUG
 	    fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
 		     f->name, pid,
@@ -455,9 +488,9 @@ noll_field_order ()
 	if (noll_vector_at (p->typ->pfields, fid) == NOLL_PFLD_NULL)
 	  {
 	    noll_field_t *f = noll_vector_at (fields_array, fid);
-	    if (f->pid == UNDEFINED_ID)
+	    if (f->order == UNDEFINED_ID && f->pid == UNDEFINED_ID)
 	      {
-		/* it is not already filled ! */
+		/* test that it is not already filled ! */
 		f->order = no++;
 		f->pid = pid;
 	      }
@@ -472,8 +505,12 @@ noll_field_order ()
 	if (noll_vector_at (p->typ->pfields, fid) == NOLL_PFLD_BORDER)
 	  {
 	    noll_field_t *f = noll_vector_at (fields_array, fid);
-	    f->order = no++;	/* TODO test that it is not already filled ! */
-	    f->pid = pid;
+	    if (f->order == UNDEFINED_ID && f->pid == UNDEFINED_ID)
+	      {
+		/* test that it is not already filled ! */
+		f->order = no++;
+		f->pid = pid;
+	      }
 #ifndef NDEBUG
 	    fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
 		     f->name, pid,

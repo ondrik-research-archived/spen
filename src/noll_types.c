@@ -146,6 +146,9 @@ noll_field_register(const char* name, noll_type_t* ty) {
 	// register the field in the src set of fields
 	noll_record_t* r_src = noll_vector_at (records_array, src);
 	noll_uid_array_push(r_src->flds, f->fid);
+	// set order/pid to max
+	f->order = UNDEFINED_ID;
+	f->pid = UNDEFINED_ID;
 
 	return ty;
 }
