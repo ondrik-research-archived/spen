@@ -797,9 +797,6 @@ noll_ta_t* noll_graph2ta(
 	uint_t initial_node = noll_vector_at(homo, 0);
 	assert(graph->nodes_size > initial_node);
 
-	NOLL_DEBUG(__func__);
-	NOLL_DEBUG("(): WARNING: ignoring the rest of the parameters in the homo morphism\n");
-
 	noll_marking_list* markings = noll_marking_list_new();
 	assert(NULL != markings);
 	if (!compute_markings(graph, initial_node, markings))
