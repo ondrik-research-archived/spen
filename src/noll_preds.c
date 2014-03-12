@@ -386,6 +386,8 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
 			NOLL_PFLD_NESTED;
 		    }
 		}
+	    if (cp->typ->useNil)
+	      p->typ->useNil = true;
 	    if (cp->typ->ptypes)
 	      for (uid_t rid = 0; rid < noll_vector_size (records_array);
 		   rid++)
