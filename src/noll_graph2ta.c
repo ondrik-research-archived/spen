@@ -795,6 +795,107 @@ uid_t find_first_ancestor_with_marking(
 }
 
 
+/**
+ * @brief  Checks whether a node is the first successor of a node with given marking
+ *
+ * This function checks whether the node @p dst is the first successor of the
+ * node @p src with the given @p marking in the given @p graph. The markings of
+ * nodes of @p graph are given in @p marking_list.
+ *
+ * @param[in]  dst           The target node
+ * @param[in]  src           The source node
+ * @param[in]  marking       The marking to be checked
+ * @param[in]  graph         The considered graph
+ * @param[in]  marking_list  The list of markings (addressed by the node number)
+ *
+ * @returns  @p true iff @p dst is the first successor of @p src with the given
+ *           @p marking
+ */
+bool is_the_first_successor_of_with_marking(
+	uid_t                     dst,
+	uid_t                     src,
+	const noll_uid_array*     marking,
+	const noll_graph_t*       graph,
+	const noll_marking_list*  marking_list)
+{
+	assert(NULL != marking);
+	assert(NULL != graph);
+	assert(NULL != marking_list);
+	assert(dst < graph->nodes_size);
+	assert(src < graph->nodes_size);
+	assert(noll_vector_size(marking_list) == graph->nodes_size);
+	assert(noll_uid_array_equal(marking, noll_vector_at(marking_list, dst)));
+
+	const noll_uid_array* src_marking = noll_vector_at(marking_list, src);
+	assert(NULL != src_marking);
+
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": approximating the result for depth 1\n");
+
+	// TODO: this is only temporary, and checks that 'next_child' is the
+	// successor of 'proc_node' over some field
+	assert(noll_vector_size(src_marking) + 1 >= noll_vector_size(marking));
+	assert(noll_vector_size(src_marking)     <= noll_vector_size(marking));
+	uint_t continuation_field = noll_vector_last(marking);
+
+	const noll_uid_array* mat_src = graph->mat[src];
+	assert(NULL != mat_src);
+	for (size_t mat_src_i = 0;
+		mat_src_i < noll_vector_size(mat_src); ++mat_src_i)
+	{
+		uint_t par_edge_id = noll_vector_at(mat_src, mat_src_i);
+		assert(par_edge_id < noll_vector_size(graph->edges));
+
+		const noll_edge_t* edge_from_par = noll_vector_at(graph->edges, par_edge_id);
+		assert(NULL != edge_from_par);
+		assert(NOLL_EDGE_PTO == edge_from_par->kind);
+
+		if (edge_from_par->label == continuation_field)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+/**
+ * @brief  Checks whether a node is the last successor of a node with given marking
+ *
+ * This function checks whether the node @p dst is the last successor of the
+ * node @p src with the given @p marking in the given @p graph. The markings of
+ * nodes of @p graph are given in @p marking_list.
+ *
+ * @param[in]  dst           The target node
+ * @param[in]  src           The source node
+ * @param[in]  marking       The marking to be checked
+ * @param[in]  graph         The considered graph
+ * @param[in]  marking_list  The list of markings (addressed by the node number)
+ *
+ * @returns  @p true iff @p dst is the last successor of @p src with the given
+ *           @p marking
+ */
+bool is_the_last_successor_of_with_marking(
+	uid_t                     dst,
+	uid_t                     src,
+	const noll_uid_array*     marking,
+	const noll_graph_t*       graph,
+	const noll_marking_list*  marking_list)
+{
+	assert(NULL != marking);
+	assert(NULL != graph);
+	assert(NULL != marking_list);
+	assert(dst < graph->nodes_size);
+	assert(src < graph->nodes_size);
+	assert(noll_vector_size(marking_list) == graph->nodes_size);
+	assert(noll_uid_array_equal(marking, noll_vector_at(marking_list, dst)));
+
+	NOLL_DEBUG("Unimplemented\n");
+	assert(false);
+}
+
+
 /* ====================================================================== */
 /* Translators */
 /* ====================================================================== */
@@ -1087,51 +1188,40 @@ noll_ta_t* noll_graph2ta(
 
 					// now, we need to check that which successor of 'parent_node' 'next_child' is
 					// TODO: implement checking of other than the s3 marker
-
-					// TODO: this is only temporary, and checks that 'next_child' is the
-					// successor of 'proc_node' over some field
-					assert(noll_vector_size(lcp) + 1 >= noll_vector_size(mark_next_child));
-					assert(noll_vector_size(lcp)     <= noll_vector_size(mark_next_child));
-					uint_t continuation_field = noll_vector_last(mark_next_child);
-
-					const noll_uid_array* mat_parent = graph->mat[parent_node];
-					assert(NULL != mat_parent);
-					bool succ_found = false;
-					for (size_t mat_parent_i = 0;
-						mat_parent_i < noll_vector_size(mat_parent); ++mat_parent_i)
+					if (is_the_first_successor_of_with_marking(
+						next_child,
+						parent_node,
+						mark_next_child,
+						graph,
+						markings))
 					{
-						uint_t par_edge_id = noll_vector_at(mat_parent, mat_parent_i);
-						assert(par_edge_id < noll_vector_size(graph->edges));
+						NOLL_DEBUG("Detected an s3() marker\n");
 
-						const noll_edge_t* edge_from_par = noll_vector_at(graph->edges, par_edge_id);
-						assert(NULL != edge_from_par);
-						assert(NOLL_EDGE_PTO == edge_from_par->kind);
+						// now, we create the corresponding symbol
+						const noll_ta_symbol_t* leaf_symbol =
+							noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
+						assert(NULL != leaf_symbol);
 
-						if (edge_from_par->label == continuation_field)
-						{
-							assert(!succ_found);
-							succ_found = true;
-
-							NOLL_DEBUG("Detected an s3() marker\n");
-
-							// now, we create the corresponding symbol
-							const noll_ta_symbol_t* leaf_symbol =
-								noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
-							assert(NULL != leaf_symbol);
-
-							// TODO: instead of getting a unique state, we might have only one
-							// state for every used leaf symbol (such as it's done in Forester)
-							size_t leaf_state = noll_get_unique();
-							noll_uid_array_push(children, leaf_state);
-							vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
-						}
+						// TODO: instead of getting a unique state, we might have only one
+						// state for every used leaf symbol (such as it's done in Forester)
+						size_t leaf_state = noll_get_unique();
+						noll_uid_array_push(children, leaf_state);
+						vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
 					}
-
-					// TODO: here, we check that we indeed stay in the limited area and
-					// don't process other markers (such as the s4 marker)
-					if (!succ_found)
+					else if (is_the_last_successor_of_with_marking(
+						next_child,
+						parent_node,
+						mark_next_child,
+						graph,
+						markings))
 					{
-						NOLL_DEBUG("ERROR: Unimplemented");
+						NOLL_DEBUG("Detected an s4() marker\n");
+						NOLL_DEBUG("ERROR: Unimplemented\n");
+						assert(false);
+					}
+					else
+					{
+						NOLL_DEBUG("We are doomed!!");
 						assert(false);
 					}
 				}
@@ -1152,11 +1242,10 @@ noll_ta_t* noll_graph2ta(
 				const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
 				assert(NULL != mark_next_child);
 
-				// adding the selector
-				noll_uid_array_push(selectors, ed->label);
+				uid_t main_backbn_field = noll_pred_get_minfield(ed->label);
+				NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u over %u\n", pred_name, i, next_child, main_backbn_field);
 
-				NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", pred_name, i, next_child);
-				if (noll_marking_is_succ_of_via(mark_next_child, mark_i, ed->label))
+				if (noll_marking_is_succ_of_via(mark_next_child, mark_i, main_backbn_field))
 				{	// if 'ed' is a backbone edge
 					NOLL_DEBUG("We are on the backbone!\n");
 					noll_uid_array_push(children, next_child);
