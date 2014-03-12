@@ -536,8 +536,8 @@ noll_pred_array_fprint (FILE * f, noll_pred_array * a, const char *msg)
   for (uint_t i = 0; i < length_a; i++)
     {
       noll_pred_t *pi = noll_vector_at (a, i);
-      fprintf (f, "pred-%d: %s(%zu args) ", pi->pid, pi->pname,
-	       pi->def->pargs);
+      fprintf (f, "pred-%d: %s(%d args) ", pi->pid, pi->pname,
+	       pi->def->fargs);
       fprintf (f, "of type ");
       if (pi->typ != NULL)
 	{
@@ -545,15 +545,14 @@ noll_pred_array_fprint (FILE * f, noll_pred_array * a, const char *msg)
 	  fprintf (f, "\n\t\tall types [");
 	  if (pi->typ->ptypes != NULL)
 	    for (uint_t ti = 0; ti < noll_vector_size (pi->typ->ptypes); ti++)
-	      fprintf (f, "%s, ",
-		       noll_record_name (noll_vector_at
-					 (pi->typ->ptypes, ti)));
+	      if (noll_vector_at (pi->typ->ptypes, ti) == 1)
+	        fprintf (f, "%s, ", noll_record_name (ti));
 	  fprintf (f, "], ");
 	  fprintf (f, "\n\t\trec fields [");
 	  if (pi->typ->pfields != NULL)
 	    for (uint_t fi = 0; fi < noll_vector_size (pi->typ->pfields);
 		 fi++)
-	      fprintf (f, "%s(%d), ", noll_field_name (fi),
+	      fprintf (f, "%s(kind-%d), ", noll_field_name (fi),
 		       noll_vector_at (pi->typ->pfields, fi));
 	  fprintf (f, "]\n");
 	}
