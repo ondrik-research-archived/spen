@@ -798,7 +798,7 @@ uint_t noll_pred2ta_nll(noll_ta_t* ta, noll_pred_t* pred,
  * nll(in,out,brd) = (in = out) or
  *                 (in != out and exists u,z. 
  *                       in -> {(s, u),(h, z)} * 
- *                       ls (z,brd) * nll(u,out))
+ *                       ls (z,brd) * nll(u,out,brd))
  * 
  * to the TA (q1 is a root state):
  * 
@@ -1030,7 +1030,6 @@ noll_pred2ta_nll(noll_ta_t* ta, noll_pred_t* pred,
     symbol_q2_1 = noll_ta_symbol_get_unique_aliased_var (noll_vector_at(mark_out,0));
   else
     symbol_q2_1 = noll_ta_symbol_get_unique_aliased_marking (alias_out, mark_out);
-    // TODO: see if {in} can be added
   assert (NULL != symbol_q2_1);
   noll_uid_array* succ_q2 = noll_uid_array_new ();
   vata_add_transition (ta, q2, symbol_q2_1, succ_q2);
@@ -1065,6 +1064,285 @@ noll_pred2ta_nll(noll_ta_t* ta, noll_pred_t* pred,
    *       -- nested list segment
    */
   qlast = noll_pred2ta_ls(ta, pred_ls, n_fid, q4, NULL, mark_in_bkb_z, mark_brd, alias_brd);
+  assert (UNDEFINED_ID != qlast);
+  assert (qlast > q4);
+  
+  noll_uid_array_delete(mark_in_bkb);
+  noll_uid_array_delete(mark_in_z);
+  noll_uid_array_delete(mark_in_bkb_z);
+  noll_uid_array_delete(selectors);
+  
+  return qlast;
+}
+
+uint_t noll_pred2ta_nlcl(noll_ta_t* ta, noll_pred_t* pred, 
+           uid_t b_fid, uid_t z_fid, uid_t n_fid,
+           uint_t qinit, 
+           noll_uid_array* vars_in, noll_uid_array* mark_in,
+           noll_uid_array* mark_out, unsigned char alias_out);
+           
+/**
+ * Get the TA for the edge built with predicate 'nlcl'
+ * by instantiating the definition of the
+ * 'nlcl(in, out)' predicate (see ../samples/nll/nlcl-vc01.smt)
+ *
+ * nlcl(in,out) = (in = out) or
+ *                (in != out and exists u,z. 
+ *                       in -> {(s, u),(h, z)} * 
+ *                       loop (ls (z,z)) * nlcl(u,out))
+ * 
+ * to the TA (q1 is a root state):
+ * 
+ * -- only simple fields --
+ * q1 -> [<s,h>, {in}, [e]] (q2,q3)
+ *       -- first cell
+ * q2 -> [<s,h>, {}, [e::s]] (q2,qn)
+ *       -- from cell two 
+ * q2 -> [, {out}, ]()
+ *       -- end
+ * 
+ * -- list segments --
+ * q1 -> [<nlcl>, {in}, [e]] (q2)
+ * q2 -> [<nlcl>, , [e::s]] (q2)
+ * 
+ * -- imported transitions --
+ * k = ls(f, q3, {}, [e::h], s1[e::h])
+ * n = k+1
+ *     ls(f, qn, {}, [e::s::h], s1[e::s::h])
+ */
+noll_ta_t *
+noll_edge2ta_nlcl (const noll_edge_t * edge)
+{
+  /* the checks on edge are done in the wrapper function */
+  
+  NOLL_DEBUG
+    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate nlcl\n");
+
+  // get infos about the predicate 
+  uint_t pid = edge->label;
+  noll_pred_t *pred = noll_vector_at (preds_array, pid);
+  assert (NULL != pred);
+
+  /* find the fields main backbone, inner and nested for the nlcl predicate */
+  uid_t b_fid = UNDEFINED_ID;
+  uid_t z_fid = UNDEFINED_ID;
+  uid_t n_fid = UNDEFINED_ID;
+  assert (NULL != pred->typ->pfields);
+  for (uint_t fid = 0; fid < noll_vector_size (fields_array); fid++) {
+    noll_field_e k = noll_vector_at (pred->typ->pfields, fid);
+    switch (k) {
+      case NOLL_PFLD_BCKBONE:
+      {
+       assert (b_fid == UNDEFINED_ID);
+       b_fid = fid;
+       break;
+      }
+      case NOLL_PFLD_INNER:
+      {
+       assert (z_fid == UNDEFINED_ID);
+       z_fid = fid;
+       break;
+      }
+      case NOLL_PFLD_NESTED:
+      {
+       assert (n_fid == UNDEFINED_ID);
+       n_fid = fid;
+       break;
+      }
+      default:
+      NOLL_DEBUG("Error: incorrect field for 'nll' predicate!\n");
+      assert (false); 
+    }
+  }
+  assert (UNDEFINED_ID != b_fid);
+  assert (UNDEFINED_ID != z_fid);
+  assert (UNDEFINED_ID != n_fid);
+  
+  /* build the TA */
+  vata_ta_t *ta = NULL;
+  if ((ta = vata_create_ta ()) == NULL)
+    {
+      return NULL;
+    }
+  vata_set_state_root (ta, 1);
+
+  /* identifiers for arguments */
+  uid_t in_node = noll_vector_at (edge->args, 0);
+  uid_t end_node = noll_vector_at (edge->args, 1);
+
+  /* label of in variables */
+  noll_uid_array *vars_in = noll_uid_array_new ();
+  assert (NULL != vars_in);
+  noll_uid_array_push (vars_in, in_node);
+
+  /* label of out variables */
+  noll_uid_array *vars_out = noll_uid_array_new ();
+  assert (NULL != vars_out);
+  noll_uid_array_push (vars_out, end_node);
+
+  /* empty marking for first state, mark_eps = [eps] */
+  noll_uid_array *mark_eps = noll_uid_array_new ();
+  assert (NULL != mark_eps);
+  noll_uid_array_push (mark_eps, NOLL_MARKINGS_EPSILON);
+
+  uint_t qend = noll_pred2ta_nlcl(ta, pred, 
+           b_fid, z_fid, n_fid, 1,
+           vars_in, mark_eps, vars_out, 0); 
+           
+  noll_uid_array_delete (vars_in);
+  noll_uid_array_delete (vars_out);
+  noll_uid_array_delete (mark_eps);
+
+  return ta;
+}
+
+ /**
+ * Add to the @p ta the transitions encoding the nlcl predicate,
+ * starting from state @p qinit, labeling the first state by @p vars_in,
+ * ending in @p vars_out, and marking the first state by @p mark_in.
+ * 
+ * @param ta        the TA to which transitions are added
+ * @param pred      the predicate generated
+ * @param *_fid     the fields to be used as selector
+ * @param qinit     the initial state to which transitions are added
+ * @param vars_in   labeling of initial state
+ * @param mark_in   marking of the initial state
+ * @param mark_out  marking of output state
+ * @param alias_out aliasing of the output state
+ * @return          the number of the last state generated for @p ta
+ */
+uint_t 
+noll_pred2ta_nlcl(noll_ta_t* ta, noll_pred_t* pred, 
+           uid_t b_fid, uid_t z_fid, uid_t n_fid,
+           uint_t qinit, 
+           noll_uid_array* vars_in, noll_uid_array* mark_in,
+           noll_uid_array* mark_out, unsigned char alias_out)
+{
+    
+  NOLL_DEBUG
+    ("WARNING: Generating a nested TA for the predicate nlcl\n");
+
+  assert (NULL != ta);
+  assert (NULL != mark_in); // at least eps
+  assert (NULL != mark_out); // at least one marking
+  assert (noll_vector_size(mark_out) >= 1);
+ 
+  /* nested predicate ls */
+  noll_pred_t* pred_ls = NULL;
+  for (uint_t pid = 0; pid < noll_vector_size (preds_array); pid++) 
+    if (noll_vector_at (pred->typ->ppreds, pid) == 1)
+       pred_ls = noll_vector_at(preds_array,pid);
+  assert (NULL != pred_ls);
+ 
+  /* states of the automaton */
+  uint_t q1 = qinit; // initial cell
+  uint_t q2 = qinit + 1; // inner cells
+  uint_t q3 = qinit + 2; // nested ls from init cell
+  uint_t q4 = UNDEFINED_ID; // nested ls from inner cells, computed
+  uint_t qlast = UNDEFINED_ID; // last state used in the inner automaton ls
+ 
+  /* the selectors <b_fid, z_fid> */
+  noll_uid_array *selectors = noll_uid_array_new ();
+  assert (NULL != selectors);
+  noll_uid_array_push (selectors, b_fid);
+  noll_uid_array_push (selectors, z_fid);
+
+  /* the marking used mark_in_bkb = mark_in . b_fid */
+  noll_uid_array *mark_in_bkb = noll_uid_array_new ();
+  assert (NULL != mark_in_bkb);
+  noll_uid_array_copy (mark_in_bkb, mark_in);
+  noll_uid_array_push (mark_in_bkb, b_fid);
+
+  /* the marking used mark_in_z = mark_in . z_fid */
+  noll_uid_array *mark_in_z = noll_uid_array_new ();
+  assert (NULL != mark_in_z);
+  noll_uid_array_copy (mark_in_z, mark_in);
+  noll_uid_array_push (mark_in_z, z_fid);
+
+  /* the marking used mark_in_bkb_z = mark_in_bkb . z_fid */
+  noll_uid_array *mark_in_bkb_z = noll_uid_array_new ();
+  assert (NULL != mark_in_bkb_z);
+  noll_uid_array_copy (mark_in_bkb_z, mark_in_bkb);
+  noll_uid_array_push (mark_in_bkb_z, z_fid);
+
+  /*
+   * Transition: q1 -> [<s,h>, {in}, [e]] (q2,q3)
+   *       -- first cell
+   */
+  const noll_ta_symbol_t *symbol_q1_1 =
+    noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
+  assert (NULL != symbol_q1_1);
+  noll_uid_array* succ_q1 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q1, q2);
+  noll_uid_array_push (succ_q1, q3);
+  vata_add_transition (ta, q1, symbol_q1_1, succ_q1);
+  noll_uid_array_delete (succ_q1);
+  
+  /*
+   * Transition: q1 -> [<nlcl>, {in}, [e]] (q2)
+   *       -- list segment from q1
+   */
+  const noll_ta_symbol_t *symbol_q1_2 =
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in);
+    // TODO: see if {in} can be added
+  assert (NULL != symbol_q1_2);
+  succ_q1 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q1, q2);
+  vata_add_transition (ta, q1, symbol_q1_2, succ_q1);
+  noll_uid_array_delete (succ_q1);
+
+  /*
+   * Transitions: k = ls(f, q3, {}, [e::h], s1[e::h])
+   */
+  q4 = noll_pred2ta_ls(ta, pred_ls, n_fid, q3, NULL, mark_in_z, mark_in_z, 1);
+  assert (UNDEFINED_ID != q4);
+  assert (q4 > q3);
+  
+  q4 += 1; // next state free
+   
+   /*
+    * Transition: q2 -> [, {out}, ]()
+    *       -- end
+    */
+  const noll_ta_symbol_t *symbol_q2_1 = NULL;
+  if (alias_out == 0) 
+    symbol_q2_1 = noll_ta_symbol_get_unique_aliased_var (noll_vector_at(mark_out,0));
+  else
+    symbol_q2_1 = noll_ta_symbol_get_unique_aliased_marking (alias_out, mark_out);
+  assert (NULL != symbol_q2_1);
+  noll_uid_array* succ_q2 = noll_uid_array_new ();
+  vata_add_transition (ta, q2, symbol_q2_1, succ_q2);
+  
+  /*
+   * Transition: q2 -> [<nlcl>, , [e::s]] (q2)
+   *       -- inner list segment
+   */
+  const noll_ta_symbol_t *symbol_q2_2 =
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in);
+    // TODO: see if {in} can be added
+  assert (NULL != symbol_q2_2);
+  assert (succ_q2 != NULL);
+  noll_uid_array_push (succ_q2, q2);
+  vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
+  // succ_q2 used below 
+  
+  /*
+   * Transition: q2 -> [<s,h>, {}, [e::s]] (q2,q4)
+   *       -- from cell two
+   */
+  const noll_ta_symbol_t *symbol_q2_3 =
+    noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
+  assert (NULL != symbol_q2_3);
+  // succ_q2 = [q2]
+  noll_uid_array_push (succ_q2, q4);
+  vata_add_transition (ta, q2, symbol_q2_3, succ_q2);
+  noll_uid_array_delete (succ_q2);
+  
+  /*
+   * Transitions: ls(f, q4, {}, [e::s::h], s1([e::s::h])
+   *       -- nested list segment
+   */
+  qlast = noll_pred2ta_ls(ta, pred_ls, n_fid, q4, NULL, mark_in_bkb_z, mark_in_bkb_z, 1);
   assert (UNDEFINED_ID != qlast);
   assert (qlast > q4);
   
@@ -1163,6 +1441,10 @@ noll_edge2ta (const noll_edge_t * edge)
   else if (0 == strcmp (pred->pname, "nll"))
     {
       ta = noll_edge2ta_nll (edge);
+    }
+  else if (0 == strcmp (pred->pname, "nlcl"))
+    {
+      ta = noll_edge2ta_nlcl (edge);
     }
   else if (0 == strncmp (pred->pname, "skl", 3))
     {
