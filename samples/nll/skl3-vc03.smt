@@ -40,9 +40,9 @@
 ; variables
 (declare-fun x1 () SL3_t)
 (declare-fun x2 () SL3_t)
+(declare-fun x2_0_1 () SL3_t)
+(declare-fun x2_1 () SL3_t)
 (declare-fun x3 () SL3_t)
-(declare-fun x4 () SL3_t)
-(declare-fun x5 () SL3_t)
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
@@ -52,10 +52,10 @@
 
 (assert (tobool (ssep
   (index alpha1 (skl3 x1 x2))
-  (pto x2 (sref (ref n3 x3) (ref n2 x4) (ref n1 x5)))
+  (pto x2 (sref (ref n3 x3) (ref n2 x2_1) (ref n1 x2_0_1)))
   (index alpha2 (skl3 x3 nil))
-  (index alpha3 (skl2 x4 x3))
-  (index alpha4 (skl1 x5 x4))
+  (index alpha3 (skl2 x2_1 x3))
+  (index alpha4 (skl1 x2_0_1 x2_1))
 )))
 
 (assert (not
