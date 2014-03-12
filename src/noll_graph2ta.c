@@ -1003,24 +1003,102 @@ noll_ta_t* noll_graph2ta(
 					noll_debug_print_one_mark(lcp);
 					NOLL_DEBUG("\n");
 
-					// TODO: this hack asserts that the node with the longest common
-					// prefix is the source of the processed edge.
-					// This should work for easier graphs, but will fail for more complex
-					assert(noll_uid_array_equal(lcp, mark_i));
+					// here, we find the first parent of 'i' that has the marking 'lcp'
+					uid_t parent_node = i;
+					const noll_uid_array* parent_node_mark = noll_vector_at(markings, parent_node);
+					while (!noll_uid_array_equal(lcp, parent_node_mark))
+					{
+						const noll_uid_array* rev_edges = graph->rmat[parent_node];
+						assert(NULL != rev_edges);
+
+						NOLL_DEBUG("Node %u, parent edges: %u\n", parent_node, noll_vector_size(rev_edges));
+
+						uid_t parent_edge_id = (uid_t)-1;
+						const noll_edge_t* parent_edge = NULL;
+						// now, we pick the main backbone parent edge
+						for (size_t rev_i = 0; rev_i < noll_vector_size(rev_edges); ++rev_i)
+						{
+							uid_t rev_edge_id = noll_vector_at(rev_edges, rev_i);
+							const noll_edge_t* edge_candid = noll_vector_at(graph->edges, rev_edge_id);
+							assert(NULL != edge_candid);
+							assert(NOLL_EDGE_PTO == edge_candid->kind);
+
+							if (parent_edge_id == (uid_t)-1)
+							{
+								assert(0 == rev_i);
+								parent_edge_id = rev_edge_id;
+								parent_edge = edge_candid;
+								continue;
+							}
+
+							assert(NULL != parent_edge);
+							if (noll_field_lt(edge_candid->label, parent_edge->label))
+							{
+								parent_edge_id = rev_edge_id;
+								parent_edge = edge_candid;
+							}
+						}
+
+						assert((uid_t)-1 != parent_edge_id);
+						assert(NULL != parent_edge);
+
+						// move a level up
+						assert(NULL != parent_edge->args);
+						parent_node = noll_vector_at(parent_edge->args, 0);
+						parent_node_mark = noll_vector_at(markings, parent_node);
+					}
+
 					noll_uid_array_delete(lcp);
 
-					NOLL_DEBUG("Detected an s3() marker\n");
+					// now, we need to check that which successor of 'parent_node' 'next_child' is
+					// TODO: implement checking of other than the s3 marker
 
-					// now, we create the corresponding symbol
-					const noll_ta_symbol_t* leaf_symbol =
-						noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
-					assert(NULL != leaf_symbol);
+					// TODO: this is only temporary, and checks that 'next_child' is the
+					// successor of 'proc_node' over some field
+					assert(noll_vector_size(lcp) + 1 >= noll_vector_size(mark_next_child));
+					assert(noll_vector_size(lcp)     <= noll_vector_size(mark_next_child));
+					uint_t continuation_field = noll_vector_last(mark_next_child);
 
-					// TODO: instead of getting a unique state, we might have only one
-					// state for every used leaf symbol (such as it's done in Forester)
-					size_t leaf_state = noll_get_unique();
-					noll_uid_array_push(children, leaf_state);
-					vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+					const noll_uid_array* mat_parent = graph->mat[parent_node];
+					assert(NULL != mat_parent);
+					bool succ_found = false;
+					for (size_t mat_parent_i = 0;
+						mat_parent_i < noll_vector_size(mat_parent); ++mat_parent_i)
+					{
+						uint_t par_edge_id = noll_vector_at(mat_parent, mat_parent_i);
+						assert(par_edge_id < noll_vector_size(graph->edges));
+
+						const noll_edge_t* edge_from_par = noll_vector_at(graph->edges, par_edge_id);
+						assert(NULL != edge_from_par);
+						assert(NOLL_EDGE_PTO == edge_from_par->kind);
+
+						if (edge_from_par->label == continuation_field)
+						{
+							assert(!succ_found);
+							succ_found = true;
+
+							NOLL_DEBUG("Detected an s3() marker\n");
+
+							// now, we create the corresponding symbol
+							const noll_ta_symbol_t* leaf_symbol =
+								noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
+							assert(NULL != leaf_symbol);
+
+							// TODO: instead of getting a unique state, we might have only one
+							// state for every used leaf symbol (such as it's done in Forester)
+							size_t leaf_state = noll_get_unique();
+							noll_uid_array_push(children, leaf_state);
+							vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
+						}
+					}
+
+					// TODO: here, we check that we indeed stay in the limited area and
+					// don't process other markers (such as the s4 marker)
+					if (!succ_found)
+					{
+						NOLL_DEBUG("ERROR: Unimplemented");
+						assert(false);
+					}
 				}
 			}
 			else if (NOLL_EDGE_PRED == ed->kind)
