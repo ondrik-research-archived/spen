@@ -722,6 +722,79 @@ static bool reachable_from_through_path_wo_marker(
 }
 
 
+/**
+ * @brief  Finds the first ancestor of a node with a given marking
+ *
+ * Finds the first ancestor of @p node in @p graph that has the given @p
+ * marking. Markings are passed in the @p marking_list.
+ *
+ * @param[in]  node          The starting node (for which we wish to find the ancestor)
+ * @param[in]  marking       The marking we are looking for
+ * @param[in]  graph         The graph
+ * @param[in]  marking_list  List of all markings of nodes (addressed by the node number)
+ *
+ * @returns  The first ancestor of @p node with the given @p marking
+ */
+uid_t find_first_ancestor_with_marking(
+	uid_t                        node,
+	const noll_uid_array*        marking,
+	const noll_graph_t*          graph,
+	const noll_marking_list*     marking_list)
+{
+	assert(NULL != marking);
+	assert(NULL != graph);
+	assert(NULL != marking_list);
+	assert(node < graph->nodes_size);
+	assert(noll_vector_size(marking_list) == graph->nodes_size);
+
+	uid_t parent_node = node;
+	const noll_uid_array* parent_node_mark = noll_vector_at(marking_list, parent_node);
+	while (!noll_uid_array_equal(marking, parent_node_mark))
+	{
+		const noll_uid_array* rev_edges = graph->rmat[parent_node];
+		assert(NULL != rev_edges);
+
+		NOLL_DEBUG("Node %u, parent edges: %u\n", parent_node, noll_vector_size(rev_edges));
+
+		uid_t parent_edge_id = (uid_t)-1;
+		const noll_edge_t* parent_edge = NULL;
+		// now, we pick the main backbone parent edge
+		for (size_t rev_i = 0; rev_i < noll_vector_size(rev_edges); ++rev_i)
+		{
+			uid_t rev_edge_id = noll_vector_at(rev_edges, rev_i);
+			const noll_edge_t* edge_candid = noll_vector_at(graph->edges, rev_edge_id);
+			assert(NULL != edge_candid);
+			assert(NOLL_EDGE_PTO == edge_candid->kind);
+
+			if (parent_edge_id == (uid_t)-1)
+			{
+				assert(0 == rev_i);
+				parent_edge_id = rev_edge_id;
+				parent_edge = edge_candid;
+				continue;
+			}
+
+			assert(NULL != parent_edge);
+			if (noll_field_lt(edge_candid->label, parent_edge->label))
+			{
+				parent_edge_id = rev_edge_id;
+				parent_edge = edge_candid;
+			}
+		}
+
+		assert((uid_t)-1 != parent_edge_id);
+		assert(NULL != parent_edge);
+
+		// move a level up
+		assert(NULL != parent_edge->args);
+		parent_node = noll_vector_at(parent_edge->args, 0);
+		parent_node_mark = noll_vector_at(marking_list, parent_node);
+	}
+
+	return parent_node;
+}
+
+
 /* ====================================================================== */
 /* Translators */
 /* ====================================================================== */
@@ -1004,50 +1077,12 @@ noll_ta_t* noll_graph2ta(
 					NOLL_DEBUG("\n");
 
 					// here, we find the first parent of 'i' that has the marking 'lcp'
-					uid_t parent_node = i;
-					const noll_uid_array* parent_node_mark = noll_vector_at(markings, parent_node);
-					while (!noll_uid_array_equal(lcp, parent_node_mark))
-					{
-						const noll_uid_array* rev_edges = graph->rmat[parent_node];
-						assert(NULL != rev_edges);
-
-						NOLL_DEBUG("Node %u, parent edges: %u\n", parent_node, noll_vector_size(rev_edges));
-
-						uid_t parent_edge_id = (uid_t)-1;
-						const noll_edge_t* parent_edge = NULL;
-						// now, we pick the main backbone parent edge
-						for (size_t rev_i = 0; rev_i < noll_vector_size(rev_edges); ++rev_i)
-						{
-							uid_t rev_edge_id = noll_vector_at(rev_edges, rev_i);
-							const noll_edge_t* edge_candid = noll_vector_at(graph->edges, rev_edge_id);
-							assert(NULL != edge_candid);
-							assert(NOLL_EDGE_PTO == edge_candid->kind);
-
-							if (parent_edge_id == (uid_t)-1)
-							{
-								assert(0 == rev_i);
-								parent_edge_id = rev_edge_id;
-								parent_edge = edge_candid;
-								continue;
-							}
-
-							assert(NULL != parent_edge);
-							if (noll_field_lt(edge_candid->label, parent_edge->label))
-							{
-								parent_edge_id = rev_edge_id;
-								parent_edge = edge_candid;
-							}
-						}
-
-						assert((uid_t)-1 != parent_edge_id);
-						assert(NULL != parent_edge);
-
-						// move a level up
-						assert(NULL != parent_edge->args);
-						parent_node = noll_vector_at(parent_edge->args, 0);
-						parent_node_mark = noll_vector_at(markings, parent_node);
-					}
-
+					uid_t parent_node = find_first_ancestor_with_marking(
+						/* node */ i,
+						/* found marking */ lcp,
+						/* graph */ graph,
+						/* list of markings */ markings);
+					assert(parent_node < graph->nodes_size);
 					noll_uid_array_delete(lcp);
 
 					// now, we need to check that which successor of 'parent_node' 'next_child' is
