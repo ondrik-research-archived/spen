@@ -60,11 +60,10 @@
 (declare-fun alpha8 () SetLoc)
 
 ;
-; level 2 insertion in the middle
+; level 2 insertion in the beginning
 ; expected: holds
 ;
 (assert (tobool (ssep
-  (index alpha1 (skl3 x1 x2))
   (pto x2 (sref (ref n3 x3) (ref n2 x2_1) (ref n1 x2_0_1)))
       (index alpha4 (skl1 x2_0_1 x2_1))
     (index alpha3 (skl2 x2_1 x2_2))
@@ -78,7 +77,7 @@
 )))
 
 (assert (not
-  (tobool (index alpha5 (skl3 x1 nil)))
+  (tobool (index alpha5 (skl3 x2 nil)))
 ))
 
 ; check whether the negation of the entailment is satisfiable

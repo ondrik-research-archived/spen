@@ -45,10 +45,10 @@
 (declare-fun x2_2 () SL3_t)
 (declare-fun x2_2_1 () SL3_t)
 (declare-fun x2_2_2 () SL3_t)
-(declare-fun x2_3 () SL3_t)
-(declare-fun x2_3_1 () SL3_t)
-(declare-fun x2_4 () SL3_t)
 (declare-fun x3 () SL3_t)
+(declare-fun x3_0_1 () SL3_t)
+(declare-fun x3_1 () SL3_t)
+(declare-fun x4 () SL3_t)
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
@@ -60,25 +60,24 @@
 (declare-fun alpha8 () SetLoc)
 
 ;
-; level 2 insertion in the middle
+; level 3 insertion in the middle
 ; expected: holds
 ;
 (assert (tobool (ssep
-  (index alpha1 (skl3 x1 x2))
   (pto x2 (sref (ref n3 x3) (ref n2 x2_1) (ref n1 x2_0_1)))
       (index alpha4 (skl1 x2_0_1 x2_1))
     (index alpha3 (skl2 x2_1 x2_2))
-    (pto x2_2 (sref (ref n3 nil) (ref n2 x2_3) (ref n1 x2_2_1)))
+    (pto x2_2 (sref (ref n3 nil) (ref n2 x3) (ref n1 x2_2_1)))
       (index alpha6 (skl1 x2_2_1 x2_2_2))
-      (pto x2_2_2 (sref (ref n3 nil) (ref n2 nil) (ref n1 x2_3)))
-    (pto x2_3 (sref (ref n3 nil) (ref n2 x2_4) (ref n1 x2_3_1)))
-      (index alpha7 (skl1 x2_3_1 x2_4))
-      (index alpha8 (skl2 x2_4 x3))
-  (index alpha2 (skl3 x3 nil))
+      (pto x2_2_2 (sref (ref n3 nil) (ref n2 nil) (ref n1 x3)))
+  (pto x3 (sref (ref n3 x4) (ref n2 x3_1) (ref n1 x3_0_1)))
+      (index alpha7 (skl1 x3_0_1 x3_1))
+    (index alpha8 (skl2 x3_1 x4))
+  (index alpha2 (skl3 x4 nil))
 )))
 
 (assert (not
-  (tobool (index alpha5 (skl3 x1 nil)))
+  (tobool (index alpha5 (skl3 x2 nil)))
 ))
 
 ; check whether the negation of the entailment is satisfiable
