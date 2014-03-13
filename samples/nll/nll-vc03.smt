@@ -42,6 +42,10 @@
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 
+;
+; two unfoldings of nll(x1,nil,nil) with inner list segments
+; exp: unsat
+;
 (assert (tobool (ssep
   (pto x1 (sref
     (ref next2 x2)

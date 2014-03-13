@@ -913,7 +913,7 @@ noll_edge2ta_nll (const noll_edge_t * edge)
   /* label of border variables */
   noll_uid_array *vars_brd = noll_uid_array_new ();
   assert (NULL != vars_brd);
-  noll_uid_array_push (vars_brd, end_node);
+  noll_uid_array_push (vars_brd, brd_node);
 
   /* empty marking for first state, mark_eps = [eps] */
   noll_uid_array *mark_eps = noll_uid_array_new ();

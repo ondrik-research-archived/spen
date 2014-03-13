@@ -41,6 +41,10 @@
 
 (declare-fun alpha1 () SetLoc)
 
+;
+; two unfoldings of nll(x1,nil,nil)
+; exp: unsat
+;
 (assert (tobool (ssep
   (pto x1 (sref
     (ref next2 x2)
