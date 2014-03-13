@@ -31,35 +31,30 @@
 )))))
 
 (declare-fun x1 () NLL_lvl2_t)
-(declare-fun x1_1 () NLL_lvl1_t)
-(declare-fun x1_2 () NLL_lvl1_t)
-(declare-fun x1_3 () NLL_lvl1_t)
 (declare-fun x2 () NLL_lvl2_t)
 (declare-fun x2_1 () NLL_lvl1_t)
 (declare-fun x2_2 () NLL_lvl1_t)
-(declare-fun nil_lvl2 () NLL_lvl2_t)
+(declare-fun x3 () NLL_lvl2_t)
 
 (declare-fun alpha1 () SetLoc)
+(declare-fun alpha2 () SetLoc)
+(declare-fun alpha3 () SetLoc)
+(declare-fun alpha4 () SetLoc)
 
 ;
-; two unfoldings of nlcl(x1,nil)
-; exp: unsat
+; (bad) unfolding in the middle of nlcl(x1,nil)
+; exp: sat
 ;
 (assert (tobool (ssep
-  (pto x1 (sref
-    (ref next2 x2)
-    (ref down x1_1)))
-  (pto x1_1 (ref next1 x1_2))
-  (pto x1_2 (ref next1 x1_3))
-  (pto x1_3 (ref next1 x1_1))
+  (index alpha1 (nlcl x1 x2))
   (pto x2 (sref
-    (ref next2 nil)
+    (ref next2 x3)
     (ref down x2_1)))
-  (pto x2_1 (ref next1 x2_2))
-  (pto x2_2 (ref next1 x2_1))
+  (pto x2_1 (ref next1 nil))
+  (index alpha3 (nlcl x3 nil))
 )))
 
-(assert (not (tobool (index alpha1
+(assert (not (tobool (index alpha4
   (nlcl x1 nil)
 ))))
 

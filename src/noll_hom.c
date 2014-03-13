@@ -1290,7 +1290,8 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
       /* test that there is not an already marked node */
       /* TODO: last condition is to deal with dll, 
        * better condition */
-      if (vg[v] >= 2)
+      if (vg[v] >= 2 || 
+          (vg[v] == 1 && (strcmp(noll_pred_name(label),"dll")!=0)))
 	{
 	  /* mark it again as explored */
 	  vg[v] = 2;

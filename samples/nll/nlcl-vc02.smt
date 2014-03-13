@@ -40,6 +40,7 @@
 (declare-fun nil_lvl2 () NLL_lvl2_t)
 
 (declare-fun alpha1 () SetLoc)
+(declare-fun alpha2 () SetLoc)
 
 ;
 ; two unfoldings of nlcl(x1,nil)
@@ -50,13 +51,12 @@
     (ref next2 x2)
     (ref down x1_1)))
   (pto x1_1 (ref next1 x1_2))
-  (pto x1_2 (ref next1 x1_3))
-  (pto x1_3 (ref next1 x1_1))
+  (pto x1_2 (ref next1 x1_1))
   (pto x2 (sref
     (ref next2 nil)
     (ref down x2_1)))
   (pto x2_1 (ref next1 x2_2))
-  (pto x2_2 (ref next1 x2_1))
+  (index alpha2 (lso x2_2 x2_1))
 )))
 
 (assert (not (tobool (index alpha1
