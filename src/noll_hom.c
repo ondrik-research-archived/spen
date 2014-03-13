@@ -45,11 +45,11 @@ noll_hom_alloc (void)
   assert (noll_prob != NULL);
 
   noll_hom_t *h = (noll_hom_t *) malloc (sizeof (noll_hom_t));
-  h->is_empty = false;
+  h->is_empty = true;
   h->shom = noll_shom_array_new ();
   size_t sz = noll_vector_size (noll_prob->ngraph);
   assert (sz >= 1);
-  noll_shom_array_reserve (h->shom, noll_vector_size (noll_prob->ngraph));
+  noll_shom_array_resize (h->shom, noll_vector_size (noll_prob->ngraph));
 
   return h;
 }
@@ -78,9 +78,9 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
       fprintf (f, "EMPTY\n");
     }
 
-  if (h->shom == NULL)
-    return;
+  assert (NULL != h->shom);
 
+  fprintf (f, "[\n");
   for (uint_t i = 0; i < noll_vector_size (h->shom); i++)
     {
       noll_shom_t *shi = noll_vector_at (h->shom, i);
@@ -100,7 +100,7 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 	}
 
       /* print edge mapping */
-      fprintf (f, "\tEdge mapping (p -> n): ");
+      fprintf (f, "\n\tEdge mapping (p -> n): ");
       if (shi->pused == NULL)
 	fprintf (f, "NULL\n");
       else
@@ -109,9 +109,10 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 	  for (uint_t j = 0; j < noll_vector_size (shi->pused); j++)
 	    fprintf (f, "e%d --> e%d,", j, noll_vector_at (shi->pused, j));
 	  fprintf (f, "]");
-	}
+	}	
+    fprintf (f, "\n");
     }
-
+  fprintf (f, "]\n");
 
 }
 
@@ -167,7 +168,7 @@ noll_graph_complete_edge (noll_graph_t * g, noll_uid_array * svar2edge,
 
   if ((&g != &g) || (&node != &node) || (&node_ty != &node_ty) ||
       (&ptos != &ptos) || (&preds != &preds) || (&impl != &impl) ||
-      (&toFill != &toFill))
+      (&toFill != &toFill) || (svar2edge == 0))
     {
       assert (0);		// to avoid the "unused parameter" bug
     }
@@ -1616,12 +1617,16 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
    * Set the result code and hom
    */
   int res = 1;
-
+  uint_t *n_hom = NULL;
+  noll_uid_array *usedg2 = NULL;
+  noll_uid_array *pto_hom = NULL;
+  noll_graph_array *ls_hom = NULL;
+  
   /*
    * Build the mapping of nodes wrt variable labeling,
    * n_hom[n1] = n2 with n1 in g1, n2 in g2, n1, n2 node ids
    */
-  uint_t *n_hom = noll_graph_shom_nodes (g1, g2);
+  n_hom = noll_graph_shom_nodes (g1, g2);
   if (n_hom == NULL)
     {
       res = 0;
@@ -1636,7 +1641,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
    * usedg2[e2] = e1 or UNDEFINED_ID
    * with e2 edge of g2, e1 edge of g1
    */
-  noll_uid_array *usedg2 = noll_uid_array_new ();
+  usedg2 = noll_uid_array_new ();
   noll_uid_array_reserve (usedg2, noll_vector_size (g2->edges));
   for (uint_t ei2 = 0; ei2 < noll_vector_size (g2->edges); ei2++)
     {
@@ -1648,7 +1653,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
    * pto_hom[e1] = e2
    * with ei pto edge in gi, i=1,2
    */
-  noll_uid_array *pto_hom = noll_graph_shom_pto (g1, g2, n_hom, usedg2);
+  pto_hom = noll_graph_shom_pto (g1, g2, n_hom, usedg2);
   if (pto_hom == NULL)
     {
       res = 0;
@@ -1661,7 +1666,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
    * with e1 predicate edge id in g1,
    *      g2' subgraph of g2
    */
-  noll_graph_array *ls_hom = noll_graph_shom_ls (g1, g2, n_hom, usedg2);
+  ls_hom = noll_graph_shom_ls (g1, g2, n_hom, usedg2);
   if (ls_hom == NULL)
     {
       res = 0;
@@ -1675,7 +1680,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
     if (noll_vector_at (usedg2, i) == UNDEFINED_ID)
       {
 	res = 0;
-	fprintf (stdout, "Edge %d of the left graph is not used!", i);
+	fprintf (stdout, "\nEdge %d of the left graph is not used!", i);
 	goto return_shom;
       }
 
@@ -1703,7 +1708,13 @@ return_shom:
   h->pto_hom = (res == 0) ? NULL : pto_hom;
   h->ls_hom = (res == 0) ? NULL : ls_hom;
   h->pused = (res == 0) ? NULL : usedg2;
-
+  // push hom found in hs
+  if (hs->is_empty)
+    hs->is_empty = false;
+  assert (NULL != hs->shom);
+  assert (i < noll_vector_size(hs->shom));
+  noll_vector_at(hs->shom,i) = h;
+  
   /* TODO: to be changed for disjunctions */
   return res;
 }

@@ -1872,7 +1872,7 @@ noll_mk_form_junk (noll_exp_t * f)
   assert (f && f->discr == NOLL_F_JUNK);
   noll_space_t *sigma = (noll_space_t *) malloc (sizeof (noll_space_t));
   sigma->kind = NOLL_SPACE_JUNK;
-  sigma->is_precise = false;
+  sigma->is_precise = (f != NULL) ? false : true;
   return sigma;
 }
 

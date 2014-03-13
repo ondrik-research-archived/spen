@@ -1,0 +1,772 @@
+==== smallfoot-vc01.tptp.smt
+==== smallfoot-vc01.tptp
+../../src/nolldp-test -n smallfoot-vc01.tptp.smt &> smallfoot-vc01.tptp.log
+1,2c1
+< 
+< Total time: 0.062420
+---
+> Total time: 0.305259
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc02.tptp.smt
+==== smallfoot-vc02.tptp
+../../src/nolldp-test -n smallfoot-vc02.tptp.smt &> smallfoot-vc02.tptp.log
+1,2c1
+< 
+< Total time: 0.062241
+---
+> Total time: 0.306066
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc03.tptp.smt
+==== smallfoot-vc03.tptp
+../../src/nolldp-test -n smallfoot-vc03.tptp.smt &> smallfoot-vc03.tptp.log
+1,2c1
+< 
+< Total time: 0.052994
+---
+> Total time: 0.313849
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc04.tptp.smt
+==== smallfoot-vc04.tptp
+../../src/nolldp-test -n smallfoot-vc04.tptp.smt &> smallfoot-vc04.tptp.log
+0a1
+> Total time: 0.302021
+2,4c3
+< Total time: 0.062991
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc05.tptp.smt
+==== smallfoot-vc05.tptp
+../../src/nolldp-test -n smallfoot-vc05.tptp.smt &> smallfoot-vc05.tptp.log
+0a1
+> Total time: 0.304254
+2,4c3
+< Total time: 0.049652
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc06.tptp.smt
+==== smallfoot-vc06.tptp
+../../src/nolldp-test -n smallfoot-vc06.tptp.smt &> smallfoot-vc06.tptp.log
+1,2c1
+< 
+< Total time: 0.061520
+---
+> Total time: 0.298574
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc07.tptp.smt
+==== smallfoot-vc07.tptp
+../../src/nolldp-test -n smallfoot-vc07.tptp.smt &> smallfoot-vc07.tptp.log
+1,2c1
+< 
+< Total time: 0.054483
+---
+> Total time: 0.295583
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc08.tptp.smt
+==== smallfoot-vc08.tptp
+../../src/nolldp-test -n smallfoot-vc08.tptp.smt &> smallfoot-vc08.tptp.log
+1,2c1
+< 
+< Total time: 0.059794
+---
+> Total time: 0.296709
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc09.tptp.smt
+==== smallfoot-vc09.tptp
+../../src/nolldp-test -n smallfoot-vc09.tptp.smt &> smallfoot-vc09.tptp.log
+0a1
+> Total time: 0.304020
+2,4c3
+< Total time: 0.056981
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc10.tptp.smt
+==== smallfoot-vc10.tptp
+../../src/nolldp-test -n smallfoot-vc10.tptp.smt &> smallfoot-vc10.tptp.log
+1,2c1
+< 
+< Total time: 0.056600
+---
+> Total time: 0.311812
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc11.tptp.smt
+==== smallfoot-vc11.tptp
+../../src/nolldp-test -n smallfoot-vc11.tptp.smt &> smallfoot-vc11.tptp.log
+1,2c1
+< 
+< Total time: 0.060478
+---
+> Total time: 0.297554
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc12.tptp.smt
+==== smallfoot-vc12.tptp
+../../src/nolldp-test -n smallfoot-vc12.tptp.smt &> smallfoot-vc12.tptp.log
+1,2c1
+< 
+< Total time: 0.058800
+---
+> Total time: 0.346460
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc13.tptp.smt
+==== smallfoot-vc13.tptp
+../../src/nolldp-test -n smallfoot-vc13.tptp.smt &> smallfoot-vc13.tptp.log
+1,2c1
+< 
+< Total time: 0.086923
+---
+> Total time: 0.319730
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc14.tptp.smt
+==== smallfoot-vc14.tptp
+../../src/nolldp-test -n smallfoot-vc14.tptp.smt &> smallfoot-vc14.tptp.log
+1,2c1
+< 
+< Total time: 0.081905
+---
+> Total time: 0.305334
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc15.tptp.smt
+==== smallfoot-vc15.tptp
+../../src/nolldp-test -n smallfoot-vc15.tptp.smt &> smallfoot-vc15.tptp.log
+1,2c1
+< 
+< Total time: 0.051975
+---
+> Total time: 0.298129
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc16.tptp.smt
+==== smallfoot-vc16.tptp
+../../src/nolldp-test -n smallfoot-vc16.tptp.smt &> smallfoot-vc16.tptp.log
+1,2c1
+< 
+< Total time: 0.053966
+---
+> Total time: 0.308929
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc17.tptp.smt
+==== smallfoot-vc17.tptp
+../../src/nolldp-test -n smallfoot-vc17.tptp.smt &> smallfoot-vc17.tptp.log
+1,2c1
+< 
+< Total time: 0.067038
+---
+> Total time: 0.297577
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc18.tptp.smt
+==== smallfoot-vc18.tptp
+../../src/nolldp-test -n smallfoot-vc18.tptp.smt &> smallfoot-vc18.tptp.log
+1,2c1
+< 
+< Total time: 0.151720
+---
+> Total time: 0.301142
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc19.tptp.smt
+==== smallfoot-vc19.tptp
+../../src/nolldp-test -n smallfoot-vc19.tptp.smt &> smallfoot-vc19.tptp.log
+1,2c1
+< 
+< Total time: 0.077214
+---
+> Total time: 0.296269
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc20.tptp.smt
+==== smallfoot-vc20.tptp
+../../src/nolldp-test -n smallfoot-vc20.tptp.smt &> smallfoot-vc20.tptp.log
+1,2c1
+< 
+< Total time: 0.064592
+---
+> Total time: 0.295543
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc21.tptp.smt
+==== smallfoot-vc21.tptp
+../../src/nolldp-test -n smallfoot-vc21.tptp.smt &> smallfoot-vc21.tptp.log
+1,2c1
+< 
+< Total time: 0.064312
+---
+> Total time: 0.298310
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc22.tptp.smt
+==== smallfoot-vc22.tptp
+../../src/nolldp-test -n smallfoot-vc22.tptp.smt &> smallfoot-vc22.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.066882
+---
+> Total time: 0.302122
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc23.tptp.smt
+==== smallfoot-vc23.tptp
+../../src/nolldp-test -n smallfoot-vc23.tptp.smt &> smallfoot-vc23.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.079235
+---
+> Total time: 0.302387
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc24.tptp.smt
+==== smallfoot-vc24.tptp
+../../src/nolldp-test -n smallfoot-vc24.tptp.smt &> smallfoot-vc24.tptp.log
+1,2c1
+< 
+< Total time: 0.076321
+---
+> Total time: 0.296740
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc25.tptp.smt
+==== smallfoot-vc25.tptp
+../../src/nolldp-test -n smallfoot-vc25.tptp.smt &> smallfoot-vc25.tptp.log
+1,2c1
+< 
+< Total time: 0.255457
+---
+> Total time: 0.315917
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc26.tptp.smt
+==== smallfoot-vc26.tptp
+../../src/nolldp-test -n smallfoot-vc26.tptp.smt &> smallfoot-vc26.tptp.log
+1,2c1
+< 
+< Total time: 0.114525
+---
+> Total time: 0.305790
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc27.tptp.smt
+==== smallfoot-vc27.tptp
+../../src/nolldp-test -n smallfoot-vc27.tptp.smt &> smallfoot-vc27.tptp.log
+1,2c1
+< 
+< Total time: 0.068696
+---
+> Total time: 0.310903
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc28.tptp.smt
+==== smallfoot-vc28.tptp
+../../src/nolldp-test -n smallfoot-vc28.tptp.smt &> smallfoot-vc28.tptp.log
+1,2c1
+< 
+< Total time: 0.062089
+---
+> Total time: 0.298211
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc29.tptp.smt
+==== smallfoot-vc29.tptp
+../../src/nolldp-test -n smallfoot-vc29.tptp.smt &> smallfoot-vc29.tptp.log
+1,2c1
+< Difference edge (n8 != n1) in right side graph is not mapped to (n8 != n1) in left side graph!
+< Total time: 0.049933
+---
+> Total time: 0.305013
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc30.tptp.smt
+==== smallfoot-vc30.tptp
+../../src/nolldp-test -n smallfoot-vc30.tptp.smt &> smallfoot-vc30.tptp.log
+1,2c1
+< Difference edge (n13 != n1) in right side graph is not mapped to (n13 != n1) in left side graph!
+< Total time: 0.053175
+---
+> Total time: 0.293139
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc31.tptp.smt
+==== smallfoot-vc31.tptp
+../../src/nolldp-test -n smallfoot-vc31.tptp.smt &> smallfoot-vc31.tptp.log
+1,2c1
+< Difference edge (n12 != n1) in right side graph is not mapped to (n12 != n1) in left side graph!
+< Total time: 0.051802
+---
+> Total time: 0.297847
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc32.tptp.smt
+==== smallfoot-vc32.tptp
+../../src/nolldp-test -n smallfoot-vc32.tptp.smt &> smallfoot-vc32.tptp.log
+1,2c1
+< Difference edge (n10 != n1) in right side graph is not mapped to (n10 != n1) in left side graph!
+< Total time: 0.052201
+---
+> Total time: 0.299978
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc33.tptp.smt
+==== smallfoot-vc33.tptp
+../../src/nolldp-test -n smallfoot-vc33.tptp.smt &> smallfoot-vc33.tptp.log
+1,2c1
+< Difference edge (n9 != n1) in right side graph is not mapped to (n9 != n1) in left side graph!
+< Total time: 0.052053
+---
+> Total time: 0.292516
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc34.tptp.smt
+==== smallfoot-vc34.tptp
+../../src/nolldp-test -n smallfoot-vc34.tptp.smt &> smallfoot-vc34.tptp.log
+0a1
+> Total time: 0.309867
+2,4c3
+< Total time: 0.053771
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc35.tptp.smt
+==== smallfoot-vc35.tptp
+../../src/nolldp-test -n smallfoot-vc35.tptp.smt &> smallfoot-vc35.tptp.log
+1,2c1
+< Difference edge (n9 != n1) in right side graph is not mapped to (n9 != n1) in left side graph!
+< Total time: 0.054760
+---
+> Total time: 0.298512
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc36.tptp.smt
+==== smallfoot-vc36.tptp
+../../src/nolldp-test -n smallfoot-vc36.tptp.smt &> smallfoot-vc36.tptp.log
+0a1
+> Total time: 0.305126
+2,4c3
+< Total time: 0.052582
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc37.tptp.smt
+==== smallfoot-vc37.tptp
+../../src/nolldp-test -n smallfoot-vc37.tptp.smt &> smallfoot-vc37.tptp.log
+1,2c1
+< Difference edge (n9 != n1) in right side graph is not mapped to (n9 != n1) in left side graph!
+< Total time: 0.052735
+---
+> Total time: 0.296921
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc38.tptp.smt
+==== smallfoot-vc38.tptp
+../../src/nolldp-test -n smallfoot-vc38.tptp.smt &> smallfoot-vc38.tptp.log
+0a1
+> Total time: 0.311371
+2,4c3
+< Total time: 0.056994
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc39.tptp.smt
+==== smallfoot-vc39.tptp
+../../src/nolldp-test -n smallfoot-vc39.tptp.smt &> smallfoot-vc39.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.053094
+---
+> Total time: 0.299174
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc40.tptp.smt
+==== smallfoot-vc40.tptp
+../../src/nolldp-test -n smallfoot-vc40.tptp.smt &> smallfoot-vc40.tptp.log
+1,2c1
+< Edge (left) 2 not used!
+< Total time: 0.061110
+---
+> Total time: 0.302357
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc41.tptp.smt
+==== smallfoot-vc41.tptp
+../../src/nolldp-test -n smallfoot-vc41.tptp.smt &> smallfoot-vc41.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.303559
+3,5c3
+< Total time: 0.053573
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc42.tptp.smt
+==== smallfoot-vc42.tptp
+../../src/nolldp-test -n smallfoot-vc42.tptp.smt &> smallfoot-vc42.tptp.log
+1,2c1
+< 
+< Total time: 0.055086
+---
+> Total time: 0.299114
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc43.tptp.smt
+==== smallfoot-vc43.tptp
+../../src/nolldp-test -n smallfoot-vc43.tptp.smt &> smallfoot-vc43.tptp.log
+1,2c1
+< Edge (left) 2 not used!
+< Total time: 0.053237
+---
+> Total time: 0.308667
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc44.tptp.smt
+==== smallfoot-vc44.tptp
+../../src/nolldp-test -n smallfoot-vc44.tptp.smt &> smallfoot-vc44.tptp.log
+1,3c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+< 
+< Total time: 0.055451
+---
+> Total time: 0.300879
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc45.tptp.smt
+==== smallfoot-vc45.tptp
+../../src/nolldp-test -n smallfoot-vc45.tptp.smt &> smallfoot-vc45.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.336228
+3,5c3
+< Total time: 0.053711
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc46.tptp.smt
+==== smallfoot-vc46.tptp
+../../src/nolldp-test -n smallfoot-vc46.tptp.smt &> smallfoot-vc46.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.297535
+3,5c3
+< Total time: 0.050893
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc47.tptp.smt
+==== smallfoot-vc47.tptp
+../../src/nolldp-test -n smallfoot-vc47.tptp.smt &> smallfoot-vc47.tptp.log
+1,2c1
+< 
+< Total time: 0.051353
+---
+> Total time: 0.309854
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc48.tptp.smt
+==== smallfoot-vc48.tptp
+../../src/nolldp-test -n smallfoot-vc48.tptp.smt &> smallfoot-vc48.tptp.log
+0a1
+> Total time: 0.297421
+2,4c3
+< Total time: 0.048291
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc49.tptp.smt
+==== smallfoot-vc49.tptp
+../../src/nolldp-test -n smallfoot-vc49.tptp.smt &> smallfoot-vc49.tptp.log
+1,2c1
+< Edge (left) 1 not used!
+< Total time: 0.046608
+---
+> Total time: 0.308865
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc50.tptp.smt
+==== smallfoot-vc50.tptp
+../../src/nolldp-test -n smallfoot-vc50.tptp.smt &> smallfoot-vc50.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.299596
+3,5c3
+< Total time: 0.046074
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc51.tptp.smt
+==== smallfoot-vc51.tptp
+../../src/nolldp-test -n smallfoot-vc51.tptp.smt &> smallfoot-vc51.tptp.log
+1,2c1
+< 
+< Total time: 0.047887
+---
+> Total time: 0.295649
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc52.tptp.smt
+==== smallfoot-vc52.tptp
+../../src/nolldp-test -n smallfoot-vc52.tptp.smt &> smallfoot-vc52.tptp.log
+0a1
+> Total time: 0.302364
+2,4c3
+< Total time: 0.047880
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc53.tptp.smt
+==== smallfoot-vc53.tptp
+../../src/nolldp-test -n smallfoot-vc53.tptp.smt &> smallfoot-vc53.tptp.log
+1,2c1
+< 
+< Total time: 0.046026
+---
+> Total time: 0.299071
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc54.tptp.smt
+==== smallfoot-vc54.tptp
+../../src/nolldp-test -n smallfoot-vc54.tptp.smt &> smallfoot-vc54.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.046005
+---
+> Total time: 0.302689
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc55.tptp.smt
+==== smallfoot-vc55.tptp
+../../src/nolldp-test -n smallfoot-vc55.tptp.smt &> smallfoot-vc55.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.299936
+3,5c3
+< Total time: 0.049800
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc56.tptp.smt
+==== smallfoot-vc56.tptp
+../../src/nolldp-test -n smallfoot-vc56.tptp.smt &> smallfoot-vc56.tptp.log
+1,2c1
+< Edge (left) 1 not used!
+< Total time: 0.046011
+---
+> Total time: 0.333233
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc57.tptp.smt
+==== smallfoot-vc57.tptp
+../../src/nolldp-test -n smallfoot-vc57.tptp.smt &> smallfoot-vc57.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.046844
+---
+> Total time: 0.303170
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc58.tptp.smt
+==== smallfoot-vc58.tptp
+../../src/nolldp-test -n smallfoot-vc58.tptp.smt &> smallfoot-vc58.tptp.log
+0a1
+> Total time: 0.318754
+2,4c3
+< Total time: 0.047641
+< 
+< unsat
+---
+> sat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc59.tptp.smt
+==== smallfoot-vc59.tptp
+../../src/nolldp-test -n smallfoot-vc59.tptp.smt &> smallfoot-vc59.tptp.log
+1,2c1
+< 
+< Total time: 0.045108
+---
+> Total time: 0.302863
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc60.tptp.smt
+==== smallfoot-vc60.tptp
+../../src/nolldp-test -n smallfoot-vc60.tptp.smt &> smallfoot-vc60.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.309142
+3,5c3
+< Total time: 0.046726
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc61.tptp.smt
+==== smallfoot-vc61.tptp
+../../src/nolldp-test -n smallfoot-vc61.tptp.smt &> smallfoot-vc61.tptp.log
+1,2c1
+< Edge (left) 1 not used!
+< Total time: 0.049550
+---
+> Total time: 0.304347
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc62.tptp.smt
+==== smallfoot-vc62.tptp
+../../src/nolldp-test -n smallfoot-vc62.tptp.smt &> smallfoot-vc62.tptp.log
+1,2c1
+< 
+< Total time: 0.046870
+---
+> Total time: 0.309831
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc63.tptp.smt
+==== smallfoot-vc63.tptp
+../../src/nolldp-test -n smallfoot-vc63.tptp.smt &> smallfoot-vc63.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.313129
+3,5c3
+< Total time: 0.047485
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc64.tptp.smt
+==== smallfoot-vc64.tptp
+../../src/nolldp-test -n smallfoot-vc64.tptp.smt &> smallfoot-vc64.tptp.log
+1,2c1
+< 
+< Total time: 0.047123
+---
+> Total time: 0.321379
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc65.tptp.smt
+==== smallfoot-vc65.tptp
+../../src/nolldp-test -n smallfoot-vc65.tptp.smt &> smallfoot-vc65.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.336173
+3,5c3
+< Total time: 0.047435
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc66.tptp.smt
+==== smallfoot-vc66.tptp
+../../src/nolldp-test -n smallfoot-vc66.tptp.smt &> smallfoot-vc66.tptp.log
+1,2c1
+< 
+< Total time: 0.047064
+---
+> Total time: 0.328834
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc67.tptp.smt
+==== smallfoot-vc67.tptp
+../../src/nolldp-test -n smallfoot-vc67.tptp.smt &> smallfoot-vc67.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.322849
+3,5c3
+< Total time: 0.048088
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc68.tptp.smt
+==== smallfoot-vc68.tptp
+../../src/nolldp-test -n smallfoot-vc68.tptp.smt &> smallfoot-vc68.tptp.log
+1,2c1
+< Edge (left) 1 not used!
+< Total time: 0.047189
+---
+> Total time: 0.304351
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc69.tptp.smt
+==== smallfoot-vc69.tptp
+../../src/nolldp-test -n smallfoot-vc69.tptp.smt &> smallfoot-vc69.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.046454
+---
+> Total time: 0.305021
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc70.tptp.smt
+==== smallfoot-vc70.tptp
+../../src/nolldp-test -n smallfoot-vc70.tptp.smt &> smallfoot-vc70.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.047630
+---
+> Total time: 0.321432
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc71.tptp.smt
+==== smallfoot-vc71.tptp
+../../src/nolldp-test -n smallfoot-vc71.tptp.smt &> smallfoot-vc71.tptp.log
+1c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+---
+> Total time: 0.319406
+3,5c3
+< Total time: 0.047208
+< 
+< sat
+---
+> unsat
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc72.tptp.smt
+==== smallfoot-vc72.tptp
+../../src/nolldp-test -n smallfoot-vc72.tptp.smt &> smallfoot-vc72.tptp.log
+1,2c1
+< Edge (left) 1 not used!
+< Total time: 0.046041
+---
+> Total time: 0.305807
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc73.tptp.smt
+==== smallfoot-vc73.tptp
+../../src/nolldp-test -n smallfoot-vc73.tptp.smt &> smallfoot-vc73.tptp.log
+1,2c1
+< Edge (left) 1 not used!
+< Total time: 0.046853
+---
+> Total time: 0.313166
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc74.tptp.smt
+==== smallfoot-vc74.tptp
+../../src/nolldp-test -n smallfoot-vc74.tptp.smt &> smallfoot-vc74.tptp.log
+1,3c1
+< === right edge-0 mapped to a set of edges that may contain a cycle
+< 
+< Total time: 0.046765
+---
+> Total time: 0.339932
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc75.tptp.smt
+==== smallfoot-vc75.tptp
+../../src/nolldp-test -n smallfoot-vc75.tptp.smt &> smallfoot-vc75.tptp.log
+1,2c1
+< 
+< Total time: 0.046248
+---
+> Total time: 0.333605
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc76.tptp.smt
+==== smallfoot-vc76.tptp
+../../src/nolldp-test -n smallfoot-vc76.tptp.smt &> smallfoot-vc76.tptp.log
+1,2c1
+< Edge (left) 0 not used!
+< Total time: 0.046155
+---
+> Total time: 0.347626
+rm -f *out.txt result.txt *.dot
+==== smallfoot-vc77.tptp.smt
+==== smallfoot-vc77.tptp
+../../src/nolldp-test -n smallfoot-vc77.tptp.smt &> smallfoot-vc77.tptp.log
+1,2c1
+< 
+< Total time: 0.044575
+---
+> Total time: 0.319503
+rm -f *out.txt result.txt *.dot

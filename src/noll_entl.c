@@ -663,6 +663,10 @@ noll_entl_to_graph (void)
   fprintf (stdout, "\n*****pos_graph: file graph-p.dot\n");
   noll_graph_fprint (stdout, noll_prob->pgraph);
 //      noll_graph_fprint_dot ("graph-p.dot", pos_graph);
+#else
+  fprintf (stdout, "\n*****pos_graph: (%d nodes, %d spatial edges)\n",
+           noll_prob->pgraph->nodes_size, 
+	   noll_vector_size(noll_prob->pgraph->edges));
 #endif
 
   if (nform)
@@ -682,7 +686,12 @@ noll_entl_to_graph (void)
 	  sprintf (fname, "graph-n%zu.dot", i);
 	  noll_graph_fprint_dot (fname, nform_i_graph);
 	  fflush (stdout);
+#else
+          fprintf (stdout, "\n*****neg_graph-%zu: (%d nodes, %d spatial edges)\n",
+	   i, nform_i_graph->nodes_size, 
+	   noll_vector_size(nform_i_graph->edges));
 #endif
+
 	}
     }
   return 1;
@@ -703,8 +712,8 @@ noll_entl_to_homomorphism (void)
 
   res = noll_graph_homomorphism ();
 
-#ifndef NDEBUG
-  fprintf (stdout, "*** check-sat: homomorphism found = \n");
+#ifdef NDEBUG
+  fprintf (stdout, "\n*** check-sat: homomorphism found = \n");
   noll_hom_fprint (stdout, noll_prob->hom);
   fflush (stdout);
 #endif
@@ -726,7 +735,7 @@ noll_entl_to_homomorphism (void)
 // check_entl_sharing(pos_graph->lvars, pos_graph->svars,
 // pos_graph->share,neg_graph->share);
 
-  return 1;
+  return res;
 }
 
 /**
@@ -740,7 +749,7 @@ noll_entl_solve_special (void)
       || ((noll_prob->nform != NULL)
 	  && noll_form_array_is_valid (noll_prob->nform)))
     {
-#ifndef NDEBUG
+#ifndef DEBUG
       fprintf (stdout, "*** check-sat: special case 0 ...\n");
 #endif
       return 0;
@@ -750,7 +759,7 @@ noll_entl_solve_special (void)
       && ((noll_prob->nform == NULL)
 	  || noll_form_array_is_unsat (noll_prob->nform)))
     {
-#ifndef NDEBUG
+#ifndef DEBUG
       fprintf (stdout, "*** check-sat: special case 1 ...\n");
 #endif
       return 1;
@@ -761,7 +770,7 @@ noll_entl_solve_special (void)
       || ((noll_prob->nform == NULL) && (noll_prob->pform == NULL)))
 // equivalent to !pform || !nform
     {
-#ifndef NDEBUG
+#ifndef DEBUG
       fprintf (stdout, "*** check-sat: special case 2 ...\n");
 #endif
       return 1;

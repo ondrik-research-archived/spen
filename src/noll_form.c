@@ -363,9 +363,10 @@ void noll_pure_add_neq(noll_form_t* f, uid_t v1, uid_t v2) {
 int 
 noll_form_type (noll_form_t * form)
 {
-	assert (form != NULL);
+	if (form != NULL) // only to use form
+	  return 1;
 	/* TODO: redo typing here */
-	return 1;
+	return 0;
 }
 
 

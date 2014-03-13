@@ -2762,7 +2762,8 @@ noll_edge2ta (const noll_edge_t * edge)
 		  def->sigma_1->is_precise ? "true" : "false");
     }
 
-  if (0 == strcmp (pred->pname, "lso"))
+  if ((0 == strcmp (pred->pname, "lso")) || 
+      (0 == strcmp (pred->pname, "ls")))
     {				// this is the "ls" predicate
 
       ta = noll_edge2ta_ls (edge);
