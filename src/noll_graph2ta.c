@@ -406,7 +406,7 @@ static bool compute_markings(
 		{	// go over all edges and update according to them
 			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
 			assert(NULL != edge);
-			assert(2 == noll_vector_size(edge->args));
+			assert(2 <= noll_vector_size(edge->args));
 			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
 			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
 				noll_vector_at(edge->args, 0),
@@ -690,7 +690,7 @@ static bool reachable_from_through_path_wo_marker(
 
 			const noll_edge_t* ed = noll_vector_at(graph->edges, edge_id);
 			assert(NULL != ed);
-			assert(2 == noll_vector_size(ed->args));
+			assert(2 <= noll_vector_size(ed->args));
 			NOLL_DEBUG("  src = %u\n", noll_vector_at(ed->args, 0));
 			NOLL_DEBUG("  dst = %u\n", noll_vector_at(ed->args, 1));
 			assert(noll_vector_at(ed->args, 0) == node);
