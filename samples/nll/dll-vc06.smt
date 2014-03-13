@@ -17,17 +17,18 @@
 (declare-fun w_emp () Dll_t)
 (declare-fun y_emp () Dll_t)
 (declare-fun z_emp () Dll_t)
+(declare-fun u_emp () Dll_t)
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 
 ;
-; (bad) unfoding at begin and end of dll(x,y,nil,z)
-; exp: sat
+; unfoding at begin and end of dll(x,y,nil,z)
+; exp: unsat
 ;
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 
-                  (index alpha2 (dll w_emp y_emp x_emp z_emp))
-                  (pto y_emp (sref (ref next z_emp) (ref prev w_emp)))
+                  (index alpha2 (dll w_emp u_emp x_emp y_emp))
+                  (pto y_emp (sref (ref next z_emp) (ref prev u_emp)))
             )
     )
 )

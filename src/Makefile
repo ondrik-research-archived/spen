@@ -19,7 +19,7 @@ LDFLAGS = \
 -L$(SMTLIB2_PREFIX) \
 -L$(LIBVATA_LIB)
 
-#DEBUG=_debug
+DEBUG=_debug
 
 #---------------------------------------
 # Files

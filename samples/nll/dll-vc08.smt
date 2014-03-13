@@ -14,20 +14,22 @@
 )))))
 
 (declare-fun x_emp () Dll_t)
-(declare-fun w_emp () Dll_t)
 (declare-fun y_emp () Dll_t)
 (declare-fun z_emp () Dll_t)
+(declare-fun w_emp () Dll_t)
+(declare-fun u_emp () Dll_t)
+(declare-fun t_emp () Dll_t)
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
-
+(declare-fun alpha3 () SetLoc)
 ;
-; (bad) unfoding at begin and end of dll(x,y,nil,z)
-; exp: sat
+; unfolding in the middle of dll(x,y,nil,z)
+; exp: unsat
 ;
 (assert
-    (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 
-                  (index alpha2 (dll w_emp y_emp x_emp z_emp))
-                  (pto y_emp (sref (ref next z_emp) (ref prev w_emp)))
+    (tobool (ssep (pto w_emp (sref (ref next t_emp) (ref prev u_emp))) 
+                  (index alpha2 (dll x_emp u_emp nil w_emp))
+                  (index alpha3 (dll t_emp y_emp w_emp z_emp))
             )
     )
 )

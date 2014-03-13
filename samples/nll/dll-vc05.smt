@@ -19,6 +19,10 @@
 (declare-fun z_emp () Dll_t)
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
+;
+; (bad) unfolding of dll(x,y,nil,z)
+; exp: sat
+;
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 
                   (index alpha2 (dll w_emp y_emp x_emp z_emp))

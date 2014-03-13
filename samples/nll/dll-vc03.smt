@@ -19,6 +19,11 @@
 (declare-fun u_emp () Dll_t)
 (declare-fun z_emp () Dll_t)
 (declare-fun alpha1 () SetLoc)
+
+;
+; three unfoldings of dll(x,u,z,z)
+; exp: sat
+;
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev z_emp))) 
                   (pto w_emp (sref (ref next y_emp) (ref prev x_emp)))
