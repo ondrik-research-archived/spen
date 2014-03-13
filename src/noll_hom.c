@@ -1261,14 +1261,19 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
   uint_t vg_size = g->nodes_size;
   int *vg = (int *) malloc (vg_size * sizeof (int));
   for (uint_t i = 0; i < vg_size; i++)
-    vg[i] = -1;			/* not marked */
+    vg[i] = -1;		/* not marked */
   /* mark the starting node */
   vg[noll_vector_at (args, 0)] = 0;	/* starting */
   /* mark the ending node */
   vg[noll_vector_at (args, 1)] = 1;	/* ending */
   /* mark the border nodes */
   for (uint_t i = 2; i < noll_vector_size (args); i++)
-    vg[noll_vector_at (args, i)] = 3;	/* border */
+  {
+    uid_t ai = noll_vector_at (args, i);
+    if (vg[ai] == -1)
+      // only boder arguments that are not already start and end
+      vg[ai] = 3;	/* border */
+  }
   /* the queue of nodes to be explored */
   noll_uid_array *vqueue = noll_uid_array_new ();
   noll_uid_array_push (vqueue, noll_vector_at (args, 0));
