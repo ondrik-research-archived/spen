@@ -764,9 +764,25 @@ uid_t find_first_ancestor_with_marking(
 			uid_t rev_edge_id = noll_vector_at(rev_edges, rev_i);
 			const noll_edge_t* edge_candid = noll_vector_at(graph->edges, rev_edge_id);
 			assert(NULL != edge_candid);
-			assert(NOLL_EDGE_PTO == edge_candid->kind);
 
-			if (parent_edge_id == (uid_t)-1)
+			uid_t edge_symbol = (uid_t)-1;
+			if (NOLL_EDGE_PTO == edge_candid->kind)
+			{
+				edge_symbol = edge_candid->label;
+			}
+			else if (NOLL_EDGE_PRED == edge_candid->kind)
+			{
+				edge_symbol = noll_pred_get_minfield(edge_candid->label);
+			}
+			else
+			{
+				NOLL_DEBUG("ERROR: Unsupported edge type\n");
+				assert(false);
+			}
+
+			assert((uid_t)-1 != edge_symbol);
+
+			if ((uid_t)-1 == parent_edge_id)
 			{
 				assert(0 == rev_i);
 				parent_edge_id = rev_edge_id;
@@ -775,7 +791,7 @@ uid_t find_first_ancestor_with_marking(
 			}
 
 			assert(NULL != parent_edge);
-			if (noll_field_lt(edge_candid->label, parent_edge->label))
+			if (noll_field_lt(edge_symbol, parent_edge->label))
 			{
 				parent_edge_id = rev_edge_id;
 				parent_edge = edge_candid;
