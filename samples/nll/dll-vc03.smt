@@ -34,7 +34,7 @@
 )
 (assert
   (not
-    (tobool (index alpha1 (dll x_emp y_emp y_emp z_emp)))
+    (tobool (index alpha1 (dll x_emp u_emp z_emp z_emp)))
 ))
 
 (check-sat)
