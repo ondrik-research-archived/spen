@@ -210,7 +210,7 @@ static bool noll_fields_order_lt(
 		return false;
 	}
 
-	NOLL_DEBUG("Calling noll_field_lt() with %u and %u\n", lhs, rhs);
+	/* NOLL_DEBUG("Calling noll_field_lt() with %u and %u\n", lhs, rhs); */
 	return noll_field_lt(lhs, rhs);
 }
 
@@ -349,6 +349,86 @@ bool noll_marking_is_prefix_or_equal(
 
 
 /**
+ * @brief  Updates the marking of a node
+ *
+ * Updates the marking of @p node according to the marking of the node @p src
+ * according to the @p edge_lab. The markings are stored in @p markings_list.
+ * Returns @p true if something has been changed, @p false otherwise.
+ *
+ * @param[in]      node           The node to have updated marking
+ * @param[in]      src            The source according to which the marking to
+ *                                be computed
+ * @param[in]      edge_lab       The label to update the marking with
+ * @param[in,out]  markings_list  The list of markings
+ *
+ * @returns  @p true if the marking has changed, @p false otherwise
+ */
+static bool update_marking_from(
+	uint_t                    node,
+	uint_t                    src,
+	uid_t                     edge_lab,
+	noll_nodes_to_markings*   markings_list)
+{
+	assert(NULL != markings_list);
+	assert(noll_vector_size(markings_list) > src);
+	assert(noll_vector_size(markings_list) > node);
+
+	bool changed = false;
+
+	// get markings of the source and destination nodes
+	const noll_marking_list* src_markings = noll_vector_at(markings_list, src);
+	noll_marking_list* node_markings = noll_vector_at(markings_list, node);
+	for (size_t j = 0; j < noll_vector_size(src_markings); ++j)
+	{
+		noll_uid_array* new_marking = noll_uid_array_new();
+		noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
+		assert(0 < noll_vector_size(new_marking));
+		if ((noll_vector_last(new_marking) == edge_lab)
+			&& noll_fields_is_main_backbone(edge_lab))
+		{
+			// we keep the same marking
+		}
+		else if (noll_fields_order_lt(noll_vector_last(new_marking), edge_lab))
+		{
+			// we add the field at the end of the marking
+			noll_uid_array_push(new_marking, edge_lab);
+		}
+		else
+		{	// in the case the 'edge_lab' is greater than the last of
+			// new_marking, this marking will surely be removed so we do not need
+			// to add it
+			noll_uid_array_delete(new_marking);
+			continue;
+		}
+
+		bool found = false;
+		for (size_t k = 0; k < noll_vector_size(node_markings); ++k)
+		{	// check whether the marking is not already there
+			const noll_uid_array* dst_mark = noll_vector_at(node_markings, k);
+			assert(NULL != dst_mark);
+			if (noll_uid_array_equal(new_marking, dst_mark))
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			changed = true;
+			noll_marking_list_push(node_markings, new_marking);
+		}
+		else
+		{
+			noll_uid_array_delete(new_marking);
+		}
+	}
+
+	return changed;
+}
+
+
+/**
  * @brief  Computes markings of nodes of a graph
  *
  * Given a @p graph, this function computes the minimum marker for every node
@@ -406,18 +486,18 @@ static bool compute_markings(
 		{	// go over all edges and update according to them
 			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
 			assert(NULL != edge);
-			assert(2 <= noll_vector_size(edge->args));
+			assert((2 == noll_vector_size(edge->args)) || (4 == noll_vector_size(edge->args)));
+
+			uint_t src = noll_vector_at(edge->args, 0);
+			uint_t dst = noll_vector_at(edge->args, 1);
+
 			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
 			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
-				noll_vector_at(edge->args, 0),
-				noll_vector_at(edge->args, 1),
-				edge->id,
-				edge->kind,
-				edge->label);
+				src, dst, edge->id, edge->kind, edge->label);
 
 			// check that the nodes are in the correct range
-			assert(noll_vector_at(edge->args, 0) < num_nodes);
-			assert(noll_vector_at(edge->args, 1) < num_nodes);
+			assert(src < num_nodes);
+			assert(dst < num_nodes);
 
 			uid_t edge_lab;
 			if (NOLL_EDGE_PTO == edge->kind)
@@ -430,61 +510,21 @@ static bool compute_markings(
 
 				edge_lab = noll_pred_get_minfield(edge->label);
 
-				NOLL_DEBUG("The minimum field for predicate %s is %s\n",
-					noll_pred_name(edge->label), noll_field_name(edge_lab));
-			}
-
-
-			// get markings of the source and destination nodes
-			const noll_marking_list* src_markings = noll_vector_at(nodes_to_markings,
-				noll_vector_at(edge->args, 0));
-			noll_marking_list* dst_markings = noll_vector_at(nodes_to_markings,
-				noll_vector_at(edge->args, 1));
-			for (size_t j = 0; j < noll_vector_size(src_markings); ++j)
-			{
-				noll_uid_array* new_marking = noll_uid_array_new();
-				noll_uid_array_copy(new_marking, noll_vector_at(src_markings, j));
-				assert(0 < noll_vector_size(new_marking));
-				if ((noll_vector_last(new_marking) == edge_lab)
-					&& noll_fields_is_main_backbone(edge_lab))
+				if (2 == noll_vector_size(edge->args))
 				{
-					// we keep the same marking
-				}
-				else if (noll_fields_order_lt(noll_vector_last(new_marking), edge_lab))
-				{
-					// we add the field at the end of the marking
-					noll_uid_array_push(new_marking, edge_lab);
-				}
-				else
-				{	// in the case the 'edge_lab' is greater than the last of
-					// new_marking, this marking will surely be removed so we do not need
-					// to add it
-					noll_uid_array_delete(new_marking);
-					continue;
-				}
-
-				bool found = false;
-				for (size_t k = 0; k < noll_vector_size(dst_markings); ++k)
-				{	// check whether the marking is not already there
-					const noll_uid_array* dst_mark = noll_vector_at(dst_markings, k);
-					assert(NULL != dst_mark);
-					if (noll_uid_array_equal(new_marking, dst_mark))
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if (!found)
-				{
-					changed = true;
-					noll_marking_list_push(dst_markings, new_marking);
+					is_doubly_linked = false;
 				}
 				else
 				{
-					noll_uid_array_delete(new_marking);
+					assert(4 == noll_vector_size(edge->args));
+					is_doubly_linked = true;
 				}
+				/* NOLL_DEBUG("The minimum field for predicate %s is %s\n", */
+				/* 	noll_pred_name(edge->label), noll_field_name(edge_lab)); */
 			}
+
+
+			changed = update_marking_from(dst, src, edge_lab, nodes_to_markings);
 		}
 	}
 
@@ -845,6 +885,10 @@ bool is_the_first_successor_of_with_marking(
 	const noll_uid_array* src_marking = noll_vector_at(marking_list, src);
 	assert(NULL != src_marking);
 
+	NOLL_DEBUG("Checking whether %d is the first successor of %d with the marking ", dst, src);
+	noll_debug_print_one_mark(marking);
+	NOLL_DEBUG("\n");
+
 	NOLL_DEBUG(__func__);
 	NOLL_DEBUG(": approximating the result for depth 1\n");
 
@@ -1050,10 +1094,6 @@ noll_ta_t* noll_graph2ta(
 		noll_uid_array* vars = noll_uid_array_new();
 		assert(NULL != vars);
 
-		NOLL_DEBUG("WARNING: ");
-		NOLL_DEBUG(__func__);
-		NOLL_DEBUG(": ignoring boundary vars\n");
-
 		if (noll_uid_array_contains(homo, i))
 		{	// in the case 'i' is pointed by a variable
 			NOLL_DEBUG("  adding variable ref %lu\n", i);
@@ -1083,7 +1123,7 @@ noll_ta_t* noll_graph2ta(
 			{
 				// TODO: should this be the only edge leaving src?
 				assert(1 == noll_vector_size(edges));
-				assert(2 <= noll_vector_size(ed->args));
+				assert((2 == noll_vector_size(ed->args)) || (4 == noll_vector_size(ed->args)));
 
 				field_name = noll_pred_name(ed->label);
 				field_symbol = noll_pred_get_minfield(ed->label);
