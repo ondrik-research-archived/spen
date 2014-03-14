@@ -210,7 +210,7 @@ static bool noll_fields_order_lt(
 		return false;
 	}
 
-	NOLL_DEBUG("Calling noll_field_lt() with %u and %u\n", lhs, rhs);
+	/* NOLL_DEBUG("Calling noll_field_lt() with %u and %u\n", lhs, rhs); */
 	return noll_field_lt(lhs, rhs);
 }
 
@@ -486,18 +486,18 @@ static bool compute_markings(
 		{	// go over all edges and update according to them
 			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
 			assert(NULL != edge);
-			assert(2 <= noll_vector_size(edge->args));
+			assert((2 == noll_vector_size(edge->args)) || (4 == noll_vector_size(edge->args)));
+
+			uint_t src = noll_vector_at(edge->args, 0);
+			uint_t dst = noll_vector_at(edge->args, 1);
+
 			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
 			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
-				noll_vector_at(edge->args, 0),
-				noll_vector_at(edge->args, 1),
-				edge->id,
-				edge->kind,
-				edge->label);
+				src, dst, edge->id, edge->kind, edge->label);
 
 			// check that the nodes are in the correct range
-			assert(noll_vector_at(edge->args, 0) < num_nodes);
-			assert(noll_vector_at(edge->args, 1) < num_nodes);
+			assert(src < num_nodes);
+			assert(dst < num_nodes);
 
 			uid_t edge_lab;
 			if (NOLL_EDGE_PTO == edge->kind)
@@ -885,6 +885,10 @@ bool is_the_first_successor_of_with_marking(
 	const noll_uid_array* src_marking = noll_vector_at(marking_list, src);
 	assert(NULL != src_marking);
 
+	NOLL_DEBUG("Checking whether %d is the first successor of %d with the marking ", dst, src);
+	noll_debug_print_one_mark(marking);
+	NOLL_DEBUG("\n");
+
 	NOLL_DEBUG(__func__);
 	NOLL_DEBUG(": approximating the result for depth 1\n");
 
@@ -1090,10 +1094,6 @@ noll_ta_t* noll_graph2ta(
 		noll_uid_array* vars = noll_uid_array_new();
 		assert(NULL != vars);
 
-		NOLL_DEBUG("WARNING: ");
-		NOLL_DEBUG(__func__);
-		NOLL_DEBUG(": ignoring boundary vars\n");
-
 		if (noll_uid_array_contains(homo, i))
 		{	// in the case 'i' is pointed by a variable
 			NOLL_DEBUG("  adding variable ref %lu\n", i);
@@ -1123,7 +1123,7 @@ noll_ta_t* noll_graph2ta(
 			{
 				// TODO: should this be the only edge leaving src?
 				assert(1 == noll_vector_size(edges));
-				assert(2 <= noll_vector_size(ed->args));
+				assert((2 == noll_vector_size(ed->args)) || (4 == noll_vector_size(ed->args)));
 
 				field_name = noll_pred_name(ed->label);
 				field_symbol = noll_pred_get_minfield(ed->label);
