@@ -26,7 +26,7 @@
     (skl2 ?tl ?ex))
 )))))
 
-; three-level skip list
+; three-level skip list 
 (define-fun skl3 ((?hd SL3_t) (?ex SL3_t)) Space
   (tospace (or (= ?hd ?ex)
   (exists ((?tl SL3_t) (?Z1 SL3_t) (?Z2 SL3_t))
@@ -39,31 +39,25 @@
 
 ; variables
 (declare-fun x1 () SL3_t)
+(declare-fun x1_2 () SL3_t)
 (declare-fun x2 () SL3_t)
-(declare-fun x2_0_1 () SL3_t)
-(declare-fun x2_1 () SL3_t)
-(declare-fun x3 () SL3_t)
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
-(declare-fun alpha4 () SetLoc)
-(declare-fun alpha5 () SetLoc)
 
 ;
-; unfolding in the middle of skl3(x1,nil)
-; exp: unsat
+; bad two 1-field unfolding of skl3(x1,nil)
+; exp: sat
 ;
 (assert (tobool (ssep
-  (index alpha1 (skl3 x1 x2))
-  (pto x2 (sref (ref n3 x3) (ref n2 x2_1) (ref n1 x2_0_1)))
-  (index alpha2 (skl3 x3 nil))
-  (index alpha3 (skl2 x2_1 x3))
-  (index alpha4 (skl1 x2_0_1 x2_1))
+  (pto x1 (sref (ref n3 x2) (ref n2 x1_2) (ref n1 x2)))
+  (index alpha2 (skl2 x1_2 x2))
+  (index alpha3 (skl3 x2 nil))
 )))
 
 (assert (not
-  (tobool (index alpha5 (skl3 x1 nil)))
+  (tobool (index alpha1 (skl3 x1 nil)))
 ))
 
 ; check whether the negation of the entailment is satisfiable

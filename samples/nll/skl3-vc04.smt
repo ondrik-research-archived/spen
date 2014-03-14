@@ -60,7 +60,7 @@
 (declare-fun alpha8 () SetLoc)
 
 ;
-; level 1 insertion in the middle
+; level 1 insertion in the middle in skl3(x1,nil)
 ; expected: holds
 ;
 (assert (tobool (ssep

@@ -26,7 +26,7 @@
     (skl2 ?tl ?ex))
 )))))
 
-; three-level skip list (WHOOOOOOOOOOA!! THREE LEVELS!! WE ARE ROCKING THE MOON!!!!)
+; three-level skip list 
 (define-fun skl3 ((?hd SL3_t) (?ex SL3_t)) Space
   (tospace (or (= ?hd ?ex)
   (exists ((?tl SL3_t) (?Z1 SL3_t) (?Z2 SL3_t))
@@ -43,6 +43,10 @@
 
 (declare-fun alpha1 () SetLoc)
 
+;
+; two 1-field unfolding of skl3(x1,nil)
+; exp: unsat
+;
 (assert (tobool (ssep
   (pto x1 (sref (ref n3 x2) (ref n2 x2) (ref n1 x2)))
   (pto x2 (sref (ref n3 nil) (ref n2 nil) (ref n1 nil)))
