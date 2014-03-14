@@ -459,6 +459,7 @@ noll_field_order ()
 	    if (f->order == UNDEFINED_ID)
 	    { /* test that it is not already filled ! */
 	      f->order = no++;	
+	      f->kind = NOLL_PFLD_BCKBONE;
 	      f->pid = pid;
 	    }
 #ifndef NDEBUG
@@ -476,6 +477,7 @@ noll_field_order ()
 	    { /* test that it is not already filled ! */
 	      f->order = no++;	
 	      f->pid = pid;
+	      f->kind = NOLL_PFLD_INNER;
 	    }
 #ifndef NDEBUG
 	    fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
@@ -493,6 +495,7 @@ noll_field_order ()
 		/* test that it is not already filled ! */
 		f->order = no++;
 		f->pid = pid;
+	        f->kind = NOLL_PFLD_NULL;
 	      }
 #ifndef NDEBUG
 	    fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
@@ -510,6 +513,7 @@ noll_field_order ()
 		/* test that it is not already filled ! */
 		f->order = no++;
 		f->pid = pid;
+	        f->kind = NOLL_PFLD_BORDER;
 	      }
 #ifndef NDEBUG
 	    fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",

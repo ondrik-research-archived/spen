@@ -1503,13 +1503,13 @@ noll_graph_dll(noll_graph_t* g, uid_t pid)
     if (src_edges == NULL) {
     src_edges = g->mat[nsrc] = noll_uid_array_new();
     }
-    noll_uid_array_push(src_edges, e->id);
+    noll_uid_array_push(src_edges, enext->id);
     // push the edge id in the reverse matrix at entry ndst
     noll_uid_array* dst_edges = g->rmat[ndst];
     if (dst_edges == NULL) {
     dst_edges = g->rmat[ndst] = noll_uid_array_new();
     }
-    noll_uid_array_push(dst_edges, e->id);
+    noll_uid_array_push(dst_edges, enext->id);
   }
   // push all the added edges in g
   for (uint ei = 0; ei < noll_vector_size(e1_en); ei++)

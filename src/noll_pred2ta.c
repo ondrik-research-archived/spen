@@ -476,6 +476,8 @@ noll_edge2ta_lss (const noll_edge_t * edge)
  *        -- exactly two cells
  *  q2 -> [<next,prev>, , m(next)](q3,q6)
  *        -- more than two cells
+ *  q2 -> [<dll>, , m(next)](q8,q6)
+ *        -- more than two cells
  *  q3 -> [<next,prev>, , m(next)](q3,q7)
  *        -- inner cells after two
  *  q3 -> [<next,prev>, {out}, m(next)](q4,q7)
@@ -660,6 +662,19 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   vata_add_transition (ta, 2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
+  /*
+   * Transition: q2 -> [<dll>, , m(next)](q8,q6)
+   *        -- more than two cells
+   */
+  const noll_ta_symbol_t *symbol_q2_p =
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_next);
+  assert (NULL != symbol_q2_p);
+  succ_q2 = noll_uid_array_new ();
+  noll_uid_array_push (succ_q2, 8);
+  noll_uid_array_push (succ_q2, 6);
+  vata_add_transition (ta, 2, symbol_q2_p, succ_q2);
+  noll_uid_array_delete (succ_q2);
+  
   /* 
    * Transition: q3 -> [<next,prev>, , m(next)](q3,q7)
    *        -- inner cells after two

@@ -21,12 +21,13 @@
 (declare-fun alpha2 () SetLoc)
 
 ;
-; (bad) unfoding at begin of dll(x,y,nil,z)
+; (bad) unfoding at begin and end of dll(x,y,nil,z)
 ; exp: sat
 ;
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 
-                  (index alpha2 (dll w_emp y_emp nil z_emp))
+                  (index alpha2 (dll w_emp y_emp x_emp z_emp))
+                  (pto y_emp (sref (ref next z_emp) (ref prev w_emp)))
             )
     )
 )
