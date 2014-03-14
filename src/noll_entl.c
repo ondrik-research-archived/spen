@@ -739,42 +739,49 @@ noll_entl_to_homomorphism (void)
 }
 
 /**
- * Check special cases for entailment.
+ * Check special cases for satisfiability of 
+ *        pform /\ ! nform.
  * @return 1 if satisfiable, 0 if unsat, -1 if not known
  */
 int
 noll_entl_solve_special (void)
 {
-  if (((noll_prob->pform != NULL) && noll_form_is_unsat (noll_prob->pform))
-      || ((noll_prob->nform != NULL)
-	  && noll_form_array_is_valid (noll_prob->nform)))
+  /* unsat = unsat(pform) */
+  if (noll_prob->pform == NULL)
     {
-#ifndef DEBUG
-      fprintf (stdout, "*** check-sat: special case 0 ...\n");
+#ifdef NDEBUG
+      fprintf (stdout, "*** check-sat: special case pform=empty ...\n");
 #endif
+      return 0;      
+    }
+    
+  assert (NULL != noll_prob->pform);
+  /* unsat = unsat(pform) */
+  if (noll_form_is_unsat (noll_prob->pform))
+    {
+//#ifdef NDEBUG
+      fprintf (stdout, "*** check-sat: special case unsat(pform) ...\n");
+//#endif
+      return 0;      
+    }
+  if ((noll_prob->nform == NULL)
+      || noll_form_array_is_unsat (noll_prob->nform))
+    {
+//#ifdef NDEBUG
+      fprintf (stdout, "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
+//#endif
+      return 0;
+    }
+  
+  assert (NULL != noll_prob->nform);
+  if (noll_form_array_is_valid (noll_prob->nform))
+    {
+//#ifdef NDEBUG
+      fprintf (stdout, "*** check-sat: special case valid(nform)and sat(pform) ...\n");
+//#endif
       return 0;
     }
 
-  if ((noll_prob->pform != NULL) && noll_form_is_unsat (noll_prob->pform)
-      && ((noll_prob->nform == NULL)
-	  || noll_form_array_is_unsat (noll_prob->nform)))
-    {
-#ifndef DEBUG
-      fprintf (stdout, "*** check-sat: special case 1 ...\n");
-#endif
-      return 1;
-    }
-  if (((noll_prob->nform != NULL)
-       && (!noll_form_array_is_valid (noll_prob->nform))
-       && (noll_prob->pform == NULL))
-      || ((noll_prob->nform == NULL) && (noll_prob->pform == NULL)))
-// equivalent to !pform || !nform
-    {
-#ifndef DEBUG
-      fprintf (stdout, "*** check-sat: special case 2 ...\n");
-#endif
-      return 1;
-    }
   return -1;
 }
 
@@ -870,7 +877,7 @@ check_end:
 
   gettimeofday (&tvEnd, NULL);
   time_difference (&tvDiff, &tvEnd, &tvBegin);
-  printf ("\nTotal time: %ld.%06ld\n\n", (long int) tvDiff.tv_sec,
+  printf ("\nTotal time (sec): %ld.%06ld\n\n", (long int) tvDiff.tv_sec,
 	  (long int) tvDiff.tv_usec);
   /*
    * Free the allocated memory

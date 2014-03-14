@@ -1,6 +1,7 @@
 #!/bin/sh
 
-for i in `ls *.smt` 
+P=$1
+for i in `ls $P*.smt` 
 do 
 	echo "==== $i"
         f=`basename -s ".smt" $i`

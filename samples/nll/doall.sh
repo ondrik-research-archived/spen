@@ -2,7 +2,7 @@
 
 P=$1
 
-for i in `ls $P*.smt` 
+for i in `ls $P-vc??.smt` 
 do 
 	echo "==== $i"
         f=`basename -s ".smt" $i`
