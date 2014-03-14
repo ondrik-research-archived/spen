@@ -30,36 +30,30 @@
 )))))
 
 (declare-fun x1 () NLL_lvl2_t)
-(declare-fun x1_1 () NLL_lvl1_t)
-(declare-fun x1_2 () NLL_lvl1_t)
-(declare-fun x1_3 () NLL_lvl1_t)
 (declare-fun x2 () NLL_lvl2_t)
+(declare-fun x2_1 () NLL_lvl1_t)
+(declare-fun x2_2 () NLL_lvl1_t)
 (declare-fun x3 () NLL_lvl2_t)
-(declare-fun x3_1 () NLL_lvl1_t)
-(declare-fun x3_2 () NLL_lvl1_t)
 (declare-fun nil_lvl1 () NLL_lvl1_t)
 (declare-fun nil_lvl2 () NLL_lvl2_t)
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
+(declare-fun alpha3 () SetLoc)
+(declare-fun alpha4 () SetLoc)
 
 ;
-; three unfoldings of nll(x1,nil,nil) with list segment in middle
+; one unfolding in middle at the end of the inner list of nll(x1,nil,nil)
 ; exp: unsat
 ;
 (assert (tobool (ssep
-  (pto x1 (sref
-    (ref next2 x2)
-    (ref down x1_1)))
-  (pto x1_1 (ref next1 x1_2))
-  (pto x1_2 (ref next1 x1_3))
-  (pto x1_3 (ref next1 nil_lvl1))
-  (index alpha2 (nll x2 x3 nil_lvl1))
-  (pto x3 (sref
-    (ref next2 nil_lvl2)
-    (ref down x3_1)))
-  (pto x3_1 (ref next1 x3_2))
-  (pto x3_2 (ref next1 nil_lvl1))
+  (index alpha2 (nll x1 x2 nil_lvl1))
+  (pto x2 (sref
+    (ref next2 x3)
+    (ref down x2_1)))
+  (index alpha3 (lso x2_1 x2_2))
+  (pto x2_2 (ref next1 nil_lvl1))
+  (index alpha4 (nll x3 nil_lvl2 nil_lvl1))
 )))
 
 (assert (not (tobool (index alpha1

@@ -913,7 +913,7 @@ noll_edge2ta_nll (const noll_edge_t * edge)
   /* label of border variables */
   noll_uid_array *vars_brd = noll_uid_array_new ();
   assert (NULL != vars_brd);
-  noll_uid_array_push (vars_brd, end_node);
+  noll_uid_array_push (vars_brd, brd_node);
 
   /* empty marking for first state, mark_eps = [eps] */
   noll_uid_array *mark_eps = noll_uid_array_new ();
@@ -1340,7 +1340,7 @@ noll_pred2ta_nlcl (noll_ta_t * ta, noll_pred_t * pred,
    *       -- list segment from q1
    */
   const noll_ta_symbol_t *symbol_q1_2 =
-    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in);
+    noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_in);
   // TODO: see if {in} can be added
   assert (NULL != symbol_q1_2);
   succ_q1 = noll_uid_array_new ();
@@ -1378,7 +1378,7 @@ noll_pred2ta_nlcl (noll_ta_t * ta, noll_pred_t * pred,
    *       -- inner list segment
    */
   const noll_ta_symbol_t *symbol_q2_2 =
-    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in);
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
   // TODO: see if {in} can be added
   assert (NULL != symbol_q2_2);
   assert (succ_q2 != NULL);

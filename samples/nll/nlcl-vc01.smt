@@ -41,6 +41,10 @@
 
 (declare-fun alpha1 () SetLoc)
 
+;
+; two unfoldings of nlcl(x1,nil)
+; exp: unsat
+;
 (assert (tobool (ssep
   (pto x1 (sref
     (ref next2 x2)
@@ -49,14 +53,14 @@
   (pto x1_2 (ref next1 x1_3))
   (pto x1_3 (ref next1 x1_1))
   (pto x2 (sref
-    (ref next2 nil_lvl2)
+    (ref next2 nil)
     (ref down x2_1)))
   (pto x2_1 (ref next1 x2_2))
   (pto x2_2 (ref next1 x2_1))
 )))
 
 (assert (not (tobool (index alpha1
-  (nlcl x1 nil_lvl2)
+  (nlcl x1 nil)
 ))))
 
 (check-sat)
