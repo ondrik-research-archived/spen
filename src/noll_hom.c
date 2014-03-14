@@ -1346,8 +1346,11 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
 	}
     }
   /* redo marking of border arguments */
+  vg[noll_vector_at (args, 0)] = 0;
+  vg[noll_vector_at (args, 1)] = 1;
   for (uint_t i = 2; i < noll_vector_size (args); i++)
-     vg[noll_vector_at (args, i)] = 3;
+     if (vg[noll_vector_at (args, i)] == 2) 
+       vg[noll_vector_at (args, i)] = 3;
 
 #ifndef NDEBUG
   fprintf (stdout, "\t- mark used edges, build the graph\n");
