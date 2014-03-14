@@ -1451,12 +1451,71 @@ return_select_ls:
   if (eg != NULL)
     free (eg);
 
+  
 #ifndef NDEBUG
   fprintf (stdout, "\t- return graph\n");
   noll_graph_fprint (stdout, rg);
 #endif
 
   return rg;
+}
+
+/**
+ * For the dll edges (labeled by @p pid) in the graph @p g,
+ * add a next edge between the target of the edge and the forward argument.
+ * 
+ */
+void
+noll_graph_dll(noll_graph_t* g, uid_t pid)
+{
+  assert (NULL != g);
+  
+  // search the backbone field
+  uid_t fi;
+  for (fi = 0; fi < noll_vector_size(fields_array); fi++)
+  {
+  noll_field_t* f = noll_vector_at(fields_array, fi);
+  if (f->pid == pid && f->kind == NOLL_PFLD_BCKBONE)
+  break;
+  }
+  
+  // array of added edges
+  noll_edge_array* e1_en = noll_edge_array_new();
+  // the first valid identifier for the added edges
+  uint_t enext_id = noll_vector_size(g->edges);
+  for (uint ei = 0; ei < noll_vector_size(g->edges); ei++)
+  {
+    noll_edge_t* e = noll_vector_at(g->edges, ei);
+    if (e->kind != NOLL_EDGE_PRED)
+      continue;
+    uint_t nsrc = noll_vector_at(e->args,1);
+    uint_t ndst = noll_vector_at(e->args,3);
+    noll_edge_t* enext = noll_edge_alloc(NOLL_EDGE_PTO, nsrc, ndst, fi);
+    enext->id = enext_id;
+    enext_id ++;
+    noll_edge_array_push(e1_en, enext);
+    // update matrices of g
+    // push the edge id in the matrix at entry nsrc
+    noll_uid_array* src_edges = g->mat[nsrc];
+    if (src_edges == NULL) {
+    src_edges = g->mat[nsrc] = noll_uid_array_new();
+    }
+    noll_uid_array_push(src_edges, e->id);
+    // push the edge id in the reverse matrix at entry ndst
+    noll_uid_array* dst_edges = g->rmat[ndst];
+    if (dst_edges == NULL) {
+    dst_edges = g->rmat[ndst] = noll_uid_array_new();
+    }
+    noll_uid_array_push(dst_edges, e->id);
+  }
+  // push all the added edges in g
+  for (uint ei = 0; ei < noll_vector_size(e1_en); ei++)
+  {
+    noll_edge_t* e = noll_vector_at(e1_en, ei);
+    noll_edge_array_push(g->edges, e);
+    noll_vector_at(e1_en, ei) = NULL;
+  }
+  noll_edge_array_delete(e1_en);
 }
 
 /**
@@ -1474,6 +1533,11 @@ noll_graph_shom_entl (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
   /* TODO: select the method of checking entailment using the option */
 
   /* HERE follows the TA based procedure */
+  if (0 == strcmp(noll_pred_name(e1->label), "dll"))
+  {
+    // special case for generating TA from graphs with dll
+    noll_graph_dll(g2, e1->label);
+  }
   noll_ta_t *g2_ta = noll_graph2ta (g2, h);
   assert (NULL != g2_ta);
 #ifndef NDEBUG

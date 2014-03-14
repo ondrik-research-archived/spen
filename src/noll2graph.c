@@ -63,18 +63,8 @@ uint_t noll_atom_of_form(noll_space_t* phi, noll_space_op_t op) {
 	uint_t res = 0;
 	if (!phi)
 		return res;
-	if (op == NOLL_SPACE_PTO) {
-		if (phi->kind == op)
-		  res += noll_vector_size (phi->m.pto.fields);
-	  else if (phi->kind == NOLL_SPACE_LS) {
-			// add pto edge in dll
-			uid_t pid = phi->m.ls.pid;
-			if (0 == strcmp(noll_pred_name(pid),"dll")) 
-				// TODO: change to a test for two-way preds
-				res += 1;
-		}
-		return res;
-	}
+	if (op == NOLL_SPACE_PTO && phi->kind == op)
+		  return noll_vector_size (phi->m.pto.fields);
 	if (op == phi->kind && op == NOLL_SPACE_LS) {
 		uint_t src = noll_vector_at(phi->m.ls.args,0);
 		uint_t dst = noll_vector_at(phi->m.ls.args,1);
@@ -173,41 +163,6 @@ noll_graph_of_space(noll_space_t* phi, noll_graph_t* g, uint_t nedges) {
 		// fill the bounded sloc variable
 		e->bound_svar = phi->m.ls.sid;
 		
-		// special case for dll: add pto field from dst to foward
-		if (0 == strcmp(noll_pred_name(phi->m.ls.pid),"dll")) 
-		{
-			// add pto edge with "forward field" to phi->m.ls.args[3]
-			noll_pred_t* pred = noll_vector_at(preds_array, phi->m.ls.pid);
-			uint_t fi = UNDEFINED_ID;
-			for (fi = 0; fi < noll_vector_size(fields_array); fi++)
-			  {
-					noll_field_t* f = noll_vector_at(fields_array, fi);
-					if ((f->pid == phi->m.ls.pid) &&
-					    (f->kind == NOLL_PFLD_BCKBONE))
-					   break;
-				}
-			res += 1;
-			uint_t nfwd = g->var2node[noll_vector_at (phi->m.ls.args, 3)];
-			// build the edge
-			noll_edge_t* e = noll_edge_alloc(NOLL_EDGE_PTO, ndst, nfwd, fi);
-			e->id = nedges + 1;
-			// push edge in graph
-			noll_edge_array_push(g->edges, e);
-			// push its identifier in the result
-			noll_uid_array_push(res, e->id);
-			// push the edge id in the matrix at entry ndst
-			noll_uid_array* src_edges = g->mat[ndst];
-			if (src_edges == NULL) {
-				src_edges = g->mat[ndst] = noll_uid_array_new();
-			}
-			noll_uid_array_push(src_edges, e->id);
-			// push the edge id in the reverse matrix at entry ndst
-			noll_uid_array* dst_edges = g->rmat[nfwd];
-			if (dst_edges == NULL) {
-				dst_edges = g->rmat[nfwd] = noll_uid_array_new();
-			}
-			noll_uid_array_push(dst_edges, e->id);
-		}
 		break;
 	}
 	case NOLL_SPACE_WSEP:
