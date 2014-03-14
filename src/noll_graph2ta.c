@@ -500,6 +500,7 @@ static bool compute_markings(
 			assert(dst < num_nodes);
 
 			uid_t edge_lab;
+			bool is_doubly_linked = false;
 			if (NOLL_EDGE_PTO == edge->kind)
 			{	// for points-to edges
 				edge_lab = edge->label;
