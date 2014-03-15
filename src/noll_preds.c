@@ -167,6 +167,20 @@ noll_pred_use_nil(uid_t pid)
   
   return (NULL != pred->typ) ? pred->typ->useNil : false;
 }
+  
+/**
+ * Retrun true if pid is a one direction predicate.
+ * Information computed by the typing.
+ */
+bool 
+noll_pred_is_one_dir(uid_t pid)
+{
+  assert (pid < noll_vector_size (preds_array));
+
+  noll_pred_t *pred = noll_vector_at (preds_array, pid);
+  
+  return (NULL != pred->typ && pred->typ->isTwoDir) ? false : true;
+}
 
 /**
  * Search @p fid inside the fields of predicate @p pid with a role of
@@ -269,6 +283,10 @@ noll_pred_type ()
 
       /* used 'nil' */
       p->typ->useNil = false;
+      
+      /* two direction predicate */
+      /* TODO: better test using the predicate definition */
+      p->typ->isTwoDir = (0 == strcmp(p->pname, "dll")) ? true : false;
       
       /* predicates called */
       p->typ->ppreds = noll_uint_array_new ();

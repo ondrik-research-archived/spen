@@ -1125,6 +1125,8 @@ noll_ta_t* noll_graph2ta(
 			else if (NOLL_EDGE_PRED == ed->kind)
 			{
 				// TODO: should this be the only edge leaving src?
+				// MS: yes, if not a two dir predicate
+				// use noll_pred_is_one_dir
 				assert(1 == noll_vector_size(edges));
 				//MS: to pass nll 
 				//assert((2 == noll_vector_size(ed->args)) || (4 == noll_vector_size(ed->args)));

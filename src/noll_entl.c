@@ -777,7 +777,7 @@ noll_entl_solve_special (bool isSyn)
 //#ifdef NDEBUG
       fprintf (stdout, "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
 //#endif
-      return 0;
+      return 1;
     }
   
   assert (NULL != noll_prob->nform);
@@ -786,19 +786,20 @@ noll_entl_solve_special (bool isSyn)
 //#ifdef NDEBUG
       fprintf (stdout, "*** check-sat: special case valid(nform)and sat(pform) ...\n");
 //#endif
-      return 0;
+      return 1;
     }
 
   return -1;
 }
 
 /**
- * Check the nol_prob->cmd for the formula
+ * Return status of the noll_prob->cmd for the formula
  *    pform /\ not(\/ nform_i)
- * to obtain the result of the entailment
+ * by looking at the entailment
  *    pform ==> \/ nform_i
  *
- * @return 1 if satisfiable, 0 if not satisfiable
+ * @return 1 if satisfiable, (i.e. invalid entailment)
+ *         0 if not satisfiable (i.e., valid entailment)
  */
 int
 noll_entl_solve (void)
@@ -866,18 +867,23 @@ noll_entl_solve (void)
    * translate formulas to graphs.
    */
   res = noll_entl_to_graph ();
-  if (res == 0)
+  if (res == 0) {
+    // entailment invalid, so sat problem
+    res = 1;
     goto check_end;
-
+  }
+  
   /*
    * Check graph homomorphism
    */
   /* build homomorphism from right to left */
   res = noll_entl_to_homomorphism ();
   /* sharing constraints in pos_graph are updated and tested! */
-  if (!res)
+  if (res == 0) {
+    // entailment invalid, so sat problem
+    res = 1;
     goto check_end;
-
+  }
   /*
    * FIN
    */
