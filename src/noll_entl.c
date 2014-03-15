@@ -741,10 +741,12 @@ noll_entl_to_homomorphism (void)
 /**
  * Check special cases for satisfiability of 
  *        pform /\ ! nform.
+ * @param isSyn if true, check syntactic special case, 
+ *              otherwise, check semantic
  * @return 1 if satisfiable, 0 if unsat, -1 if not known
  */
 int
-noll_entl_solve_special (void)
+noll_entl_solve_special (bool isSyn)
 {
   /* unsat = unsat(pform) */
   if (noll_prob->pform == NULL)
@@ -764,13 +766,18 @@ noll_entl_solve_special (void)
 //#endif
       return 0;      
     }
+  /* only the previous checks can be done before normalization */
+  if (isSyn)
+    return -1;
+    
+  /* after normalization, more tests can be done */
   if ((noll_prob->nform == NULL)
       || noll_form_array_is_unsat (noll_prob->nform))
     {
 //#ifdef NDEBUG
       fprintf (stdout, "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
 //#endif
-      return 0;
+      return 1;
     }
   
   assert (NULL != noll_prob->nform);
@@ -779,19 +786,20 @@ noll_entl_solve_special (void)
 //#ifdef NDEBUG
       fprintf (stdout, "*** check-sat: special case valid(nform)and sat(pform) ...\n");
 //#endif
-      return 0;
+      return 1;
     }
 
   return -1;
 }
 
 /**
- * Check the nol_prob->cmd for the formula
+ * Return status of the noll_prob->cmd for the formula
  *    pform /\ not(\/ nform_i)
- * to obtain the result of the entailment
+ * by looking at the entailment
  *    pform ==> \/ nform_i
  *
- * @return 1 if satisfiable, 0 if not satisfiable
+ * @return 1 if satisfiable, (i.e. invalid entailment)
+ *         0 if not satisfiable (i.e., valid entailment)
  */
 int
 noll_entl_solve (void)
@@ -804,9 +812,9 @@ noll_entl_solve (void)
 #endif
 
   /*
-   * Test special cases, before normalizing the formulas
+   * Test special (syntactic) cases, before normalizing the formulas
    */
-  res = noll_entl_solve_special ();
+  res = noll_entl_solve_special (true);
   if (res != -1)
     return res;
 
@@ -815,6 +823,10 @@ noll_entl_solve (void)
 	   (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
   fflush (stdout);
 #endif
+
+  struct timeval tvBegin, tvEnd, tvDiff;
+
+  gettimeofday (&tvBegin, NULL);
 
   /*
    * Compute typing infos
@@ -832,16 +844,13 @@ noll_entl_solve (void)
   /*
    * Normalize both formulas (which also test satisfiability)
    */
+  
+  noll_entl_normalize ();
+
 #ifndef NDEBUG
   fprintf (stdout, "\n*** check-%ssat: normalize\n",
 	   (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
 #endif
-
-  struct timeval tvBegin, tvEnd, tvDiff;
-
-  gettimeofday (&tvBegin, NULL);
-
-  noll_entl_normalize ();
 
   /*
    * Test the satisfiability of pform /\ not(\/_i nform)
@@ -849,27 +858,32 @@ noll_entl_solve (void)
   /*
    * Special cases, not covered by graph homomorphism
    */
-  res = noll_entl_solve_special ();
+  res = noll_entl_solve_special (false);
   if (res != -1)
-    return res;
+    goto check_end;
 
   /*
    * If both formulas are not empty,
    * translate formulas to graphs.
    */
   res = noll_entl_to_graph ();
-  if (res == 0)
+  if (res == 0) {
+    // entailment invalid, so sat problem
+    res = 1;
     goto check_end;
-
+  }
+  
   /*
    * Check graph homomorphism
    */
   /* build homomorphism from right to left */
   res = noll_entl_to_homomorphism ();
   /* sharing constraints in pos_graph are updated and tested! */
-  if (!res)
+  if (res == 0) {
+    // entailment invalid, so sat problem
+    res = 1;
     goto check_end;
-
+  }
   /*
    * FIN
    */

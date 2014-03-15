@@ -1291,7 +1291,7 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
       /* TODO: last condition is to deal with dll, 
        * better condition */
       if (vg[v] >= 2 || 
-          (vg[v] == 1 && (strcmp(noll_pred_name(label),"dll")!=0)))
+          (vg[v] == 1 && (noll_pred_is_one_dir(label) == false)))
 	{
 	  /* mark it again as explored */
 	  vg[v] = 2;
@@ -1346,8 +1346,11 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
 	}
     }
   /* redo marking of border arguments */
+  vg[noll_vector_at (args, 0)] = 0;
+  vg[noll_vector_at (args, 1)] = 1;
   for (uint_t i = 2; i < noll_vector_size (args); i++)
-     vg[noll_vector_at (args, i)] = 3;
+     if (vg[noll_vector_at (args, i)] == 2) 
+       vg[noll_vector_at (args, i)] = 3;
 
 #ifndef NDEBUG
   fprintf (stdout, "\t- mark used edges, build the graph\n");
@@ -1470,43 +1473,76 @@ noll_graph_dll(noll_graph_t* g, uid_t pid)
 {
   assert (NULL != g);
   
-  // search the backbone field
-  uid_t fi;
-  for (fi = 0; fi < noll_vector_size(fields_array); fi++)
+  // get the fields fid_nxt and fid_prv
+  uid_t fid_next = UNDEFINED_ID;
+  uid_t fid_prev = UNDEFINED_ID;
+  noll_pred_t* pred = noll_vector_at(preds_array,pid);
+  assert (NULL != pred);
+  assert (NULL != pred->typ);
+  assert (NULL != pred->typ->pfields);
+  for (uint_t fi = 0; 
+      (fi < noll_vector_size(fields_array)) &&
+      (fid_next == UNDEFINED_ID || fid_prev == UNDEFINED_ID); 
+      fi++)
   {
-  noll_field_t* f = noll_vector_at(fields_array, fi);
-  if (f->pid == pid && f->kind == NOLL_PFLD_BCKBONE)
-  break;
+  if (noll_vector_at(pred->typ->pfields, fi) == NOLL_PFLD_BCKBONE)
+    fid_next = fi;
+  else if (noll_vector_at(pred->typ->pfields, fi) == NOLL_PFLD_BORDER)
+    fid_prev = fi;
   }
   
   // array of added edges
   noll_edge_array* e1_en = noll_edge_array_new();
   // the first valid identifier for the added edges
-  uint_t enext_id = noll_vector_size(g->edges);
+  uint_t lst_eid = noll_vector_size(g->edges);
   for (uint ei = 0; ei < noll_vector_size(g->edges); ei++)
   {
     noll_edge_t* e = noll_vector_at(g->edges, ei);
     if (e->kind != NOLL_EDGE_PRED)
       continue;
-    uint_t nsrc = noll_vector_at(e->args,1);
-    uint_t ndst = noll_vector_at(e->args,3);
-    noll_edge_t* enext = noll_edge_alloc(NOLL_EDGE_PTO, nsrc, ndst, fi);
-    enext->id = enext_id;
-    enext_id ++;
+    uint_t nfst = noll_vector_at(e->args,0);
+    uint_t nlst = noll_vector_at(e->args,1);
+    uint_t nprv = noll_vector_at(e->args,2);
+    uint_t nfwd = noll_vector_at(e->args,3);
+    
+    /* edge nlst --next-->nfwd */
+    noll_edge_t* enext = noll_edge_alloc(NOLL_EDGE_PTO, nlst, nfwd, fid_next);
+    enext->id = lst_eid;
+    lst_eid++;
     noll_edge_array_push(e1_en, enext);
+    
     // update matrices of g
-    // push the edge id in the matrix at entry nsrc
-    noll_uid_array* src_edges = g->mat[nsrc];
-    if (src_edges == NULL) {
-    src_edges = g->mat[nsrc] = noll_uid_array_new();
+    // push the edge enext in the matrix at entry nlst
+    noll_uid_array* lst_edges = g->mat[nlst];
+    if (lst_edges == NULL) {
+    lst_edges = g->mat[nlst] = noll_uid_array_new();
     }
-    noll_uid_array_push(src_edges, e->id);
-    // push the edge id in the reverse matrix at entry ndst
-    noll_uid_array* dst_edges = g->rmat[ndst];
-    if (dst_edges == NULL) {
-    dst_edges = g->rmat[ndst] = noll_uid_array_new();
+    noll_uid_array_push(lst_edges, enext->id);
+    // push the edge enext in the reverse matrix at entry nfwd
+    noll_uid_array* fwd_edges = g->rmat[nfwd];
+    if (fwd_edges == NULL) {
+    fwd_edges = g->rmat[nfwd] = noll_uid_array_new();
     }
-    noll_uid_array_push(dst_edges, e->id);
+    noll_uid_array_push(fwd_edges, enext->id);
+
+    /* edge nfst --prev-->nprev */
+    noll_edge_t* eprev = noll_edge_alloc(NOLL_EDGE_PTO, nfst, nprv, fid_prev);
+    eprev->id = lst_eid;
+    lst_eid ++;
+    noll_edge_array_push(e1_en, eprev);
+       
+    // push the edge eprev in the matrix at entry nfst
+    noll_uid_array* fst_edges = g->mat[nfst];
+    if (fst_edges == NULL) {
+    fst_edges = g->mat[nfst] = noll_uid_array_new();
+    }
+    noll_uid_array_push(fst_edges, eprev->id);
+    // push the edge eprev in the reverse matrix at entry nprv
+    noll_uid_array* prv_edges = g->rmat[nprv];
+    if (prv_edges == NULL) {
+    prv_edges = g->rmat[nprv] = noll_uid_array_new();
+    }
+    noll_uid_array_push(prv_edges, eprev->id);
   }
   // push all the added edges in g
   for (uint ei = 0; ei < noll_vector_size(e1_en); ei++)
@@ -1533,7 +1569,7 @@ noll_graph_shom_entl (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
   /* TODO: select the method of checking entailment using the option */
 
   /* HERE follows the TA based procedure */
-  if (0 == strcmp(noll_pred_name(e1->label), "dll"))
+  if (noll_pred_is_one_dir(e1->label) == false)
   {
     // special case for generating TA from graphs with dll
     noll_graph_dll(g2, e1->label);

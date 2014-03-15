@@ -492,16 +492,15 @@ smtlib2_noll_parser_check_sat (smtlib2_parser_interface * p)
   if (ap->response_ != SMTLIB2_RESPONSE_ERROR)
     {
       int s = noll_check (noll_ctx (p));
-      // returns 1 if phi1 ==> phi2 valid,
-      // i.e., phi1 /\ not(phi2) unsat
+      // returns status of phi1 /\ not(phi2) 
       ap->response_ = SMTLIB2_RESPONSE_STATUS;
       switch (s)
 	{
 	case 1:
-	  ap->status_ = SMTLIB2_STATUS_UNSAT;
+	  ap->status_ = SMTLIB2_STATUS_SAT;
 	  break;
 	case 0:
-	  ap->status_ = SMTLIB2_STATUS_SAT;
+	  ap->status_ = SMTLIB2_STATUS_UNSAT;
 	  break;
 	default:
 	  ap->status_ = SMTLIB2_STATUS_UNKNOWN;

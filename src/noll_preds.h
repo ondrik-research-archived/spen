@@ -66,7 +66,8 @@ extern "C"
      * with values of @type noll_pfld_t for each field used in pred
      */
     noll_uint_array* pfields;
-    bool useNil; /* the predicate use fields to nil */  
+    bool useNil; /* the predicate use fields to nil */ 
+    bool isTwoDir; /* the predicate is a two direction */  
     /* array of size @global preds_array
      * with values 1 for predicates called inside the definition of pred
      */
@@ -130,6 +131,10 @@ extern "C"
   
   bool noll_pred_use_nil(uid_t pid);
   /* Retrun true if pid uses nil internally */
+  
+  bool noll_pred_is_one_dir(uid_t pid);
+  /* Retrun true if pid is a one direction predicate */
+  /* WARNING: for the moment, only dll are two direction predicates */
   
   bool  noll_pred_is_field(uid_t pid, uid_t fid, noll_field_e kind);
   /* Search the field in the predicate with a role of at most kind.

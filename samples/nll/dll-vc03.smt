@@ -21,7 +21,7 @@
 (declare-fun alpha1 () SetLoc)
 
 ;
-; three unfoldings of dll(x,u,z,z)
+; three (bad) unfoldings of dll(x,u,z,z)
 ; exp: sat
 ;
 (assert
