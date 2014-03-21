@@ -1,4 +1,4 @@
-(set-logic QF_NOLL)
+(set-logic QF_SLRD)
 
 (declare-sort Sll_t 0)
 

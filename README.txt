@@ -1,6 +1,9 @@
 About
 =====
-This is a decision procedure for NOLL logic.
+This is a decision procedure for entailment problems between formulas in
+the fragment of Separation Logic with Recursive Definitions (SLRD) 
+defined in [FIT-TR-2014-01].
+
 
 Requires
 ========
@@ -10,7 +13,7 @@ To compile:
 
 - GNU flex >= 2.5.33
 
-- GNU bison (tested under bison 2.4.1)
+- GNU bison (tested under bison 2.7.0)
 
 - SMTLIB2 parser of Alberto Griggio available at 
   https://es.fbk.eu/people/griggio/misc/smtlib2parser.html
@@ -38,7 +41,7 @@ Installation
 
 3) Install:
    - put the 'minisat' tool in the PATH
-   - move the 'nolldp' binary to a known executable path
+   - move the 'spen' binary to a known executable path
 
 
 libVATA
@@ -63,3 +66,4 @@ libVATA is provided as a Git submodule fetching a specific revision of the libra
 4) When the libVATA submodule is updated, you need to run again
 
   $ git submodule update
+
