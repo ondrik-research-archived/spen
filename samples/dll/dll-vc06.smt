@@ -1,4 +1,4 @@
-(set-logic QF_NOLL)
+(set-logic QF_SLRD)
 
 (declare-sort Dll_t 0)
 

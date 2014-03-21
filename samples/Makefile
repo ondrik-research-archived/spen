@@ -1,7 +1,7 @@
 # Makefile
 #
 
-TOOL=../../src/nolldp
+TOOL=spen
 OPTION=-n
 
 clean:

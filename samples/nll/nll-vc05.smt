@@ -1,4 +1,4 @@
-(set-logic QF_NOLL)
+(set-logic QF_SLRD)
 
 (declare-sort NLL_lvl1_t 0)
 (declare-sort NLL_lvl2_t 0)
