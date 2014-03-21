@@ -41,7 +41,7 @@
 
 noll_entl_t *noll_prob;		// problem of entailment in noll
 
-bool tosat_old = true;		/* choice of boolean abstraction */
+bool tosat_old = false;		/* choice of boolean abstraction */
 
 /* ====================================================================== */
 /* Constructors/destructors */
@@ -152,6 +152,7 @@ noll_entl_get_nform ()
 void
 noll_entl_set_fname (char *fname)
 {
+  assert (noll_prob->smt_fname == NULL);
   noll_prob->smt_fname = fname;
 }
 
@@ -277,13 +278,10 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 		      fprintf (out_decl, "(not ");
 		    fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
 								    noll_vector_at
-								    (atom->
-								     t_right,
-								     0)->
-								    svar)->
-			     vname, noll_vector_at (lvars,
-						    atom->t_left->lvar)->
-			     vname);
+								    (atom->t_right,
+								     0)->svar)->vname,
+			     noll_vector_at (lvars,
+					     atom->t_left->lvar)->vname);
 		    if (!sign)
 		      fprintf (out_decl, ")");
 		    fprintf (out_decl, ")\n");
@@ -298,8 +296,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 					     atom->t_left->lvar)->vname,
 			     noll_vector_at (lvars,
 					     noll_vector_at (atom->t_right,
-							     0)->lvar)->
-			     vname);
+							     0)->
+					     lvar)->vname);
 		    if (!sign)
 		      fprintf (out_decl, ")");
 		    fprintf (out_decl, ")\n");
@@ -318,13 +316,10 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 		      {
 			fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
 									noll_vector_at
-									(atom->
-									 t_right,
-									 i)->
-									svar)->
-				 vname, noll_vector_at (lvars,
-							atom->t_left->lvar)->
-				 vname);
+									(atom->t_right,
+									 i)->svar)->vname,
+				 noll_vector_at (lvars,
+						 atom->t_left->lvar)->vname);
 		      }
 		    else
 		      {
@@ -332,10 +327,9 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 				 noll_vector_at (lvars,
 						 atom->t_left->lvar)->vname,
 				 noll_vector_at (lvars,
-						 noll_vector_at (atom->
-								 t_right,
-								 i)->lvar)->
-				 vname);
+						 noll_vector_at
+						 (atom->t_right,
+						  i)->lvar)->vname);
 		      }
 		  }
 		fprintf (out_decl, ")");
@@ -376,8 +370,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 					     atom->t_left->lvar)->vname,
 			     noll_vector_at (lvars,
 					     noll_vector_at (atom->t_right,
-							     0)->lvar)->
-			     vname);
+							     0)->
+					     lvar)->vname);
 		    if (!sign)
 		      fprintf (out_decl, ")");
 		    fprintf (out_decl, ")\n");
@@ -396,12 +390,11 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 		      {
 			fprintf (out_decl, " (not (%s %s)) ",
 				 noll_vector_at (svars,
-						 noll_vector_at (atom->
-								 t_right,
-								 i)->svar)->
-				 vname, noll_vector_at (lvars,
-							atom->t_left->lvar)->
-				 vname);
+						 noll_vector_at
+						 (atom->t_right,
+						  i)->svar)->vname,
+				 noll_vector_at (lvars,
+						 atom->t_left->lvar)->vname);
 		      }
 		    else
 		      {
@@ -409,10 +402,9 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 				 noll_vector_at (lvars,
 						 atom->t_left->lvar)->vname,
 				 noll_vector_at (lvars,
-						 noll_vector_at (atom->
-								 t_right,
-								 i)->lvar)->
-				 vname);
+						 noll_vector_at
+						 (atom->t_right,
+						  i)->lvar)->vname);
 		      }
 		  }
 		fprintf (out_decl, ")");
@@ -461,19 +453,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 			== NOLL_STERM_SVAR)
 		      fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
 								      noll_vector_at
-								      (atom->
-								       t_right,
-								       i)->
-								      svar)->
-			       vname);
+								      (atom->t_right,
+								       i)->svar)->vname);
 		    else
 		      fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
 									noll_vector_at
-									(atom->
-									 t_right,
-									 i)->
-									lvar)->
-			       vname);
+									(atom->t_right,
+									 i)->lvar)->vname);
 		  }
 		fprintf (out_decl, ") ) )");
 		if (!sign)
@@ -665,8 +651,8 @@ noll_entl_to_graph (void)
 //      noll_graph_fprint_dot ("graph-p.dot", pos_graph);
 #else
   fprintf (stdout, "\n*****pos_graph: (%d nodes, %d spatial edges)\n",
-           noll_prob->pgraph->nodes_size, 
-	   noll_vector_size(noll_prob->pgraph->edges));
+	   noll_prob->pgraph->nodes_size,
+	   noll_vector_size (noll_prob->pgraph->edges));
 #endif
 
   if (nform)
@@ -687,9 +673,10 @@ noll_entl_to_graph (void)
 	  noll_graph_fprint_dot (fname, nform_i_graph);
 	  fflush (stdout);
 #else
-          fprintf (stdout, "\n*****neg_graph-%zu: (%d nodes, %d spatial edges)\n",
-	   i, nform_i_graph->nodes_size, 
-	   noll_vector_size(nform_i_graph->edges));
+	  fprintf (stdout,
+		   "\n*****neg_graph-%zu: (%d nodes, %d spatial edges)\n", i,
+		   nform_i_graph->nodes_size,
+		   noll_vector_size (nform_i_graph->edges));
 #endif
 
 	}
@@ -754,9 +741,9 @@ noll_entl_solve_special (bool isSyn)
 #ifdef NDEBUG
       fprintf (stdout, "*** check-sat: special case pform=empty ...\n");
 #endif
-      return 0;      
+      return 0;
     }
-    
+
   assert (NULL != noll_prob->pform);
   /* unsat = unsat(pform) */
   if (noll_form_is_unsat (noll_prob->pform))
@@ -764,31 +751,32 @@ noll_entl_solve_special (bool isSyn)
 //#ifdef NDEBUG
       fprintf (stdout, "*** check-sat: special case unsat(pform) ...\n");
 //#endif
-      return 0;      
+      return 0;
     }
+
+  assert (NULL != noll_prob->nform);
+  if (noll_form_array_is_valid (noll_prob->nform))
+    {
+//#ifdef NDEBUG
+      fprintf (stdout, "*** check-sat: special case valid(nform) ...\n");
+//#endif
+      return 1;
+    }
+
   /* only the previous checks can be done before normalization */
   if (isSyn)
     return -1;
-    
+
   /* after normalization, more tests can be done */
   if ((noll_prob->nform == NULL)
       || noll_form_array_is_unsat (noll_prob->nform))
     {
 //#ifdef NDEBUG
-      fprintf (stdout, "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
+      fprintf (stdout,
+	       "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
 //#endif
       return 1;
     }
-  
-  assert (NULL != noll_prob->nform);
-  if (noll_form_array_is_valid (noll_prob->nform))
-    {
-//#ifdef NDEBUG
-      fprintf (stdout, "*** check-sat: special case valid(nform)and sat(pform) ...\n");
-//#endif
-      return 1;
-    }
-
   return -1;
 }
 
@@ -844,7 +832,7 @@ noll_entl_solve (void)
   /*
    * Normalize both formulas (which also test satisfiability)
    */
-  
+
   noll_entl_normalize ();
 
 #ifndef NDEBUG
@@ -867,23 +855,25 @@ noll_entl_solve (void)
    * translate formulas to graphs.
    */
   res = noll_entl_to_graph ();
-  if (res == 0) {
-    // entailment invalid, so sat problem
-    res = 1;
-    goto check_end;
-  }
-  
+  if (res == 0)
+    {
+      // entailment invalid, so sat problem
+      res = 1;
+      goto check_end;
+    }
+
   /*
    * Check graph homomorphism
    */
   /* build homomorphism from right to left */
   res = noll_entl_to_homomorphism ();
   /* sharing constraints in pos_graph are updated and tested! */
-  if (res == 0) {
-    // entailment invalid, so sat problem
-    res = 1;
-    goto check_end;
-  }
+  if (res == 0)
+    {
+      // entailment invalid, so sat problem
+      res = 1;
+      goto check_end;
+    }
   /*
    * FIN
    */

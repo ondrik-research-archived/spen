@@ -150,6 +150,12 @@ extern "C"
 #define VID_SND_PARAM 2
 
 /* ====================================================================== */
+/* Globals */
+/* ====================================================================== */
+
+  extern int noll_error_parsing;
+
+/* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
 
@@ -232,8 +238,8 @@ extern "C"
 			     uint_t size);
   noll_exp_t *noll_mk_tobool (noll_context_t * ctx, noll_exp_t ** args,
 			      uint_t size);
-    noll_exp_t * noll_mk_tospace (noll_context_t * ctx, noll_exp_t ** args,
-				  uint_t size);
+  noll_exp_t *noll_mk_tospace (noll_context_t * ctx, noll_exp_t ** args,
+			       uint_t size);
   noll_exp_t *noll_mk_loop (noll_context_t * ctx, noll_exp_t ** args,
 			    uint_t size);
 
@@ -258,6 +264,12 @@ extern "C"
   void noll_exp_push (noll_context_t * ctx, noll_exp_t * e, int ispos);
 /* Translates the expression into a formula and push in global formulas. */
 
+/* ====================================================================== */
+/* Handling errors */
+/* ====================================================================== */
+
+  void noll_error (int level, const char *fun, const char *msg);
+
 #ifndef NDEBUG
 
 #define NOLL_DEBUG(...) \
@@ -265,11 +277,11 @@ extern "C"
 			fprintf (stderr, __VA_ARGS__); \
 	} while (0)
 
-#else /* #ifndef NDEBUG */
+#else				/* #ifndef NDEBUG */
 
-#define NOLL_DEBUG(...) /* empty */
+#define NOLL_DEBUG(...)		/* empty */
 
-#endif /* #ifndef NDEBUG */
+#endif				/* #ifndef NDEBUG */
 
 #ifdef __cplusplus
 }

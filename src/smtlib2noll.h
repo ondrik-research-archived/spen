@@ -29,16 +29,17 @@
 
 /** Internal data for the parser.
  */
-typedef struct smtlib2_noll_parser {
-    smtlib2_abstract_parser parent_;
-    noll_context_t* ctx_; // used for local variables and quantifiers 
-    smtlib2_hashtable *sorts_; // all the declared sort symbols
-    smtlib2_hashtable *funs_;  // all the declared function symbols 
+typedef struct smtlib2_noll_parser
+{
+  smtlib2_abstract_parser parent_;
+  noll_context_t *ctx_;		// used for local variables and quantifiers 
+  smtlib2_hashtable *sorts_;	// all the declared sort symbols
+  smtlib2_hashtable *funs_;	// all the declared function symbols 
 } smtlib2_noll_parser;
 
 /** Constructor/destructor.
  */
-smtlib2_noll_parser *smtlib2_noll_parser_new(void);
-void smtlib2_noll_parser_delete(smtlib2_noll_parser *p);
+smtlib2_noll_parser *smtlib2_noll_parser_new (void);
+void smtlib2_noll_parser_delete (smtlib2_noll_parser * p);
 
 #endif /* _SMTLIB2NOLL_H */

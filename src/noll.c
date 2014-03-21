@@ -26,6 +26,12 @@
 #include "noll.h"
 #include "noll_ta_symbols.h"
 
+/* ====================================================================== */
+/* Globals */
+/* ====================================================================== */
+
+int noll_error_parsing = 0;
+
 /*
  * ======================================================================
  * Messages
@@ -35,32 +41,38 @@
 void
 noll_error (int level, const char *fun, const char *msg)
 {
-  fprintf (stderr, "NOLL-DP Error of level %d in %s: %s.\n", level, fun, msg);
+  fprintf (stderr, "Error of level %d in %s: %s.\n", level, fun, msg);
   if (level == 0)
     //terminate
     exit (0);
+  else
+    noll_error_parsing = level;
 }
 
 void
 noll_error_args (int level, const char *fun, uint_t size, const char *expect)
 {
   fprintf (stderr,
-	   "NOLL-DP Error of level %d in %s: bad number (%d) of arguments, expected (%s).\n",
+	   "Error of level %d in %s: bad number (%d) of arguments, expected (%s).\n",
 	   level, fun, size, expect);
   if (level == 0)
     //terminate
     exit (0);
+  else
+    noll_error_parsing = level;
 }
 
 void
 noll_error_id (int level, char *fun, const char *name)
 {
   fprintf (stderr,
-	   "NOLL-DP Error of level %d in %s: identifier %s not declared.\n",
+	   "Error of level %d in %s: identifier '%s' is not declared.\n",
 	   level, fun, name);
   if (level == 0)
     //terminate
     exit (0);
+  else
+    noll_error_parsing = level;
 }
 
 /*
@@ -904,6 +916,12 @@ noll_check (noll_context_t * ctx)
   if (&ctx != &ctx)
     {
       assert (0);		// to avoid "unused parameter" warning
+    }
+  if (noll_error_parsing > 0)
+    {
+      assert (noll_prob->smt_fname != NULL);
+      noll_error (0, "noll_check", "stop check because of parsing error");
+      return 0;
     }
 
   noll_entl_set_cmd (NOLL_FORM_SAT);

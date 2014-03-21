@@ -401,10 +401,10 @@ int noll_form_array_is_valid(noll_form_array* phi1_phiN) {
 
 	/* one formula shall be valid */
 	for (size_t i = 0; i < noll_vector_size(phi1_phiN); i++)
-		if (noll_vector_at(phi1_phiN,i)->kind == NOLL_FORM_VALID)
+		if (noll_form_is_valid(noll_vector_at(phi1_phiN,i)))
 			return 1;
 	return 0;
-};
+}
 
 
 /* ====================================================================== */

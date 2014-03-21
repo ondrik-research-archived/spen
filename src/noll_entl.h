@@ -54,27 +54,28 @@
  *  - abstract graphs of positive/negative formulae
  */
 
-typedef struct noll_entl_t {
-	char*            smt_fname; // smt file with entailment
-	noll_form_t*     pform;     // positive formula phi
-	noll_form_array* nform;     // array of negative formulae psi
-	noll_form_kind_t cmd;       // command given: check-sat (default),
-	                            //                check-unsat
+typedef struct noll_entl_t
+{
+  char *smt_fname;		// smt file with entailment
+  noll_form_t *pform;		// positive formula phi
+  noll_form_array *nform;	// array of negative formulae psi
+  noll_form_kind_t cmd;		// command given: check-sat (default),
+  //                check-unsat
 
-	noll_sat_t*       pabstr;   // abstraction of the positive formula
-	noll_sat_array*   nabstr;   // abstraction of the negative formulae
+  noll_sat_t *pabstr;		// abstraction of the positive formula
+  noll_sat_array *nabstr;	// abstraction of the negative formulae
 
-	noll_graph_t*     pgraph;   // graph for positive formula
-	noll_graph_array* ngraph;   // graphs for negative formulae
+  noll_graph_t *pgraph;		// graph for positive formula
+  noll_graph_array *ngraph;	// graphs for negative formulae
 
-	noll_hom_t*       hom;      // homomorphism found
+  noll_hom_t *hom;		// homomorphism found
 } noll_entl_t;
 
 /* ====================================================================== */
 /* Globals */
 /* ====================================================================== */
 
-extern noll_entl_t* noll_prob; // problem of entailment in noll
+extern noll_entl_t *noll_prob;	// problem of entailment in noll
 
 extern bool tosat_old;
 /* Global option: choice of boolean abstraction */
@@ -84,55 +85,55 @@ extern bool tosat_old;
 /* ====================================================================== */
 
 /* Initialization/Deallocation of formulas */
-void noll_entl_init(void);
-void noll_entl_free(void);
+void noll_entl_init (void);
+void noll_entl_free (void);
 
 /* ====================================================================== */
 /* Getters */
 /* ====================================================================== */
 
-noll_form_t* noll_entl_get_pform(void);
+noll_form_t *noll_entl_get_pform (void);
 /* Get positive formula */
-noll_form_t* noll_entl_get_nform_last(void);
+noll_form_t *noll_entl_get_nform_last (void);
 /* Get last negative formulae */
-noll_form_array* noll_entl_get_nform(void);
+noll_form_array *noll_entl_get_nform (void);
 /* Get all the set of negative formulae */
 
 /* ====================================================================== */
 /* Setters */
 /* ====================================================================== */
 
-void noll_entl_set_fname(char* fname);
+void noll_entl_set_fname (char *fname);
 /* Set source file information */
-void noll_entl_set_cmd(noll_form_kind_t pb);
+void noll_entl_set_cmd (noll_form_kind_t pb);
 
 /* ====================================================================== */
 /* Printers */
 /* ====================================================================== */
 
-void noll_entl_fprint(FILE* f);
+void noll_entl_fprint (FILE * f);
 
 /* ====================================================================== */
 /* Solver */
 /* ====================================================================== */
 
-int noll_entl_type(void);
+int noll_entl_type (void);
 /* Type the predicates, fields, formulas in noll_prob */
 
-int noll_entl_normalize(void);
+int noll_entl_normalize (void);
 /* Normalize the formulae in noll_prob */
 
-int noll_entl_to_graph(void);
+int noll_entl_to_graph (void);
 /* Translate to graph representation all formulae in noll_prob */
 
-int noll_entl_to_homomorphism(void);
+int noll_entl_to_homomorphism (void);
 /* Build the homomorphism for this entailment problem */
 
-int noll_entl_solve(void);
+int noll_entl_solve (void);
 /* Check the global problem in noll_prob */
 
-int noll_share_check(noll_var_array* lvars, noll_var_array* svars,
-		noll_share_array* lambda1, noll_share_array* lambda2);
+int noll_share_check (noll_var_array * lvars, noll_var_array * svars,
+		      noll_share_array * lambda1, noll_share_array * lambda2);
 /* Check satisfiability (if one of formula is NULL)
  * or entailment (lambda1 => lambda2) of share formulas */
 

@@ -2,7 +2,7 @@
 #
 
 TOOL=spen
-OPTION=-n
+OPTION=
 
 clean:
 	rm *out.txt result.txt *.dot
@@ -18,4 +18,4 @@ purge: clean
 
 
 %.log: %.smt
-	$(TOOL) $(OPTION) $< &> log/$@
+	$(TOOL) $(OPTION) $< &> $@
