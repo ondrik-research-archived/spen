@@ -700,7 +700,7 @@ noll_entl_to_homomorphism (void)
   res = noll_graph_homomorphism ();
 
 #ifdef NDEBUG
-  fprintf (stdout, "\n*** check-sat: homomorphism found = \n");
+  fprintf (stdout, "\n*** check-sat: homomorphism found = ");
   noll_hom_fprint (stdout, noll_prob->hom);
   fflush (stdout);
 #endif
@@ -868,12 +868,27 @@ noll_entl_solve (void)
   /* build homomorphism from right to left */
   res = noll_entl_to_homomorphism ();
   /* sharing constraints in pos_graph are updated and tested! */
-  if (res == 0)
+  switch (res) {
+    case 0: 
     {
-      // entailment invalid, so sat problem
+      // homomorphism not found, 
+      // so entailment invalid, 
+      // so sat problem
       res = 1;
-      goto check_end;
+      break;
     }
+    case 1:
+    {
+      // homomorphism found
+      // so entailment valid
+      // so unsat problem
+      res = 0;
+      break;
+    } 
+    default:
+      break;
+  }
+      
   /*
    * FIN
    */

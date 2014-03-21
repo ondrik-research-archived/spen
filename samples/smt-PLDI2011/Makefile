@@ -1,8 +1,8 @@
 # Makefile
 #
 
-TOOL=../../src/nolldp-test
-OPTION=-n
+TOOL=spen
+OPTION=
 
 clean:
 	rm -f *out.txt result.txt *.dot

@@ -7,10 +7,10 @@ do
 	echo "==== $i"
         f=`basename -s ".smt" $i`
 	echo "==== $f"
-	make $f.log
-	tail -3 $f.log > $f.res
-	diff $P/$i.exp $f.res
+	make $P/$f.log
+	tail -3 $P/$f.log > $P/$f.res
+	diff $P/$f.smt.exp $P/$f.res
 	make clean
-        rm $f.res
+        rm $P/$f.res
 done
 
