@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "$#" -ne 1 ]; then
+	echo "usage: $0 <predicate>"
+	exit 1
+fi
+
 P=$1
 
 for i in `ls $P/$P-vc??.smt` 
