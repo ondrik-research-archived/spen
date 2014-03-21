@@ -5,17 +5,37 @@ if [ "$#" -ne 1 ]; then
 	exit 1
 fi
 
-P=$1
+PRED=$1
 
-for i in `ls $P/$P-vc??.smt` 
-do 
-	echo "==== $i"
-        f=`basename -s ".smt" $i`
-	echo "==== $f"
-	make $f.log
-	tail -3 $f.log > $f.res
-	diff $P/$i.exp $f.res
-	make clean
-        rm $f.res
+SHARED_MAKE="make -f ../Makefile"
+
+cd ${PRED}
+echo "========================== Testing predicate \"${PRED}\" =========================="
+
+for i in `ls ${PRED}-vc??.smt`
+do
+	LOG_FILE="${i}.log"
+	RESULT_FILE="${i}.res"
+	EXPECTED_FILE="${i}.exp"
+
+	echo "==== Testing file \"${i}\""
+	${SHARED_MAKE} --always-make ${LOG_FILE}
+	if [ $? -ne "0" ] ; then
+		echo "FATAL ERROR"
+		echo "result for ${i}:                                              FAILED"
+		continue
+	fi
+	tail -1 ${LOG_FILE} > ${RESULT_FILE}
+	diff ${EXPECTED_FILE} ${RESULT_FILE} >/dev/null
+	if [ $? -ne "0" ] ; then
+		echo "==== received \"" $(cat ${RESULT_FILE}) "\" while expecting \"$(cat ${EXPECTED_FILE})\""
+		echo "result for ${i}:                                              ERROR"
+		
+	else
+		echo "==== received expected result:    " $(cat ${RESULT_FILE})
+		echo "result for ${i}:                                              OK"
+	fi
+	${SHARED_MAKE} --quiet clean
+	rm ${RESULT_FILE}
 done
 

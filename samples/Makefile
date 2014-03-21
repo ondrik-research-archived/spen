@@ -1,14 +1,17 @@
 # Makefile
 #
 
-TOOL=spen
+#TOOL=spen
+TOOL=../../src/nolldp
 OPTION=
 
+.PHONY: clean purge
+
 clean:
-	rm *out.txt result.txt *.dot
+	rm -f *out.txt result.txt *.dot
 
 purge: clean
-	rm *.log
+	rm -f *.log
 
 #---------------------------------------
 # IMPLICIT RULES AND DEPENDENCIES
@@ -17,5 +20,5 @@ purge: clean
 .SUFFIXES: .smt .log 
 
 
-%.log: %.smt
-	$(TOOL) $(OPTION) $< &> $@
+%.smt.log: %.smt
+	$(TOOL) $(OPTION) $< > $@ 2>&1
