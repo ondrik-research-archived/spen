@@ -80,25 +80,31 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 
   assert (NULL != h->shom);
 
-  fprintf (f, "[\n");
+  bool isempty = true;
   for (uint_t i = 0; i < noll_vector_size (h->shom); i++)
     {
       noll_shom_t *shi = noll_vector_at (h->shom, i);
-      fprintf (f, "Simple Hom %d for n-graph %zu: \n", i, shi->ngraph);
       noll_graph_t *ngi = noll_vector_at (noll_prob->ngraph, i);
 
-      /* print node mapping */
-      fprintf (f, "\tNode mapping (n -> p): ");
-      if (shi->node_hom == NULL)
+      if (shi->node_hom == NULL) {
+#ifndef NDEBUG
 	fprintf (f, "NULL\n");
-      else
-	{
-	  fprintf (f, "[");
-	  for (uint_t j = 0; j < ngi->nodes_size; j++)
-	    fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
-	  fprintf (f, "]");
-	}
+#endif
+	continue;
+      }
 
+      /* print node mapping */
+      if (isempty) {
+	fprintf (f, "[\n");
+	isempty = false;
+      }
+      fprintf (f, "Simple Hom %d for n-graph %zu: \n", i, shi->ngraph);
+      fprintf (f, "\tNode mapping (n -> p): ");
+      fprintf (f, "[");
+      for (uint_t j = 0; j < ngi->nodes_size; j++)
+	fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
+	fprintf (f, "]");
+      
       /* print edge mapping */
       fprintf (f, "\n\tEdge mapping (p -> n): ");
       if (shi->pused == NULL)
@@ -112,7 +118,10 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 	}	
     fprintf (f, "\n");
     }
-  fprintf (f, "]\n");
+  if (isempty == false) 
+    fprintf (f, "]\n");
+  else
+    fprintf (f, "EMPTY\n");
 
 }
 
@@ -1188,8 +1197,10 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
 #ifndef NDEBUG
 	  fprintf (stdout, "\t not found!");
 #endif
-	  /* TODO: put a diagnosis message */
-	  assert (isHom = isHom);
+	  /* failure */
+	  fprintf (stdout, "\nDiagnosis of failure: ");
+	  fprintf (stdout, "points-to edge n%d ---%s--> n%d not mapped!\n",
+	       nsrc_e1, noll_field_name(e1->label), ndst_e1);
 	}
       /* else, continue */
     }
@@ -1677,8 +1688,13 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 	  noll_graph_array_delete (ls_hom);
 	  ls_hom = NULL;
 #ifndef NDEBUG
-	  fprintf (stdout, "shom_ls: fails!\n");
+	  fprintf (stdout, "\nshom_ls: fails!\n");
 #endif
+	  fprintf (stdout, "\nDiagnosis of failure: ");
+	  fprintf (stdout, "predicate edge n%d ---%s--> n%d not mapped!\n",
+	       noll_vector_at(e1->args,0),
+	       noll_pred_name(e1->label), 
+	       noll_vector_at(e1->args,1));
 	  // Warning: usedg2 is deselected also
 	  goto return_shom_ls;
 	}

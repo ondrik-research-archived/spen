@@ -17,8 +17,7 @@
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 (assert
-    (tobool (ssep (index alpha2 (lso y_emp w_emp))
-            )
+    (tobool (index alpha2 (lso y_emp w_emp))
     )
 )
 (assert

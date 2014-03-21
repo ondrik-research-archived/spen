@@ -8,8 +8,9 @@ do
 	echo "==== $f"
 	make $f.log
 	tail -3 $f.log > $f.res
-	diff expected/$f.exp $f.res
+	diff expected/$f.smt.exp $f.res
 	make clean
+        mv $f.log log/.
         rm $f.res
 done
 
