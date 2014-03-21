@@ -8,7 +8,7 @@ do
 	echo "==== $f"
 	make $f.log
 	tail -3 $f.log > $f.res
-	diff $i.exp $f.res
+	diff base.exp $f.res
 	make clean
         rm $f.res
 done
