@@ -21,19 +21,19 @@ do
 	echo "==== Testing file \"${i}\""
 	${SHARED_MAKE} --always-make ${LOG_FILE}
 	if [ $? -ne "0" ] ; then
-		echo "FATAL ERROR"
+		echo "INTERNAL ERROR"
 		echo "result for ${i}:                                              FAILED"
 		continue
 	fi
 	tail -1 ${LOG_FILE} > ${RESULT_FILE}
+	RUN_TIME=$(grep "Total time" ${LOG_FILE} | sed 's/^.*:\(.*\)$/\1/')
 	diff ${EXPECTED_FILE} ${RESULT_FILE} >/dev/null
 	if [ $? -ne "0" ] ; then
 		echo "==== received \"" $(cat ${RESULT_FILE}) "\" while expecting \"$(cat ${EXPECTED_FILE})\""
 		echo "result for ${i}:                                              ERROR"
-		
 	else
 		echo "==== received expected result:    " $(cat ${RESULT_FILE})
-		echo "result for ${i}:                                              OK"
+		echo "result for ${i}:                                              OK       in time ${RUN_TIME} sec"
 	fi
 	${SHARED_MAKE} --quiet clean
 	rm ${RESULT_FILE}
