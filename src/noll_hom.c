@@ -104,7 +104,7 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
       for (uint_t j = 0; j < ngi->nodes_size; j++)
 	fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
 	fprintf (f, "]");
-      
+
       /* print edge mapping */
       fprintf (f, "\n\tEdge mapping (p -> n): ");
       if (shi->pused == NULL)
@@ -115,10 +115,10 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
 	  for (uint_t j = 0; j < noll_vector_size (shi->pused); j++)
 	    fprintf (f, "e%d --> e%d,", j, noll_vector_at (shi->pused, j));
 	  fprintf (f, "]");
-	}	
+	}
     fprintf (f, "\n");
     }
-  if (isempty == false) 
+  if (isempty == false)
     fprintf (f, "]\n");
   else
     fprintf (f, "EMPTY\n");
@@ -135,12 +135,12 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
  * Add 'nil' at the end if the predicate used 'nil'.
  */
 noll_uid_array *
-noll_hom_apply_size_array (uint_t * h, uint_t hsize, 
+noll_hom_apply_size_array (uint_t * h, uint_t hsize,
      noll_uid_array * args, bool useNil)
 {
   noll_uid_array *res = noll_uid_array_new ();
   uint_t sz = noll_vector_size (args);
-  noll_uid_array_reserve (res, sz);  
+  noll_uid_array_reserve (res, sz);
   for (uint_t i = 0; i < noll_vector_size (args); i++)
     {
       uint_t n1 = noll_vector_at (args, i);
@@ -1299,9 +1299,9 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
       uint_t v = noll_vector_last (vqueue);
       noll_uid_array_pop (vqueue);
       /* test that there is not an already marked node */
-      /* TODO: last condition is to deal with dll, 
+      /* TODO: last condition is to deal with dll,
        * better condition */
-      if (vg[v] >= 2 || 
+      if (vg[v] >= 2 ||
           (vg[v] == 1 && (noll_pred_is_one_dir(label) == false)))
 	{
 	  /* mark it again as explored */
@@ -1360,7 +1360,7 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
   vg[noll_vector_at (args, 0)] = 0;
   vg[noll_vector_at (args, 1)] = 1;
   for (uint_t i = 2; i < noll_vector_size (args); i++)
-     if (vg[noll_vector_at (args, i)] == 2) 
+     if (vg[noll_vector_at (args, i)] == 2)
        vg[noll_vector_at (args, i)] = 3;
 
 #ifndef NDEBUG
@@ -1465,7 +1465,7 @@ return_select_ls:
   if (eg != NULL)
     free (eg);
 
-  
+
 #ifndef NDEBUG
   fprintf (stdout, "\t- return graph\n");
   noll_graph_fprint (stdout, rg);
@@ -1477,13 +1477,13 @@ return_select_ls:
 /**
  * For the dll edges (labeled by @p pid) in the graph @p g,
  * add a next edge between the target of the edge and the forward argument.
- * 
+ *
  */
 void
 noll_graph_dll(noll_graph_t* g, uid_t pid)
 {
   assert (NULL != g);
-  
+
   // get the fields fid_nxt and fid_prv
   uid_t fid_next = UNDEFINED_ID;
   uid_t fid_prev = UNDEFINED_ID;
@@ -1491,9 +1491,9 @@ noll_graph_dll(noll_graph_t* g, uid_t pid)
   assert (NULL != pred);
   assert (NULL != pred->typ);
   assert (NULL != pred->typ->pfields);
-  for (uint_t fi = 0; 
+  for (uint_t fi = 0;
       (fi < noll_vector_size(fields_array)) &&
-      (fid_next == UNDEFINED_ID || fid_prev == UNDEFINED_ID); 
+      (fid_next == UNDEFINED_ID || fid_prev == UNDEFINED_ID);
       fi++)
   {
   if (noll_vector_at(pred->typ->pfields, fi) == NOLL_PFLD_BCKBONE)
@@ -1501,7 +1501,7 @@ noll_graph_dll(noll_graph_t* g, uid_t pid)
   else if (noll_vector_at(pred->typ->pfields, fi) == NOLL_PFLD_BORDER)
     fid_prev = fi;
   }
-  
+
   // array of added edges
   noll_edge_array* e1_en = noll_edge_array_new();
   // the first valid identifier for the added edges
@@ -1515,13 +1515,13 @@ noll_graph_dll(noll_graph_t* g, uid_t pid)
     uint_t nlst = noll_vector_at(e->args,1);
     uint_t nprv = noll_vector_at(e->args,2);
     uint_t nfwd = noll_vector_at(e->args,3);
-    
+
     /* edge nlst --next-->nfwd */
     noll_edge_t* enext = noll_edge_alloc(NOLL_EDGE_PTO, nlst, nfwd, fid_next);
     enext->id = lst_eid;
     lst_eid++;
     noll_edge_array_push(e1_en, enext);
-    
+
     // update matrices of g
     // push the edge enext in the matrix at entry nlst
     noll_uid_array* lst_edges = g->mat[nlst];
@@ -1541,7 +1541,7 @@ noll_graph_dll(noll_graph_t* g, uid_t pid)
     eprev->id = lst_eid;
     lst_eid ++;
     noll_edge_array_push(e1_en, eprev);
-       
+
     // push the edge eprev in the matrix at entry nfst
     noll_uid_array* fst_edges = g->mat[nfst];
     if (fst_edges == NULL) {
@@ -1586,7 +1586,11 @@ noll_graph_shom_entl (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
     noll_graph_dll(g2, e1->label);
   }
   noll_ta_t *g2_ta = noll_graph2ta (g2, h);
-  assert (NULL != g2_ta);
+	if (NULL == g2_ta)
+	{	// if the graph could not be translated to a tree
+		NOLL_DEBUG("Could not translate the graph into a tree!\n");
+		return 0;
+	}
 #ifndef NDEBUG
   NOLL_DEBUG ("\nGraph TA:\n");
   vata_print_ta (g2_ta);
@@ -1693,7 +1697,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 	  fprintf (stdout, "\nDiagnosis of failure: ");
 	  fprintf (stdout, "predicate edge n%d ---%s--> n%d not mapped!\n",
 	       noll_vector_at(e1->args,0),
-	       noll_pred_name(e1->label), 
+	       noll_pred_name(e1->label),
 	       noll_vector_at(e1->args,1));
 	  // Warning: usedg2 is deselected also
 	  goto return_shom_ls;
@@ -1743,7 +1747,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
   noll_uid_array *usedg2 = NULL;
   noll_uid_array *pto_hom = NULL;
   noll_graph_array *ls_hom = NULL;
-  
+
   /*
    * Build the mapping of nodes wrt variable labeling,
    * n_hom[n1] = n2 with n1 in g1, n2 in g2, n1, n2 node ids
@@ -1836,7 +1840,7 @@ return_shom:
   assert (NULL != hs->shom);
   assert (i < noll_vector_size(hs->shom));
   noll_vector_at(hs->shom,i) = h;
-  
+
   /* TODO: to be changed for disjunctions */
   return res;
 }
