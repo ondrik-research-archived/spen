@@ -29,10 +29,10 @@ do
 	RUN_TIME=$(grep "Total time" ${LOG_FILE} | sed 's/^.*:\(.*\)$/\1/')
 	diff ${EXPECTED_FILE} ${RESULT_FILE} >/dev/null
 	if [ $? -ne "0" ] ; then
-		echo "==== received \"" $(cat ${RESULT_FILE}) "\" while expecting \"$(cat ${EXPECTED_FILE})\""
+		echo "==== received \"$(cat ${RESULT_FILE})\" while expecting \"$(cat ${EXPECTED_FILE})\""
 		echo "result for ${i}:                                              \033[1;31mERROR\033[0m"
 	else
-		echo "==== received expected result:    " $(cat ${RESULT_FILE})
+		echo "==== received expected result:    $(cat ${RESULT_FILE})"
 		echo "result for ${i}:                                              \033[1;32mOK\033[0m       in time ${RUN_TIME} sec"
 	fi
 	${SHARED_MAKE} --quiet clean
