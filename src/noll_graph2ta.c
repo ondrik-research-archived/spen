@@ -323,7 +323,7 @@ static bool noll_marking_order_lt(
  *
  * @returns  @p true iff @p pred is a prefix of @p succ
  */
-bool noll_marking_is_prefix_or_equal(
+static bool noll_marking_is_prefix_or_equal(
 	const noll_uid_array*      pred,
 	const noll_uid_array*      succ)
 {
@@ -486,8 +486,7 @@ static bool compute_markings(
 		{	// go over all edges and update according to them
 			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
 			assert(NULL != edge);
-			// MS: to pass nll
-			// assert((2 == noll_vector_size(edge->args)) || (4 == noll_vector_size(edge->args)));
+			assert(2 <= noll_vector_size(edge->args));
 
 			uint_t src = noll_vector_at(edge->args, 0);
 			uint_t dst = noll_vector_at(edge->args, 1);
@@ -501,7 +500,6 @@ static bool compute_markings(
 			assert(dst < num_nodes);
 
 			uid_t edge_lab;
-			bool is_doubly_linked = false;
 			if (NOLL_EDGE_PTO == edge->kind)
 			{	// for points-to edges
 				edge_lab = edge->label;
@@ -509,23 +507,8 @@ static bool compute_markings(
 			else
 			{	// for higher-order predicate edges
 				assert(NOLL_EDGE_PRED == edge->kind);
-
 				edge_lab = noll_pred_get_minfield(edge->label);
-
-				// MS: to pass nll changed (2 == ...)
-				if (4 != noll_vector_size(edge->args))
-				{
-					is_doubly_linked = false;
-				}
-				else
-				{
-					// assert(4 == noll_vector_size(edge->args));
-					is_doubly_linked = true;
-				}
-				/* NOLL_DEBUG("The minimum field for predicate %s is %s\n", */
-				/* 	noll_pred_name(edge->label), noll_field_name(edge_lab)); */
 			}
-
 
 			changed = update_marking_from(dst, src, edge_lab, nodes_to_markings);
 		}
@@ -778,7 +761,7 @@ static bool reachable_from_through_path_wo_marker(
  *
  * @returns  The first ancestor of @p node with the given @p marking
  */
-uid_t find_first_ancestor_with_marking(
+static uid_t find_first_ancestor_with_marking(
 	uid_t                        node,
 	const noll_uid_array*        marking,
 	const noll_graph_t*          graph,
@@ -870,7 +853,7 @@ uid_t find_first_ancestor_with_marking(
  * @returns  @p true iff @p dst is the first successor of @p src with the given
  *           @p marking
  */
-bool is_the_first_successor_of_with_marking(
+static bool is_the_first_successor_of_with_marking(
 	uid_t                     dst,
 	uid_t                     src,
 	const noll_uid_array*     marking,
@@ -939,7 +922,7 @@ bool is_the_first_successor_of_with_marking(
  * @returns  @p true iff @p dst is the last successor of @p src with the given
  *           @p marking
  */
-bool is_the_last_successor_of_with_marking(
+static bool is_the_last_successor_of_with_marking(
 	uid_t                     dst,
 	uid_t                     src,
 	const noll_uid_array*     marking,
@@ -956,6 +939,159 @@ bool is_the_last_successor_of_with_marking(
 
 	NOLL_DEBUG("Unimplemented\n");
 	assert(false);
+}
+
+
+/**
+ * @brief  Retrieves marking symbol for a node w.r.t. a given base node
+ *
+ * @param[in]  node       The target node we wish to represent using a marking
+ * @param[in]  base_node  The @em base node w.r.t. which we wish to compute the
+ *                        marking of @p node
+ * @param[in]  graph      The graph in which we are operating
+ * @param[in]  vars       List of variables
+ * @param[in]  markings   Markings of nodes
+ *
+ * @returns  The symbol representing the alias marking if it is expressible in
+ *           the framework, @p NULL otherwise
+ *
+ */
+static const noll_ta_symbol_t* get_marking_symbol_of_node_wrt_base(
+	uint_t                     node,
+	uint_t                     base_node,
+	const noll_graph_t*        graph,
+	const noll_uid_array*      vars,
+	const noll_marking_list*   markings)
+{
+	assert(NULL != graph);
+	assert(graph->nodes_size > node);
+	assert(graph->nodes_size > base_node);
+	assert(NULL != vars);
+	assert(NULL != markings);
+	assert(noll_vector_size(markings) == graph->nodes_size);
+
+	if (noll_uid_array_contains(vars, node))
+	{	// if next_child is pointed by a variable
+		NOLL_DEBUG("Detected aliasing of variable (node) %u\n", node);
+
+		// now, we create the corresponding symbol
+		const noll_ta_symbol_t* leaf_symbol =
+			noll_ta_symbol_get_unique_aliased_var(node);
+		assert(NULL != leaf_symbol);
+
+		return leaf_symbol;
+	}
+
+	const noll_uid_array* mark_node = noll_vector_at(markings, node);
+	assert(NULL != mark_node);
+	const noll_uid_array* mark_base = noll_vector_at(markings, base_node);
+	assert(NULL != mark_base);
+
+	if (noll_marking_is_prefix_or_equal(mark_node, mark_base))
+	{	// in the case the source is a predecessor of the target (this is the
+		// case e.g. for a doubly-linked segment)
+		NOLL_DEBUG("The source ");
+		noll_debug_print_one_mark(mark_node);
+		NOLL_DEBUG(" is a PREFIX of the target ");
+		noll_debug_print_one_mark(mark_base);
+		NOLL_DEBUG("\n");
+
+		NOLL_DEBUG("Now, we check whether node %u is reachable from node %u on a path that does not use the marking ",
+			base_node, node);
+		noll_debug_print_one_mark(mark_node);
+		NOLL_DEBUG("\n");
+
+		// TODO: first test marking, then the reachability
+		if (reachable_from_through_path_wo_marker(
+			graph, markings, base_node, node, mark_node))
+		{	// in case 'base_node' is reachable from 'node' via a path where the
+			// marker '\mu(n)' is not used
+			NOLL_DEBUG("  reachable\n");
+			if (!noll_uid_array_equal(mark_node, mark_base))
+			{	// in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
+				NOLL_DEBUG("Detected an s1() marker\n");
+
+				// now, we create the corresponding symbol
+				const noll_ta_symbol_t* leaf_symbol =
+					noll_ta_symbol_get_unique_aliased_marking_up(mark_node);
+				assert(NULL != leaf_symbol);
+
+				return leaf_symbol;
+			}
+			else
+			{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
+				NOLL_DEBUG("Detected an s2() marker\n");
+
+				// now, we create the corresponding symbol
+				const noll_ta_symbol_t* leaf_symbol =
+					noll_ta_symbol_get_unique_aliased_marking_up_up(mark_node);
+				assert(NULL != leaf_symbol);
+				return leaf_symbol;
+			}
+		}
+		else
+		{
+			NOLL_DEBUG("  unreachable\n");
+		}
+	}
+
+	NOLL_DEBUG("The source ");
+	noll_debug_print_one_mark(mark_node);
+	NOLL_DEBUG(" is NOT a PREFIX of the target ");
+	noll_debug_print_one_mark(mark_base);
+	NOLL_DEBUG("\n");
+
+	// get the longest prefix
+	noll_uid_array* lcp = noll_longest_common_prefix(mark_node, mark_base);
+	assert(NULL != lcp);
+	assert(!noll_vector_empty(lcp));
+
+	NOLL_DEBUG("Their longest common prefix is ");
+	noll_debug_print_one_mark(lcp);
+	NOLL_DEBUG("\n");
+
+	// here, we find the first parent of 'i' that has the marking 'lcp'
+	uid_t parent_node = find_first_ancestor_with_marking(
+		/* node */ base_node,
+		/* found marking */ lcp,
+		/* graph */ graph,
+		/* list of markings */ markings);
+	assert(parent_node < graph->nodes_size);
+	noll_uid_array_delete(lcp);
+
+	// now, we need to check that which successor of 'parent_node' 'next_child' is
+	// TODO: implement checking of other than the s3 marker
+	if (is_the_first_successor_of_with_marking(
+		node,
+		parent_node,
+		mark_node,
+		graph,
+		markings))
+	{
+		NOLL_DEBUG("Detected an s3() marker\n");
+
+		// now, we create the corresponding symbol
+		const noll_ta_symbol_t* leaf_symbol =
+			noll_ta_symbol_get_unique_aliased_marking_up_down_fst(mark_node);
+		assert(NULL != leaf_symbol);
+		return leaf_symbol;
+	}
+	else if (is_the_last_successor_of_with_marking(
+		node,
+		parent_node,
+		mark_node,
+		graph,
+		markings))
+	{
+		NOLL_DEBUG("Detected an s4() marker\n");
+		NOLL_DEBUG("ERROR: Unimplemented\n");
+		assert(false);
+	}
+	else
+	{
+		NOLL_DEBUG("We are doomed!!");
+		assert(false);
+	}
 }
 
 
@@ -1027,10 +1163,6 @@ noll_ta_t* noll_graph2ta(
 
 	// Now, we compute for every node 'n' a set of markings 'pi(n)'. These is a
 	// least fix point computation.
-
-	// first, let's prepare a map of nodes to their markings, nodes are labelled
-	// from 0, so let that be a vector
-
 	uint_t initial_node = noll_vector_at(homo, 0);
 	assert(graph->nodes_size > initial_node);
 
@@ -1108,6 +1240,7 @@ noll_ta_t* noll_graph2ta(
 
 		bool is_pred_edge = false;
 		uid_t pred_id = (uid_t)-1;
+		const noll_edge_t* pred_edge = NULL;
 		for (size_t j = 0; j < noll_vector_size(edges); ++j)
 		{
 			const noll_edge_t* ed = noll_vector_at(graph->edges, noll_vector_at(edges, j));
@@ -1128,14 +1261,24 @@ noll_ta_t* noll_graph2ta(
 				// MS: yes, if not a two dir predicate
 				// use noll_pred_is_one_dir
 				assert(1 == noll_vector_size(edges));
-				//MS: to pass nll
-				//assert((2 == noll_vector_size(ed->args)) || (4 == noll_vector_size(ed->args)));
+				assert(2 <= noll_vector_size(ed->args));
+				assert(!is_pred_edge);
+				assert((uid_t)-1 == pred_id);
+				assert(NULL == pred_edge);
+
+				const noll_pred_t* edge_pred = noll_pred_getpred(ed->label);
+				assert(NULL != edge_pred);
+				assert(NULL != edge_pred->typ);
+				// two-dir => args >= 4
+				assert(!edge_pred->typ->isTwoDir || (4 <= noll_vector_size(ed->args)));
 
 				field_name = noll_pred_name(ed->label);
+				assert(NULL != field_name);
 				field_symbol = noll_pred_get_minfield(ed->label);
 
 				is_pred_edge = true;
 				pred_id = ed->label;
+				pred_edge = ed;
 			}
 			else
 			{
@@ -1170,148 +1313,17 @@ noll_ta_t* noll_graph2ta(
 				// considered) and use a node labelled by this in the transition
 				NOLL_DEBUG("We are NOT on the backbone...\n");
 
-				NOLL_DEBUG("WARNING: not checking whether the node is marked by a program variable.\n");
-
-				if (noll_uid_array_contains(homo, next_child))
-				{	// if next_child is pointed by a variable
-					NOLL_DEBUG("Detected aliasing of variable (node) %u\n", next_child);
-
-					// now, we create the corresponding symbol
-					const noll_ta_symbol_t* leaf_symbol =
-						noll_ta_symbol_get_unique_aliased_var(next_child);
-					assert(NULL != leaf_symbol);
-
-					// TODO: instead of getting a unique state, we might have only one
-					// state for every used leaf symbol (such as it's done in Forester)
-					size_t leaf_state = noll_get_unique();
-					noll_uid_array_push(children, leaf_state);
-					vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
-
-					continue;
-				}
-
-				if (noll_marking_is_prefix_or_equal(mark_next_child, mark_i))
-				{	// in the case the source is a predecessor of the target (this is the
-					// case e.g. for a doubly-linked segment)
-					NOLL_DEBUG("The source ");
-					noll_debug_print_one_mark(mark_next_child);
-					NOLL_DEBUG(" is a PREFIX of the target ");
-					noll_debug_print_one_mark(mark_i);
-					NOLL_DEBUG("\n");
-
-					NOLL_DEBUG("Now, we check whether node %lu is reachable from node %u on a path that does not use the marking ", i, next_child);
-					noll_debug_print_one_mark(mark_next_child);
-					NOLL_DEBUG("\n");
-
-					// TODO: first test marking, then the reachability
-					if (reachable_from_through_path_wo_marker(
-						graph, markings, i, next_child, mark_next_child))
-					{	// in case 'i' is reachable from 'next_child' via a path where the
-						// marker '\mu(n)' is not used
-						NOLL_DEBUG("  reachable\n");
-						if (!noll_uid_array_equal(mark_next_child, mark_i))
-						{	// in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
-							NOLL_DEBUG("Detected an s1() marker\n");
-
-							// now, we create the corresponding symbol
-							const noll_ta_symbol_t* leaf_symbol =
-								noll_ta_symbol_get_unique_aliased_marking_up(mark_next_child);
-							assert(NULL != leaf_symbol);
-
-							// TODO: instead of getting a unique state, we might have only one
-							// state for every used leaf symbol (such as it's done in Forester)
-							size_t leaf_state = noll_get_unique();
-							noll_uid_array_push(children, leaf_state);
-							vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
-
-							continue;
-						}
-						else
-						{	// in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
-							NOLL_DEBUG("Detected an s2() marker\n");
-
-							// now, we create the corresponding symbol
-							const noll_ta_symbol_t* leaf_symbol =
-								noll_ta_symbol_get_unique_aliased_marking_up_up(mark_next_child);
-							assert(NULL != leaf_symbol);
-
-							// TODO: instead of getting a unique state, we might have only one
-							// state for every used leaf symbol (such as it's done in Forester)
-							size_t leaf_state = noll_get_unique();
-							noll_uid_array_push(children, leaf_state);
-							vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
-
-							continue;
-						}
-					}
-					else
-					{
-						NOLL_DEBUG("  unreachable\n");
-					}
-				}
-
-				NOLL_DEBUG("The source ");
-				noll_debug_print_one_mark(mark_next_child);
-				NOLL_DEBUG(" is NOT a PREFIX of the target ");
-				noll_debug_print_one_mark(mark_i);
-				NOLL_DEBUG("\n");
-
-				// get the longest prefix
-				noll_uid_array* lcp = noll_longest_common_prefix(mark_next_child, mark_i);
-				assert(NULL != lcp);
-				assert(!noll_vector_empty(lcp));
-
-				NOLL_DEBUG("Their longest common prefix is ");
-				noll_debug_print_one_mark(lcp);
-				NOLL_DEBUG("\n");
-
-				// here, we find the first parent of 'i' that has the marking 'lcp'
-				uid_t parent_node = find_first_ancestor_with_marking(
-					/* node */ i,
-					/* found marking */ lcp,
-					/* graph */ graph,
-					/* list of markings */ markings);
-				assert(parent_node < graph->nodes_size);
-				noll_uid_array_delete(lcp);
-
-				// now, we need to check that which successor of 'parent_node' 'next_child' is
-				// TODO: implement checking of other than the s3 marker
-				if (is_the_first_successor_of_with_marking(
+				const noll_ta_symbol_t* alias_symb = get_marking_symbol_of_node_wrt_base(
 					next_child,
-					parent_node,
-					mark_next_child,
+					i,
 					graph,
-					markings))
-				{
-					NOLL_DEBUG("Detected an s3() marker\n");
+					homo,
+					markings);
+				assert(NULL != alias_symb);
 
-					// now, we create the corresponding symbol
-					const noll_ta_symbol_t* leaf_symbol =
-						noll_ta_symbol_get_unique_aliased_marking_up_down_fst(mark_next_child);
-					assert(NULL != leaf_symbol);
-
-					// TODO: instead of getting a unique state, we might have only one
-					// state for every used leaf symbol (such as it's done in Forester)
-					size_t leaf_state = noll_get_unique();
-					noll_uid_array_push(children, leaf_state);
-					vata_add_transition(ta, leaf_state, leaf_symbol, NULL);
-				}
-				else if (is_the_last_successor_of_with_marking(
-					next_child,
-					parent_node,
-					mark_next_child,
-					graph,
-					markings))
-				{
-					NOLL_DEBUG("Detected an s4() marker\n");
-					NOLL_DEBUG("ERROR: Unimplemented\n");
-					assert(false);
-				}
-				else
-				{
-					NOLL_DEBUG("We are doomed!!");
-					assert(false);
-				}
+				size_t leaf_state = noll_get_unique();
+				vata_add_transition(ta, leaf_state, alias_symb, NULL);
+				noll_uid_array_push(children, leaf_state);
 			}
 		}
 
@@ -1321,6 +1333,35 @@ noll_ta_t* noll_graph2ta(
 		if (is_pred_edge)
 		{	// for a predicate edge
 			assert((uid_t)-1 != pred_id);
+			assert(NULL != pred_edge);
+			const noll_pred_t* ed_pred = noll_pred_getpred(pred_id);
+			assert(NULL != ed_pred);
+			assert(NULL != ed_pred->typ);
+			assert(NULL != pred_edge);
+			assert(NULL != pred_edge->args);
+
+			// at this point we process additional parameters of the edge
+			size_t it_param;
+			if (ed_pred->typ->isTwoDir)
+			{	// for doubly linked segments
+				it_param = 4;
+			}
+			else
+			{	// for singly linked segments
+				it_param = 2;
+			}
+
+			for (;  it_param < noll_vector_size(pred_edge->args); ++it_param)
+			{
+				uint_t param_node = noll_vector_at(pred_edge->args, it_param);
+				NOLL_DEBUG("Processing border variable of a predicate edge %s: %u\n",
+					noll_pred_name(pred_id), param_node);
+				const noll_ta_symbol_t* param_symb =
+					get_marking_symbol_of_node_wrt_base(param_node, i, graph, homo, markings);
+
+				NOLL_DEBUG("  This node is marked as %s\n", noll_ta_symbol_get_str(param_symb));
+			}
+
 			symbol = noll_ta_symbol_get_unique_higher_pred(
 				noll_pred_getpred(pred_id),
 				vars,
