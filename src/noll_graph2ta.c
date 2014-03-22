@@ -1360,6 +1360,9 @@ noll_ta_t* noll_graph2ta(
 					get_marking_symbol_of_node_wrt_base(param_node, i, graph, homo, markings);
 
 				NOLL_DEBUG("  This node is marked as %s\n", noll_ta_symbol_get_str(param_symb));
+				size_t leaf_state = noll_get_unique();
+				vata_add_transition(ta, leaf_state, param_symb, NULL);
+				noll_uid_array_push(children, leaf_state);
 			}
 
 			symbol = noll_ta_symbol_get_unique_higher_pred(
