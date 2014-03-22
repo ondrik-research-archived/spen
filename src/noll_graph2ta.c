@@ -880,8 +880,15 @@ static bool is_the_first_successor_of_with_marking(
 
 	// TODO: this is only temporary, and checks that 'next_child' is the
 	// successor of 'proc_node' over some field
-	assert(noll_vector_size(src_marking) + 1 >= noll_vector_size(marking));
-	assert(noll_vector_size(src_marking)     <= noll_vector_size(marking));
+	if ((noll_vector_size(src_marking) + 1 < noll_vector_size(marking)) ||
+		(noll_vector_size(src_marking)     > noll_vector_size(marking)))
+	{
+		NOLL_DEBUG("WARNING: ");
+		NOLL_DEBUG(__func__);
+		NOLL_DEBUG(": soundly approximating to FALSE for a strange marking\n");
+		return false;
+	}
+
 	uint_t continuation_field = noll_vector_last(marking);
 
 	const noll_uid_array* mat_src = graph->mat[src];
@@ -937,8 +944,11 @@ static bool is_the_last_successor_of_with_marking(
 	assert(noll_vector_size(marking_list) == graph->nodes_size);
 	assert(noll_uid_array_equal(marking, noll_vector_at(marking_list, dst)));
 
-	NOLL_DEBUG("Unimplemented\n");
-	assert(false);
+	NOLL_DEBUG("WARNING: ");
+	NOLL_DEBUG(__func__);
+	NOLL_DEBUG(": unimplemented - soundly approximating to FALSE\n");
+
+	return false;
 }
 
 
@@ -1089,8 +1099,8 @@ static const noll_ta_symbol_t* get_marking_symbol_of_node_wrt_base(
 	}
 	else
 	{
-		NOLL_DEBUG("We are doomed!!");
-		assert(false);
+		NOLL_DEBUG("Could not find a marking!!!\n");
+		return NULL;
 	}
 }
 
@@ -1319,7 +1329,17 @@ noll_ta_t* noll_graph2ta(
 					graph,
 					homo,
 					markings);
-				assert(NULL != alias_symb);
+
+				if (NULL == alias_symb)
+				{	// in the case the marking could not be deduced, we are out of power
+					vata_free_ta(ta);
+
+					NOLL_DEBUG("WARNING: leaving ");
+					NOLL_DEBUG(__func__);
+					NOLL_DEBUG("() without cleaning up!\n");
+
+					return NULL;
+				}
 
 				size_t leaf_state = noll_get_unique();
 				vata_add_transition(ta, leaf_state, alias_symb, NULL);
