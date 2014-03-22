@@ -985,8 +985,9 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
 {
 	// check for the input parameters
 	assert(NULL != alias_marking);
-	assert(0 < id_rel);
-	assert(5 > id_rel);
+	assert((NOLL_ALIAS_MARKING_REL_UP == id_rel) ||
+		(NOLL_ALIAS_MARKING_REL_UP_UP == id_rel) ||
+		(NOLL_ALIAS_MARKING_REL_UP_DOWN_FIRST == id_rel));
 
 	noll_ta_symbol_t* symb = noll_ta_symbol_create();
 	assert(NULL != symb);
