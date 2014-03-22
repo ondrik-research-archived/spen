@@ -857,7 +857,8 @@ noll_pred2ta_nll(
   /* states of the automaton */
   uint_t q1 = qinit;		// initial cell
   uint_t q2 = qinit + 1;	// inner cells
-  uint_t q3 = qinit + 2;	// nested ls from init cell
+  uint_t qbrd = qinit + 2;	// border cell
+  uint_t q3 = qinit + 3;	// nested ls from init cell
   uint_t q4 = UNDEFINED_ID;	// nested ls from inner cells, computed
   uint_t qlast = UNDEFINED_ID;	// last state used in the inner automaton ls
 
@@ -907,7 +908,7 @@ noll_pred2ta_nll(
   assert (NULL != symbol_q1_2);
   succ_q1 = noll_uid_array_new ();
   noll_uid_array_push (succ_q1, q2);
-  noll_uid_array_push (succ_q1, q3);
+  noll_uid_array_push (succ_q1, qbrd);
   vata_add_transition (ta, q1, symbol_q1_2, succ_q1);
   noll_uid_array_delete (succ_q1);
 
@@ -915,6 +916,11 @@ noll_pred2ta_nll(
    * Transition: q3 -> [ {brd} ]()
    */
   vata_add_transition (ta, q3, brd_symbol, NULL);
+
+  /*
+   * Transition: qbrd -> [ {brd} ]()
+   */
+  vata_add_transition (ta, qbrd, brd_symbol, NULL);
 
   /*
    * Transitions: k = ls(f, q3, {}, [e::h], {brd})
@@ -942,7 +948,7 @@ noll_pred2ta_nll(
   noll_uid_array *succ_q2 = noll_uid_array_new ();
   assert (succ_q2 != NULL);
   noll_uid_array_push (succ_q2, q2);
-  noll_uid_array_push (succ_q2, q3);
+  noll_uid_array_push (succ_q2, qbrd);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
