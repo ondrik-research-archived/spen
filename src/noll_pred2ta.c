@@ -155,7 +155,7 @@ noll_pred2ta_ls(
 /**
  * Get the TA for the edge built with predicate 'ls'
  * by instantiating the definition of the
- * 'lso(in, out)' predicate (see ../samples/nll/ls-vc01.smt)
+ * 'lso(in, out)' predicate (see ../samples/ls/ls-vc01.smt)
  *
  * lso(in, out) = (in = out) or
  *                (in != out and
@@ -286,7 +286,7 @@ noll_edge2ta_ls (const noll_edge_t * edge)
 /**
  * Get the TA for the edge built with predicate 'lss'
  * by instantiating the definition of the
- * 'lsso(in, out)' predicate (see ../samples/nll/lss-vc01.smt)
+ * 'lsso(in, out)' predicate (see ../samples/lss/lss-vc01.smt)
  *
  * lsso(in, out) = (in = out) or
  *                 (in != out and
@@ -448,7 +448,7 @@ noll_edge2ta_lss (const noll_edge_t * edge)
 /**
  * Get the TA for the edge built with predicate 'dll'
  * by instantiating the definition of the
- * 'dll(in, out, prv, flw)' predicate (see ../samples/nll/dll-vc01.smt)
+ * 'dll(in, out, prv, flw)' predicate (see ../samples/dll/dll-vc01.smt)
  *
  * dll(in,out,pv,fw) = ((in = fw) and (out=pv)) or
  *                 (in != fw and out != pv and
@@ -903,11 +903,11 @@ noll_pred2ta_nll(
    *       -- list segment from q1
    */
   const noll_ta_symbol_t *symbol_q1_2 =
-    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in);
-  // TODO: see if {in} can be added
+    noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_in);
   assert (NULL != symbol_q1_2);
   succ_q1 = noll_uid_array_new ();
   noll_uid_array_push (succ_q1, q2);
+  noll_uid_array_push (succ_q1, q3);
   vata_add_transition (ta, q1, symbol_q1_2, succ_q1);
   noll_uid_array_delete (succ_q1);
 
@@ -937,14 +937,14 @@ noll_pred2ta_nll(
    *       -- inner list segment
    */
   const noll_ta_symbol_t *symbol_q2_2 =
-    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in);
-  // TODO: see if {in} can be added
-  noll_uid_array *succ_q2 = noll_uid_array_new ();
+    noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_2);
+  noll_uid_array *succ_q2 = noll_uid_array_new ();
   assert (succ_q2 != NULL);
   noll_uid_array_push (succ_q2, q2);
+  noll_uid_array_push (succ_q2, q3);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
-  // succ_q2 used below
+  noll_uid_array_delete (succ_q2);
 
   /*
    * Transition: q2 -> [<s,h>, {}, [e::s]] (q2,q4)
@@ -954,6 +954,9 @@ noll_pred2ta_nll(
     noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_3);
   // succ_q2 = [q2]
+  succ_q2 = noll_uid_array_new ();
+  assert (succ_q2 != NULL);
+  noll_uid_array_push (succ_q2, q2);
   noll_uid_array_push (succ_q2, q4);
   vata_add_transition (ta, q2, symbol_q2_3, succ_q2);
   noll_uid_array_delete (succ_q2);
