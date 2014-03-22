@@ -139,10 +139,16 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
-	unsigned char                    id_rel,
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up(
 	const noll_uid_array*            alias_marking);
 
+/// TODO
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_up(
+	const noll_uid_array*            alias_marking);
+
+/// TODO
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_down_fst(
+	const noll_uid_array*            alias_marking);
 
 /**
  * @brief  Creates a unique TA symbol of a node with higher-order predicate

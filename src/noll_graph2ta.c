@@ -1128,7 +1128,7 @@ noll_ta_t* noll_graph2ta(
 				// MS: yes, if not a two dir predicate
 				// use noll_pred_is_one_dir
 				assert(1 == noll_vector_size(edges));
-				//MS: to pass nll 
+				//MS: to pass nll
 				//assert((2 == noll_vector_size(ed->args)) || (4 == noll_vector_size(ed->args)));
 
 				field_name = noll_pred_name(ed->label);
@@ -1215,7 +1215,7 @@ noll_ta_t* noll_graph2ta(
 
 							// now, we create the corresponding symbol
 							const noll_ta_symbol_t* leaf_symbol =
-								noll_ta_symbol_get_unique_aliased_marking(1, mark_next_child);
+								noll_ta_symbol_get_unique_aliased_marking_up(mark_next_child);
 							assert(NULL != leaf_symbol);
 
 							// TODO: instead of getting a unique state, we might have only one
@@ -1232,7 +1232,7 @@ noll_ta_t* noll_graph2ta(
 
 							// now, we create the corresponding symbol
 							const noll_ta_symbol_t* leaf_symbol =
-								noll_ta_symbol_get_unique_aliased_marking(2, mark_next_child);
+								noll_ta_symbol_get_unique_aliased_marking_up_up(mark_next_child);
 							assert(NULL != leaf_symbol);
 
 							// TODO: instead of getting a unique state, we might have only one
@@ -1287,7 +1287,7 @@ noll_ta_t* noll_graph2ta(
 
 					// now, we create the corresponding symbol
 					const noll_ta_symbol_t* leaf_symbol =
-						noll_ta_symbol_get_unique_aliased_marking(3, mark_next_child);
+						noll_ta_symbol_get_unique_aliased_marking_up_down_fst(mark_next_child);
 					assert(NULL != leaf_symbol);
 
 					// TODO: instead of getting a unique state, we might have only one

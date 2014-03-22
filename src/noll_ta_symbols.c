@@ -37,6 +37,17 @@ enum noll_tree_label_type_t
 	NOLL_TREE_LABEL_HIGHER_PRED,      ///< higher-order predicate
 };
 
+/// Enumeration of possible alias marking relations
+enum noll_alias_marking_rel_t
+{
+	NOLL_ALIAS_MARKING_REL_UP,            ///< the alias UP relation
+	NOLL_ALIAS_MARKING_REL_UP_UP,         ///< the alias UP UP relation
+	NOLL_ALIAS_MARKING_REL_UP_DOWN_FIRST  ///< the alias UP DOWN relation
+};
+
+/**
+ * @brief  The symbol used in the tree encoding and in tree automata
+ */
 typedef struct noll_ta_symbol
 {
 	/// The type of the label (see enum @p noll_tree_label_type_t)
@@ -64,7 +75,7 @@ typedef struct noll_ta_symbol
 			/// The marking
 			noll_uid_array* marking;
 
-			/// Identifier of the relation
+			/// Identifier of the relation (of the type noll_alias_marking_rel_t)
 			unsigned char id_relation;
 		} alias_marking;
 
@@ -738,64 +749,78 @@ static char* noll_ta_symbol_alias_marking_str(
 	assert(NULL != str_mark);
 	size_t len_mark = strlen(str_mark);
 
-	size_t total_len =
-		1 /* '[' */ +
-		1 /* 's' */ +
-		1 /* 'X' */ +
-		1 /* '(' */ +
-		len_mark +
-		1 /* ')' */ +
-		1 /* ']' */ +
-		1 /* '\0' */;
+	static const size_t BUFFER_SIZE = 256;
 
-	char* str = malloc(total_len);
+	char* buffer = malloc(BUFFER_SIZE);
 	size_t index = 0;
-	str[index++] = '[';
-	str[index++] = 's';
+
+	assert(index < BUFFER_SIZE);
+	index += snprintf(
+		&buffer[index],
+		BUFFER_SIZE - index,
+		"alias<"
+		);
 
 	switch (sym->alias_marking.id_relation)
 	{
-		case 1:
+		case NOLL_ALIAS_MARKING_REL_UP:
 		{
-			str[index++] = '1';
+			assert(index < BUFFER_SIZE);
+			index += snprintf(
+				&buffer[index],
+				BUFFER_SIZE - index,
+				"UP"
+				);
 			break;
 		}
 
-		case 2:
+		case NOLL_ALIAS_MARKING_REL_UP_UP:
 		{
-			str[index++] = '2';
+			assert(index < BUFFER_SIZE);
+			index += snprintf(
+				&buffer[index],
+				BUFFER_SIZE - index,
+				"UP UP"
+				);
 			break;
 		}
 
-		case 3:
+		case NOLL_ALIAS_MARKING_REL_UP_DOWN_FIRST:
 		{
-			str[index++] = '3';
-			break;
-		}
-
-		case 4:
-		{
-			str[index++] = '4';
+			assert(index < BUFFER_SIZE);
+			index += snprintf(
+				&buffer[index],
+				BUFFER_SIZE - index,
+				"UP DOWN fst"
+				);
 			break;
 		}
 
 		default:
 		{
+			NOLL_DEBUG("Error: invalid alias marking relation\n");
 			assert(false);
 		}
 	}
 
-	str[index++] = '(';
-	strcpy(&str[index], str_mark);
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '>';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '(';
+
+	assert(index < BUFFER_SIZE - len_mark);
+	strcpy(&buffer[index], str_mark);
 	index += len_mark;
-	str[index++] = ')';
-	str[index++] = ']';
-	str[index++] = '\0';
-	assert(total_len == index);
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ')';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = ']';
+	assert(index < BUFFER_SIZE);
+	buffer[index++] = '\0';
 
 	free(str_mark);
 
-	return str;
+	return buffer;
 }
 
 
@@ -978,6 +1003,33 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking(
 }
 
 
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up(
+	const noll_uid_array*            alias_marking)
+{
+	return noll_ta_symbol_get_unique_aliased_marking(
+		NOLL_ALIAS_MARKING_REL_UP,
+		alias_marking);
+}
+
+
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_up(
+	const noll_uid_array*            alias_marking)
+{
+	return noll_ta_symbol_get_unique_aliased_marking(
+		NOLL_ALIAS_MARKING_REL_UP_UP,
+		alias_marking);
+}
+
+
+const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_down_fst(
+	const noll_uid_array*            alias_marking)
+{
+	return noll_ta_symbol_get_unique_aliased_marking(
+		NOLL_ALIAS_MARKING_REL_UP_DOWN_FIRST,
+		alias_marking);
+}
+
+
 const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
 	const noll_pred_t*               pred,
 	const noll_uid_array*            vars,
@@ -1009,5 +1061,4 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
 	assert(NULL != ret_sym);
 
 	return ret_sym;
-
 }
