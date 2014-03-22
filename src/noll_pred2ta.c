@@ -55,11 +55,11 @@ uint_t noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
 			noll_uid_array * vars_out, unsigned char alias_out);
 /**
  * Get the TA for the edge built with predicate 'ls'
- * by instantiating the definition of the 
+ * by instantiating the definition of the
  * 'lso(in, out)' predicate (see ../samples/nll/ls-vc01.smt)
  *
  * lso(in, out) = (in = out) or
- *                (in != out and 
+ *                (in != out and
  *                 exists u . in -> {(f, u)} * lso(u, out))
  *
  * to the TA (q1 is a root state):
@@ -68,7 +68,7 @@ uint_t noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
  *  q2 -> [f, m(f)](q2)
  *  q2 -> [lso, m(f)](q2)
  *  q2 -> [out]
- * 
+ *
  * @param edge   An edge using the 'lso' predicate
  * @return       The TA recognizing unfolding of this edge
  */
@@ -78,9 +78,9 @@ noll_edge2ta_ls (const noll_edge_t * edge)
   /* the checks on edge are done in the wrapper function */
 
   NOLL_DEBUG
-    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate lso\n");
+    ("WARNING: Generating a fixed TA for the predicate lso\n");
 
-  // get infos about the predicate 
+  // get infos about the predicate
   uint_t pid = edge->label;
   noll_pred_t *pred = noll_vector_at (preds_array, pid);
   assert (NULL != pred);
@@ -193,7 +193,7 @@ noll_edge2ta_ls (const noll_edge_t * edge)
  * Add to the @p ta the transitions encoding the ls predicate,
  * starting from state @p qinit, labeling the first state by @p vars_in,
  * ending in @p vars_out, and marking the first state by @p mark_in.
- * 
+ *
  * @param ta       the TA to which transitions are added
  * @param pred     the predicate generated
  * @param fid      the field to be used as selector
@@ -235,8 +235,8 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
   noll_uid_array *children = noll_uid_array_new ();
   noll_uid_array_push (children, q);
 
-  /* 
-   * Transition: q1 -> [<fid>, {in}, mark_in](q2) 
+  /*
+   * Transition: q1 -> [<fid>, {in}, mark_in](q2)
    *       -- one cell
    */
   const noll_ta_symbol_t *symbol_next1 =
@@ -244,8 +244,8 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
   assert (NULL != symbol_next1);
   vata_add_transition (ta, qinit, symbol_next1, children);
 
-  /* 
-   * Transition: q1 -> [<ls>, {in}, mark_in](q2) 
+  /*
+   * Transition: q1 -> [<ls>, {in}, mark_in](q2)
    *       -- one list segment
    */
   const noll_ta_symbol_t *symbol_lso1 =
@@ -253,8 +253,8 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
   assert (NULL != symbol_lso1);
   vata_add_transition (ta, qinit, symbol_lso1, children);
 
-  /* 
-   * Transition: q2 -> [<fid>, {}, mark_in_fld](q2) 
+  /*
+   * Transition: q2 -> [<fid>, {}, mark_in_fld](q2)
    *       -- one list segment
    */
   const noll_ta_symbol_t *symbol_next2 =
@@ -262,8 +262,8 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
   assert (NULL != symbol_next2);
   vata_add_transition (ta, q, symbol_next2, children);
 
-  /* 
-   * Transition: q2 -> [<ls>, {}, mark_in_fld](q2) 
+  /*
+   * Transition: q2 -> [<ls>, {}, mark_in_fld](q2)
    *       -- one list segment
    */
   const noll_ta_symbol_t *symbol_lso2 =
@@ -271,8 +271,8 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
   assert (NULL != symbol_lso2);
   vata_add_transition (ta, q, symbol_lso2, children);
 
-  /* 
-   * Transition: q2 -> [, {out}, ]() 
+  /*
+   * Transition: q2 -> [, {out}, ]()
    *       -- one list segment
    */
   const noll_ta_symbol_t *symbol_end = NULL;
@@ -298,7 +298,7 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
  * 'lsso(in, out)' predicate (see ../samples/nll/lss-vc01.smt)
  *
  * lsso(in, out) = (in = out) or
- *                 (in != out and 
+ *                 (in != out and
  *                 exists u . in -> {(f1, u), (f2, u)} * lsso(u, out))
  *
  * to the TA (q1 is a root state):
@@ -308,7 +308,7 @@ noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid,
  *  q2 -> [lsso, m(f)](q2)
  *  q2 -> [out]
  *  q3 -> [m(next2)]
- * 
+ *
  * @param edge   An edge using the 'lsso' predicate
  * @return       The TA recognizing unfolding of this edge
  */
@@ -318,9 +318,9 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   /* the checks on edge are done in the wrapper function */
 
   NOLL_DEBUG
-    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate lsso\n");
+    ("WARNING: Generating a fixed TA for the predicate lsso\n");
 
-  // get infos about the predicate 
+  // get infos about the predicate
   uint_t pid = edge->label;
   noll_pred_t *pred = noll_vector_at (preds_array, pid);
   assert (NULL != pred);
@@ -344,8 +344,8 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   assert (UNDEFINED_ID != next2_uid);
   noll_field_t *next1_fld = noll_vector_at (fields_array, next1_uid);
   noll_field_t *next2_fld = noll_vector_at (fields_array, next2_uid);
-  // this translation works only for the lsso predicate where 
-  // next2 < next1 
+  // this translation works only for the lsso predicate where
+  // next2 < next1
   assert (noll_field_lt (next2_uid, next1_uid));
 
   vata_ta_t *ta = NULL;
@@ -464,14 +464,14 @@ noll_edge2ta_lss (const noll_edge_t * edge)
  *                 exists u. in -> {(next, u),(prev, pv)} * dll(u,out,in,fw))
  *
  * (Notice: both int and out are 'allocated' on the list segment!)
- * 
+ *
  * to the TA (q1 is a root state):
- * 
+ *
  *  -- only simple fields --
  *  q1 -> [<next,prev>, {in,out}, eps](q4,q5)
- *        -- one cell list 
+ *        -- one cell list
  *  q1 -> [<next,prev>, {in}, eps](q2,q5)
- *        -- at least two cell list 
+ *        -- at least two cell list
  *  q2 -> [<next,prev>, {out}, m(next)](q4,q6)
  *        -- exactly two cells
  *  q2 -> [<next,prev>, , m(next)](q3,q6)
@@ -490,7 +490,7 @@ noll_edge2ta_lss (const noll_edge_t * edge)
  *        -- ref to the input of the list
  *  q7 -> [,s2(m(next)),]()
  *        -- ref to the previous inside the list
- *  
+ *
  *  -- only predicate segments --
  *  q1 -> [<dll>, {in}, eps](q8,q5)
  *        -- one list segment from in location
@@ -499,11 +499,11 @@ noll_edge2ta_lss (const noll_edge_t * edge)
  *  q8 -> [<next>, , m(next)](q9)
  *        -- link by next to another dll cell
  *  q9 -> [<dll>, , m(next)](q8,q7)
- * 
- *  -- mixed fileds/dll --- 
+ *
+ *  -- mixed fileds/dll ---
  *  q9 -> [<next>, , m(next)](q3)
  *  q3 -> [<next>, , m(next)](q9)
- * 
+ *
  * @param edge   An edge using the 'lsso' predicate
  * @return       The TA recognizing unfolding of this edge
  */
@@ -513,9 +513,9 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   /* the checks on edge are done in the wrapper function */
 
   NOLL_DEBUG
-    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate dll\n");
+    ("WARNING: Generating a fixed TA for the predicate dll\n");
 
-  // get infos about the predicate 
+  // get infos about the predicate
   uint_t pid = edge->label;
   noll_pred_t *pred = noll_vector_at (preds_array, pid);
   assert (NULL != pred);
@@ -596,9 +596,9 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   /* build the TA */
   vata_set_state_root (ta, 1);
 
-  /* 
+  /*
    * Transition: q1 -> [<next,prev>, {in,out}, eps](q4,q5)
-   *        -- one cell list 
+   *        -- one cell list
    */
   const noll_ta_symbol_t *symbol_q1_1 =
     noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_in_out,
@@ -612,7 +612,7 @@ noll_edge2ta_dll (const noll_edge_t * edge)
 
   /*
    * Transition: q1 -> [<next,prev>, {in}, eps](q2,q5)
-   *        -- at least two cell list 
+   *        -- at least two cell list
    */
   const noll_ta_symbol_t *symbol_q1_2 =
     noll_ta_symbol_get_unique_allocated (sel_next_prev, vars_in, mark_eps);
@@ -674,8 +674,8 @@ noll_edge2ta_dll (const noll_edge_t * edge)
   noll_uid_array_push (succ_q2, 6);
   vata_add_transition (ta, 2, symbol_q2_p, succ_q2);
   noll_uid_array_delete (succ_q2);
-  
-  /* 
+
+  /*
    * Transition: q3 -> [<next,prev>, , m(next)](q3,q7)
    *        -- inner cells after two
    */
@@ -826,30 +826,30 @@ uint_t noll_pred2ta_nll (noll_ta_t * ta, noll_pred_t * pred,
  * 'nll(in, out, brd)' predicate (see ../samples/nll/nll-vc01.smt)
  *
  * nll(in,out,brd) = (in = out) or
- *                 (in != out and exists u,z. 
- *                       in -> {(s, u),(h, z)} * 
+ *                 (in != out and exists u,z.
+ *                       in -> {(s, u),(h, z)} *
  *                       ls (z,brd) * nll(u,out,brd))
- * 
+ *
  * to the TA (q1 is a root state):
- * 
+ *
  * -- only simple fields --
  * q1 -> [<s,h>, {in}, [e]] (q2,q3)
  *       -- first cell
  * q2 -> [<s,h>, {}, [e::s]] (q2,qn)
- *       -- from cell two 
+ *       -- from cell two
  * q2 -> [, {out}, ]()
  *       -- end
- * 
+ *
  * -- list segments --
  * q1 -> [<nll(brd)>, {in}, [e]] (q2)
  * q2 -> [<nll(brd)>, , [e::s]] (q2)
- * 
+ *
  * -- imported transitions --
  * q3 -> [ {brd} ]()
  * q3 --> qn-1 = ls(f, q3, {}, [e::h], {brd})
- * 
+ *
  * qn -> [ {brd} ] ()
- * qn --> qlast = 
+ * qn --> qlast =
  *     ls(f, qn, {}, [e::s::h], {brd})
  */
 noll_ta_t *
@@ -858,9 +858,9 @@ noll_edge2ta_nll (const noll_edge_t * edge)
   /* the checks on edge are done in the wrapper function */
 
   NOLL_DEBUG
-    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate nll\n");
+    ("WARNING: Generating a fixed TA for the predicate nll\n");
 
-  // get infos about the predicate 
+  // get infos about the predicate
   uint_t pid = edge->label;
   noll_pred_t *pred = noll_vector_at (preds_array, pid);
   assert (NULL != pred);
@@ -952,7 +952,7 @@ noll_edge2ta_nll (const noll_edge_t * edge)
  * Add to the @p ta the transitions encoding the nll predicate,
  * starting from state @p qinit, labeling the first state by @p vars_in,
  * ending in @p vars_out, and marking the first state by @p mark_in.
- * 
+ *
  * @param ta        the TA to which transitions are added
  * @param pred      the predicate generated
  * @param *_fid     the fields to be used as selector
@@ -1047,7 +1047,7 @@ noll_pred2ta_nll (noll_ta_t * ta, noll_pred_t * pred,
   vata_add_transition (ta, q1, symbol_q1_2, succ_q1);
   noll_uid_array_delete (succ_q1);
 
-  /* 
+  /*
    * Transition: q3 -> [ {brd} ]()
    */
   const noll_ta_symbol_t *symbol_q3 = NULL;
@@ -1099,7 +1099,7 @@ noll_pred2ta_nll (noll_ta_t * ta, noll_pred_t * pred,
   assert (succ_q2 != NULL);
   noll_uid_array_push (succ_q2, q2);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
-  // succ_q2 used below 
+  // succ_q2 used below
 
   /*
    * Transition: q2 -> [<s,h>, {}, [e::s]] (q2,q4)
@@ -1113,7 +1113,7 @@ noll_pred2ta_nll (noll_ta_t * ta, noll_pred_t * pred,
   vata_add_transition (ta, q2, symbol_q2_3, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-  /* 
+  /*
    * Transition: qn -> [ {brd} ] ()
    */
   const noll_ta_symbol_t *symbol_q4 = NULL;
@@ -1158,24 +1158,24 @@ uint_t noll_pred2ta_nlcl (noll_ta_t * ta, noll_pred_t * pred,
  * 'nlcl(in, out)' predicate (see ../samples/nll/nlcl-vc01.smt)
  *
  * nlcl(in,out) = (in = out) or
- *                (in != out and exists u,z. 
- *                       in -> {(s, u),(h, z)} * 
+ *                (in != out and exists u,z.
+ *                       in -> {(s, u),(h, z)} *
  *                       loop (ls (z,z)) * nlcl(u,out))
- * 
+ *
  * to the TA (q1 is a root state):
- * 
+ *
  * -- only simple fields --
  * q1 -> [<s,h>, {in}, [e]] (q2,q3)
  *       -- first cell
  * q2 -> [<s,h>, {}, [e::s]] (q2,qn)
- *       -- from cell two 
+ *       -- from cell two
  * q2 -> [, {out}, ]()
  *       -- end
- * 
+ *
  * -- list segments --
  * q1 -> [<nlcl>, {in}, [e]] (q2)
  * q2 -> [<nlcl>, , [e::s]] (q2)
- * 
+ *
  * -- imported transitions --
  * k = ls(f, q3, {}, [e::h], s1[e::h])
  * n = k+1
@@ -1187,9 +1187,9 @@ noll_edge2ta_nlcl (const noll_edge_t * edge)
   /* the checks on edge are done in the wrapper function */
 
   NOLL_DEBUG
-    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate nlcl\n");
+    ("WARNING: Generating a fixed TA for the predicate nlcl\n");
 
-  // get infos about the predicate 
+  // get infos about the predicate
   uint_t pid = edge->label;
   noll_pred_t *pred = noll_vector_at (preds_array, pid);
   assert (NULL != pred);
@@ -1273,7 +1273,7 @@ noll_edge2ta_nlcl (const noll_edge_t * edge)
  * Add to the @p ta the transitions encoding the nlcl predicate,
  * starting from state @p qinit, labeling the first state by @p vars_in,
  * ending in @p vars_out, and marking the first state by @p mark_in.
- * 
+ *
  * @param ta        the TA to which transitions are added
  * @param pred      the predicate generated
  * @param *_fid     the fields to be used as selector
@@ -1399,7 +1399,7 @@ noll_pred2ta_nlcl (noll_ta_t * ta, noll_pred_t * pred,
   assert (succ_q2 != NULL);
   noll_uid_array_push (succ_q2, q2);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
-  // succ_q2 used below 
+  // succ_q2 used below
 
   /*
    * Transition: q2 -> [<s,h>, {}, [e::s]] (q2,q4)
@@ -1445,15 +1445,15 @@ noll_pred2ta_skl (noll_ta_t * ta, noll_pred_t * pred, uint_t level,
  * 'skl(in, out)' predicate (see ../samples/nll/skl2-vc01.smt)
  *
  * skl2(in,out) = (in = out) or
- *                (in != out and exists u,z. 
- *                       in -> {(f2, u),(f1, z)} * 
+ *                (in != out and exists u,z.
+ *                       in -> {(f2, u),(f1, z)} *
  *                       skl1 (z,u)) * skl2(u,out))
- * 
+ *
  * skl1(in,out) = (in = out) or
- *                (in != out and exists u. 
- *                       in -> {(f2, NULL),(f1, u)} * 
+ *                (in != out and exists u.
+ *                       in -> {(f2, NULL),(f1, u)} *
  *                       skl1(u,out))
- * 
+ *
  * WARNING: the max level supported is 3.
  */
 noll_ta_t *
@@ -1468,7 +1468,7 @@ noll_edge2ta_skl (const noll_edge_t * edge)
   assert (strlen (pname) == 4);
 
   NOLL_DEBUG
-    ("WARNING: Generating a fixed (and screwed-up) TA for the predicate %s\n",
+    ("WARNING: Generating a fixed TA for the predicate %s\n",
      pname);
 
   /* get the level of the skl = char after name = number of fields != NULL */
@@ -1539,18 +1539,18 @@ noll_edge2ta_skl (const noll_edge_t * edge)
 
 /**
  * Add transitions to @p ta for skl1 of fields @p flds.
- * 
+ *
  * TA generated:
- * 
+ *
  * q1 = qinit -> [ flds, {in}, [e] ] (qnil, qnil, q2)
  * q1 -> [ <skl1>, {in}, [e] ] (q2)
- * 
+ *
  * qnil -> [ , {nil-0}, ]()
- * 
- * q2 -> [, {out}, ] () 
+ *
+ * q2 -> [, {out}, ] ()
  * q2 -> [ flds, , [e.flds[maxlevel-1]] ] (qnil, qnil, q2)
  * q2 -> [ <skl1>, , [e.flds[maxlevel-1] ] (q2)
- * 
+ *
  */
 uint_t
 noll_pred2ta_skl1 (noll_ta_t * ta, noll_pred_t * pred,
@@ -1655,9 +1655,9 @@ noll_pred2ta_skl1 (noll_ta_t * ta, noll_pred_t * pred,
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-/* 
+/*
  * Transition: q2 -> [ <skl1>, , [e.flds[maxlevel-1] ] (q2)
- * 
+ *
 */
   const noll_ta_symbol_t *symbol_q2_3 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
@@ -1675,9 +1675,9 @@ noll_pred2ta_skl1 (noll_ta_t * ta, noll_pred_t * pred,
 
 /**
  * Add transitions to @p ta for skl2 of fields @p flds.
- * 
+ *
  * TA generated:
- * 
+ *
  * q1 = qinit
  * qout -> [ {out} ] ()
  *    -- out cell
@@ -1701,7 +1701,7 @@ noll_pred2ta_skl1 (noll_ta_t * ta, noll_pred_t * pred,
  *     -- skl1 segment to q2
  * q1 -> [ <skl2>, {in}, [min] ] (q2)
  *    -- at least one list segment
- * 
+ *
  * q2 -> [ flds, , [min.f2] ] (qnil, qout, qout)
  *    -- last fields to qout, inner skl1 empty
  * q2 -> [ flds, , [min.f2] ] (qnil, qout, q1out)
@@ -1714,7 +1714,7 @@ noll_pred2ta_skl1 (noll_ta_t * ta, noll_pred_t * pred,
  *    -- inner cell with skl1 non empty
  * q2 -> [ <skl2>, , [min . f2] ] (q2)
  *    -- inner list segment
- * 
+ *
  * q14 --skl1--> qlast=skl1(q14, [min.f2.f1], s3(min.f2))
  *       -- non-empty nested skl1 from inner cell
  */
@@ -1758,9 +1758,9 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
   noll_pred_t *pred_skl1 = noll_vector_at (preds_array, 0);
   assert (strcmp (pred_skl1->pname, "skl1") == 0);
   /*
-     for (uint_t pid = 0; 
+     for (uint_t pid = 0;
      pid < noll_vector_size(preds_array) &&
-     pred_skl1 != NULL; 
+     pred_skl1 != NULL;
      pid++)
      if (noll_vector_at(pred->typ->ppreds, pid) == 1 &&
      pid != pred->pid)
@@ -1949,10 +1949,10 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-/* 
+/*
  * Transition: q2 -> [ <skl2>, , [min.f2] ] (qout)
  *    -- last list segment to out
- * 
+ *
 */
   const noll_ta_symbol_t *symbol_q2_3 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
@@ -1962,10 +1962,10 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
   vata_add_transition (ta, q2, symbol_q2_3, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-/* 
+/*
  * Transition: q2 -> [ <skl2>, , [min . f2] ] (q2)
  *    -- inner list segment
- * 
+ *
 */
   const noll_ta_symbol_t *symbol_q2_4 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
@@ -2003,7 +2003,7 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
   vata_add_transition (ta, q2, symbol_q2_6, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-  /* 
+  /*
    * q14 --skl1--> qlast=skl1(q14, [min.f2.f1], s3(min.f2))
    *       -- non-empty nested skl1 from inner cell
    */
@@ -2021,14 +2021,14 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
 
 /**
  * Add transitions to @p ta for skl3 of fields @p flds.
- * 
+ *
  * TA generated:
- * 
- * qi3 = qinit 
- * 
+ *
+ * qi3 = qinit
+ *
  * qout -> [ (out,alias_out) ] ()
  *      -- last cell
- * 
+ *
  * --- Initial to out ---
  * qi3 -> [ <skl3>, {in}, [min] ] (qout)
  *    -- one skl3 segment to out
@@ -2036,19 +2036,19 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
  *    -- one f3 link to out, inner skl2 and skl1 empty
  * qi3 -> [ flds, {in}, [min] ] (qout, qout, qi1out)
  *    -- one f3 link to out, inner skl2 empty, inner skl1 non empty
- * qi1out --skl1--> qi2out(-1) = skl1 (qi1out, [min.f1], out, aliasout) 
+ * qi1out --skl1--> qi2out(-1) = skl1 (qi1out, [min.f1], out, aliasout)
  *    -- inner skl1 to out from start cell
  * qi3 -> [ flds, {in}, [min] ] (qout, qi2out, qiref2)
  *    -- one f3 link to out, inner skl2 non empty, inner skl1 empty
- * qi2out --skl2--> qiref2(-1) = skl2 (qi2out, [min.f2], out, aliasout) 
+ * qi2out --skl2--> qiref2(-1) = skl2 (qi2out, [min.f2], out, aliasout)
  *    -- inner skl2 to out from start cell
  * qiref2 -> [ s3(min.f2) ]()
  *    -- reference to level2 from start cell
  * qi3 -> [ flds, {in}, [min] ] (qout, qi2out, qi1ref2)
  *    -- one f3 link to out, inner skl2 and skl1 non empty
- * qi1ref2 --skl1--> qi1ref3(-1) = skl1 (qi1ref2, [min.f1], [min.f2], 3) 
+ * qi1ref2 --skl1--> qi1ref3(-1) = skl1 (qi1ref2, [min.f1], [min.f2], 3)
  *    -- inner skl1 to level 2 in the start cell
- * 
+ *
  * --- Initial to inner ---
  * qi3 -> [ <skl3>, {in}, [min] ] (qn3)
  *    -- at least one skl3 segment
@@ -2058,15 +2058,15 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
  *    -- reference to inner node
  * qi3 -> [ flds, {in}, [min] ] (qn3, qnref3, qi1ref3)
  *    -- one f3 link to inner, inner skl2 empty, inner skl1 non empty
- * qi1ref3 --skl1--> qi2ref3(-1) = skl1 (qi1ref3, [min.f1], [min.f3], s3) 
+ * qi1ref3 --skl1--> qi2ref3(-1) = skl1 (qi1ref3, [min.f1], [min.f3], s3)
  *    -- inner skl1 to inner from start cell
  * qi3 -> [ flds, {in}, [min] ] (qn3, qi2ref3, qiref2)
  *    -- one f3 link to inner, inner skl2 non empty, inner skl1 empty
- * qi2ref3 --skl2--> qn1out(-1) = skl2 (qi2ref3, [min.f2], [min.f3], s3) 
+ * qi2ref3 --skl2--> qn1out(-1) = skl2 (qi2ref3, [min.f2], [min.f3], s3)
  *    -- inner skl2 to inner from start cell
  * qi3 -> [ flds, {in}, [min] ] (qn3, qi2ref3, qi1ref2)
  *    -- one f3 link to inner, inner skl2 and skl1 non empty
- * 
+ *
  * --- Inner to out ---
  * qn3 -> [ <skl3>, , [min.f3] ] (qout)
  *    -- last skl3 segment to out
@@ -2074,31 +2074,31 @@ noll_pred2ta_skl2 (noll_ta_t * ta, noll_pred_t * pred,
  *    -- one f3 link to out, inner skl2 and skl1 empty
  * qn3 -> [ flds, , [min.f3] ] (qout, qout, qn1out)
  *    -- one f3 link to out, inner skl2 empty, inner skl1 non empty
- * qn1out --skl1--> qn2out(-1) = skl1 (qn1out, [min.f3.f1], out, aliasout) 
+ * qn1out --skl1--> qn2out(-1) = skl1 (qn1out, [min.f3.f1], out, aliasout)
  *    -- inner skl1 to out from inner cell
  * qn3 -> [ flds, , [min.f3] ] (qout, qn2out, qnref2)
  *    -- one f3 link to out, inner skl2 non empty, inner skl1 empty
- * qn2out --skl2--> qnref2(-1) = skl2 (qn2out, [min.f3.f2], out, aliasout) 
+ * qn2out --skl2--> qnref2(-1) = skl2 (qn2out, [min.f3.f2], out, aliasout)
  *    -- inner skl2 to out from inner cell
  * qnref2 -> [ s3(min.f3.f2) ]()
  *    -- reference to level2 from inner cell
  * qn3 -> [ flds, , [min.f3] ] (qout, qn2out, qn1ref2)
  *    -- one f3 link to out, inner skl2 and skl1 non empty
- * qn1ref2 --skl1--> qn1ref3(-1) = skl1 (qn1ref2, [min.f3.f1], [min.f3.f2], 3) 
+ * qn1ref2 --skl1--> qn1ref3(-1) = skl1 (qn1ref2, [min.f3.f1], [min.f3.f2], 3)
  *    -- inner skl1 to level 2 in the inner cell
- * 
+ *
  * --- Inner to inner ---
  * qn3 -> [ <skl3>, , [min.f3] ] (qn3)
- *    -- inner skl3 segment 
+ *    -- inner skl3 segment
  * qn3 -> [ flds, , [min.f3] ] (qn3, qnref3, qnref3)
  *    -- field f3 to inner, inner skl2 and skl1 empty
  * qn3 -> [ flds, , [min.f3] ] (qn3, qnref3, qn1ref3)
  *    -- field f3 to out, inner skl2 empty, inner skl1 non empty
- * qn1ref3 --skl1--> qn2ref3(-1) = skl1 (qn1ref3, [min.f3.f1], [min.f3], 3) 
+ * qn1ref3 --skl1--> qn2ref3(-1) = skl1 (qn1ref3, [min.f3.f1], [min.f3], 3)
  *    -- inner skl1 to level 3 in inner cell
  * qn3 -> [ flds, , [min.f3] ] (qn3, qn2ref3, qnref2)
  *    -- one f3 link to inner, inner skl2 non empty, inner skl1 empty
- * qn2ref3 --skl2--> qlast = skl2 (qn2ref3, [min.f3.f2], [min.f3], 3) 
+ * qn2ref3 --skl2--> qlast = skl2 (qn2ref3, [min.f3.f2], [min.f3], 3)
  *    -- inner skl2 to level 3 from inner cell
  * qn3 -> [ flds, , [min.f3] ] (qn3, qn2ref3, qn1ref2)
  *    -- one f3 link to out, inner skl2 and skl1 non empty
@@ -2142,9 +2142,9 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   noll_pred_t *pred_skl2 = noll_vector_at (preds_array, 1);
   assert (strcmp (pred_skl2->pname, "skl2") == 0);
   /*
-     for (uint_t pid = 0; 
+     for (uint_t pid = 0;
      pid < noll_vector_size(preds_array) &&
-     pred_skl1 != NULL; 
+     pred_skl1 != NULL;
      pid++)
      if (noll_vector_at(pred->typ->ppreds, pid) == 1 &&
      pid != pred->pid)
@@ -2247,7 +2247,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transition: qi1out --skl1--> skl1 (qi1out, [min.f1], out, aliasout) 
+   * Transition: qi1out --skl1--> skl1 (qi1out, [min.f1], out, aliasout)
    *    -- inner skl1 to out from start cell
    */
   qlast =
@@ -2271,7 +2271,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
 
   uint_t qi2out = ++qlast;
   /*
-   * Transitions:  qi2out --skl2--> qi1ref2(-1) = skl2 (qi2out, [min.f2], out, aliasout) 
+   * Transitions:  qi2out --skl2--> qi1ref2(-1) = skl2 (qi2out, [min.f2], out, aliasout)
    *    -- inner skl2 to out from start cell
    */
   qlast =
@@ -2297,7 +2297,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
 
   uint_t qi1ref2 = ++qlast;
   /*
-   * Transitions:  qi1ref2 --skl1-->  skl1 (qi1ref2, [min.f1], [min.f2], 3) 
+   * Transitions:  qi1ref2 --skl1-->  skl1 (qi1ref2, [min.f1], [min.f2], 3)
    *    -- inner skl1 to level 2 in the start cell
    */
   qlast =
@@ -2308,7 +2308,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   /*
    * Transition: qi3 -> [ flds, {in}, [min] ] (qout, qi2out, qi1ref2)
    *    -- one f3 link to out, inner skl2 and skl1 non empty
-   * 
+   *
    */
   {
     const noll_ta_symbol_t *symbol_qi3 =
@@ -2386,7 +2386,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transitions: qi1ref3 --skl1--> skl1 (qi1ref3, [min.f1], [min.f3], s3) 
+   * Transitions: qi1ref3 --skl1--> skl1 (qi1ref3, [min.f1], [min.f3], s3)
    *    -- inner skl1 to inner from start cell
    */
   qlast =
@@ -2412,7 +2412,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transitions: qi2ref3 --skl2--> skl2 (qi2ref3, [min.f2], [min.f3], s3) 
+   * Transitions: qi2ref3 --skl2--> skl2 (qi2ref3, [min.f2], [min.f3], s3)
    *    -- inner skl2 to inner from start cell
    */
   qlast =
@@ -2487,7 +2487,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transition: qn1out --skl1--> skl1 (qn1out, [min.f3.f1], out, aliasout) 
+   * Transition: qn1out --skl1--> skl1 (qn1out, [min.f3.f1], out, aliasout)
    *    -- inner skl1 to out from inner cell
    */
   qlast =
@@ -2527,7 +2527,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transition: qn2out --skl2--> skl2 (qn2out, [min.f3.f2], out, aliasout) 
+   * Transition: qn2out --skl2--> skl2 (qn2out, [min.f3.f2], out, aliasout)
    *    -- inner skl2 to out from inner cell
    */
   qlast =
@@ -2553,7 +2553,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transition: qn1ref2 --skl1--> skl1 (qn1ref2, [min.f3.f1], [min.f3.f2], 3) 
+   * Transition: qn1ref2 --skl1--> skl1 (qn1ref2, [min.f3.f1], [min.f3.f2], 3)
    *    -- inner skl1 to level 2 in the inner cell
    */
   qlast =
@@ -2562,9 +2562,9 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   assert (qlast > qn1ref2);
 
   /* --- Inner to inner --- */
-  /* 
+  /*
    * Transition: qn3 -> [ <skl3>, , [min.f3] ] (qn3)
-   *    -- inner skl3 segment 
+   *    -- inner skl3 segment
    */
   {
     const noll_ta_symbol_t *symbol_qn3 =
@@ -2610,7 +2610,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transition: qn1ref3 --skl1--> skl1 (qn1ref3, [min.f3.f1], [min.f3], 3) 
+   * Transition: qn1ref3 --skl1--> skl1 (qn1ref3, [min.f3.f1], [min.f3], 3)
    *    -- inner skl1 to level 3 in inner cell
    */
   qlast =
@@ -2636,7 +2636,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
   }
 
   /*
-   * Transition: qn2ref3 --skl2--> qlast = skl2 (qn2ref3, [min.f3.f2], [min.f3], 3) 
+   * Transition: qn2ref3 --skl2--> qlast = skl2 (qn2ref3, [min.f3.f2], [min.f3], 3)
    *    -- inner skl2 to level 3 from inner cell
    */
   qlast =
@@ -2673,7 +2673,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta, noll_pred_t * pred,
  * Add to the @p ta the transitions encoding the skl(@p level) predicate,
  * starting from state @p qinit, labeling the first state by @p vars_in,
  * ending in @p vars_out, and marking the first state by @p mark_in.
- * 
+ *
  * @param ta        the TA to which transitions are added
  * @param pred      the predicate generated
  * @param level     the level of the predicate <= @p maxlevel
@@ -2717,8 +2717,8 @@ noll_pred2ta_skl (noll_ta_t * ta, noll_pred_t * pred, uint_t level,
 
 
 /**
- * Get the TA for the @p edge.  
- * 
+ * Get the TA for the @p edge.
+ *
  * @param edge    A predicate edge
  * @return        A TA recorgnizing the tree encodings for this edge
  */
@@ -2777,7 +2777,7 @@ noll_edge2ta (const noll_edge_t * edge)
 		  def->sigma_1->is_precise ? "true" : "false");
     }
 
-  if ((0 == strcmp (pred->pname, "lso")) || 
+  if ((0 == strcmp (pred->pname, "lso")) ||
       (0 == strcmp (pred->pname, "ls")))
     {				// this is the "ls" predicate
 
