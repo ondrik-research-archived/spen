@@ -294,11 +294,15 @@ noll_edge2ta_ls (const noll_edge_t * edge)
  *
  * to the TA (q1 is a root state):
  *  q1 -> [<f1,f2>, in, m(f)](q2,q3)
+ *  q1 -> [<f1,f2>, in, m(f)](qout,qout)
  *  q1 -> [lsso, in, m(f)](q2)
+ *  q1 -> [lsso, in, m(f)](qout)
  *  q2 -> [<f1,f2>, m(f)](q2,q3)
+ *  q2 -> [<f1,f2>, m(f)](qout,qout)
  *  q2 -> [lsso, m(f)](q2)
- *  q2 -> [out]
- *  q3 -> [m(next2)]
+ *  q2 -> [lsso, m(f)](qout)
+ *  qout -> [out]
+ *  q3 -> [alias^v(f1)]
  *
  * @param edge   An edge using the 'lsso' predicate
  * @return       The TA recognizing unfolding of this edge
@@ -333,11 +337,17 @@ noll_edge2ta_lss (const noll_edge_t * edge)
       }
   assert (UNDEFINED_ID != next1_uid);
   assert (UNDEFINED_ID != next2_uid);
+  // this translation works only for the lsso predicate where
+  // next1 < next2
+  if (noll_field_lt (next2_uid, next1_uid))
+  {
+    // swap fields
+    uid_t tmp_uid = next2_uid;
+    next2_uid = next1_uid;
+    next1_uid = tmp_uid;
+  }
   noll_field_t *next1_fld = noll_vector_at (fields_array, next1_uid);
   noll_field_t *next2_fld = noll_vector_at (fields_array, next2_uid);
-  // this translation works only for the lsso predicate where
-  // next2 < next1
-  assert (noll_field_lt (next2_uid, next1_uid));
 
   vata_ta_t *ta = NULL;
   if ((ta = vata_create_ta ()) == NULL)
@@ -367,11 +377,11 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   assert (NULL != marking1);
   noll_uid_array_push (marking1, NOLL_MARKINGS_EPSILON);
 
-  /*  symbol [m(next2), eps]] */
+  /*  symbol [m(next1), eps]] */
   noll_uid_array *marking2 = noll_uid_array_new ();
   assert (NULL != marking2);
   noll_uid_array_copy (marking2, marking1);
-  noll_uid_array_push (marking2, next2_uid);
+  noll_uid_array_push (marking2, next1_uid);
 
   /* symbol <next1, next2> [in, eps] */
   const noll_ta_symbol_t *symbol_alloc1 =
@@ -383,12 +393,12 @@ noll_edge2ta_lss (const noll_edge_t * edge)
     noll_ta_symbol_get_unique_higher_pred (pred, vars1, marking1);
   assert (NULL != symbol_lsso1);
 
-  /* symbol <next1, next2> [m(next2), eps]  */
+  /* symbol <next1, next2> [m(next1), eps]  */
   const noll_ta_symbol_t *symbol_alloc2 =
     noll_ta_symbol_get_unique_allocated (selectors, NULL, marking2);
   assert (NULL != symbol_alloc2);
 
-  /* symbol <lsso> [m(next2), eps]  */
+  /* symbol <lsso> [m(next1), eps]  */
   const noll_ta_symbol_t *symbol_lsso2 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, marking2);
   assert (NULL != symbol_lsso2);
@@ -398,7 +408,7 @@ noll_edge2ta_lss (const noll_edge_t * edge)
     noll_ta_symbol_get_unique_aliased_var (end_node);
   assert (NULL != symbol_end);
 
-  /* TODO: symbol [m(next2), eps]  */
+  /* TODO: symbol [m(next1), eps]  */
   const noll_ta_symbol_t *symbol_ref =
     noll_ta_symbol_get_unique_aliased_marking_up_down_fst(marking2);
   assert (NULL != symbol_ref);
@@ -406,40 +416,67 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   /* build the TA */
   vata_set_state_root (ta, 1);
 
+  /* q1 -> <next1, next2> [in, eps] (q2,q3) */
   noll_uid_array *children1next = noll_uid_array_new ();
-  noll_uid_array_push (children1next, 3);
   noll_uid_array_push (children1next, 2);
+  noll_uid_array_push (children1next, 3);
+  vata_add_transition (ta, 1, symbol_alloc1, children1next);
+  noll_uid_array_delete (children1next);
 
+  /* q1 -> [<f1,f2>, in, m(f)](qout,qout) */
+  children1next = noll_uid_array_new ();
+  noll_uid_array_push (children1next, 4);
+  noll_uid_array_push (children1next, 4);
+  vata_add_transition (ta, 1, symbol_alloc1, children1next);
+  noll_uid_array_delete (children1next);
+
+  /* q1 -> <lsso> [in, eps] (q2) */
   noll_uid_array *children1lsso = noll_uid_array_new ();
   noll_uid_array_push (children1lsso, 2);
-
+  vata_add_transition (ta, 1, symbol_lsso1, children1lsso);
+  noll_uid_array_delete (children1lsso);
+  
+  /* q1 -> [lsso, in, m(f)](qout) */
+  children1lsso = noll_uid_array_new ();
+  noll_uid_array_push (children1lsso, 4);
+  vata_add_transition (ta, 1, symbol_lsso1, children1lsso);
+  noll_uid_array_delete (children1lsso);
+ 
+  /* q2 -> <next1, next2> [m(next1), eps] (q2,q3) */
   noll_uid_array *children2next = noll_uid_array_new ();
-  noll_uid_array_push (children2next, 3);
   noll_uid_array_push (children2next, 2);
+  noll_uid_array_push (children2next, 3);
+  vata_add_transition (ta, 2, symbol_alloc2, children2next);
+  noll_uid_array_delete (children2next);
 
+  /* q2 -> [<f1,f2>, m(f)](qout,qout) */
+  children2next = noll_uid_array_new ();
+  noll_uid_array_push (children2next, 4);
+  noll_uid_array_push (children2next, 4);
+  vata_add_transition (ta, 2, symbol_alloc2, children1next);
+  noll_uid_array_delete (children2next);
+  
+  /* q2 -> <lsso> [m(next1), eps] (q2) */
   noll_uid_array *children2lsso = noll_uid_array_new ();
   noll_uid_array_push (children2lsso, 2);
-
-  /* q1 -> <next1, next2> [in, eps] (q3,q2) */
-  vata_add_transition (ta, 1, symbol_alloc1, children1next);
-  /* q1 -> <lsso> [in, eps] (q2) */
-  vata_add_transition (ta, 1, symbol_lsso1, children1lsso);
-  /* q2 -> <next1, next2> [m(next2), eps] (q3,q2) */
-  vata_add_transition (ta, 2, symbol_alloc2, children2next);
-  /* q2 -> <lsso> [m(next2), eps] (q2) */
   vata_add_transition (ta, 2, symbol_lsso2, children2lsso);
-  /* q2 -> [out] */
-  vata_add_transition (ta, 2, symbol_end, NULL);
-  /* q3 -> [m(next2)] */
+  noll_uid_array_delete (children2lsso);
+
+  /* q2 -> [lsso, m(f)](qout) */
+  children2lsso = noll_uid_array_new ();
+  noll_uid_array_push (children2lsso, 4);
+  vata_add_transition (ta, 2, symbol_lsso2, children2lsso);
+  noll_uid_array_delete (children2lsso);
+  
+  /* q3 -> [alias^v(next1)] */
   vata_add_transition (ta, 3, symbol_ref, NULL);
+ 
+  /* q4 -> [out] */
+  vata_add_transition (ta, 4, symbol_end, NULL);
 
   noll_uid_array_delete (marking1);
   noll_uid_array_delete (marking2);
   noll_uid_array_delete (vars1);
-  noll_uid_array_delete (children1next);
-  noll_uid_array_delete (children1lsso);
-  noll_uid_array_delete (children2next);
-  noll_uid_array_delete (children2lsso);
   noll_uid_array_delete (selectors);
 
   return ta;
