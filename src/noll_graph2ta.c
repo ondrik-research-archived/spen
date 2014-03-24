@@ -510,7 +510,8 @@ static bool compute_markings(
 				edge_lab = noll_pred_get_minfield(edge->label);
 			}
 
-			changed = update_marking_from(dst, src, edge_lab, nodes_to_markings);
+			bool new_changed = update_marking_from(dst, src, edge_lab, nodes_to_markings);
+			changed = changed || new_changed;
 		}
 	}
 
