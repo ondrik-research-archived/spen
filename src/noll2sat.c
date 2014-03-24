@@ -1103,10 +1103,13 @@ int noll2sat_space_aux(noll_sat_t* fsat, noll_space_t* subform,
 			// print points to
 			fprintf(fsat->file, "%d 0\n", bvar_pto);
 			nb_clauses++;
+			// Warning: only for NOLL
+#ifdef NOLL_SAT
 			// points to implies that source and destination are different
 			uint_t eq_src_dst = noll2sat_get_bvar_eq(fsat, vsrc, vdsti);
 			fprintf(fsat->file, "-%d 0\n", eq_src_dst);
 			nb_clauses++;
+#endif
 			// push atom in the list
 			noll_uint_array_push(bvars_used, bvar_pto);
 		}
