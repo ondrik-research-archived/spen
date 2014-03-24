@@ -244,11 +244,13 @@ int bool_abstr_space(noll_form_t* form, FILE *out) {
 			fprintf(out, "%d 0\n", encode_pto(source,
 					NOLL_VECTOR_ARRAY (dests)[i], NOLL_VECTOR_ARRAY (flds)[i]));
 			nb_clauses++;
+			// Warning: only for NOLL
+#ifdef NOLL_SAT
 			//points to implies that source and destination are different
 			fprintf(out, "-%d 0\n", encode_eq(source,
 					NOLL_VECTOR_ARRAY (dests)[i]));
 			nb_clauses++;
-
+#endif
 		}
 	} else if (f->kind == NOLL_SPACE_LS) {
 #ifndef NDEBUG
