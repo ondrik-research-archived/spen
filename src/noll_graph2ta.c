@@ -42,9 +42,9 @@
 NOLL_VECTOR_DECLARE( noll_marking_list, noll_uid_array* )
 NOLL_VECTOR_DEFINE( noll_marking_list, noll_uid_array* )
 
-// mapping of nodes to lists of their markings
-NOLL_VECTOR_DECLARE( noll_nodes_to_markings , noll_marking_list* )
-NOLL_VECTOR_DEFINE( noll_nodes_to_markings , noll_marking_list* )
+// mapping of nodes to lists of paths
+NOLL_VECTOR_DECLARE( noll_nodes_to_paths , noll_marking_list* )
+NOLL_VECTOR_DEFINE( noll_nodes_to_paths , noll_marking_list* )
 
 /* ====================================================================== */
 /* Macros */
@@ -367,7 +367,7 @@ static bool update_marking_from(
 	uint_t                    node,
 	uint_t                    src,
 	uid_t                     edge_lab,
-	noll_nodes_to_markings*   markings_list)
+	noll_nodes_to_paths*   markings_list)
 {
 	assert(NULL != markings_list);
 	assert(noll_vector_size(markings_list) > src);
@@ -465,6 +465,83 @@ static bool update_marking_from(
 
 
 /**
+ * @brief  Computes simple paths to nodes of graphs
+ *
+ * Given a @p graph, this function computes all simple paths from @p initial_node to all nodes
+ * of @p graph, which is stored into @p paths.
+ *
+ * @param[in]   graph           The input graph
+ * @param[in]   initial_node    The initial node of @p graph
+ * @param[out]  nodes_to_paths  The computed paths
+ */
+static void compute_simple_paths(
+	const noll_graph_t*       graph,
+	uint_t                    initial_node,
+	noll_nodes_to_paths*      nodes_to_paths)
+{
+	assert(NULL != graph);
+	assert(initial_node < graph->nodes_size);
+	assert(NULL != nodes_to_paths);
+
+	noll_nodes_to_paths_resize(nodes_to_paths, graph->nodes_size); // resize should allocate enough mem
+	for (size_t i = 0; i < noll_vector_size(nodes_to_paths); ++i)
+	{	// we allocate empty list of markings for every node now
+		noll_vector_at(nodes_to_paths, i) = noll_marking_list_new();
+		assert(NULL != noll_vector_at(nodes_to_paths, i));
+	}
+
+	NOLL_DEBUG("Computing marking of nodes of the graph\n");
+
+	// initialize the marking of the initial node to be 'epsilon'
+	// TODO: the NOLL_MARKINGS_EPSILON symbol is useless here, but it makes some
+	// things easier (such as that *_last() will not fail)
+	noll_uid_array* epsilon_marking = noll_uid_array_new();
+	assert(NULL != epsilon_marking);
+	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
+	noll_marking_list* initial_node_markings = noll_vector_at(nodes_to_paths, initial_node);
+	assert(NULL != initial_node_markings);
+	noll_marking_list_push(initial_node_markings, epsilon_marking);
+
+	bool changed = true;
+	while (changed)
+	{	// until we reach a fixed point
+		changed = false;
+
+		for (size_t i = 0; i < noll_vector_size(graph->edges); ++i)
+		{	// go over all edges and update according to them
+			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
+			assert(NULL != edge);
+			assert(2 <= noll_vector_size(edge->args));
+
+			uint_t src = noll_vector_at(edge->args, 0);
+			uint_t dst = noll_vector_at(edge->args, 1);
+
+			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
+			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
+				src, dst, edge->id, edge->kind, edge->label);
+
+			// check that the nodes are in the correct range
+			assert(src < graph->nodes_size);
+			assert(dst < graph->nodes_size);
+
+			uid_t edge_lab;
+			if (NOLL_EDGE_PTO == edge->kind)
+			{	// for points-to edges
+				edge_lab = edge->label;
+			}
+			else
+			{	// for higher-order predicate edges
+				assert(NOLL_EDGE_PRED == edge->kind);
+				edge_lab = noll_pred_get_minfield(edge->label);
+			}
+
+			bool new_changed = update_marking_from(dst, src, edge_lab, nodes_to_paths);
+			changed = changed || new_changed;
+		}
+	}
+}
+
+/**
  * @brief  Computes markings of nodes of a graph
  *
  * Given a @p graph, this function computes the minimum marker for every node
@@ -488,76 +565,21 @@ static bool compute_markings(
 	assert(NULL != markings);
 	assert(initial_node < graph->nodes_size);
 
+	noll_nodes_to_paths* nodes_to_paths = noll_nodes_to_paths_new();
+	assert(NULL != nodes_to_paths);
+	compute_simple_paths(graph, initial_node, nodes_to_paths);
+
 	size_t num_nodes = graph->nodes_size;
 	assert(0 < num_nodes);
 	noll_marking_list_resize(markings, num_nodes);
 
-	noll_nodes_to_markings* nodes_to_markings = noll_nodes_to_markings_new();
-	assert(NULL != nodes_to_markings);
-	noll_nodes_to_markings_resize(nodes_to_markings, num_nodes); // resize should allocate enough mem
-	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
-	{	// we allocate empty list of markings for every node now
-		noll_vector_at(nodes_to_markings, i) = noll_marking_list_new();
-		assert(NULL != noll_vector_at(nodes_to_markings, i));
-	}
-
-	NOLL_DEBUG("Computing marking of nodes of the graph\n");
-
-	// initialize the marking of the initial node to be 'epsilon'
-	// TODO: the NOLL_MARKINGS_EPSILON symbol is useless here, but it makes some
-	// things easier (such as that *_last() will not fail)
-	noll_uid_array* epsilon_marking = noll_uid_array_new();
-	assert(NULL != epsilon_marking);
-	noll_uid_array_push(epsilon_marking, NOLL_MARKINGS_EPSILON);
-	noll_marking_list* initial_node_markings = noll_vector_at(nodes_to_markings, initial_node);
-	assert(NULL != initial_node_markings);
-	noll_marking_list_push(initial_node_markings, epsilon_marking);
-
-	bool changed = true;
-	while (changed)
-	{	// until we reach a fixed point
-		changed = false;
-
-		for (size_t i = 0; i < noll_vector_size(graph->edges); ++i)
-		{	// go over all edges and update according to them
-			const noll_edge_t* edge = noll_vector_at(graph->edges, i);
-			assert(NULL != edge);
-			assert(2 <= noll_vector_size(edge->args));
-
-			uint_t src = noll_vector_at(edge->args, 0);
-			uint_t dst = noll_vector_at(edge->args, 1);
-
-			NOLL_DEBUG("Processing edge (*g->edges)[%lu] = %p, ", i, edge);
-			NOLL_DEBUG("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
-				src, dst, edge->id, edge->kind, edge->label);
-
-			// check that the nodes are in the correct range
-			assert(src < num_nodes);
-			assert(dst < num_nodes);
-
-			uid_t edge_lab;
-			if (NOLL_EDGE_PTO == edge->kind)
-			{	// for points-to edges
-				edge_lab = edge->label;
-			}
-			else
-			{	// for higher-order predicate edges
-				assert(NOLL_EDGE_PRED == edge->kind);
-				edge_lab = noll_pred_get_minfield(edge->label);
-			}
-
-			bool new_changed = update_marking_from(dst, src, edge_lab, nodes_to_markings);
-			changed = changed || new_changed;
-		}
-	}
-
-	NOLL_DEBUG("Marking of nodes of the graph computed\n");
-	NOLL_DEBUG("Markings:\n");
+	NOLL_DEBUG("Paths of nodes of the graph computed\n");
+	NOLL_DEBUG("Paths:\n");
 
 	// print the computed markings
-	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	for (size_t i = 0; i < noll_vector_size(nodes_to_paths); ++i)
 	{
-		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		const noll_marking_list* list = noll_vector_at(nodes_to_paths, i);
 		assert(NULL != list);
 		NOLL_DEBUG("Node %lu: {", i);
 		for (size_t j = 0; j < noll_vector_size(list); ++j)
@@ -570,10 +592,10 @@ static bool compute_markings(
 
 	// compute the least marking for every node
 	bool is_fine = true;
-	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	for (size_t i = 0; i < noll_vector_size(nodes_to_paths); ++i)
 	{
 		NOLL_DEBUG("Going over node %lu\n", i);
-		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		const noll_marking_list* list = noll_vector_at(nodes_to_paths, i);
 		assert(NULL != list);
 		if (0 == noll_vector_size(list))
 		{	// if there is a node with no marking, this means that it is not reachable
@@ -602,9 +624,9 @@ static bool compute_markings(
 
 	NOLL_DEBUG("Before killing\n");
 	// print the computed markings
-	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	for (size_t i = 0; i < noll_vector_size(nodes_to_paths); ++i)
 	{
-		const noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		const noll_marking_list* list = noll_vector_at(nodes_to_paths, i);
 		assert(NULL != list);
 		NOLL_DEBUG("Node %lu: {", i);
 		for (size_t j = 0; j < noll_vector_size(list); ++j)
@@ -616,9 +638,9 @@ static bool compute_markings(
 	}
 
 	// delete markings
-	for (size_t i = 0; i < noll_vector_size(nodes_to_markings); ++i)
+	for (size_t i = 0; i < noll_vector_size(nodes_to_paths); ++i)
 	{	// we allocate empty markings for every node now
-		noll_marking_list* list = noll_vector_at(nodes_to_markings, i);
+		noll_marking_list* list = noll_vector_at(nodes_to_paths, i);
 		assert(NULL != list);
 		for (size_t j = 0; j < noll_vector_size(list); ++j)
 		{
@@ -629,7 +651,7 @@ static bool compute_markings(
 		}
 		noll_marking_list_delete(list);
 	}
-	noll_nodes_to_markings_delete(nodes_to_markings);
+	noll_nodes_to_paths_delete(nodes_to_paths);
 
 	return is_fine;
 }
