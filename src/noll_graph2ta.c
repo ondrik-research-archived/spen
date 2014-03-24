@@ -375,6 +375,24 @@ static bool update_marking_from(
 
 	bool changed = false;
 
+	NOLL_DEBUG("Updating the marking of %u \"", node);
+	NOLL_DEBUG("{");
+	for (size_t j = 0; j < noll_vector_size(noll_vector_at(markings_list, node)); ++j)
+	{
+		noll_debug_print_one_mark(noll_vector_at(noll_vector_at(markings_list, node), j));
+		NOLL_DEBUG(", ");
+	}
+	NOLL_DEBUG("}");
+	NOLL_DEBUG("\" from the marking of %u \"", src);
+	NOLL_DEBUG("{");
+	for (size_t j = 0; j < noll_vector_size(noll_vector_at(markings_list, src)); ++j)
+	{
+		noll_debug_print_one_mark(noll_vector_at(noll_vector_at(markings_list, src), j));
+		NOLL_DEBUG(", ");
+	}
+	NOLL_DEBUG("}");
+	NOLL_DEBUG("\" over %s.\n", noll_field_name(edge_lab));
+
 	// get markings of the source and destination nodes
 	const noll_marking_list* src_markings = noll_vector_at(markings_list, src);
 	noll_marking_list* node_markings = noll_vector_at(markings_list, node);
@@ -421,6 +439,24 @@ static bool update_marking_from(
 		else
 		{
 			noll_uid_array_delete(new_marking);
+		}
+	}
+
+	if (changed)
+	{
+			NOLL_DEBUG("Changed markings to\n");
+		// print the computed markings
+		for (size_t i = 0; i < noll_vector_size(markings_list); ++i)
+		{
+			const noll_marking_list* list = noll_vector_at(markings_list, i);
+			assert(NULL != list);
+			NOLL_DEBUG("Node %lu: {", i);
+			for (size_t j = 0; j < noll_vector_size(list); ++j)
+			{
+				noll_debug_print_one_mark(noll_vector_at(list, j));
+				NOLL_DEBUG(", ");
+			}
+			NOLL_DEBUG("}\n");
 		}
 	}
 
@@ -1304,15 +1340,16 @@ noll_ta_t* noll_graph2ta(
 			uid_t next_child = noll_vector_at(ed->args, 1);
 			NOLL_DEBUG("An edge from the node %lu to the node %u over %s\n", i, next_child, field_name);
 
+			bool is_border_var = noll_uid_array_contains(homo, next_child);
 			// marking of the child
 			const noll_uid_array* mark_next_child = noll_vector_at(markings, next_child);
-			assert(NULL != mark_next_child);
+			assert(is_border_var || (NULL != mark_next_child));
 
 			// adding the selector
 			noll_uid_array_push(selectors, field_symbol);
 
 			NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", field_name, i, next_child);
-			if (noll_marking_is_succ_of_via(mark_next_child, mark_i, field_symbol))
+			if (is_border_var || noll_marking_is_succ_of_via(mark_next_child, mark_i, field_symbol))
 			{	// if 'ed' is a backbone edge
 				NOLL_DEBUG("We are on the backbone!\n");
 				noll_uid_array_push(children, next_child);
