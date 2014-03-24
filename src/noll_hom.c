@@ -1227,11 +1227,11 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
  * on the paths from args[0] to args[1..] or
  * on cyclic paths from args[0].
  * (Nodes used as arguments on predicate edges are also marked.)
- * Then, edges outgoing from Vg \ args[2..] (border) are all marked
- * as used (even not labeled by labels in l2) because they cannot be
+ * Then, edges outgoing from Vg \ args[1..] (border) are all marked
+ * as used (even not labeled by labels in L2) because they cannot be
  * used by another predicate (from the * semantics).
  * The subgraph g2 is defined as the set of edges labeled with L2
- * and outgoing from Vg \ args[2..], and the set of difference edges
+ * and outgoing from Vg \ args[1..], and the set of difference edges
  * between these vertices.
  *
  * @param g      the graph in which the selection is done
@@ -1299,10 +1299,8 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
       uint_t v = noll_vector_last (vqueue);
       noll_uid_array_pop (vqueue);
       /* test that there is not an already marked node */
-      /* TODO: last condition is to deal with dll,
-       * better condition */
-      if (vg[v] >= 2 ||
-          (vg[v] == 1 && (noll_pred_is_one_dir(label) == false)))
+      if (vg[v] >= 1) /* vg[v] >= 2 ||
+          (vg[v] == 1 && (noll_pred_is_one_dir(label) == false))) */
 	{
 	  /* mark it again as explored */
 	  vg[v] = 2;
@@ -1368,12 +1366,12 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
 #endif
 
   /*
-   * Mark the edges outgoing from vg (except from border) as used.
+   * Mark the edges outgoing from vg (except from target and border) as used.
    * Insert the edges labeled by labels in L2 in the result.
    */
   for (uint_t v = 0; v < vg_size; v++)
     {
-      if (vg[v] >= 0 && vg[v] <= 2)
+      if (vg[v] == 0 || vg[v] == 2) /* vg[v] >= 0 && vg[v] <= 2 */
 	{
 	  /* outgoing edges from i */
 	  noll_uid_array *out_v = g->mat[v];
@@ -1436,7 +1434,7 @@ return_select_ls_error:
   /* redo the used edges */
   for (uint_t v = 0; v < vg_size; v++)
     {
-      if (vg[v] >= 0 && vg[v] <= 2)
+      if (vg[v] == 0 || vg[v] == 2) /* vg[v] >= 0 && vg[v] <= 2 */
 	{
 	  /* outgoing edges from i */
 	  noll_uid_array *out_v = g->mat[v];
