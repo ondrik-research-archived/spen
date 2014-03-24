@@ -1270,7 +1270,6 @@ noll_ta_t* noll_graph2ta(
 				// TODO: should this be the only edge leaving src?
 				// MS: yes, if not a two dir predicate
 				// use noll_pred_is_one_dir
-				assert(1 == noll_vector_size(edges));
 				assert(2 <= noll_vector_size(ed->args));
 				assert(!is_pred_edge);
 				assert((uid_t)-1 == pred_id);
@@ -1281,6 +1280,8 @@ noll_ta_t* noll_graph2ta(
 				assert(NULL != edge_pred->typ);
 				// two-dir => args >= 4
 				assert(!edge_pred->typ->isTwoDir || (4 <= noll_vector_size(ed->args)));
+				assert(1 == noll_vector_size(edges) ||
+					(edge_pred->typ->isTwoDir && (2 == noll_vector_size(edges))));
 
 				field_name = noll_pred_name(ed->label);
 				assert(NULL != field_name);
@@ -1369,6 +1370,22 @@ noll_ta_t* noll_graph2ta(
 			else
 			{	// for singly linked segments
 				it_param = 2;
+			}
+
+			assert((noll_vector_size(children) == 1) || (ed_pred->typ->isTwoDir && (noll_vector_size(children) == 2)));
+
+			if (ed_pred->typ->isTwoDir)
+			{
+				assert(noll_vector_size(children) == 2);
+
+				// move the target of the predicate edge to the first position
+				if (noll_vector_at(children, 0) != noll_vector_at(pred_edge->args, 1))
+				{
+					assert(noll_vector_at(children, 1) == noll_vector_at(pred_edge->args, 1));
+					NOLL_DEBUG("Sorting children of predicate edge!\n");
+					noll_vector_at(children, 1) = noll_vector_at(children, 0);
+					noll_vector_at(children, 0) = noll_vector_at(pred_edge->args, 1);
+				}
 			}
 
 			for (;  it_param < noll_vector_size(pred_edge->args); ++it_param)
