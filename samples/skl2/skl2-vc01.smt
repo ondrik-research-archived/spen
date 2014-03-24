@@ -37,7 +37,7 @@
 )))
 
 (assert (not
-  (tobool (index alpha1 (skl2 x1 x2)))
+  (tobool (index alpha1 (skl2 x1 nil)))
 ))
 
 ; check whether the negation of the entailment is satisfiable

@@ -1528,13 +1528,13 @@ noll_edge2ta_skl (const noll_edge_t * edge)
  *
  * TA generated:
  *
- * q1 = qinit -> [ flds, {in}, [e] ] (qnil, qnil, q2)
+ * q1 = qinit -> [ flds, {in}, [e] ] (qnil^(maxlevel-1), q2)
  * q1 -> [ <skl1>, {in}, [e] ] (q2)
  *
  * qnil -> [ , {nil-0}, ]()
  *
  * q2 -> [, {out}, ] ()
- * q2 -> [ flds, , [e.flds[maxlevel-1]] ] (qnil, qnil, q2)
+ * q2 -> [ flds, , [e.flds[maxlevel-1]] ] (qnil^(maxlevel-1), q2)
  * q2 -> [ <skl1>, , [e.flds[maxlevel-1] ] (q2)
  *
  */
@@ -1576,6 +1576,11 @@ noll_pred2ta_skl1(
   noll_uid_array_copy (mark_in_bkb, mark_in);
   noll_marking_push (mark_in_bkb, b_fid);
 
+  /* states for levels > 1 */
+  noll_uid_array *succ_nil = noll_uid_array_new ();
+  for (uint_t i = 1; i < maxlevel; i++)
+    noll_uid_array_push(succ_nil, qnil);
+
   /*
    * Transition: q1 -> [ flds, {in}, [e] ] (qnil, qnil, q2)
    *       -- first cell
@@ -1584,8 +1589,7 @@ noll_pred2ta_skl1(
     noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
   assert (NULL != symbol_q1_1);
   noll_uid_array *succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, qnil);
-  noll_uid_array_push (succ_q1, qnil);
+  noll_uid_array_copy (succ_q1, succ_nil);
   noll_uid_array_push (succ_q1, q2);
   vata_add_transition (ta, q1, symbol_q1_1, succ_q1);
   noll_uid_array_delete (succ_q1);
@@ -1628,8 +1632,7 @@ noll_pred2ta_skl1(
     noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_2);
   noll_uid_array* succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, qnil);
-  noll_uid_array_push (succ_q2, qnil);
+  noll_uid_array_copy (succ_q2, succ_nil);
   noll_uid_array_push (succ_q2, q2);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
@@ -1664,32 +1667,32 @@ noll_pred2ta_skl1(
  *    -- nil cell
  * q1 -> [ <skl2>, {in}, [min] ] (qout)
  *    -- one list segment to out
- * q1 -> [ flds, {in}, [min] ] (qnil, qout, qout)
+ * q1 -> [ flds, {in}, [min] ] (qnil^(maxlevel-2), qout, qout)
  *    -- one f2 link, inner skl1 empty
- * q1 -> [ flds, {in}, [min] ] (qnil, qout, q1out)
+ * q1 -> [ flds, {in}, [min] ] (qnil^(maxlevel-2), qout, qout)
  *    -- one f2 link, inner skl1 non empty
  * q1out --skl1--> q13 (-1) = skl1 (q1out, out)
  *    -- skl1 segment to out
- * q1  -> [ flds, {in}, [min] ] (qnil, q2, q12)
+ * q1  -> [ flds, {in}, [min] ] (qnil^(maxlevel-2), q2, q12)
  *     -- at least two f2 links, inner skl1 empty
  * q12 -> [ s3(min . f2) ] ()
  *     -- alias to level 2
- * q1  --> [flds, {in}, [min] ] (qnil, q2, q13)
+ * q1  --> [flds, {in}, [min] ] (qnil^(maxlevel-2), q2, q13)
  *     -- at least two f2 links, inner skl1 non-empty
  * q13 --skl1--> q14(-1) = skl1 (q13, min.f1, to s3(min.f2))
  *     -- skl1 segment to q2
  * q1 -> [ <skl2>, {in}, [min] ] (q2)
  *    -- at least one list segment
  *
- * q2 -> [ flds, , [min.f2] ] (qnil, qout, qout)
+ * q2 -> [ flds, , [min.f2] ] (qnil^(maxlevel-2), qout, qout)
  *    -- last fields to qout, inner skl1 empty
- * q2 -> [ flds, , [min.f2] ] (qnil, qout, q1out)
+ * q2 -> [ flds, , [min.f2] ] (qnil^(maxlevel-2), qout, q1out)
  *    -- last fields to qout, inner skl1 non empty
  * q2 -> [ <skl2>, , [min.f2] ] (qout)
  *    -- last list segment to out
- * q2 -> [ flds, , [min.f2] ] (qnil, q2, q12)
+ * q2 -> [ flds, , [min.f2] ] (qnil^(maxlevel-2), q2, q12)
  *    -- inner cell with skl1 empty
- * q2 -> [ flds, , [min.f2] ] (qnil, q2, q14)
+ * q2 -> [ flds, , [min.f2] ] (qnil^(maxlevel-2), q2, q14)
  *    -- inner cell with skl1 non empty
  * q2 -> [ <skl2>, , [min . f2] ] (q2)
  *    -- inner list segment
@@ -1736,6 +1739,11 @@ noll_pred2ta_skl2(
   uint_t b_fid = noll_vector_at (flds, maxlevel - 2);
   uint_t n_fid = noll_vector_at (flds, maxlevel - 1);
 
+  /* states for levels > 2 */
+  noll_uid_array *succ_nil = noll_uid_array_new ();
+  for (uint_t i = 2; i < maxlevel; i++)
+    noll_uid_array_push(succ_nil, qnil);
+    
   /* the called predicate skl1 */
   noll_pred_t *pred_skl1 = noll_vector_at (preds_array, 0);
   assert (strcmp (pred_skl1->pname, "skl1") == 0);
@@ -1825,7 +1833,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
   assert (NULL != symbol_q1_3);
   succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, qnil);
+  noll_uid_array_copy (succ_q1, succ_nil);
   noll_uid_array_push (succ_q1, qout);
   noll_uid_array_push (succ_q1, qout);
   vata_add_transition (ta, q1, symbol_q1_3, succ_q1);
@@ -1839,7 +1847,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
   assert (NULL != symbol_q1_3);
   succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, qnil);
+  noll_uid_array_copy (succ_q1, succ_nil);
   noll_uid_array_push (succ_q1, qout);
   noll_uid_array_push (succ_q1, q1out);
   vata_add_transition (ta, q1, symbol_q1_4, succ_q1);
@@ -1853,7 +1861,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
   assert (NULL != symbol_q1_5);
   succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, qnil);
+  noll_uid_array_copy (succ_q1, succ_nil);
   noll_uid_array_push (succ_q1, q2);
   noll_uid_array_push (succ_q1, q12);
   vata_add_transition (ta, q1, symbol_q1_5, succ_q1);
@@ -1877,7 +1885,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, vars_in, mark_in);
   assert (NULL != symbol_q1_6);
   succ_q1 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q1, qnil);
+  noll_uid_array_copy (succ_q1, succ_nil);
   noll_uid_array_push (succ_q1, q2);
   noll_uid_array_push (succ_q1, q13);
   vata_add_transition (ta, q1, symbol_q1_6, succ_q1);
@@ -1903,7 +1911,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_1);
   noll_uid_array *succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, qnil);
+  noll_uid_array_copy (succ_q2, succ_nil);
   noll_uid_array_push (succ_q2, qout);
   noll_uid_array_push (succ_q2, qout);
   vata_add_transition (ta, q2, symbol_q2_1, succ_q2);
@@ -1917,7 +1925,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_2);
   succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, qnil);
+  noll_uid_array_copy (succ_q2, succ_nil);
   noll_uid_array_push (succ_q2, qout);
   noll_uid_array_push (succ_q2, q1out);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
@@ -1957,7 +1965,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_5);
   succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, qnil);
+  noll_uid_array_copy (succ_q2, succ_nil);
   noll_uid_array_push (succ_q2, q2);
   noll_uid_array_push (succ_q2, q12);
   vata_add_transition (ta, q2, symbol_q2_5, succ_q2);
@@ -1971,7 +1979,7 @@ noll_pred2ta_skl2(
     noll_ta_symbol_get_unique_allocated (selectors, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_6);
   succ_q2 = noll_uid_array_new ();
-  noll_uid_array_push (succ_q2, qnil);
+  noll_uid_array_copy (succ_q2, succ_nil);
   noll_uid_array_push (succ_q2, q2);
   noll_uid_array_push (succ_q2, q14);
   vata_add_transition (ta, q2, symbol_q2_6, succ_q2);
