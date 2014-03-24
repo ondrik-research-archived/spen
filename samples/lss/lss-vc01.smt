@@ -20,8 +20,10 @@
 (declare-fun z_emp () Sll_t)
 (declare-fun alpha1 () SetLoc)
 (assert
-    (tobool (ssep (pto x_emp (sref (ref next1 y_emp) (ref next2 y_emp))) (pto y_emp (sref (ref next1 z_emp) (ref next2 z_emp)))))
-)
+    (tobool (ssep 
+		(pto x_emp (sref (ref next1 y_emp) (ref next2 y_emp))) 
+		(pto y_emp (sref (ref next1 z_emp) (ref next2 z_emp)))
+)))
 (assert
   (not
     (tobool (index alpha1 (lsso x_emp z_emp)))
