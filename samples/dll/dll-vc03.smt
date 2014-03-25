@@ -21,8 +21,8 @@
 (declare-fun alpha1 () SetLoc)
 
 ;
-; three (bad) unfoldings of dll(x,u,z,z)
-; exp: sat
+; three unfoldings of dll(x,u,z,z)
+; exp: unsat
 ;
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev z_emp))) 

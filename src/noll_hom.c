@@ -1299,8 +1299,9 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
       uint_t v = noll_vector_last (vqueue);
       noll_uid_array_pop (vqueue);
       /* test that there is not an already marked node */
-      if (vg[v] >= 1) /* vg[v] >= 2 ||
-          (vg[v] == 1 && (noll_pred_is_one_dir(label) == false))) */
+      if ((vg[v] >= 1 && noll_pred_is_one_dir(label)) ||
+	  (vg[v] >= 2 && (noll_pred_is_one_dir(label) == false))
+	 )
 	{
 	  /* mark it again as explored */
 	  vg[v] = 2;
@@ -1371,7 +1372,8 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
    */
   for (uint_t v = 0; v < vg_size; v++)
     {
-      if (vg[v] == 0 || vg[v] == 2) /* vg[v] >= 0 && vg[v] <= 2 */
+      if (vg[v] == 0 || vg[v] == 2 ||
+          (vg[v] == 1 && (noll_pred_is_one_dir(label) == false))) 
 	{
 	  /* outgoing edges from i */
 	  noll_uid_array *out_v = g->mat[v];
@@ -1434,7 +1436,8 @@ return_select_ls_error:
   /* redo the used edges */
   for (uint_t v = 0; v < vg_size; v++)
     {
-      if (vg[v] == 0 || vg[v] == 2) /* vg[v] >= 0 && vg[v] <= 2 */
+      if (vg[v] == 0 || vg[v] == 2 ||
+          (vg[v] == 1 && (noll_pred_is_one_dir(label) == false))) 
 	{
 	  /* outgoing edges from i */
 	  noll_uid_array *out_v = g->mat[v];

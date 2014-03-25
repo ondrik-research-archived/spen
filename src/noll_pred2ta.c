@@ -1806,7 +1806,6 @@ noll_pred2ta_skl2(
    */
   const noll_ta_symbol_t *symbol_q1_1 =
     noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_in);
-  // TODO: how to add { in } ?
   assert (NULL != symbol_q1_1);
   noll_uid_array *succ_q1 = noll_uid_array_new ();
   noll_uid_array_push (succ_q1, qout);
@@ -1819,7 +1818,6 @@ noll_pred2ta_skl2(
    */
   const noll_ta_symbol_t *symbol_q1_2 =
     noll_ta_symbol_get_unique_higher_pred (pred, vars_in, mark_in);
-  // TODO: how to add { in } ?
   assert (NULL != symbol_q1_2);
   succ_q1 = noll_uid_array_new ();
   noll_uid_array_push (succ_q1, q2);
@@ -1868,23 +1866,21 @@ noll_pred2ta_skl2(
   vata_add_transition (ta, q1, symbol_q1_5, succ_q1);
   noll_uid_array_delete (succ_q1);
 
-/*
- * Transitions: q1out --skl1--> q13 (-1) = skl1 (q1out, out)
- *    -- skl1 segment to out
- */
-  q2out =
-    noll_pred2ta_skl1 (ta, pred_skl1, flds, maxlevel, q1out, NULL,
+  /*
+   * Transitions: q1out --skl1--> q13 (-1) = skl1 (q1out, out)
+   *    -- skl1 segment to out
+   */
+  q2out = noll_pred2ta_skl1 (ta, pred_skl1, flds, maxlevel, q1out, NULL,
 		       mark_in_nst, out_symbol);
   assert (q2out > q1out);
   q2out++;
-
-/*
- * Transitions: q2out --skl1--> q19 (-1) = skl1 (q2out, out)
- *    -- skl1 segment to out
- */
-  q13 =
-    noll_pred2ta_skl1 (ta, pred_skl1, flds, maxlevel, q2out, NULL,
-		       mark_in_bkb_nst, out_symbol);
+  
+  /*
+   * Transitions: q2out --skl1--> q19 (-1) = skl1 (q2out, out)
+   *    -- skl1 segment to out
+   */
+  q13 = noll_pred2ta_skl1 (ta, pred_skl1, flds, maxlevel, q2out, NULL,
+  mark_in_bkb_nst, out_symbol);
   assert (q13 > q2out);
   q13++;
 
@@ -1942,11 +1938,10 @@ noll_pred2ta_skl2(
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-/*
- * Transition: q2 -> [ <skl2>, , [min.f2] ] (qout)
- *    -- last list segment to out
- *
-*/
+  /*
+   * Transition: q2 -> [ <skl2>, , [min.f2] ] (qout)
+   *    -- last list segment to out
+   */
   const noll_ta_symbol_t *symbol_q2_3 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_3);
@@ -1955,11 +1950,10 @@ noll_pred2ta_skl2(
   vata_add_transition (ta, q2, symbol_q2_3, succ_q2);
   noll_uid_array_delete (succ_q2);
 
-/*
- * Transition: q2 -> [ <skl2>, , [min . f2] ] (q2)
- *    -- inner list segment
- *
-*/
+  /*
+   * Transition: q2 -> [ <skl2>, , [min . f2] ] (q2)
+   *    -- inner list segment
+   */
   const noll_ta_symbol_t *symbol_q2_4 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, mark_in_bkb);
   assert (NULL != symbol_q2_4);
