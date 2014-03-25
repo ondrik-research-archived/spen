@@ -411,13 +411,13 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   noll_uid_array_push (children1lsso, 2);
   vata_add_transition (ta, 1, symbol_lsso1, children1lsso);
   noll_uid_array_delete (children1lsso);
-  
+
   /* q1 -> [<lsso, [in, eps]](qout) */
   children1lsso = noll_uid_array_new ();
   noll_uid_array_push (children1lsso, 4);
   vata_add_transition (ta, 1, symbol_lsso1, children1lsso);
   noll_uid_array_delete (children1lsso);
- 
+
   /* q2 -> [<f1, f2> ,[[], f1.eps]] (q2,q3) */
   const noll_ta_symbol_t *symbol_alloc2 =
     noll_ta_symbol_get_unique_allocated (selectors, NULL, marking2);
@@ -434,7 +434,7 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   noll_uid_array_push (children2next, 4);
   vata_add_transition (ta, 2, symbol_alloc2, children2next);
   noll_uid_array_delete (children2next);
-  
+
   /* q2 -> [<lsso>, [[], f1.eps]]] (q2) */
   const noll_ta_symbol_t *symbol_lsso2 =
     noll_ta_symbol_get_unique_higher_pred (pred, NULL, marking2);
@@ -449,13 +449,13 @@ noll_edge2ta_lss (const noll_edge_t * edge)
   noll_uid_array_push (children2lsso, 4);
   vata_add_transition (ta, 2, symbol_lsso2, children2lsso);
   noll_uid_array_delete (children2lsso);
-  
+
   /* q3 -> [alias^v(next1)] */
   const noll_ta_symbol_t *symbol_ref =
     noll_ta_symbol_get_unique_aliased_marking_up_down_fst(marking2);
   assert (NULL != symbol_ref);
   vata_add_transition (ta, 3, symbol_ref, NULL);
- 
+
   /* q4 -> [out] */
   const noll_ta_symbol_t *symbol_end =
     noll_ta_symbol_get_unique_aliased_var (end_node);
@@ -1728,8 +1728,9 @@ noll_pred2ta_skl2(
   uint_t q2 = qout + 1;
   uint_t q12 = q2 + 1;
   uint_t q1out = q12 + 1;
-  uint_t q13 = UNDEFINED_ID;	// should be computed by calling skl1(q1out)
-  uint_t q14 = UNDEFINED_ID;	// should be computed by calling skl1(q13)
+  uint_t q2out = UNDEFINED_ID;  // should be computed by calling skl1(q1out)
+  uint_t q13 = UNDEFINED_ID;    // should be computed by calling skl1(q2out)
+  uint_t q14 = UNDEFINED_ID;    // should be computed by calling skl1(q13)
   uint_t qlast = UNDEFINED_ID;	// should be computed by calling skl1(q14)
 
   /* the selectors */
@@ -1743,7 +1744,7 @@ noll_pred2ta_skl2(
   noll_uid_array *succ_nil = noll_uid_array_new ();
   for (uint_t i = 2; i < maxlevel; i++)
     noll_uid_array_push(succ_nil, qnil);
-    
+
   /* the called predicate skl1 */
   noll_pred_t *pred_skl1 = noll_vector_at (preds_array, 0);
   assert (strcmp (pred_skl1->pname, "skl1") == 0);
@@ -1871,10 +1872,20 @@ noll_pred2ta_skl2(
  * Transitions: q1out --skl1--> q13 (-1) = skl1 (q1out, out)
  *    -- skl1 segment to out
  */
-  q13 =
+  q2out =
     noll_pred2ta_skl1 (ta, pred_skl1, flds, maxlevel, q1out, NULL,
 		       mark_in_nst, out_symbol);
-  assert (q13 > q1out);
+  assert (q2out > q1out);
+  q2out++;
+
+/*
+ * Transitions: q2out --skl1--> q19 (-1) = skl1 (q2out, out)
+ *    -- skl1 segment to out
+ */
+  q13 =
+    noll_pred2ta_skl1 (ta, pred_skl1, flds, maxlevel, q2out, NULL,
+		       mark_in_bkb_nst, out_symbol);
+  assert (q13 > q2out);
   q13++;
 
   /*
@@ -1918,7 +1929,7 @@ noll_pred2ta_skl2(
   noll_uid_array_delete (succ_q2);
 
   /*
-   * Transition: q2 -> [ flds, , [min.f2] ] (qnil, qout, q1out)
+   * Transition: q2 -> [ flds, , [min.f2] ] (qnil, qout, q2out)
    *    -- last fields to qout, inner skl1 non empty
    */
   const noll_ta_symbol_t *symbol_q2_2 =
@@ -1927,7 +1938,7 @@ noll_pred2ta_skl2(
   succ_q2 = noll_uid_array_new ();
   noll_uid_array_copy (succ_q2, succ_nil);
   noll_uid_array_push (succ_q2, qout);
-  noll_uid_array_push (succ_q2, q1out);
+  noll_uid_array_push (succ_q2, q2out);
   vata_add_transition (ta, q2, symbol_q2_2, succ_q2);
   noll_uid_array_delete (succ_q2);
 
