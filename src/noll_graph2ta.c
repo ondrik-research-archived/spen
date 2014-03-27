@@ -1415,7 +1415,7 @@ noll_ta_t* noll_graph2ta(
 			noll_uid_array_push(selectors, field_symbol);
 
 			NOLL_DEBUG("Now, we check whether the edge %s is a backbone edge from %lu to %u\n", field_name, i, next_child);
-			if (is_border_var || noll_marking_is_succ_of_via(mark_next_child, mark_i, field_symbol))
+			if (noll_marking_is_succ_of_via(mark_next_child, mark_i, field_symbol))
 			{	// if 'ed' is a backbone edge
 				NOLL_DEBUG("We are on the backbone!\n");
 				noll_uid_array_push(children, next_child);
