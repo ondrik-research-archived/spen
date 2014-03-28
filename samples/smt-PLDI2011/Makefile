@@ -1,7 +1,7 @@
 # Makefile
 #
 
-TOOL=spen
+TOOL=../../src/spen
 OPTION=
 
 clean:

@@ -2,7 +2,7 @@
 #
 
 #TOOL=spen
-TOOL=../../src/nolldp
+TOOL=../../src/spen
 OPTION=
 
 .PHONY: clean purge
