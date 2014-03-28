@@ -56,9 +56,9 @@ SHARED_LIBS = -lsmtlib2parser \
 	-lm \
 	-lvata
 
-all: nolldp
+all: spen
 
-nolldp: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
+spen: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
 	$(CXX) -o $@ $^ \
 	$(LDFLAGS) \
 	$(SHARED_LIBS)
@@ -67,7 +67,7 @@ clean:
 	rm -f *.o *~ *-out.txt result.txt
 	
 distclean: clean
-	rm nolldp
+	rm spen
 
 #---------------------------------------
 # IMPLICIT RULES AND DEPENDENCIES
