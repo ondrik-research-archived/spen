@@ -1,8 +1,7 @@
 # Makefile
 #
 
-#TOOL=spen
-TOOL=../../src/spen
+TOOL=spen
 OPTION=
 
 .PHONY: clean purge

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$#" -ne 1 ]; then
 	echo "usage: $0 <predicate>"
@@ -22,7 +22,7 @@ do
 	${SHARED_MAKE} --always-make ${LOG_FILE}
 	if [ $? -ne "0" ] ; then
 		echo "INTERNAL ERROR"
-		echo "result for ${i}:                                              \033[1;33mFAILED\033[0m"
+		echo -e "result for ${i}:                                              \033[33mFAILED\033[30m"
 		continue
 	fi
 	tail -1 ${LOG_FILE} > ${RESULT_FILE}
@@ -30,10 +30,10 @@ do
 	diff ${EXPECTED_FILE} ${RESULT_FILE} >/dev/null
 	if [ $? -ne "0" ] ; then
 		echo "==== received \"$(cat ${RESULT_FILE})\" while expecting \"$(cat ${EXPECTED_FILE})\""
-		echo "result for ${i}:                                              \033[1;31mERROR\033[0m"
+		echo -e "result for ${i}:                                              \033[31mERROR\033[30m"
 	else
 		echo "==== received expected result:    $(cat ${RESULT_FILE})"
-		echo "result for ${i}:                                              \033[1;32mOK\033[0m       in time ${RUN_TIME} sec"
+		echo -e "result for ${i}:                                              \033[32mOK\033[30m       in time ${RUN_TIME} sec"
 	fi
 	${SHARED_MAKE} --quiet clean
 	rm ${RESULT_FILE}

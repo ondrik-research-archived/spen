@@ -19,7 +19,7 @@ LDFLAGS = \
 -L$(SMTLIB2_PREFIX) \
 -L$(LIBVATA_LIB)
 
-DEBUG=_debug
+#DEBUG=_debug
 
 #---------------------------------------
 # Files
@@ -68,6 +68,9 @@ clean:
 	
 distclean: clean
 	rm spen
+
+install: spen
+	mv spen $(HOME)/bin
 
 #---------------------------------------
 # IMPLICIT RULES AND DEPENDENCIES
