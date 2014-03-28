@@ -21,7 +21,7 @@
 (declare-fun alpha2 () SetLoc)
 ;
 ; (bad) unfolding of dll(x,y,nil,z)
-; exp: sat
+; exp: unsat because the first assert is unsat (by normalization)
 ;
 (assert
     (tobool (ssep (pto x_emp (sref (ref next w_emp) (ref prev nil))) 

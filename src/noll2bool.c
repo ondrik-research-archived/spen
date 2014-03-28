@@ -253,18 +253,40 @@ int bool_abstr_space(noll_form_t* form, FILE *out) {
 #endif
 		}
 	} else if (f->kind == NOLL_SPACE_LS) {
+		uint_t pid = f->m.ls.pid;
+		uint_t sid = f->m.ls.sid;
 #ifndef NDEBUG
 		fprintf (stdout,"=================pred abstraction P%d_alpha%d\n",
-				f->m.ls.pid, f->m.ls.sid);
+				pid, sid);
 		fflush (stdout);
 #endif
 		int var = encode_ls(&(f->m.ls));
 		uint_t source = noll_vector_at (f->m.ls.args, 0);
-		uint_t dest = noll_vector_at (f->m.ls.args, 1); // TODO: take care DLL
-		int var_eq = encode_eq(source, dest);
-		fprintf(out, "%d %d 0\n", var, var_eq);
-		fprintf(out, "-%d -%d 0\n", var, var_eq);
-		nb_clauses += 2;
+		uint_t dest = noll_vector_at (f->m.ls.args, 1); 
+		if (var == 0) {
+			assert(0);
+			// internal error
+		} 
+
+		if (noll_pred_is_one_dir(pid)) {	
+		  uint_t var_eq = encode_eq(source, dest);
+		
+			fprintf(out, "%d %d 0\n", var, var_eq);
+			fprintf(out, "-%d -%d 0\n", var, var_eq);
+			nb_clauses += 2;
+		} else {
+			// Warning: works mainly for DLL
+			uint_t vpv = noll_vector_at (f->m.ls.args, 2);
+			uint_t vfw = noll_vector_at (f->m.ls.args, 3);
+			
+			uint_t var_eq_in_fw = encode_eq(source, vfw);
+			uint_t var_eq_out_pv = encode_eq(dest, vpv);
+		
+			fprintf(out, "%d %d 0\n", var, var_eq_in_fw);
+			fprintf(out, "%d %d 0\n", var, var_eq_out_pv);
+			fprintf(out, "-%d -%d -%d 0\n", var, var_eq_in_fw, var_eq_out_pv);
+			nb_clauses += 3;
+		}
 	} else if (f->kind == NOLL_SPACE_WSEP) {
 		//printf("aici1\n");fflush(stdout);
 		for (uint_t i = 0; i < noll_vector_size (f->m.sep); i++) {
@@ -377,6 +399,25 @@ int bool_abstr_space(noll_form_t* form, FILE *out) {
 								fprintf(out, "-%d %d 0\n", encode_eq(source1,
 										source2), encode_eq(source1, dest1));
 								nb_clauses++;
+								
+								if (noll_pred_is_one_dir(atom1_ls->pid) == false) {
+									// Warning: this works only for DLL
+									// F_*(pto(src_2,dst_2) bvari, ls(in_1,out_1) bvarj)
+									// = [src_2 = out_1] ==> - [ls(in_1,out_1)]
+#ifndef NDEBUG
+								  fprintf (stdout,"ls %d with pto %d\n", j - index_pto, t);
+#endif
+									uint_t var_eq_2_1 = encode_eq(source2, dest1);
+								  uint_t prv1 =
+										NOLL_VECTOR_ARRAY (atom1_ls->args)[2];
+								  uint_t fwd1 =
+										NOLL_VECTOR_ARRAY (atom1_ls->args)[3];
+								  fprintf(out, "-%d %d 0\n", var_eq_2_1, 
+											encode_eq(source1, fwd1));
+								  fprintf(out, "-%d %d 0\n", var_eq_2_1, 
+											encode_eq(dest1, prv1));
+									nb_clauses += 2;
+								}
 							}
 						}
 				}

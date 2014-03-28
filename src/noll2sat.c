@@ -990,6 +990,18 @@ int noll2sat_space_sep(noll_sat_t* fsat, noll_uint_array* bvars_subform,
 							out_j);
 					fprintf(fsat->file, "-%d %d 0\n", bvar_eq_i_j, bvar_eq_j_j);
 					nb_clauses++;
+					
+					if (noll_pred_is_one_dir(atomj->forig->m.ls.pid) == false) {
+						// Warning: this works only for DLL
+					  // F_*(pto(src_i,dst_i) bvari, ls(in_j,out_j) bvarj)
+					  // = [src_i = out_j] ==> - [ls(in_j,out_j)]
+#ifndef NDEBUG
+					  fprintf (stdout,"---- F_*(pto %d, ls %d)\n", bvari, bvarj);
+#endif
+					  bvar_eq_i_j = noll2sat_get_bvar_eq(fsat, src_i,	out_j);
+					  fprintf(fsat->file, "-%d -%d 0\n", bvar_eq_i_j, bvarj);
+					  nb_clauses++;
+					}
 				}
 			} else {
 				// atomi->forig->kind == NOLL_SPACE_LS
@@ -997,8 +1009,8 @@ int noll2sat_space_sep(noll_sat_t* fsat, noll_uint_array* bvars_subform,
 					// F_*(ls(in_i,out_i) bvari, pto(src_j,...) bvarj)
 					// = [src_j = in_i] ==> [in_i = out_i]
 #ifndef NDEBUG
-					fprintf (stdout,"---- F_*(ls %d, pto %d)\n",
-							bvari, bvarj);
+					fprintf (stdout,"---- F_*(ls %d (P%d), pto %d)\n", 
+					   bvari, atomi->forig->m.ls.pid, bvarj);
 #endif
 					uint_t src_j = atomj->forig->m.pto.sid;
 					uint_t in_i = noll_vector_at(atomi->forig->m.ls.args,0);
@@ -1009,6 +1021,19 @@ int noll2sat_space_sep(noll_sat_t* fsat, noll_uint_array* bvars_subform,
 							out_i);
 					fprintf(fsat->file, "-%d %d 0\n", bvar_eq_i_j, bvar_eq_i_i);
 					nb_clauses++;
+					
+					if (noll_pred_is_one_dir(atomi->forig->m.ls.pid) == false) {
+						// Warning: this works only for DLL
+					  // F_*(ls(in_i,out_i) bvari, pto(src_j,dst_j) bvarj)
+					  // = [src_j = out_i] ==> - [ls(in_i,out_i)]
+#ifndef NDEBUG
+					  fprintf (stdout,"---- F_*(dls %d (P%d), pto %d)\n", 
+					   bvari, atomi->forig->m.ls.pid, bvarj);
+#endif
+					  bvar_eq_i_j = noll2sat_get_bvar_eq(fsat, src_j,	out_i);
+					  fprintf(fsat->file, "-%d -%d 0\n", bvar_eq_i_j, bvari);
+					  nb_clauses++;
+					}
 				} else {
 					// atomj->forig->kind == NOLL_SPACE_LS
 					// F_*(ls(in_i,out_i) bvari, ls(in_j,out_j) bvarj)
@@ -1116,13 +1141,14 @@ int noll2sat_space_aux(noll_sat_t* fsat, noll_space_t* subform,
 		break;
 	}
 	case NOLL_SPACE_LS: {
+		uint_t pid = subform->m.ls.pid;
+		uint_t sid = subform->m.ls.sid;
 		uint_t vin = noll_vector_at (subform->m.ls.args, 0);
-		uint_t bvar_ls = noll2sat_get_bvar_pred(fsat, subform, vin,
-				subform->m.ls.pid, subform->m.ls.sid);
+		uint_t vout = noll_vector_at (subform->m.ls.args, 1);
+		uint_t bvar_ls = noll2sat_get_bvar_pred(fsat, subform, vin, pid, sid);
 #ifndef NDEBUG
-		fprintf (stdout,"----- ls abstraction for [P%d,alpha%d,x%d,...] (bvar %d) from ",
-				subform->m.ls.pid, subform->m.ls.sid, vin,
-				bvar_ls);
+		fprintf (stdout,"----- ls abstraction for [P%d,alpha%d,x%d,x%d,...] (bvar %d) from ",
+				pid, sid, vin, vout, bvar_ls);
 		noll_space_fprint(stdout, fsat->form->lvars, fsat->form->svars, subform);
 		fprintf (stdout,"\n");
 		fflush (stdout);
@@ -1131,12 +1157,27 @@ int noll2sat_space_aux(noll_sat_t* fsat, noll_space_t* subform,
 			assert(0);
 			// internal error
 		}
-		uint_t vout = noll_vector_at (subform->m.ls.args, 1); // TODO: take care DLL
-		uint_t bvar_eq_in_out = noll2sat_get_bvar_eq(fsat, vin, vout);
 
-		fprintf(fsat->file, "%d %d 0\n", bvar_ls, bvar_eq_in_out);
-		fprintf(fsat->file, "-%d -%d 0\n", bvar_ls, bvar_eq_in_out);
-		nb_clauses += 2;
+		if (noll_pred_is_one_dir(pid)) {	
+		  uint_t bvar_eq_in_out = noll2sat_get_bvar_eq(fsat, vin, vout);
+		
+			fprintf(fsat->file, "%d %d 0\n", bvar_ls, bvar_eq_in_out);
+			fprintf(fsat->file, "-%d -%d 0\n", bvar_ls, bvar_eq_in_out);
+			nb_clauses += 2;
+		} else {
+			// Warning: works mainly for DLL
+			uint_t vpv = noll_vector_at (subform->m.ls.args, 2);
+			uint_t vfw = noll_vector_at (subform->m.ls.args, 3);
+			
+			uint_t bvar_eq_in_fw = noll2sat_get_bvar_eq(fsat, vin, vfw);
+			uint_t bvar_eq_out_pv = noll2sat_get_bvar_eq(fsat, vout, vpv);
+		
+			fprintf(fsat->file, "%d %d 0\n", bvar_ls, bvar_eq_in_fw);
+			fprintf(fsat->file, "%d %d 0\n", bvar_ls, bvar_eq_out_pv);
+			fprintf(fsat->file, "-%d -%d -%d 0\n", 
+					bvar_ls, bvar_eq_in_fw, bvar_eq_out_pv);
+			nb_clauses += 3;
+		}
 		// push atom in the list
 		noll_uint_array_push(bvars_used, bvar_ls);
 		break;
