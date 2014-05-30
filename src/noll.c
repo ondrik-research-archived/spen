@@ -351,16 +351,16 @@ noll_exp_typecheck_pred_basic_case (const char *name,
 				    uint_t nrec_p, noll_exp_t * fequals)
 {
 
+  // the form is (and (equalities) (tobool emp)) 
   /* TODO: check correctly the two way predicates */
-  if ((fequals == NULL)		/* empty basic case */
-      || (fequals->discr != NOLL_F_EQ && nrec_p < 4)	/* one way predicate */
-      || (fequals->discr != NOLL_F_AND && nrec_p >= 4)	/* two way predicate */
-    )
+
+  if (fequals == NULL)		/* empty basic case */
     {
       noll_error (1, "Building predicate definition ", name);
-      noll_error (1, "Base case not well defined ", "(number of equalities)");
+      noll_error (1, "Base case not well defined ", "(null)");
       return UNDEFINED_ID;
     }
+  // old style pred, accept
   if (fequals->discr == NOLL_F_EQ)
     {
       /* the two variables are the first parameters */
@@ -378,28 +378,67 @@ noll_exp_typecheck_pred_basic_case (const char *name,
 	  return UNDEFINED_ID;
 	}
       /* else, the predicate may be built */
+      return 0;
     }
-  else
+  // new style predicate
+  if (fequals->discr != NOLL_F_AND)
     {
-      /* TODO: see how to check that it is a two way predicate
-       * Now, only two equalities between variables 1 = 3 and 2 = 4,
-       * thus the node shall be an 'and' and
-       *      the inner nodes shall be equalities
-       */
-      if ((fequals->discr != NOLL_F_AND) ||
-	  (fequals->size != 2) ||
-	  (fequals->args[0]->discr != NOLL_F_EQ) ||
-	  (fequals->args[0]->discr != NOLL_F_EQ))
+      noll_error (1, "Building predicate definition ", name);
+      noll_error (1, "Base case not well defined ", "(equals and emp)");
+      return UNDEFINED_ID;
+    }
+  bool isempty = false;
+  for (uint_t i = 0; i < fequals->size; i++)
+    {
+      // get each formula of the basic case and tests that
+      // - emp exists
+      // - equalities are correct
+      noll_exp_t *ei = fequals->args[i];
+      if (ei->discr == NOLL_F_EQ)
+	{
+	  /* the two variables are the first parameters */
+	  uint_t v1 = UNDEFINED_ID;
+	  uint_t v2 = UNDEFINED_ID;
+	  if (ei->args[0]->discr == NOLL_F_LVAR)
+	    v1 = ei->args[0]->p.sid;
+	  if (ei->args[1]->discr == NOLL_F_LVAR)
+	    v2 = ei->args[1]->p.sid;
+	  if (!((nrec_p == 2 &&
+		 ((v1 == 1 && v2 == 2)
+		  || (v1 == 2 && v2 == 1)))
+		||
+		(nrec_p == 4 &&
+		 ((v1 == 1 && v2 == 4)
+		  || (v1 == 4 && v2 == 1)
+		  || (v1 == 2 && v2 == 3) || (v1 == 3 && v2 == 2)))))
+	    {
+	      noll_error (1, "Building predicate definition ", name);
+	      noll_error (1, "Base case not well defined ",
+			  "(equalities on bad parameters)");
+	      return UNDEFINED_ID;
+	    }
+	  /* else, the predicate may be built */
+	}
+      else if ((ei->discr == NOLL_F_TOBOOL) && 
+               (ei->args[0]->discr == NOLL_F_EMP))
+	{
+	  isempty = true;
+	}
+      else
 	{
 	  noll_error (1, "Building predicate definition ", name);
 	  noll_error (1, "Base case not well defined ",
-		      "(and with two equalities)");
+		      "(not = or emp formula)");
 	  return UNDEFINED_ID;
 	}
-      /*
-       * TODO: check the equalities
-       */
       /* else, the predicate may be built */
+    }
+
+  if (!isempty)
+    {
+      noll_error (1, "Building predicate definition ", name);
+      noll_error (1, "Base case not well defined ", "(not precise)");
+      return UNDEFINED_ID;
     }
 
   return 0;
