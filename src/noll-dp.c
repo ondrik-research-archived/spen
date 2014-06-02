@@ -34,9 +34,14 @@
 void
 noll_set_option (char *option)
 {
-  if (strcmp (option, "-satold") == 0)
+  if (strcmp (option, "-n") == 0)
     {
       tosat_old = true;
+      return;
+    }
+  if (strcmp (option, "-f") == 0)
+    {
+      fixed_def = 1;
       return;
     }
   printf ("Unknown option: %s! ignore.\n", option);
@@ -49,7 +54,9 @@ void
 print_help (void)
 {
   printf ("spen: decision procedure for SLRD, version 0.1\n");
-  printf ("Usage: spen <file>\n");
+  printf ("Usage: spen <options> <file>\n");
+  printf ("\t-n:     internal switch to old normalisation procedure\n");
+  printf ("\t-f:     use predefined recursive definitions (set from name\n");
   printf ("\t<file>: input file in the SMTLIB2 format\n");
   printf
     ("See http://www.liafa.univ-paris-diderot.fr/spen for more details.\n");
@@ -59,7 +66,7 @@ print_help (void)
  * Entry of the decision procedure.
  * @requires: only one problem per file
  *
- * Call: noll-dp [-n] file.smt2
+ * Call: noll-dp [-n|-f] file.smt2
  */
 int
 main (int argc, char **argv)
@@ -75,7 +82,7 @@ main (int argc, char **argv)
     {
       arg_file = argc - 1;
       for (int i = 1; i < arg_file; i++)
-	noll_set_option (argv[i]);
+        noll_set_option (argv[i]);
     }
 
   // Step 1: Parse the file and initialize the problem
