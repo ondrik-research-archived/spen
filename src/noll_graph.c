@@ -88,7 +88,11 @@ noll_edge_copy (noll_edge_t * e) {
 	return re;
 }
 
-
+/**
+ * Allocate a graph using the informations about the formula.
+ * If nodes==0 or edges==0, return the  empty graph, i.e.,
+ * only nil node.
+ */
 noll_graph_t*
 noll_graph_alloc(noll_var_array* lvars, noll_var_array* svars, uint_t nodes,
 		uint_t edges, uint_t* vars) {
@@ -114,7 +118,8 @@ noll_graph_alloc(noll_var_array* lvars, noll_var_array* svars, uint_t nodes,
 	 * allocate the array of edges
 	 */
 	res->edges = noll_edge_array_new();
-	noll_edge_array_reserve(res->edges, edges);
+	if (edges > 0)
+	  noll_edge_array_reserve(res->edges, edges);
 
 	/*
 	 * allocate the adjacency matrices
@@ -326,7 +331,7 @@ void noll_share_fprint_dot(FILE* f, noll_var_array* lvars,
 void noll_graph_fprint(FILE* f, noll_graph_t* g) {
 	assert(f);
 	if (!g) {
-		fprintf(f, "\t null graph\n");
+		fprintf(f, "\tnull graph\n");
 		return;
 	}
 	fprintf(f, "Graph nodes size: %d\n", g->nodes_size);
@@ -378,7 +383,7 @@ void noll_graph_fprint(FILE* f, noll_graph_t* g) {
 void noll_graph_fprint_dot(char* fname, noll_graph_t* g) {
 	assert(fname);
 	if (!g) {
-		fprintf(stderr, "Null graph! quit.");
+		fprintf(stderr, "null graph");
 		return;
 	}
 	FILE* f = fopen(fname, "w");

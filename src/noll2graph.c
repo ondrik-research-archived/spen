@@ -233,12 +233,17 @@ void noll_graph_of_pure(noll_pure_t* phi, noll_graph_t* g) {
 
 noll_graph_t*
 noll_graph_of_form(noll_form_t* phi) {
-	if (!phi || phi->kind == NOLL_FORM_UNSAT)
+	if (!phi) {
+		// emp formula, build empty graph
+		return noll_graph_alloc(NULL, NULL, 0, 0, NULL);
+	}
+	
+	if (phi->kind == NOLL_FORM_UNSAT)
 		return NULL;
 
 	// the result graph
 	noll_graph_t* res = NULL;
-
+	
 	// compute the number of nodes from the pure part
 	uint_t* vars = (uint_t*) malloc(noll_vector_size (phi->lvars)
 			* sizeof(uint_t));
@@ -253,14 +258,19 @@ noll_graph_of_form(noll_form_t* phi) {
 	// go through the space formula,
 	// assign identifiers to edges, and
 	// fill information in the graph
-	res->is_precise = phi->space->is_precise;
-	noll_uid_array* r = noll_graph_of_space(phi->space, res, 0);
-	if (r == NULL) { // error
-		noll_graph_free(res);
-		return NULL;
-	} else
-		noll_uid_array_delete(r);
-
+	if (phi->space == NULL) {
+		// emp formula
+		res->is_precise = true;
+	} else {
+		res->is_precise = phi->space->is_precise;
+		noll_uid_array* r = noll_graph_of_space(phi->space, res, 0);
+		if (r == NULL) { // error
+			noll_graph_free(res);
+			return NULL;
+		} else
+			noll_uid_array_delete(r);
+	}
+	
 	// go through pure constraints to obtain distinct edges
 	noll_graph_of_pure(phi->pure, res);
 

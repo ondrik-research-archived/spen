@@ -647,8 +647,7 @@ noll_entl_to_graph (void)
 
 #ifndef NDEBUG
   fprintf (stdout, "\n*****pos_graph: file graph-p.dot\n");
-  noll_graph_fprint (stdout, noll_prob->pgraph);
-//      noll_graph_fprint_dot ("graph-p.dot", pos_graph);
+  noll_graph_fprint_dot ("graph-p.dot", noll_prob->pgraph);
 #else
   fprintf (stdout, "\n*****pos_graph: (%d nodes, %d spatial edges)\n",
 	   noll_prob->pgraph->nodes_size,

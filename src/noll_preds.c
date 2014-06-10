@@ -75,8 +75,26 @@ noll_pred_array_find (const char *name)
 uid_t
 noll_pred_register (const char *pname, noll_pred_binding_t * def)
 {
-  assert (pname && def);
-  uid_t pid = noll_vector_size (preds_array);
+  assert (NULL != pname);
+
+  uid_t pid = 0;
+  for (; pid < noll_vector_size (preds_array); pid++)
+    {
+      noll_pred_t *pi = noll_vector_at (preds_array, pid);
+      if (0 == strcmp (pname, pi->pname))
+        {
+          if (pi->def != NULL && def != NULL)
+            {
+              printf ("Warning: rewrite predicate definition '%s'!\n", pname);
+            }
+          if (def != NULL)
+            pi->def = def;
+          return pid;
+        }
+    }
+
+  /* Warning: modified to support mutually recursive definitions */
+  assert (pid == noll_vector_size (preds_array));
   noll_pred_t *p = noll_pred_new (pname, pid, def);
   noll_pred_array_push (preds_array, p);
   return pid;

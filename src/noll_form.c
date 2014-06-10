@@ -439,7 +439,7 @@ void noll_pure_fprint(FILE* f, noll_var_array* lvars, noll_pure_t* phi) {
 void noll_space_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
 		noll_space_t* phi) {
 	if (!phi) {
-		fprintf(f, "null\n");
+		fprintf(f, "emp (null)\n");
 		return;
 	}
 
@@ -574,7 +574,7 @@ void noll_share_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
 		noll_share_atom_fprint(f, lvars, svars, noll_vector_at (phi, i));
 		fprintf(f, " &&\n");
 	}
-	fprintf(f, " true\n");
+	fprintf(f, "true\n");
 }
 
 void noll_form_fprint(FILE* f, noll_form_t* phi) {

@@ -1760,6 +1760,18 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
       goto return_shom;
     }
 
+  /* Mapping of edges: special case of emp graph */
+  if (noll_vector_size(g1->edges) == 0) {
+	  // the g2 shall also be empty
+	  if (noll_vector_size(g2->edges) != 0) {
+		  res = 0;
+		  goto return_shom;
+	  }
+	  pto_hom = noll_uid_array_new();
+	  ls_hom = noll_uid_array_new();
+	  usedg2 = noll_uid_array_new();
+	  goto return_shom;
+  }
   /*
    * While building the mapping for edges,
    * check the separation property of the mapping found

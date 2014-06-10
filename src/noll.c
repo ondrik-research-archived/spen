@@ -1922,8 +1922,14 @@ noll_exp_typecheck_and (noll_context_t * ctx, noll_exp_t * e)
 
   if (!e)
     return e;
-  //top formulas shall be linked by and or tobool, expected type bool
-  assert ((e->discr == NOLL_F_AND) || (e->discr == NOLL_F_TOBOOL));
+  //top formulas shall be linked by and or any other atomic boolean
+  //or tobool, expected type bool
+  assert ((e->discr == NOLL_F_AND) || 
+          (e->discr == NOLL_F_EQ) ||
+          (e->discr == NOLL_F_DISTINCT) ||
+          (e->discr == NOLL_F_TRUE) ||
+          (e->discr == NOLL_F_FALSE) ||
+          (e->discr == NOLL_F_TOBOOL));
   //TODO
   return e;
 }
