@@ -727,13 +727,13 @@ noll_mk_pred_userdef (noll_context_t * ctx, const char *name, uint_t npar,
   // check diseq to have the good form, i.e., E != F U B 
   for (uint_t i = 2; i <= npar; i++)
     {
-      // TODO: see DLL
-      if (diseq[i] != 1) {
+      if (diseq[i] != 1 && (0 != strcmp(name, "dll"))) {
 	    noll_error (1, "Building predicate definition ", name);
 	    noll_error (1, "Formula inside exists ",
 			"first argument not distinct from last and border");
 	    return NULL;
       }
+      //TODO: see dll
     }
   free (diseq);
 
