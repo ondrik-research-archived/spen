@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012-2013                                               */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -1391,7 +1387,7 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
                       goto return_select_ls_error;
                     }
                   noll_vector_at (used, ei) = eid;
-                  if (eg[eid] == 1)
+                  if (eg[ei] == 1)
                     {
                       noll_edge_t *e = noll_vector_at (g->edges, ei);
                       /* edge using the label, copy in the result */
@@ -1679,7 +1675,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
         }
     }
   /* Go in the reverse order using t over the predicate edges */
-  for (uint_t i = 0; i < sz; i--)
+  for (uint_t i = 0; i < sz; i++)
     {
       // the edge to be mapped is at position t[sz - 1 - i]
       uint_t e1id = t[sz - 1 - i];
@@ -1776,7 +1772,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
           goto return_shom;
         }
       pto_hom = noll_uid_array_new ();
-      ls_hom = noll_uid_array_new ();
+      ls_hom = noll_graph_array_new ();
       usedg2 = noll_uid_array_new ();
       goto return_shom;
     }

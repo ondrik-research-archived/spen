@@ -19,7 +19,7 @@ LDFLAGS = \
 -L$(SMTLIB2_PREFIX) \
 -L$(LIBVATA_LIB)
 
-DEBUG=_debug
+#DEBUG=_debug
 
 #---------------------------------------
 # Files
@@ -63,7 +63,7 @@ spen: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
 	$(SHARED_LIBS)
 
 clean:
-	rm -f *.o *~ *-out.txt result.txt
+	rm -f *.o *~ *-out.txt *.dot result.txt
 	
 distclean: clean
 	rm spen
