@@ -37,7 +37,7 @@ extern "C"
 /* Data types */
 /* ====================================================================== */
 
-typedef struct noll_ta_symbol noll_ta_symbol_t;
+  typedef struct noll_ta_symbol noll_ta_symbol_t;
 
 /* ====================================================================== */
 /* Constants */
@@ -56,7 +56,7 @@ typedef struct noll_ta_symbol noll_ta_symbol_t;
  * This function initializes the global database of symbols. This needs to be
  * done before the first call to any @p noll_ta_symbol_* function.
  */
-void noll_ta_symbol_init(void);
+  void noll_ta_symbol_init (void);
 
 
 /**
@@ -64,7 +64,7 @@ void noll_ta_symbol_init(void);
  *
  * Releases allocated memory and does all the housekeeping.
  */
-void noll_ta_symbol_destroy(void);
+  void noll_ta_symbol_destroy (void);
 
 
 /**
@@ -74,8 +74,7 @@ void noll_ta_symbol_destroy(void);
  *
  * @returns  A human-readable represenation of @p symb
  */
-const char* noll_ta_symbol_get_str(
-	const noll_ta_symbol_t*       symb);
+  const char *noll_ta_symbol_get_str (const noll_ta_symbol_t * symb);
 
 
 /**
@@ -88,8 +87,7 @@ const char* noll_ta_symbol_get_str(
  *
  * @returns  A string representing @p marking
  */
-char* noll_marking_tostring(
-	const noll_uid_array*    marking);
+  char *noll_marking_tostring (const noll_uid_array * marking);
 
 
 /**
@@ -106,10 +104,15 @@ char* noll_marking_tostring(
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
-	const noll_uid_array*            sels,
-	const noll_uid_array*            vars,
-	const noll_uid_array*            marking);
+  const noll_ta_symbol_t *noll_ta_symbol_get_unique_allocated (const
+                                                               noll_uid_array
+                                                               * sels,
+                                                               const
+                                                               noll_uid_array
+                                                               * vars,
+                                                               const
+                                                               noll_uid_array
+                                                               * marking);
 
 
 /**
@@ -123,8 +126,8 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_allocated(
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
-	uid_t                            alias_var);
+  const noll_ta_symbol_t *noll_ta_symbol_get_unique_aliased_var (uid_t
+                                                                 alias_var);
 
 
 /**
@@ -139,16 +142,21 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_var(
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up(
-	const noll_uid_array*            alias_marking);
+  const noll_ta_symbol_t *noll_ta_symbol_get_unique_aliased_marking_up (const
+                                                                        noll_uid_array
+                                                                        *
+                                                                        alias_marking);
 
 /// TODO
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_up(
-	const noll_uid_array*            alias_marking);
+  const noll_ta_symbol_t
+    *noll_ta_symbol_get_unique_aliased_marking_up_up (const noll_uid_array *
+                                                      alias_marking);
 
 /// TODO
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_down_fst(
-	const noll_uid_array*            alias_marking);
+  const noll_ta_symbol_t
+    *noll_ta_symbol_get_unique_aliased_marking_up_down_fst (const
+                                                            noll_uid_array *
+                                                            alias_marking);
 
 /**
  * @brief  Creates a unique TA symbol of a node with higher-order predicate
@@ -164,10 +172,15 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_aliased_marking_up_down_fst(
  *
  * @returns  A unique pointer to the symbol
  */
-const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
-	const noll_pred_t*               pred,
-	const noll_uid_array*            vars,
-	const noll_uid_array*            marking);
+  const noll_ta_symbol_t *noll_ta_symbol_get_unique_higher_pred (const
+                                                                 noll_pred_t *
+                                                                 pred,
+                                                                 const
+                                                                 noll_uid_array
+                                                                 * vars,
+                                                                 const
+                                                                 noll_uid_array
+                                                                 * marking);
 
 
 #ifdef	__cplusplus
@@ -175,4 +188,4 @@ const noll_ta_symbol_t* noll_ta_symbol_get_unique_higher_pred(
 #endif
 
 
-#endif /* _NOLL_TA_SYMBOLS_H_ */
+#endif                          /* _NOLL_TA_SYMBOLS_H_ */

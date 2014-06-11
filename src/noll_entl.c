@@ -30,7 +30,7 @@
 #include "noll.h"
 #include "noll_form.h"
 #include "noll_entl.h"
-#include "noll2bool.h"		// for old normalization call
+#include "noll2bool.h"          // for old normalization call
 #include "noll2graph.h"
 #include "noll_hom.h"
 #include "noll_pred2ta.h"
@@ -39,9 +39,9 @@
 /* Globals */
 /* ====================================================================== */
 
-noll_entl_t *noll_prob;		// problem of entailment in noll
+noll_entl_t *noll_prob;         // problem of entailment in noll
 
-bool tosat_old = false;		/* choice of boolean abstraction */
+bool tosat_old = false;         /* choice of boolean abstraction */
 
 /* ====================================================================== */
 /* Constructors/destructors */
@@ -63,7 +63,7 @@ noll_entl_init ()
   noll_form_array_push (noll_prob->nform, noll_form_new ());
 
   // init command
-  noll_prob->cmd = NOLL_FORM_SAT;	// by default value
+  noll_prob->cmd = NOLL_FORM_SAT;       // by default value
 }
 
 /**
@@ -179,7 +179,7 @@ noll_entl_fprint (FILE * f)
     }
 
   fprintf (f, "*** (source %s) check-%s on:\n", noll_prob->smt_fname,
-	   (noll_prob->cmd == NOLL_FORM_SAT) ? "sat" : "unsat");
+           (noll_prob->cmd == NOLL_FORM_SAT) ? "sat" : "unsat");
 
   noll_records_array_fprint (f, "records:");
   noll_fields_array_fprint (f, "fields:");
@@ -208,7 +208,7 @@ noll_entl_fprint (FILE * f)
  */
 int
 time_difference (struct timeval *result, struct timeval *t2,
-		 struct timeval *t1)
+                 struct timeval *t1)
 {
   long int diff = (t2->tv_usec + 1000000 * t2->tv_sec)
     - (t1->tv_usec + 1000000 * t1->tv_sec);
@@ -220,7 +220,7 @@ time_difference (struct timeval *result, struct timeval *t2,
 
 int
 noll_share_check_euf_decl (noll_var_array * lvars, noll_var_array * svars,
-			   char *fname)
+                           char *fname)
 {
   FILE *out_decl = fopen (fname, "a");
   fprintf (out_decl, "(set-logic UFNIA)\n");
@@ -229,7 +229,7 @@ noll_share_check_euf_decl (noll_var_array * lvars, noll_var_array * svars,
   for (uint_t iterator = 0; iterator < noll_vector_size (svars); iterator++)
     {
       fprintf (out_decl, "(declare-fun %s (addr) Bool)\n",
-	       noll_vector_at (svars, iterator)->vname);
+               noll_vector_at (svars, iterator)->vname);
       /* some part of the extension to alpha(R)
          for (uint_t it = 0; it < noll_vector_size (records_array); it++)
          {
@@ -244,7 +244,7 @@ noll_share_check_euf_decl (noll_var_array * lvars, noll_var_array * svars,
   for (uint_t iterator = 0; iterator < noll_vector_size (lvars); iterator++)
     {
       fprintf (out_decl, "(declare-fun %s () addr)\n",
-	       noll_vector_at (lvars, iterator)->vname);
+               noll_vector_at (lvars, iterator)->vname);
     }
   fclose (out_decl);
   return 1;
@@ -252,7 +252,7 @@ noll_share_check_euf_decl (noll_var_array * lvars, noll_var_array * svars,
 
 int
 noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
-			      noll_share_array * share, char *fname, int sign)
+                              noll_share_array * share, char *fname, int sign)
 {
   if (share == NULL)
     return 0;
@@ -264,216 +264,228 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
       //printf("#@$#@$@#$@#$\n");
       noll_atom_share_t *atom = noll_vector_at (share, iterator);
       switch (atom->kind)
-	{
-	case NOLL_SHARE_IN:
-	  {
-	    //printf("Member case\n");
-	    if (noll_vector_size (atom->t_right) == 1)
-	      {
-		if (noll_vector_at (atom->t_right, 0)->kind ==
-		    NOLL_STERM_SVAR)
-		  {
-		    fprintf (out_decl, "(assert ");
-		    if (!sign)
-		      fprintf (out_decl, "(not ");
-		    fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
-								    noll_vector_at
-								    (atom->t_right,
-								     0)->svar)->vname,
-			     noll_vector_at (lvars,
-					     atom->t_left->lvar)->vname);
-		    if (!sign)
-		      fprintf (out_decl, ")");
-		    fprintf (out_decl, ")\n");
-		  }
-		else
-		  {		//this case shouldn't arrive .. it is not handled in the boolean abstraction...it is equivalent to an equality
-		    fprintf (out_decl, "(assert ");
-		    if (!sign)
-		      fprintf (out_decl, "(not ");
-		    fprintf (out_decl, " (= (%s %s)) ",
-			     noll_vector_at (lvars,
-					     atom->t_left->lvar)->vname,
-			     noll_vector_at (lvars,
-					     noll_vector_at (atom->t_right,
-							     0)->
-					     lvar)->vname);
-		    if (!sign)
-		      fprintf (out_decl, ")");
-		    fprintf (out_decl, ")\n");
-		  }
-	      }
-	    else
-	      {
-		fprintf (out_decl, "(assert ");
-		if (!sign)
-		  fprintf (out_decl, "(not ");
-		fprintf (out_decl, "(or ");
-		for (uint_t i = 0; i < noll_vector_size (atom->t_right); i++)
-		  {
-		    if (noll_vector_at (atom->t_right, i)->kind
-			== NOLL_STERM_SVAR)
-		      {
-			fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
-									noll_vector_at
-									(atom->t_right,
-									 i)->svar)->vname,
-				 noll_vector_at (lvars,
-						 atom->t_left->lvar)->vname);
-		      }
-		    else
-		      {
-			fprintf (out_decl, " (= (%s %s)) ",
-				 noll_vector_at (lvars,
-						 atom->t_left->lvar)->vname,
-				 noll_vector_at (lvars,
-						 noll_vector_at
-						 (atom->t_right,
-						  i)->lvar)->vname);
-		      }
-		  }
-		fprintf (out_decl, ")");
-		if (!sign)
-		  fprintf (out_decl, ")");
-		fprintf (out_decl, ")\n");
-	      }
-	    break;
-	  }
-	case NOLL_SHARE_NI:
-	  {
-	    //printf("Non-Member case\n");
-	    if (noll_vector_size (atom->t_right) == 1)
-	      {
-		if (noll_vector_at (atom->t_right, 0)->kind ==
-		    NOLL_STERM_SVAR)
-		  {
-		    fprintf (out_decl, "(assert ");
-		    if (!sign)
-		      fprintf (out_decl, "(not ");
-		    fprintf (out_decl, " (not (%s %s)) ",
-			     noll_vector_at (svars,
-					     noll_vector_at (atom->t_right,
-							     0)->svar)->vname,
-			     noll_vector_at (lvars,
-					     atom->t_left->lvar)->vname);
-		    if (!sign)
-		      fprintf (out_decl, ")");
-		    fprintf (out_decl, ")\n");
-		  }
-		else
-		  {		//this case shouldn't arrive .. it is not handled in the boolean abstraction...it is equivalent to an equality
-		    fprintf (out_decl, "(assert ");
-		    if (!sign)
-		      fprintf (out_decl, "(not ");
-		    fprintf (out_decl, " (not (= (%s %s))) ",
-			     noll_vector_at (lvars,
-					     atom->t_left->lvar)->vname,
-			     noll_vector_at (lvars,
-					     noll_vector_at (atom->t_right,
-							     0)->
-					     lvar)->vname);
-		    if (!sign)
-		      fprintf (out_decl, ")");
-		    fprintf (out_decl, ")\n");
-		  }
-	      }
-	    else
-	      {
-		fprintf (out_decl, "(assert ");
-		if (!sign)
-		  fprintf (out_decl, "(not ");
-		fprintf (out_decl, "(and ");
-		for (uint_t i = 0; i < noll_vector_size (atom->t_right); i++)
-		  {
-		    if (noll_vector_at (atom->t_right, i)->kind
-			== NOLL_STERM_SVAR)
-		      {
-			fprintf (out_decl, " (not (%s %s)) ",
-				 noll_vector_at (svars,
-						 noll_vector_at
-						 (atom->t_right,
-						  i)->svar)->vname,
-				 noll_vector_at (lvars,
-						 atom->t_left->lvar)->vname);
-		      }
-		    else
-		      {
-			fprintf (out_decl, " (not (= (%s %s))) ",
-				 noll_vector_at (lvars,
-						 atom->t_left->lvar)->vname,
-				 noll_vector_at (lvars,
-						 noll_vector_at
-						 (atom->t_right,
-						  i)->lvar)->vname);
-		      }
-		  }
-		fprintf (out_decl, ")");
-		if (!sign)
-		  fprintf (out_decl, ")");
-		fprintf (out_decl, ")\n");
-	      }
-	    break;
-	  }
-	case NOLL_SHARE_SUBSET:
-	  {
-	    if (noll_vector_size (atom->t_right) == 1)
-	      {
-		fprintf (out_decl, "(assert ");
-		if (!sign)
-		  fprintf (out_decl, "(not ");
-		if (noll_vector_at (atom->t_right, 0)->kind ==
-		    NOLL_STERM_SVAR)
-		  fprintf (out_decl,
-			   "(forall ((?e addr)) (=> (%s ?e) (%s ?e)))",
-			   noll_vector_at (svars, atom->t_left->svar)->vname,
-			   noll_vector_at (svars,
-					   noll_vector_at (atom->t_right,
-							   0)->svar)->vname);
-		else
-		  fprintf (out_decl,
-			   "(forall ((?e addr)) (=> (%s ?e) (= %s ?e)))",
-			   noll_vector_at (svars, atom->t_left->svar)->vname,
-			   noll_vector_at (lvars,
-					   noll_vector_at (atom->t_right,
-							   0)->lvar)->vname);
-		if (!sign)
-		  fprintf (out_decl, ")");
-		fprintf (out_decl, ")\n");
-	      }
-	    else
-	      {
-		fprintf (out_decl, "(assert ");
-		if (!sign)
-		  fprintf (out_decl, "(not ");
-		fprintf (out_decl, "(forall ((?e addr)) (=> (%s ?e) (or ",
-			 noll_vector_at (svars, atom->t_left->svar)->vname);
-		for (uint_t i = 0; i < noll_vector_size (atom->t_right); i++)
-		  {
-		    if (noll_vector_at (atom->t_right, 0)->kind
-			== NOLL_STERM_SVAR)
-		      fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
-								      noll_vector_at
-								      (atom->t_right,
-								       i)->svar)->vname);
-		    else
-		      fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
-									noll_vector_at
-									(atom->t_right,
-									 i)->lvar)->vname);
-		  }
-		fprintf (out_decl, ") ) )");
-		if (!sign)
-		  fprintf (out_decl, ")");
-		fprintf (out_decl, ")\n");
+        {
+        case NOLL_SHARE_IN:
+          {
+            //printf("Member case\n");
+            if (noll_vector_size (atom->t_right) == 1)
+              {
+                if (noll_vector_at (atom->t_right, 0)->kind ==
+                    NOLL_STERM_SVAR)
+                  {
+                    fprintf (out_decl, "(assert ");
+                    if (!sign)
+                      fprintf (out_decl, "(not ");
+                    fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
+                                                                    noll_vector_at
+                                                                    (atom->
+                                                                     t_right,
+                                                                     0)->
+                                                                    svar)->
+                             vname, noll_vector_at (lvars,
+                                                    atom->t_left->lvar)->
+                             vname);
+                    if (!sign)
+                      fprintf (out_decl, ")");
+                    fprintf (out_decl, ")\n");
+                  }
+                else
+                  {             //this case shouldn't arrive .. it is not handled in the boolean abstraction...it is equivalent to an equality
+                    fprintf (out_decl, "(assert ");
+                    if (!sign)
+                      fprintf (out_decl, "(not ");
+                    fprintf (out_decl, " (= (%s %s)) ",
+                             noll_vector_at (lvars,
+                                             atom->t_left->lvar)->vname,
+                             noll_vector_at (lvars,
+                                             noll_vector_at (atom->t_right,
+                                                             0)->lvar)->
+                             vname);
+                    if (!sign)
+                      fprintf (out_decl, ")");
+                    fprintf (out_decl, ")\n");
+                  }
+              }
+            else
+              {
+                fprintf (out_decl, "(assert ");
+                if (!sign)
+                  fprintf (out_decl, "(not ");
+                fprintf (out_decl, "(or ");
+                for (uint_t i = 0; i < noll_vector_size (atom->t_right); i++)
+                  {
+                    if (noll_vector_at (atom->t_right, i)->kind
+                        == NOLL_STERM_SVAR)
+                      {
+                        fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
+                                                                        noll_vector_at
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        svar)->
+                                 vname, noll_vector_at (lvars,
+                                                        atom->t_left->lvar)->
+                                 vname);
+                      }
+                    else
+                      {
+                        fprintf (out_decl, " (= (%s %s)) ",
+                                 noll_vector_at (lvars,
+                                                 atom->t_left->lvar)->vname,
+                                 noll_vector_at (lvars,
+                                                 noll_vector_at
+                                                 (atom->t_right,
+                                                  i)->lvar)->vname);
+                      }
+                  }
+                fprintf (out_decl, ")");
+                if (!sign)
+                  fprintf (out_decl, ")");
+                fprintf (out_decl, ")\n");
+              }
+            break;
+          }
+        case NOLL_SHARE_NI:
+          {
+            //printf("Non-Member case\n");
+            if (noll_vector_size (atom->t_right) == 1)
+              {
+                if (noll_vector_at (atom->t_right, 0)->kind ==
+                    NOLL_STERM_SVAR)
+                  {
+                    fprintf (out_decl, "(assert ");
+                    if (!sign)
+                      fprintf (out_decl, "(not ");
+                    fprintf (out_decl, " (not (%s %s)) ",
+                             noll_vector_at (svars,
+                                             noll_vector_at (atom->t_right,
+                                                             0)->svar)->vname,
+                             noll_vector_at (lvars,
+                                             atom->t_left->lvar)->vname);
+                    if (!sign)
+                      fprintf (out_decl, ")");
+                    fprintf (out_decl, ")\n");
+                  }
+                else
+                  {             //this case shouldn't arrive .. it is not handled in the boolean abstraction...it is equivalent to an equality
+                    fprintf (out_decl, "(assert ");
+                    if (!sign)
+                      fprintf (out_decl, "(not ");
+                    fprintf (out_decl, " (not (= (%s %s))) ",
+                             noll_vector_at (lvars,
+                                             atom->t_left->lvar)->vname,
+                             noll_vector_at (lvars,
+                                             noll_vector_at (atom->t_right,
+                                                             0)->lvar)->
+                             vname);
+                    if (!sign)
+                      fprintf (out_decl, ")");
+                    fprintf (out_decl, ")\n");
+                  }
+              }
+            else
+              {
+                fprintf (out_decl, "(assert ");
+                if (!sign)
+                  fprintf (out_decl, "(not ");
+                fprintf (out_decl, "(and ");
+                for (uint_t i = 0; i < noll_vector_size (atom->t_right); i++)
+                  {
+                    if (noll_vector_at (atom->t_right, i)->kind
+                        == NOLL_STERM_SVAR)
+                      {
+                        fprintf (out_decl, " (not (%s %s)) ",
+                                 noll_vector_at (svars,
+                                                 noll_vector_at
+                                                 (atom->t_right,
+                                                  i)->svar)->vname,
+                                 noll_vector_at (lvars,
+                                                 atom->t_left->lvar)->vname);
+                      }
+                    else
+                      {
+                        fprintf (out_decl, " (not (= (%s %s))) ",
+                                 noll_vector_at (lvars,
+                                                 atom->t_left->lvar)->vname,
+                                 noll_vector_at (lvars,
+                                                 noll_vector_at
+                                                 (atom->t_right,
+                                                  i)->lvar)->vname);
+                      }
+                  }
+                fprintf (out_decl, ")");
+                if (!sign)
+                  fprintf (out_decl, ")");
+                fprintf (out_decl, ")\n");
+              }
+            break;
+          }
+        case NOLL_SHARE_SUBSET:
+          {
+            if (noll_vector_size (atom->t_right) == 1)
+              {
+                fprintf (out_decl, "(assert ");
+                if (!sign)
+                  fprintf (out_decl, "(not ");
+                if (noll_vector_at (atom->t_right, 0)->kind ==
+                    NOLL_STERM_SVAR)
+                  fprintf (out_decl,
+                           "(forall ((?e addr)) (=> (%s ?e) (%s ?e)))",
+                           noll_vector_at (svars, atom->t_left->svar)->vname,
+                           noll_vector_at (svars,
+                                           noll_vector_at (atom->t_right,
+                                                           0)->svar)->vname);
+                else
+                  fprintf (out_decl,
+                           "(forall ((?e addr)) (=> (%s ?e) (= %s ?e)))",
+                           noll_vector_at (svars, atom->t_left->svar)->vname,
+                           noll_vector_at (lvars,
+                                           noll_vector_at (atom->t_right,
+                                                           0)->lvar)->vname);
+                if (!sign)
+                  fprintf (out_decl, ")");
+                fprintf (out_decl, ")\n");
+              }
+            else
+              {
+                fprintf (out_decl, "(assert ");
+                if (!sign)
+                  fprintf (out_decl, "(not ");
+                fprintf (out_decl, "(forall ((?e addr)) (=> (%s ?e) (or ",
+                         noll_vector_at (svars, atom->t_left->svar)->vname);
+                for (uint_t i = 0; i < noll_vector_size (atom->t_right); i++)
+                  {
+                    if (noll_vector_at (atom->t_right, 0)->kind
+                        == NOLL_STERM_SVAR)
+                      fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
+                                                                      noll_vector_at
+                                                                      (atom->
+                                                                       t_right,
+                                                                       i)->
+                                                                      svar)->
+                               vname);
+                    else
+                      fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
+                                                                        noll_vector_at
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        lvar)->
+                               vname);
+                  }
+                fprintf (out_decl, ") ) )");
+                if (!sign)
+                  fprintf (out_decl, ")");
+                fprintf (out_decl, ")\n");
 
-	      }
-	    break;
-	  }
-	default:
-	  {
-	    break;
-	  }
-	}
+              }
+            break;
+          }
+        default:
+          {
+            break;
+          }
+        }
     }
   fclose (out_decl);
   return 1;
@@ -481,7 +493,7 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
 
 int
 noll_share_check (noll_var_array * lvars, noll_var_array * svars,
-		  noll_share_array * pos_share, noll_share_array * neg_share)
+                  noll_share_array * pos_share, noll_share_array * neg_share)
 {
   int isvalid = 0;
   FILE *out = fopen ("sharing.smt", "w");
@@ -507,12 +519,12 @@ noll_share_check (noll_var_array * lvars, noll_var_array * svars,
       fgets (s, 10, res);
       fclose (res);
       if (strcmp (s, "unsat\n") == 0)
-	{
-	  printf ("*******************UNSAT*******************\n");
-	  isvalid = 1;
-	}
+        {
+          printf ("*******************UNSAT*******************\n");
+          isvalid = 1;
+        }
       else
-	printf ("*******************SAT*******************\n");
+        printf ("*******************SAT*******************\n");
     }
   free (command);
   return isvalid;
@@ -549,10 +561,10 @@ noll_entl_type ()
     if (noll_form_type (noll_vector_at (noll_prob->nform, i)) == 0)
       {
 #ifndef NDEBUG
-	fprintf (stdout, "*** noll_entl_type: type error in %d nform.\n", i);
-	fflush (stdout);
+        fprintf (stdout, "*** noll_entl_type: type error in %d nform.\n", i);
+        fflush (stdout);
 #endif
-	return 0;
+        return 0;
       }
 
   return 1;
@@ -573,10 +585,10 @@ noll_entl_normalize ()
     {
       noll_prob->pabstr = NULL;
       if (tosat_old == true)
-	normalize_incremental (pform, "p-out.txt");
+        normalize_incremental (pform, "p-out.txt");
       else
-	noll_prob->pabstr = noll2sat_normalize (pform, "p-out.txt", true,
-						false);
+        noll_prob->pabstr = noll2sat_normalize (pform, "p-out.txt", true,
+                                                false);
     }
 #ifndef NDEBUG
   fprintf (stdout, "*** check-sat: normalized pform: \n");
@@ -592,26 +604,26 @@ noll_entl_normalize ()
       noll_sat_array_resize (noll_prob->nabstr, noll_vector_size (nform));
       // go through negative formulae
       for (size_t i = 0; i < noll_vector_size (nform); i++)
-	{
-	  noll_form_t *nform_i = noll_vector_at (nform, i);
-	  noll_sat_t *nform_i_abstr = NULL;
+        {
+          noll_form_t *nform_i = noll_vector_at (nform, i);
+          noll_sat_t *nform_i_abstr = NULL;
 #ifndef NDEBUG
-	  fprintf (stdout, "\t\t(nform_%zu): begin normalize\n", i);
-	  fflush (stdout);
+          fprintf (stdout, "\t\t(nform_%zu): begin normalize\n", i);
+          fflush (stdout);
 #endif
-	  if (tosat_old == true)
-	    normalize_incremental (nform_i, "n-out.txt");
-	  else
-	    nform_i_abstr = noll2sat_normalize (nform_i, "n-out.txt", true,
-						false);
+          if (tosat_old == true)
+            normalize_incremental (nform_i, "n-out.txt");
+          else
+            nform_i_abstr = noll2sat_normalize (nform_i, "n-out.txt", true,
+                                                false);
 #ifndef NDEBUG
-	  fprintf (stdout, "\t\t(nform_%zu): end normalize\n", i);
-	  noll_form_fprint (stdout, nform_i);
-	  fflush (stdout);
+          fprintf (stdout, "\t\t(nform_%zu): end normalize\n", i);
+          noll_form_fprint (stdout, nform_i);
+          fflush (stdout);
 #endif
-	  noll_vector_at (nform, i) = nform_i;
-	  noll_vector_at (noll_prob->nabstr, i) = nform_i_abstr;
-	}
+          noll_vector_at (nform, i) = nform_i;
+          noll_vector_at (noll_prob->nabstr, i) = nform_i_abstr;
+        }
     }
 
 #ifndef NDEBUG
@@ -638,9 +650,9 @@ noll_entl_to_graph (void)
   for (uint_t i = 0; i < pform->pure->size; i++)
     for (uint_t j = i + 1; j < pform->pure->size; j++)
       if (noll_pure_matrix_at (pform->pure, i, j) == NOLL_PURE_EQ)
-	printf ("Variable %s equals %s\n",
-		noll_vector_at (pform->lvars, i)->vname,
-		noll_vector_at (pform->lvars, j)->vname);
+        printf ("Variable %s equals %s\n",
+                noll_vector_at (pform->lvars, i)->vname,
+                noll_vector_at (pform->lvars, j)->vname);
 #endif
 
   noll_prob->pgraph = noll_graph_of_form (pform);
@@ -650,8 +662,8 @@ noll_entl_to_graph (void)
   noll_graph_fprint_dot ("graph-p.dot", noll_prob->pgraph);
 #else
   fprintf (stdout, "\n*****pos_graph: (%d nodes, %d spatial edges)\n",
-	   noll_prob->pgraph->nodes_size,
-	   noll_vector_size (noll_prob->pgraph->edges));
+           noll_prob->pgraph->nodes_size,
+           noll_vector_size (noll_prob->pgraph->edges));
 #endif
 
   if (nform)
@@ -661,24 +673,24 @@ noll_entl_to_graph (void)
       noll_graph_array_resize (noll_prob->ngraph, noll_vector_size (nform));
       // go through negative formulae
       for (size_t i = 0; i < noll_vector_size (nform); i++)
-	{
-	  noll_form_t *nform_i = noll_vector_at (nform, i);
-	  noll_graph_t *nform_i_graph = noll_graph_of_form (nform_i);
-	  noll_vector_at (noll_prob->ngraph, i) = nform_i_graph;
+        {
+          noll_form_t *nform_i = noll_vector_at (nform, i);
+          noll_graph_t *nform_i_graph = noll_graph_of_form (nform_i);
+          noll_vector_at (noll_prob->ngraph, i) = nform_i_graph;
 #ifndef NDEBUG
-	  fprintf (stdout, "\n*****neg_graph: file graph-n%zu.dot\n", i);
-	  char fname[20] = "\0";
-	  sprintf (fname, "graph-n%zu.dot", i);
-	  noll_graph_fprint_dot (fname, nform_i_graph);
-	  fflush (stdout);
+          fprintf (stdout, "\n*****neg_graph: file graph-n%zu.dot\n", i);
+          char fname[20] = "\0";
+          sprintf (fname, "graph-n%zu.dot", i);
+          noll_graph_fprint_dot (fname, nform_i_graph);
+          fflush (stdout);
 #else
-	  fprintf (stdout,
-		   "\n*****neg_graph-%zu: (%d nodes, %d spatial edges)\n", i,
-		   nform_i_graph->nodes_size,
-		   noll_vector_size (nform_i_graph->edges));
+          fprintf (stdout,
+                   "\n*****neg_graph-%zu: (%d nodes, %d spatial edges)\n", i,
+                   nform_i_graph->nodes_size,
+                   noll_vector_size (nform_i_graph->edges));
 #endif
 
-	}
+        }
     }
   return 1;
 }
@@ -772,7 +784,7 @@ noll_entl_solve_special (bool isSyn)
     {
 //#ifdef NDEBUG
       fprintf (stdout,
-	       "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
+               "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
 //#endif
       return 1;
     }
@@ -807,7 +819,7 @@ noll_entl_solve (void)
 
 #ifndef NDEBUG
   fprintf (stdout, "\n*** check-%ssat: not special case\n",
-	   (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
+           (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
   fflush (stdout);
 #endif
 
@@ -836,7 +848,7 @@ noll_entl_solve (void)
 
 #ifndef NDEBUG
   fprintf (stdout, "\n*** check-%ssat: normalize\n",
-	   (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
+           (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
 #endif
 
   /*
@@ -867,27 +879,28 @@ noll_entl_solve (void)
   /* build homomorphism from right to left */
   res = noll_entl_to_homomorphism ();
   /* sharing constraints in pos_graph are updated and tested! */
-  switch (res) {
-    case 0: 
+  switch (res)
     {
-      // homomorphism not found, 
-      // so entailment invalid, 
-      // so sat problem
-      res = 1;
-      break;
-    }
+    case 0:
+      {
+        // homomorphism not found, 
+        // so entailment invalid, 
+        // so sat problem
+        res = 1;
+        break;
+      }
     case 1:
-    {
-      // homomorphism found
-      // so entailment valid
-      // so unsat problem
-      res = 0;
-      break;
-    } 
+      {
+        // homomorphism found
+        // so entailment valid
+        // so unsat problem
+        res = 0;
+        break;
+      }
     default:
       break;
-  }
-      
+    }
+
   /*
    * FIN
    */
@@ -896,7 +909,7 @@ check_end:
   gettimeofday (&tvEnd, NULL);
   time_difference (&tvDiff, &tvEnd, &tvBegin);
   printf ("\nTotal time (sec): %ld.%06ld\n\n", (long int) tvDiff.tv_sec,
-	  (long int) tvDiff.tv_usec);
+          (long int) tvDiff.tv_usec);
   /*
    * Free the allocated memory
    * (only graphs, formulas will be deallocated at the end)

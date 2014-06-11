@@ -32,9 +32,9 @@
 typedef struct smtlib2_noll_parser
 {
   smtlib2_abstract_parser parent_;
-  noll_context_t *ctx_;		// used for local variables and quantifiers 
-  smtlib2_hashtable *sorts_;	// all the declared sort symbols
-  smtlib2_hashtable *funs_;	// all the declared function symbols 
+  noll_context_t *ctx_;         // used for local variables and quantifiers 
+  smtlib2_hashtable *sorts_;    // all the declared sort symbols
+  smtlib2_hashtable *funs_;     // all the declared function symbols 
 } smtlib2_noll_parser;
 
 /** Constructor/destructor.

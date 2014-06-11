@@ -51,7 +51,6 @@ CXXSRC = libvata_noll_iface.cc
 # Rules
 #---------------------------------------
 
-#TODO
 SHARED_LIBS = -lsmtlib2parser \
 	-lm \
 	-lvata
@@ -71,6 +70,9 @@ distclean: clean
 
 install: spen
 	mv spen $(HOME)/bin
+
+indent: $(CCINC) $(CCSRC) clean
+	indent -nut *.?
 
 #---------------------------------------
 # IMPLICIT RULES AND DEPENDENCIES

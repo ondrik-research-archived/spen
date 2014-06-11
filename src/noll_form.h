@@ -57,8 +57,8 @@ extern "C"
 
   typedef struct noll_pure_t
   {
-    noll_pure_op_t **m;		// matrix of equality and inequality constraints
-    uint_t size;		// allocated size for the matrix, 0 if empty or == locs_array size
+    noll_pure_op_t **m;         // matrix of equality and inequality constraints
+    uint_t size;                // allocated size for the matrix, 0 if empty or == locs_array size
   } noll_pure_t;
 
 /**
@@ -70,7 +70,7 @@ extern "C"
  * Spatial formulas.
  */
 
-  typedef struct noll_space_s noll_space_t;	/* forward definition */
+  typedef struct noll_space_s noll_space_t;     /* forward definition */
     NOLL_VECTOR_DECLARE (noll_space_array, noll_space_t *);
 
   typedef enum noll_space_op_t
@@ -89,19 +89,19 @@ extern "C"
 
   typedef struct noll_pto_t
   {
-    uid_t sid;			// source location
-    noll_uid_array *fields;	// array of fields
-    noll_uid_array *dest;	// array of destination locations
+    uid_t sid;                  // source location
+    noll_uid_array *fields;     // array of fields
+    noll_uid_array *dest;       // array of destination locations
   } noll_pto_t;
 
 // list segment constraint
 
   typedef struct noll_ls_t
   {
-    uid_t pid;			// predicate
-    noll_uid_array *args;	// arguments used
-    uid_t sid;			// set of locations variable bound
-    bool is_loop;		// set if it is a loop instance
+    uid_t pid;                  // predicate
+    noll_uid_array *args;       // arguments used
+    uid_t sid;                  // set of locations variable bound
+    bool is_loop;               // set if it is a loop instance
   } noll_ls_t;
 
   struct noll_space_s
@@ -111,9 +111,9 @@ extern "C"
 
     union
     {
-      noll_pto_t pto;		// points-to constraint
-      noll_ls_t ls;		// list segment constraint
-      noll_space_array *sep;	// array of constraints
+      noll_pto_t pto;           // points-to constraint
+      noll_ls_t ls;             // list segment constraint
+      noll_space_array *sep;    // array of constraints
       // for weak or strong separation
     } m;
   };
@@ -122,9 +122,9 @@ extern "C"
  */
   typedef enum noll_share_op_t
   {
-    NOLL_SHARE_IN = 0,		/* \in */
-    NOLL_SHARE_NI,		/* \not\in */
-    NOLL_SHARE_SUBSET,		/* \subseteq */
+    NOLL_SHARE_IN = 0,          /* \in */
+    NOLL_SHARE_NI,              /* \not\in */
+    NOLL_SHARE_SUBSET,          /* \subseteq */
     NOLL_SHARE_OTHER
 /* NOT TO BE USED */
   } noll_share_op_t;
@@ -144,8 +144,8 @@ extern "C"
   typedef struct noll_sterm_t
   {
     noll_sterm_kind_t kind;
-    uid_t lvar;			// location variable, UNDEFINED_ID if kind == NOLL_STERM_SVAR
-    uid_t svar;			// set of locations variable, UNDEFINED_ID if kind == NOLL_STERM_LVAR
+    uid_t lvar;                 // location variable, UNDEFINED_ID if kind == NOLL_STERM_SVAR
+    uid_t svar;                 // set of locations variable, UNDEFINED_ID if kind == NOLL_STERM_LVAR
   } noll_sterm_t;
 
     NOLL_VECTOR_DECLARE (noll_sterm_array, noll_sterm_t *);
@@ -156,9 +156,9 @@ extern "C"
  */
   typedef struct noll_atom_share_t
   {
-    noll_share_op_t kind;	// kind of constraint
-    noll_sterm_t *t_left;	// term left
-    noll_sterm_array *t_right;	// term right = union of terms
+    noll_share_op_t kind;       // kind of constraint
+    noll_sterm_t *t_left;       // term left
+    noll_sterm_array *t_right;  // term right = union of terms
   } noll_atom_share_t;
 
     NOLL_VECTOR_DECLARE (noll_share_array, noll_atom_share_t *);
@@ -172,12 +172,12 @@ extern "C"
 /** Formula in NOLL */
   typedef struct noll_form_t
   {
-    noll_form_kind_t kind;	// kind of formula
-    noll_var_array *lvars;	// local variables
+    noll_form_kind_t kind;      // kind of formula
+    noll_var_array *lvars;      // local variables
     noll_var_array *svars;
-    noll_pure_t *pure;		// pure part
-    noll_space_t *space;	// space part
-    noll_share_array *share;	// sharing part
+    noll_pure_t *pure;          // pure part
+    noll_space_t *space;        // space part
+    noll_share_array *share;    // sharing part
   } noll_form_t;
 
     NOLL_VECTOR_DECLARE (noll_form_array, noll_form_t *);
@@ -234,16 +234,16 @@ extern "C"
 /* ====================================================================== */
 
   void noll_share_atom_fprint (FILE * f, noll_var_array * lvars,
-			       noll_var_array * svars,
-			       noll_atom_share_t * phi);
+                               noll_var_array * svars,
+                               noll_atom_share_t * phi);
   void noll_share_fprint (FILE * f, noll_var_array * lvars,
-			  noll_var_array * svars, noll_share_array * phi);
+                          noll_var_array * svars, noll_share_array * phi);
   void noll_space_fprint (FILE * f, noll_var_array * lvars,
-			  noll_var_array * svars, noll_space_t * phi);
+                          noll_var_array * svars, noll_space_t * phi);
   void noll_form_fprint (FILE * f, noll_form_t * phi);
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif /* _NOL_FORMULA_H_ */
+#endif                          /* _NOL_FORMULA_H_ */

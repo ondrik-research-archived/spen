@@ -58,10 +58,10 @@ extern "C"
  */
   typedef struct noll_var_t
   {
-    char *vname;		// declaration name
-    uid_t vid;			// variable identifier
-    noll_type_t *vty;		// type
-    noll_scope_e scope;		// visibility
+    char *vname;                // declaration name
+    uid_t vid;                  // variable identifier
+    noll_type_t *vty;           // type
+    noll_scope_e scope;         // visibility
   } noll_var_t;
 
 /** Type of the global array of variables. */
@@ -81,7 +81,7 @@ extern "C"
 /* Constructors/destructors */
 /* ====================================================================== */
   noll_var_t *noll_var_new (const char *name, noll_type_t * vty,
-			    noll_scope_e s);
+                            noll_scope_e s);
 /* Build a variable record. */
   void noll_var_free (noll_var_t * a);
 /* Free a variable record. */
@@ -97,7 +97,7 @@ extern "C"
 /* ====================================================================== */
 
   void noll_var_register (noll_var_array * a, const char *name,
-			  noll_type_t * ty, noll_scope_e s);
+                          noll_type_t * ty, noll_scope_e s);
 /* Add a variable declaration to the array a. */
 
   uint_t noll_var_array_find_local (noll_var_array * a, const char *name);
@@ -118,4 +118,4 @@ extern "C"
 }
 #endif
 
-#endif				/* _NOL_VARS_H_ */
+#endif                          /* _NOL_VARS_H_ */

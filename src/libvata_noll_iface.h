@@ -36,22 +36,25 @@
 
 
 #ifdef __cplusplus
-	extern "C" {
+extern "C"
+{
 #endif
 
 /* ====================================================================== */
 /* Datatypes */
 /* ====================================================================== */
-struct type_noll_ta_t;
-typedef struct type_noll_ta_t vata_ta_t;
-typedef vata_ta_t noll_ta_t;
+  struct type_noll_ta_t;
+  typedef struct type_noll_ta_t vata_ta_t;
+  typedef vata_ta_t noll_ta_t;
 
-typedef size_t vata_state_t;
+  typedef size_t vata_state_t;
 
 /// Function pointer type for function translating symbols of TA
-typedef const noll_ta_symbol_t* (*vata_symbol_translate_fncptr)(const noll_ta_symbol_t*);
+  typedef const noll_ta_symbol_t *(*vata_symbol_translate_fncptr) (const
+                                                                   noll_ta_symbol_t
+                                                                   *);
 
-typedef noll_ta_symbol_t vata_symbol_t;
+  typedef noll_ta_symbol_t vata_symbol_t;
 
 /* ====================================================================== */
 /* Functions */
@@ -66,7 +69,7 @@ typedef noll_ta_symbol_t vata_symbol_t;
  *
  * @returns  Pointer to the created TA
  */
-vata_ta_t* vata_create_ta(void);
+  vata_ta_t *vata_create_ta (void);
 
 
 /**
@@ -77,8 +80,7 @@ vata_ta_t* vata_create_ta(void);
  *
  * @param[in]  ta  The TA to be freed, if NULL, nothing happens.
  */
-void vata_free_ta(
-	vata_ta_t*          ta);
+  void vata_free_ta (vata_ta_t * ta);
 
 
 /**
@@ -90,9 +92,7 @@ void vata_free_ta(
  * @param[in,out]  ta     The TA to be altered
  * @param[in]      state  The state to be set as a root state in @p ta
  */
-void vata_set_state_root(
-	vata_ta_t*          ta,
-	vata_state_t        state);
+  void vata_set_state_root (vata_ta_t * ta, vata_state_t state);
 
 
 /**
@@ -108,11 +108,10 @@ void vata_set_state_root(
  * @param[in]      children     Array of children states of the transition
  *                              (might be @p NULL for an empty array)
  */
-void vata_add_transition(
-	vata_ta_t*                ta,
-	vata_state_t              parent,
-	const noll_ta_symbol_t*   symbol,
-	const noll_uid_array*     children);
+  void vata_add_transition (vata_ta_t * ta,
+                            vata_state_t parent,
+                            const noll_ta_symbol_t * symbol,
+                            const noll_uid_array * children);
 
 
 /**
@@ -120,8 +119,7 @@ void vata_add_transition(
  *
  * @param[in]  ta  The automaton to be printed
  */
-void vata_print_ta(
-	const vata_ta_t*        ta);
+  void vata_print_ta (const vata_ta_t * ta);
 
 
 /**
@@ -136,9 +134,8 @@ void vata_print_ta(
  *
  * @returns  @p bool if L(smaller_ta) <= L(bigger_ta), @p false otherwise
  */
-bool vata_check_inclusion(
-	const vata_ta_t*        smaller_ta,
-	const vata_ta_t*        bigger_ta);
+  bool vata_check_inclusion (const vata_ta_t * smaller_ta,
+                             const vata_ta_t * bigger_ta);
 
 
 /**
@@ -150,14 +147,13 @@ bool vata_check_inclusion(
  * @param[in,out]  ta      The TA to have its symbols translated (also the output)
  * @param[in]      transl  The translation function
  */
-void vata_translate_symbols(
-	vata_ta_t*                        ta,
-	vata_symbol_translate_fncptr      transl);
+  void vata_translate_symbols (vata_ta_t * ta,
+                               vata_symbol_translate_fncptr transl);
 
 
 
 #ifdef __cplusplus
-	} // extern "C"
+}                               // extern "C"
 #endif
 
-#endif /* LIBVATA_NOLL_IFACE_H_ */
+#endif                          /* LIBVATA_NOLL_IFACE_H_ */

@@ -53,7 +53,7 @@ extern "C"
 /* Valid term builder in NOLL */
   typedef enum
   {
-    NOLL_F_FALSE = 0,		/* boolean operators */
+    NOLL_F_FALSE = 0,           /* boolean operators */
     NOLL_F_TRUE,
     NOLL_F_NOT,
     NOLL_F_AND,
@@ -61,13 +61,13 @@ extern "C"
     NOLL_F_IMPLIES,
     NOLL_F_EXISTS,
     NOLL_F_FORALL,
-    NOLL_F_LVAR,		/* variable, field, or predicate */
+    NOLL_F_LVAR,                /* variable, field, or predicate */
     NOLL_F_SVAR,
     NOLL_F_FIELD,
     NOLL_F_PRED,
-    NOLL_F_EQ,			/* pure operators */
+    NOLL_F_EQ,                  /* pure operators */
     NOLL_F_DISTINCT,
-    NOLL_F_EMP,			/* space operators */
+    NOLL_F_EMP,                 /* space operators */
     NOLL_F_JUNK,
     NOLL_F_WSEP,
     NOLL_F_SSEP,
@@ -75,16 +75,16 @@ extern "C"
     NOLL_F_REF,
     NOLL_F_SREF,
     NOLL_F_INDEX,
-    NOLL_F_SLOC,		/* share operators */
+    NOLL_F_SLOC,                /* share operators */
     NOLL_F_UNLOC,
     NOLL_F_INLOC,
-    NOLL_F_NILOC,		/* not in */
+    NOLL_F_NILOC,               /* not in */
     NOLL_F_EQLOC,
     NOLL_F_LELOC,
     NOLL_F_SELOC,
     NOLL_F_TOBOOL,
     NOLL_F_TOSPACE,
-    NOLL_F_LOOP,		/* loop of length at least one */
+    NOLL_F_LOOP,                /* loop of length at least one */
     NOLL_F_OTHER
 /* NOT TO BE USED */
   } noll_expkind_t;
@@ -101,19 +101,19 @@ extern "C"
       /* quantifiers */
       struct
       {
-	/* reference to the array containing the variables quantified
-	 * in a continuous region from [start to end) */
-	noll_var_array *lvars;	/* location vars */
-	uint_t lstart;		/* index starting the location quantified variables */
-	uint_t lend;		/* index ending the location quantified variables */
-	noll_var_array *svars;	/* set of location vars */
-	uint_t sstart;		/* index starting the set of location quantified variables */
-	uint_t send;		/* index ending the set of location quantified variables */
+        /* reference to the array containing the variables quantified
+         * in a continuous region from [start to end) */
+        noll_var_array *lvars;  /* location vars */
+        uint_t lstart;          /* index starting the location quantified variables */
+        uint_t lend;            /* index ending the location quantified variables */
+        noll_var_array *svars;  /* set of location vars */
+        uint_t sstart;          /* index starting the set of location quantified variables */
+        uint_t send;            /* index ending the set of location quantified variables */
       } quant;
     } p;
 
-    struct noll_exp_t **args;	/* array of expression args or NULL */
-    uint_t size;		/* size of the array above */
+    struct noll_exp_t **args;   /* array of expression args or NULL */
+    uint_t size;                /* size of the array above */
 
   } noll_exp_t;
 
@@ -155,7 +155,7 @@ extern "C"
 
   extern int noll_error_parsing;
   extern int fixed_def;
-  
+
 /* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
@@ -175,10 +175,10 @@ extern "C"
 
 /* Functions */
   noll_type_t *noll_mk_fun_decl (noll_context_t * ctx, const char *name,
-				 noll_type_t * ty);
+                                 noll_type_t * ty);
 /* Register a field or a variable. */
   uint_t noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
-			  noll_type_t * rety, noll_exp_t * def);
+                          noll_type_t * rety, noll_exp_t * def);
 /* Register a predicate definition. */
 
 /* Commands */
@@ -187,7 +187,7 @@ extern "C"
 
 /* Terms */
   void noll_push_var (noll_context_t * ctx, const char *name,
-		      noll_type_t * vty);
+                      noll_type_t * vty);
 /* Declare a local variable in the context. */
   int noll_push_quant (noll_context_t * ctx);
   int noll_pop_quant (noll_context_t * ctx);
@@ -195,54 +195,54 @@ extern "C"
 
   noll_exp_t *noll_mk_exists (noll_context_t * ctx, noll_exp_t * term);
   noll_exp_t *noll_mk_app (noll_context_t * ctx, const char *name,
-			   noll_exp_t ** args, uint_t size);
+                           noll_exp_t ** args, uint_t size);
   noll_exp_t *noll_mk_symbol (noll_context_t * ctx, const char *name);
   noll_exp_t *noll_mk_pred (noll_context_t * ctx, const char *name,
-			    noll_exp_t ** args, uint_t size);
+                            noll_exp_t ** args, uint_t size);
   noll_exp_t *noll_mk_true (noll_context_t * ctx);
   noll_exp_t *noll_mk_false (noll_context_t * ctx);
   noll_exp_t *noll_mk_and (noll_context_t * ctx, noll_exp_t ** args,
-			   uint_t size);
+                           uint_t size);
   noll_exp_t *noll_mk_or (noll_context_t * ctx, noll_exp_t ** args,
-			  uint_t size);
+                          uint_t size);
   noll_exp_t *noll_mk_not (noll_context_t * ctx, noll_exp_t ** args,
-			   uint_t size);
+                           uint_t size);
   noll_exp_t *noll_mk_eq (noll_context_t * ctx, noll_exp_t ** args,
-			  uint_t size);
+                          uint_t size);
   noll_exp_t *noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args,
-				uint_t size);
+                                uint_t size);
   noll_exp_t *noll_mk_emp (noll_context_t * ctx);
   noll_exp_t *noll_mk_junk (noll_context_t * ctx);
   noll_exp_t *noll_mk_wsep (noll_context_t * ctx, noll_exp_t ** args,
-			    uint_t size);
+                            uint_t size);
   noll_exp_t *noll_mk_ssep (noll_context_t * ctx, noll_exp_t ** args,
-			    uint_t size);
+                            uint_t size);
   noll_exp_t *noll_mk_pto (noll_context_t * ctx, noll_exp_t ** args,
-			   uint_t size);
+                           uint_t size);
   noll_exp_t *noll_mk_ref (noll_context_t * ctx, noll_exp_t ** args,
-			   uint_t size);
+                           uint_t size);
   noll_exp_t *noll_mk_sref (noll_context_t * ctx, noll_exp_t ** args,
-			    uint_t size);
+                            uint_t size);
   noll_exp_t *noll_mk_index (noll_context_t * ctx, noll_exp_t ** args,
-			     uint_t size);
+                             uint_t size);
   noll_exp_t *noll_mk_sloc (noll_context_t * ctx, noll_exp_t ** args,
-			    uint_t size);
+                            uint_t size);
   noll_exp_t *noll_mk_unloc (noll_context_t * ctx, noll_exp_t ** args,
-			     uint_t size);
+                             uint_t size);
   noll_exp_t *noll_mk_inloc (noll_context_t * ctx, noll_exp_t ** args,
-			     uint_t size);
+                             uint_t size);
   noll_exp_t *noll_mk_eqloc (noll_context_t * ctx, noll_exp_t ** args,
-			     uint_t size);
+                             uint_t size);
   noll_exp_t *noll_mk_leloc (noll_context_t * ctx, noll_exp_t ** args,
-			     uint_t size);
+                             uint_t size);
   noll_exp_t *noll_mk_seloc (noll_context_t * ctx, noll_exp_t ** args,
-			     uint_t size);
+                             uint_t size);
   noll_exp_t *noll_mk_tobool (noll_context_t * ctx, noll_exp_t ** args,
-			      uint_t size);
+                              uint_t size);
   noll_exp_t *noll_mk_tospace (noll_context_t * ctx, noll_exp_t ** args,
-			       uint_t size);
+                               uint_t size);
   noll_exp_t *noll_mk_loop (noll_context_t * ctx, noll_exp_t ** args,
-			    uint_t size);
+                            uint_t size);
 
 /* ====================================================================== */
 /* Typechecking */
@@ -256,7 +256,7 @@ extern "C"
 /* ====================================================================== */
 /* Build a space formula from AST in args */
   void noll_exp_push_pure (noll_context_t * ctx, noll_exp_t * e,
-			   noll_form_t * f);
+                           noll_form_t * f);
   noll_space_t *noll_mk_form_junk (noll_exp_t * e);
   noll_space_t *noll_mk_form_pto (noll_context_t * ctx, noll_exp_t * e);
   noll_space_t *noll_mk_form_loop (noll_context_t * ctx, noll_exp_t * e);
@@ -278,14 +278,14 @@ extern "C"
 			fprintf (stderr, __VA_ARGS__); \
 	} while (0)
 
-#else				/* #ifndef NDEBUG */
+#else                           /* #ifndef NDEBUG */
 
-#define NOLL_DEBUG(...)		/* empty */
+#define NOLL_DEBUG(...)         /* empty */
 
-#endif				/* #ifndef NDEBUG */
+#endif                          /* #ifndef NDEBUG */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif				/* _NOLL_H */
+#endif                          /* _NOLL_H */

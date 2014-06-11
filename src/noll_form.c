@@ -33,322 +33,375 @@
 #include "noll2graph.h"
 #include "noll_graph.h"
 
-NOLL_VECTOR_DEFINE (noll_space_array, noll_space_t*)
-;
+NOLL_VECTOR_DEFINE (noll_space_array, noll_space_t *);
 
-NOLL_VECTOR_DEFINE (noll_share_array, noll_atom_share_t*)
-;
+NOLL_VECTOR_DEFINE (noll_share_array, noll_atom_share_t *);
 
-NOLL_VECTOR_DEFINE (noll_sterm_array, noll_sterm_t*)
-;
+NOLL_VECTOR_DEFINE (noll_sterm_array, noll_sterm_t *);
 
-NOLL_VECTOR_DEFINE (noll_form_array, noll_form_t*)
-;
+NOLL_VECTOR_DEFINE (noll_form_array, noll_form_t *);
 
 /* ====================================================================== */
 /* Globals */
 /* ====================================================================== */
 
-noll_form_t* noll_form_new() {
-	noll_form_t* form = (noll_form_t*) malloc(sizeof(noll_form_t));
-	form->kind = NOLL_FORM_VALID;
-	form->lvars = noll_var_array_new();
-	form->svars = noll_var_array_new();
-	form->pure = NULL; //noll_pure_new();
-	form->space = noll_space_new();
-	form->share = noll_share_new();
+noll_form_t *
+noll_form_new ()
+{
+  noll_form_t *form = (noll_form_t *) malloc (sizeof (noll_form_t));
+  form->kind = NOLL_FORM_VALID;
+  form->lvars = noll_var_array_new ();
+  form->svars = noll_var_array_new ();
+  form->pure = NULL;            //noll_pure_new();
+  form->space = noll_space_new ();
+  form->share = noll_share_new ();
 
-	return form;
+  return form;
 }
 
-void noll_form_free(noll_form_t* form) {
-	assert (form != NULL);
-	if (form->lvars != NULL) {
-		noll_var_array_delete(form->lvars);
-		form->lvars = NULL;
-	}
-	if (form->svars != NULL) {
-		noll_var_array_delete(form->svars);
-		form->svars = NULL;
-	}
-	if (form->pure != NULL) {
-		noll_pure_free(form->pure);
-		form->pure = NULL;
-	}
-	if (form->space != NULL) {
-		noll_space_free(form->space);
-		form->space = NULL;
-	}
-	if (form->share != NULL) {
-		noll_share_free(form->share);
-		form->share = NULL;
-	}
-	free(form);
+void
+noll_form_free (noll_form_t * form)
+{
+  assert (form != NULL);
+  if (form->lvars != NULL)
+    {
+      noll_var_array_delete (form->lvars);
+      form->lvars = NULL;
+    }
+  if (form->svars != NULL)
+    {
+      noll_var_array_delete (form->svars);
+      form->svars = NULL;
+    }
+  if (form->pure != NULL)
+    {
+      noll_pure_free (form->pure);
+      form->pure = NULL;
+    }
+  if (form->space != NULL)
+    {
+      noll_space_free (form->space);
+      form->space = NULL;
+    }
+  if (form->share != NULL)
+    {
+      noll_share_free (form->share);
+      form->share = NULL;
+    }
+  free (form);
 }
 
-void noll_form_set_unsat(noll_form_t* form) {
+void
+noll_form_set_unsat (noll_form_t * form)
+{
 
-	form->kind = NOLL_FORM_UNSAT;
-	// DO NOT FREE variables, already pointed by the context
-	if (form->pure != NULL) {
-		noll_pure_free(form->pure);
-		form->pure = NULL;
-	}
-	if (form->space != NULL) {
-		noll_space_free(form->space);
-		form->space = NULL;
-	}
-	if (form->share != NULL) {
-		noll_share_free(form->share);
-		form->share = NULL;
-	}
+  form->kind = NOLL_FORM_UNSAT;
+  // DO NOT FREE variables, already pointed by the context
+  if (form->pure != NULL)
+    {
+      noll_pure_free (form->pure);
+      form->pure = NULL;
+    }
+  if (form->space != NULL)
+    {
+      noll_space_free (form->space);
+      form->space = NULL;
+    }
+  if (form->share != NULL)
+    {
+      noll_share_free (form->share);
+      form->share = NULL;
+    }
 }
 
-noll_pure_t*
-noll_pure_new(uint_t size) {
-	noll_pure_t* ret = (noll_pure_t*) malloc(sizeof(struct noll_pure_t));
-	ret->m = NULL;
-	ret->size = size;
-	if (ret->size > 0) {
-		ret->m = (noll_pure_op_t**) malloc(ret->size * sizeof(noll_pure_op_t*));
-		for (uid_t i = 0; i < ret->size; i++) {
-			uid_t sz = ret->size - i;
-			ret->m[i] = (noll_pure_op_t*) malloc(sz * sizeof(noll_pure_op_t));
-			// set the diagonal
-			ret->m[i][0] = NOLL_PURE_EQ;
-			for (uid_t j = 1; j < sz; j++)
-				ret->m[i][j] = NOLL_PURE_OTHER;
-		}
-	}
-	return ret;
+noll_pure_t *
+noll_pure_new (uint_t size)
+{
+  noll_pure_t *ret = (noll_pure_t *) malloc (sizeof (struct noll_pure_t));
+  ret->m = NULL;
+  ret->size = size;
+  if (ret->size > 0)
+    {
+      ret->m =
+        (noll_pure_op_t **) malloc (ret->size * sizeof (noll_pure_op_t *));
+      for (uid_t i = 0; i < ret->size; i++)
+        {
+          uid_t sz = ret->size - i;
+          ret->m[i] =
+            (noll_pure_op_t *) malloc (sz * sizeof (noll_pure_op_t));
+          // set the diagonal
+          ret->m[i][0] = NOLL_PURE_EQ;
+          for (uid_t j = 1; j < sz; j++)
+            ret->m[i][j] = NOLL_PURE_OTHER;
+        }
+    }
+  return ret;
 }
 
-void noll_pure_free(noll_pure_t* p) {
-	if (!p)
-		return;
-	if (p->m) {
-		for (uid_t i = 0; i < p->size; i++)
-			if (p->m[i])
-				free(p->m[i]);
+void
+noll_pure_free (noll_pure_t * p)
+{
+  if (!p)
+    return;
+  if (p->m)
+    {
+      for (uid_t i = 0; i < p->size; i++)
+        if (p->m[i])
+          free (p->m[i]);
 
-		free(p->m);
-	}
-	free(p);
+      free (p->m);
+    }
+  free (p);
 }
 
-noll_space_t* noll_space_new() {
-	noll_space_t* ret = (noll_space_t*) malloc(sizeof(noll_space_t));
-	ret->kind = NOLL_SPACE_EMP;
-	ret->is_precise = true;
-	return ret;
+noll_space_t *
+noll_space_new ()
+{
+  noll_space_t *ret = (noll_space_t *) malloc (sizeof (noll_space_t));
+  ret->kind = NOLL_SPACE_EMP;
+  ret->is_precise = true;
+  return ret;
 }
 
-void noll_space_free(noll_space_t* s) {
-	if (!s)
-		return;
-	switch (s->kind) {
-	case NOLL_SPACE_PTO: {
-		if (noll_vector_size (s->m.pto.fields) > 0) {
-			if (s->m.pto.fields)
-				noll_uid_array_delete(s->m.pto.fields);
-			if (s->m.pto.dest)
-				noll_uid_array_delete(s->m.pto.dest);
-		}
-		break;
-	}
-	case NOLL_SPACE_LS: {
-		if (s->m.ls.args && noll_vector_size (s->m.ls.args) > 0)
-			noll_uid_array_delete(s->m.ls.args);
-		break;
-	}
-	case NOLL_SPACE_WSEP:
-	case NOLL_SPACE_SSEP: {
-		noll_space_array_delete(s->m.sep);
-		break;
-	}
-	default:
-		break;
-	}
-	free(s);
-	return;
+void
+noll_space_free (noll_space_t * s)
+{
+  if (!s)
+    return;
+  switch (s->kind)
+    {
+    case NOLL_SPACE_PTO:
+      {
+        if (noll_vector_size (s->m.pto.fields) > 0)
+          {
+            if (s->m.pto.fields)
+              noll_uid_array_delete (s->m.pto.fields);
+            if (s->m.pto.dest)
+              noll_uid_array_delete (s->m.pto.dest);
+          }
+        break;
+      }
+    case NOLL_SPACE_LS:
+      {
+        if (s->m.ls.args && noll_vector_size (s->m.ls.args) > 0)
+          noll_uid_array_delete (s->m.ls.args);
+        break;
+      }
+    case NOLL_SPACE_WSEP:
+    case NOLL_SPACE_SSEP:
+      {
+        noll_space_array_delete (s->m.sep);
+        break;
+      }
+    default:
+      break;
+    }
+  free (s);
+  return;
 }
 
-noll_sterm_t*
-noll_sterm_new_var(uid_t v, noll_sterm_kind_t kind) {
-	noll_sterm_t* tv = (noll_sterm_t*) malloc(sizeof(noll_sterm_t));
-	tv->kind = kind;
-	tv->lvar = (kind == NOLL_STERM_LVAR) ? v : UNDEFINED_ID;
-	tv->svar = (kind == NOLL_STERM_SVAR) ? v : UNDEFINED_ID;
-	return tv;
+noll_sterm_t *
+noll_sterm_new_var (uid_t v, noll_sterm_kind_t kind)
+{
+  noll_sterm_t *tv = (noll_sterm_t *) malloc (sizeof (noll_sterm_t));
+  tv->kind = kind;
+  tv->lvar = (kind == NOLL_STERM_LVAR) ? v : UNDEFINED_ID;
+  tv->svar = (kind == NOLL_STERM_SVAR) ? v : UNDEFINED_ID;
+  return tv;
 }
 
-noll_sterm_t*
-noll_sterm_new_prj(uid_t s, uid_t v) {
-	noll_sterm_t* tv = (noll_sterm_t*) malloc(sizeof(noll_sterm_t));
-	tv->kind = NOLL_STERM_PRJ;
-	tv->lvar = v;
-	tv->svar = s;
-	return tv;
+noll_sterm_t *
+noll_sterm_new_prj (uid_t s, uid_t v)
+{
+  noll_sterm_t *tv = (noll_sterm_t *) malloc (sizeof (noll_sterm_t));
+  tv->kind = NOLL_STERM_PRJ;
+  tv->lvar = v;
+  tv->svar = s;
+  return tv;
 }
 
-noll_share_array* noll_share_new() {
-	return noll_share_array_new();
+noll_share_array *
+noll_share_new ()
+{
+  return noll_share_array_new ();
 }
 
-void noll_share_free(noll_share_array* s) {
-	if (s == NULL)
-		return;
-	// TODO: free also the sterms in each element
-	noll_share_array_delete(s);
+void
+noll_share_free (noll_share_array * s)
+{
+  if (s == NULL)
+    return;
+  // TODO: free also the sterms in each element
+  noll_share_array_delete (s);
 }
 
-noll_sterm_t*
-noll_sterm_copy(noll_sterm_t* a) {
-	if (a == NULL)
-		return NULL;
+noll_sterm_t *
+noll_sterm_copy (noll_sterm_t * a)
+{
+  if (a == NULL)
+    return NULL;
 
-	noll_sterm_t* tv = (noll_sterm_t*) malloc(sizeof(noll_sterm_t));
-	tv->kind = a->kind;
-	tv->lvar = a->lvar;
-	tv->svar = a->svar;
-	return tv;
+  noll_sterm_t *tv = (noll_sterm_t *) malloc (sizeof (noll_sterm_t));
+  tv->kind = a->kind;
+  tv->lvar = a->lvar;
+  tv->svar = a->svar;
+  return tv;
 }
 
-void noll_pure_update_eq(noll_form_t* f, uid_t l, uid_t c) {
-	assert (f);
-	if (f->kind == NOLL_FORM_UNSAT)
-		return;
-	assert (f->pure && f->pure->m);
-	assert ((l < f->pure->size) && (c < f->pure->size) && (l < c));
-	if (noll_pure_matrix_at (f->pure, l, c) == NOLL_PURE_NEQ) {
+void
+noll_pure_update_eq (noll_form_t * f, uid_t l, uid_t c)
+{
+  assert (f);
+  if (f->kind == NOLL_FORM_UNSAT)
+    return;
+  assert (f->pure && f->pure->m);
+  assert ((l < f->pure->size) && (c < f->pure->size) && (l < c));
+  if (noll_pure_matrix_at (f->pure, l, c) == NOLL_PURE_NEQ)
+    {
 #ifndef NDEBUG
-		fprintf (stdout, "noll_pure_update_eq(%d,%d): set unsat!\n", l, c);
+      fprintf (stdout, "noll_pure_update_eq(%d,%d): set unsat!\n", l, c);
 #endif
-		noll_form_set_unsat(f);
-		return;
-	}
-	noll_pure_matrix_at (f->pure, l, c) = NOLL_PURE_EQ;
+      noll_form_set_unsat (f);
+      return;
+    }
+  noll_pure_matrix_at (f->pure, l, c) = NOLL_PURE_EQ;
 }
 
-void noll_pure_update_neq(noll_form_t* f, uid_t l, uid_t c) {
-	assert (f);
-	if (f->kind == NOLL_FORM_UNSAT)
-		return;
-	assert (f->pure && f->pure->m);
-	assert ((l < f->pure->size) && (c < f->pure->size) && (l < c));
-	if (noll_pure_matrix_at (f->pure, l, c) == NOLL_PURE_EQ) {
+void
+noll_pure_update_neq (noll_form_t * f, uid_t l, uid_t c)
+{
+  assert (f);
+  if (f->kind == NOLL_FORM_UNSAT)
+    return;
+  assert (f->pure && f->pure->m);
+  assert ((l < f->pure->size) && (c < f->pure->size) && (l < c));
+  if (noll_pure_matrix_at (f->pure, l, c) == NOLL_PURE_EQ)
+    {
 #ifndef NDEBUG
-		fprintf (stdout, "noll_pure_update_neq(%d,%d): set unsat!\n", l, c);
+      fprintf (stdout, "noll_pure_update_neq(%d,%d): set unsat!\n", l, c);
 #endif
-		noll_form_set_unsat(f);
-		return;
-	}
-	noll_pure_matrix_at (f->pure, l, c) = NOLL_PURE_NEQ;
+      noll_form_set_unsat (f);
+      return;
+    }
+  noll_pure_matrix_at (f->pure, l, c) = NOLL_PURE_NEQ;
 }
 
-void noll_pure_add_eq(noll_form_t* f, uid_t v1, uid_t v2) {
-	assert (f != NULL);
-	if (f->kind == NOLL_FORM_UNSAT)
-		return;
+void
+noll_pure_add_eq (noll_form_t * f, uid_t v1, uid_t v2)
+{
+  assert (f != NULL);
+  if (f->kind == NOLL_FORM_UNSAT)
+    return;
 
-	/* part used only at parsing
-	 uint_t size = noll_vector_size(f->lvars);
-	 if ((f->pure != NULL) && (f->pure->size != size)) {
-	 noll_pure_free(f->pure);
-	 f->pure = NULL;
-	 }
-	 if (f->pure == NULL)
-	 f->pure = noll_pure_new(size);
-	 */
+  /* part used only at parsing
+     uint_t size = noll_vector_size(f->lvars);
+     if ((f->pure != NULL) && (f->pure->size != size)) {
+     noll_pure_free(f->pure);
+     f->pure = NULL;
+     }
+     if (f->pure == NULL)
+     f->pure = noll_pure_new(size);
+   */
 
-	assert (f->pure->size > v1 && f->pure->size > v2);
-	if (v1 != v2) {
-		// set the entry in form->pure->m to 0
-		uid_t v_lin = (v1 <= v2) ? v1 : v2;
-		uid_t v_col = (v1 <= v2) ? v2 : v1;
-		noll_pure_update_eq(f, v_lin, v_col);
-		// close with entries < vcol-1
-		for (uid_t j = v_lin + 1; (j < v_col) && (f->kind != NOLL_FORM_UNSAT); j++) {
-			if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
-				/* v_lin = v_col && v_lin = j => j = v_col */
-				noll_pure_update_eq(f, j, v_col);
+  assert (f->pure->size > v1 && f->pure->size > v2);
+  if (v1 != v2)
+    {
+      // set the entry in form->pure->m to 0
+      uid_t v_lin = (v1 <= v2) ? v1 : v2;
+      uid_t v_col = (v1 <= v2) ? v2 : v1;
+      noll_pure_update_eq (f, v_lin, v_col);
+      // close with entries < vcol-1
+      for (uid_t j = v_lin + 1; (j < v_col) && (f->kind != NOLL_FORM_UNSAT);
+           j++)
+        {
+          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
+            /* v_lin = v_col && v_lin = j => j = v_col */
+            noll_pure_update_eq (f, j, v_col);
 
-			if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_NEQ)
-				/* v_lin = v_col && v_lin != j => j != v_col */
-				noll_pure_update_neq(f, j, v_col);
-		}
-		// close with entries > vcol
-		for (uid_t j = v_col + 1; (j < f->pure->size) && (f->kind
-				!= NOLL_FORM_UNSAT); j++) {
-			if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
-				/* v_lin = v_col && v_lin = j =>  v_col = j */
-				noll_pure_update_eq(f, v_col, j);
+          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_NEQ)
+            /* v_lin = v_col && v_lin != j => j != v_col */
+            noll_pure_update_neq (f, j, v_col);
+        }
+      // close with entries > vcol
+      for (uid_t j = v_col + 1; (j < f->pure->size) && (f->kind
+                                                        != NOLL_FORM_UNSAT);
+           j++)
+        {
+          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
+            /* v_lin = v_col && v_lin = j =>  v_col = j */
+            noll_pure_update_eq (f, v_col, j);
 
-			if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_NEQ)
-				/* v_lin = v_col && v_lin != j => j != v_col */
-				noll_pure_update_neq(f, v_col, j);
+          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_NEQ)
+            /* v_lin = v_col && v_lin != j => j != v_col */
+            noll_pure_update_neq (f, v_col, j);
 
-			if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_EQ)
-				/* v_lin = v_col && v_col = j =>  v_lin = j */
-				noll_pure_update_eq(f, v_lin, j);
+          if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_EQ)
+            /* v_lin = v_col && v_col = j =>  v_lin = j */
+            noll_pure_update_eq (f, v_lin, j);
 
-			if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_NEQ)
-				/* v_lin = v_col && v_col != j => v_lin != j */
-				noll_pure_update_neq(f, v_lin, j);
-		}
-	}
-	if (f->kind != NOLL_FORM_UNSAT)
-		f->kind = NOLL_FORM_SAT;
+          if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_NEQ)
+            /* v_lin = v_col && v_col != j => v_lin != j */
+            noll_pure_update_neq (f, v_lin, j);
+        }
+    }
+  if (f->kind != NOLL_FORM_UNSAT)
+    f->kind = NOLL_FORM_SAT;
 }
 
-void noll_pure_add_neq(noll_form_t* f, uid_t v1, uid_t v2) {
-	assert (f != NULL);
-	if (f->kind == NOLL_FORM_UNSAT)
-		return;
+void
+noll_pure_add_neq (noll_form_t * f, uid_t v1, uid_t v2)
+{
+  assert (f != NULL);
+  if (f->kind == NOLL_FORM_UNSAT)
+    return;
 
-	/* part used only at parsing
-	 unt_t size = noll_vector_size(f->lvars);
-	 if (f->pure != NULL)
-	 if (f->pure->size != size) {
-	 noll_pure_free(f->pure);
-	 f->pure = NULL;
-	 }
-	 if (f->pure == NULL)
-	 f->pure = noll_pure_new(size);
-	 */
+  /* part used only at parsing
+     unt_t size = noll_vector_size(f->lvars);
+     if (f->pure != NULL)
+     if (f->pure->size != size) {
+     noll_pure_free(f->pure);
+     f->pure = NULL;
+     }
+     if (f->pure == NULL)
+     f->pure = noll_pure_new(size);
+   */
 
-	assert (f->pure->size > v1 && f->pure->size > v2);
-	// set the entry in form->pure->m to 0
-	uid_t v_lin = (v1 <= v2) ? v1 : v2;
-	uid_t v_col = (v1 <= v2) ? v2 : v1;
-	if (v_lin == v_col) {
-		// try to add x != x
+  assert (f->pure->size > v1 && f->pure->size > v2);
+  // set the entry in form->pure->m to 0
+  uid_t v_lin = (v1 <= v2) ? v1 : v2;
+  uid_t v_col = (v1 <= v2) ? v2 : v1;
+  if (v_lin == v_col)
+    {
+      // try to add x != x
 #ifndef NDEBUG
-		fprintf (stdout, "noll_pure_add_neq(%d,%d): set unsat!\n", v1, v2);
+      fprintf (stdout, "noll_pure_add_neq(%d,%d): set unsat!\n", v1, v2);
 #endif
-		noll_form_set_unsat(f);
-		return;
-	}
-	noll_pure_update_neq(f, v_lin, v_col);
-	// close with entries < vcol-1
-	for (uid_t j = v_lin + 1; (f->kind != NOLL_FORM_UNSAT) && (j < v_col); j++) {
-		if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
-			/* v_lin != v_col && v_lin = j => j != v_col */
-			noll_pure_update_neq(f, j, v_col);
-	}
-	// close with entries > vcol
-	for (uid_t j = v_col + 1; (f->kind != NOLL_FORM_UNSAT) && (j
-			< f->pure->size); j++) {
-		if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
-			/* v_lin != v_col && v_lin = j =>  v_col != j */
-			noll_pure_update_neq(f, v_col, j);
+      noll_form_set_unsat (f);
+      return;
+    }
+  noll_pure_update_neq (f, v_lin, v_col);
+  // close with entries < vcol-1
+  for (uid_t j = v_lin + 1; (f->kind != NOLL_FORM_UNSAT) && (j < v_col); j++)
+    {
+      if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
+        /* v_lin != v_col && v_lin = j => j != v_col */
+        noll_pure_update_neq (f, j, v_col);
+    }
+  // close with entries > vcol
+  for (uid_t j = v_col + 1; (f->kind != NOLL_FORM_UNSAT) && (j
+                                                             < f->pure->size);
+       j++)
+    {
+      if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
+        /* v_lin != v_col && v_lin = j =>  v_col != j */
+        noll_pure_update_neq (f, v_col, j);
 
-		if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_EQ)
-			/* v_lin != v_col && v_col = j =>  v_lin != j */
-			noll_pure_update_neq(f, v_lin, j);
-	}
-	if (f->kind != NOLL_FORM_UNSAT)
-		f->kind = NOLL_FORM_SAT;
+      if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_EQ)
+        /* v_lin != v_col && v_col = j =>  v_lin != j */
+        noll_pure_update_neq (f, v_lin, j);
+    }
+  if (f->kind != NOLL_FORM_UNSAT)
+    f->kind = NOLL_FORM_SAT;
 }
 
 /* ====================================================================== */
@@ -360,13 +413,13 @@ void noll_pure_add_neq(noll_form_t* f, uid_t v1, uid_t v2) {
  * Type the formula @p form.
  * @return 0 if incorrect typing
  */
-int 
+int
 noll_form_type (noll_form_t * form)
 {
-	if (form != NULL) // only to use form
-	  return 1;
-	/* TODO: redo typing here */
-	return 0;
+  if (form != NULL)             // only to use form
+    return 1;
+  /* TODO: redo typing here */
+  return 0;
 }
 
 
@@ -374,36 +427,46 @@ noll_form_type (noll_form_t * form)
 /* Getters/Setters */
 /* ====================================================================== */
 
-int noll_form_is_unsat (noll_form_t * phi) {
-    return phi->kind == NOLL_FORM_UNSAT;
+int
+noll_form_is_unsat (noll_form_t * phi)
+{
+  return phi->kind == NOLL_FORM_UNSAT;
 }
 
-int noll_form_is_sat (noll_form_t * phi) {
-    return phi->kind == NOLL_FORM_SAT;
+int
+noll_form_is_sat (noll_form_t * phi)
+{
+  return phi->kind == NOLL_FORM_SAT;
 }
 
-int noll_form_is_valid (noll_form_t * phi) {
-    return phi->kind == NOLL_FORM_VALID;
+int
+noll_form_is_valid (noll_form_t * phi)
+{
+  return phi->kind == NOLL_FORM_VALID;
 }
 
-int noll_form_array_is_unsat(noll_form_array* phi1_phiN) {
-	assert (phi1_phiN != NULL);
+int
+noll_form_array_is_unsat (noll_form_array * phi1_phiN)
+{
+  assert (phi1_phiN != NULL);
 
-	/* all formulae shall be unsat */
-	for (size_t i = 0; i < noll_vector_size(phi1_phiN); i++)
-		if (noll_vector_at(phi1_phiN,i)->kind != NOLL_FORM_UNSAT)
-			return 0;
-	return 1;
+  /* all formulae shall be unsat */
+  for (size_t i = 0; i < noll_vector_size (phi1_phiN); i++)
+    if (noll_vector_at (phi1_phiN, i)->kind != NOLL_FORM_UNSAT)
+      return 0;
+  return 1;
 }
 
-int noll_form_array_is_valid(noll_form_array* phi1_phiN) {
-	assert (phi1_phiN != NULL);
+int
+noll_form_array_is_valid (noll_form_array * phi1_phiN)
+{
+  assert (phi1_phiN != NULL);
 
-	/* one formula shall be valid */
-	for (size_t i = 0; i < noll_vector_size(phi1_phiN); i++)
-		if (noll_form_is_valid(noll_vector_at(phi1_phiN,i)))
-			return 1;
-	return 0;
+  /* one formula shall be valid */
+  for (size_t i = 0; i < noll_vector_size (phi1_phiN); i++)
+    if (noll_form_is_valid (noll_vector_at (phi1_phiN, i)))
+      return 1;
+  return 0;
 }
 
 
@@ -412,202 +475,235 @@ int noll_form_array_is_valid(noll_form_array* phi1_phiN) {
 
 /* ====================================================================== */
 
-void noll_pure_fprint(FILE* f, noll_var_array* lvars, noll_pure_t* phi) {
-	if (!phi || !phi->m) {
-		fprintf(f, "null\n");
-		return;
-	}
-	for (uid_t l = 0; l < phi->size; l++)
-		for (uid_t c = l; c < phi->size; c++) {
-			fprintf(f, "%s", noll_var_name(lvars, l, NOLL_TYP_RECORD));
-			switch (noll_pure_matrix_at (phi, l, c)) {
-			case NOLL_PURE_EQ:
-				fprintf(f, "=");
-				break;
-			case NOLL_PURE_NEQ:
-				fprintf(f, "<>");
-				break;
-			default:
-				fprintf(f, "#");
-				break;
-			}
-			fprintf(f, "%s, ", noll_var_name(lvars, c, NOLL_TYP_RECORD));
-		}
-	fprintf(f, "\n");
+void
+noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi)
+{
+  if (!phi || !phi->m)
+    {
+      fprintf (f, "null\n");
+      return;
+    }
+  for (uid_t l = 0; l < phi->size; l++)
+    for (uid_t c = l; c < phi->size; c++)
+      {
+        fprintf (f, "%s", noll_var_name (lvars, l, NOLL_TYP_RECORD));
+        switch (noll_pure_matrix_at (phi, l, c))
+          {
+          case NOLL_PURE_EQ:
+            fprintf (f, "=");
+            break;
+          case NOLL_PURE_NEQ:
+            fprintf (f, "<>");
+            break;
+          default:
+            fprintf (f, "#");
+            break;
+          }
+        fprintf (f, "%s, ", noll_var_name (lvars, c, NOLL_TYP_RECORD));
+      }
+  fprintf (f, "\n");
 }
 
-void noll_space_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
-		noll_space_t* phi) {
-	if (!phi) {
-		fprintf(f, "emp (null)\n");
-		return;
-	}
+void
+noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
+                   noll_space_t * phi)
+{
+  if (!phi)
+    {
+      fprintf (f, "emp (null)\n");
+      return;
+    }
 
-	if (phi->is_precise == true)
-		fprintf(f, "[precise] ");
-	else
-		fprintf(f, "[junk] ");
+  if (phi->is_precise == true)
+    fprintf (f, "[precise] ");
+  else
+    fprintf (f, "[junk] ");
 
-	switch (phi->kind) {
-	case NOLL_SPACE_EMP:
-		fprintf(f, "emp");
-		break;
-	case NOLL_SPACE_JUNK:
-		fprintf(f, "junk");
-		break;
-	case NOLL_SPACE_PTO: {
-		fprintf(f, "(pto  ");
-		if (lvars == NULL)
-			fprintf(f, "*%d ...)", phi->m.pto.sid);
-		else
-			fprintf(f, "%s ...)", noll_vector_at(lvars,phi->m.pto.sid)->vname);
-		break;
-	}
-	case NOLL_SPACE_LS: {
-		const noll_pred_t* pred = noll_pred_getpred(phi->m.ls.pid);
-		assert(NULL != pred);
-		fprintf(f, "(%s_", pred->pname);
-		if (svars == NULL)
-			fprintf(f, "*%d", phi->m.ls.sid);
-		else
-		{
-			assert(noll_vector_size(svars) > phi->m.ls.sid);
+  switch (phi->kind)
+    {
+    case NOLL_SPACE_EMP:
+      fprintf (f, "emp");
+      break;
+    case NOLL_SPACE_JUNK:
+      fprintf (f, "junk");
+      break;
+    case NOLL_SPACE_PTO:
+      {
+        fprintf (f, "(pto  ");
+        if (lvars == NULL)
+          fprintf (f, "*%d ...)", phi->m.pto.sid);
+        else
+          fprintf (f, "%s ...)",
+                   noll_vector_at (lvars, phi->m.pto.sid)->vname);
+        break;
+      }
+    case NOLL_SPACE_LS:
+      {
+        const noll_pred_t *pred = noll_pred_getpred (phi->m.ls.pid);
+        assert (NULL != pred);
+        fprintf (f, "(%s_", pred->pname);
+        if (svars == NULL)
+          fprintf (f, "*%d", phi->m.ls.sid);
+        else
+          {
+            assert (noll_vector_size (svars) > phi->m.ls.sid);
 
-			fprintf(f, "%s", noll_vector_at (svars, phi->m.ls.sid)->vname);
-		}
-		for (uid_t i = 0; i < noll_vector_size (phi->m.ls.args); i++) {
-			uint_t vi = noll_vector_at (phi->m.ls.args, i);
-			if (lvars == NULL)
-				fprintf(f, " *%d ", vi);
-			else if (vi == VNIL_ID)
-				fprintf(f, " nil ");
-			else
-				fprintf(f, " %s ", noll_vector_at (lvars, vi)->vname);
-		}
-		fprintf(f, ")");
-		break;
-	}
-	default: {
-		assert (phi->kind == NOLL_SPACE_WSEP || phi->kind == NOLL_SPACE_SSEP);
-		if (phi->kind == NOLL_SPACE_WSEP)
-			fprintf(f, "(wsep ");
-		else
-			fprintf(f, "(ssep ");
-		for (uid_t i = 0; i < noll_vector_size (phi->m.sep); i++) {
-			noll_space_fprint(f, lvars, svars, noll_vector_at (phi->m.sep, i));
-			fprintf(f, "\n\t");
-		}
-		fprintf(f, ")");
-		break;
-	}
-	}
+            fprintf (f, "%s", noll_vector_at (svars, phi->m.ls.sid)->vname);
+          }
+        for (uid_t i = 0; i < noll_vector_size (phi->m.ls.args); i++)
+          {
+            uint_t vi = noll_vector_at (phi->m.ls.args, i);
+            if (lvars == NULL)
+              fprintf (f, " *%d ", vi);
+            else if (vi == VNIL_ID)
+              fprintf (f, " nil ");
+            else
+              fprintf (f, " %s ", noll_vector_at (lvars, vi)->vname);
+          }
+        fprintf (f, ")");
+        break;
+      }
+    default:
+      {
+        assert (phi->kind == NOLL_SPACE_WSEP || phi->kind == NOLL_SPACE_SSEP);
+        if (phi->kind == NOLL_SPACE_WSEP)
+          fprintf (f, "(wsep ");
+        else
+          fprintf (f, "(ssep ");
+        for (uid_t i = 0; i < noll_vector_size (phi->m.sep); i++)
+          {
+            noll_space_fprint (f, lvars, svars,
+                               noll_vector_at (phi->m.sep, i));
+            fprintf (f, "\n\t");
+          }
+        fprintf (f, ")");
+        break;
+      }
+    }
 }
 
-void noll_share_sterm_fprint(FILE* f, noll_var_array* lvars,
-		noll_var_array* svars, noll_sterm_t * t) {
-	assert (t);
-	switch (t->kind) {
-	case NOLL_STERM_LVAR:
-		fprintf(f, " %s ", noll_var_name(lvars, t->lvar, NOLL_TYP_RECORD));
-		break;
-	case NOLL_STERM_SVAR:
-		fprintf(f, " %s ", noll_var_name(svars, t->svar, NOLL_TYP_SETLOC));
-		break;
-	case NOLL_STERM_PRJ:
-		fprintf(f, " (prj %s %s) ", noll_var_name(svars, t->svar,
-				NOLL_TYP_SETLOC),
-				noll_var_name(lvars, t->lvar, NOLL_TYP_RECORD));
-		break;
-	default:
-		fprintf(f, "error");
-		break;
-	}
+void
+noll_share_sterm_fprint (FILE * f, noll_var_array * lvars,
+                         noll_var_array * svars, noll_sterm_t * t)
+{
+  assert (t);
+  switch (t->kind)
+    {
+    case NOLL_STERM_LVAR:
+      fprintf (f, " %s ", noll_var_name (lvars, t->lvar, NOLL_TYP_RECORD));
+      break;
+    case NOLL_STERM_SVAR:
+      fprintf (f, " %s ", noll_var_name (svars, t->svar, NOLL_TYP_SETLOC));
+      break;
+    case NOLL_STERM_PRJ:
+      fprintf (f, " (prj %s %s) ", noll_var_name (svars, t->svar,
+                                                  NOLL_TYP_SETLOC),
+               noll_var_name (lvars, t->lvar, NOLL_TYP_RECORD));
+      break;
+    default:
+      fprintf (f, "error");
+      break;
+    }
 }
 
-void noll_share_sterm_array_fprint(FILE* f, noll_var_array* lvars,
-		noll_var_array* svars, noll_sterm_array * t) {
-	assert (t);
-	if (noll_vector_size (t) > 1)
-		fprintf(f, "(unloc ");
+void
+noll_share_sterm_array_fprint (FILE * f, noll_var_array * lvars,
+                               noll_var_array * svars, noll_sterm_array * t)
+{
+  assert (t);
+  if (noll_vector_size (t) > 1)
+    fprintf (f, "(unloc ");
 
-	for (uid_t i = 0; i < noll_vector_size (t); i++) {
-		noll_share_sterm_fprint(f, lvars, svars, noll_vector_at (t, i));
-		// fprintf (f, "\n");
-	}
+  for (uid_t i = 0; i < noll_vector_size (t); i++)
+    {
+      noll_share_sterm_fprint (f, lvars, svars, noll_vector_at (t, i));
+      // fprintf (f, "\n");
+    }
 
-	if (noll_vector_size (t) > 1)
-		fprintf(f, " )");
+  if (noll_vector_size (t) > 1)
+    fprintf (f, " )");
 }
 
-void noll_share_atom_fprint(FILE* f, noll_var_array* lvars,
-		noll_var_array* svars, noll_atom_share_t * phi) {
-	assert (phi);
-	fprintf(f, "(");
-	switch (phi->kind) {
-	case NOLL_SHARE_IN:
-		fprintf(f, "inloc ");
-		break;
-	case NOLL_SHARE_NI:
-		fprintf(f, "not-inloc ");
-		break;
-	case NOLL_SHARE_SUBSET:
-		fprintf(f, "leloc ");
-		break;
-	default:
-		fprintf(f, "error ");
-		break;
-	}
-	// fprintf (f, "\n\t");
-	noll_share_sterm_fprint(f, lvars, svars, phi->t_left);
-	// fprintf (f, "\n\t");
-	noll_share_sterm_array_fprint(f, lvars, svars, phi->t_right);
-	fprintf(f, ")");
+void
+noll_share_atom_fprint (FILE * f, noll_var_array * lvars,
+                        noll_var_array * svars, noll_atom_share_t * phi)
+{
+  assert (phi);
+  fprintf (f, "(");
+  switch (phi->kind)
+    {
+    case NOLL_SHARE_IN:
+      fprintf (f, "inloc ");
+      break;
+    case NOLL_SHARE_NI:
+      fprintf (f, "not-inloc ");
+      break;
+    case NOLL_SHARE_SUBSET:
+      fprintf (f, "leloc ");
+      break;
+    default:
+      fprintf (f, "error ");
+      break;
+    }
+  // fprintf (f, "\n\t");
+  noll_share_sterm_fprint (f, lvars, svars, phi->t_left);
+  // fprintf (f, "\n\t");
+  noll_share_sterm_array_fprint (f, lvars, svars, phi->t_right);
+  fprintf (f, ")");
 }
 
-void noll_share_fprint(FILE* f, noll_var_array* lvars, noll_var_array* svars,
-		noll_share_array * phi) {
-	if (!phi) {
-		fprintf(f, "null\n");
-		return;
-	}
-	for (uid_t i = 0; i < noll_vector_size (phi); i++) {
-		noll_share_atom_fprint(f, lvars, svars, noll_vector_at (phi, i));
-		fprintf(f, " &&\n");
-	}
-	fprintf(f, "true\n");
+void
+noll_share_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
+                   noll_share_array * phi)
+{
+  if (!phi)
+    {
+      fprintf (f, "null\n");
+      return;
+    }
+  for (uid_t i = 0; i < noll_vector_size (phi); i++)
+    {
+      noll_share_atom_fprint (f, lvars, svars, noll_vector_at (phi, i));
+      fprintf (f, " &&\n");
+    }
+  fprintf (f, "true\n");
 }
 
-void noll_form_fprint(FILE* f, noll_form_t* phi) {
-	assert (f != NULL);
+void
+noll_form_fprint (FILE * f, noll_form_t * phi)
+{
+  assert (f != NULL);
 
-	if (!phi) {
-		fprintf(stdout, "null\n");
-		return;
-	}
+  if (!phi)
+    {
+      fprintf (stdout, "null\n");
+      return;
+    }
 
-	switch (phi->kind) {
-	case NOLL_FORM_UNSAT:
-		fprintf(f, "unsat\n");
-		break;
-	case NOLL_FORM_SAT:
-		fprintf(f, "sat\n");
-		break;
-	case NOLL_FORM_VALID:
-		fprintf(f, "valid\n");
-		break;
-	default:
-		fprintf(f, "error\n");
-		break;
-	}
-	fprintf(f, "\n\t lvars: ");
-	noll_var_array_fprint(f, phi->lvars, "lvars");
-	fprintf(f, "\n\t svars: ");
-	noll_var_array_fprint(f, phi->svars, "svars");
-	fprintf(f, "\n\t pure part: ");
-	noll_pure_fprint(f, phi->lvars, phi->pure);
-	fprintf(f, "\n\t shape part: ");
-	noll_space_fprint(f, phi->lvars, phi->svars, phi->space);
-	fprintf(f, "\n\t share part: ");
-	noll_share_fprint(f, phi->lvars, phi->svars, phi->share);
+  switch (phi->kind)
+    {
+    case NOLL_FORM_UNSAT:
+      fprintf (f, "unsat\n");
+      break;
+    case NOLL_FORM_SAT:
+      fprintf (f, "sat\n");
+      break;
+    case NOLL_FORM_VALID:
+      fprintf (f, "valid\n");
+      break;
+    default:
+      fprintf (f, "error\n");
+      break;
+    }
+  fprintf (f, "\n\t lvars: ");
+  noll_var_array_fprint (f, phi->lvars, "lvars");
+  fprintf (f, "\n\t svars: ");
+  noll_var_array_fprint (f, phi->svars, "svars");
+  fprintf (f, "\n\t pure part: ");
+  noll_pure_fprint (f, phi->lvars, phi->pure);
+  fprintf (f, "\n\t shape part: ");
+  noll_space_fprint (f, phi->lvars, phi->svars, phi->space);
+  fprintf (f, "\n\t share part: ");
+  noll_share_fprint (f, phi->lvars, phi->svars, phi->share);
 
 }

@@ -196,4 +196,3 @@ bool name ## _equal(const name *v1, const name *v2)                     \
 }
 
 #endif /* NOLL_VECTOR_H_ */
-

@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012                                                    */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -56,8 +52,8 @@ print_help (void)
   printf ("spen: decision procedure for SLRD, version 0.1\n");
   printf ("Usage: spen <options> <file>\n");
   printf ("\t-n:     internal switch to old normalisation procedure\n");
-  printf ("\t-f:     use predefined recursive definitions (set from name\n");
-  printf ("\t<file>: input file in the SMTLIB2 format\n");
+  printf ("\t-f:     use predefined recursive definitions (set from name)\n");
+  printf ("\t<file>: input file in SMTLIB2 format\n");
   printf
     ("See http://www.liafa.univ-paris-diderot.fr/spen for more details.\n");
 }
@@ -112,7 +108,7 @@ main (int argc, char **argv)
   smtlib2_noll_parser_delete (sp);
   fclose (f);
   noll_entl_free ();
-  noll_ta_symbol_destroy ();	// destroy the TA symbol database
+  noll_ta_symbol_destroy ();    // destroy the TA symbol database
 
   return 0;
 }

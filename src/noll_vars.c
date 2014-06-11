@@ -78,7 +78,7 @@ noll_var_array_make (uid_t sz)
 
 void
 noll_var_register (noll_var_array * a, const char *name, noll_type_t * ty,
-		   noll_scope_e scope)
+                   noll_scope_e scope)
 {
   assert (ty && (ty->kind == NOLL_TYP_RECORD || ty->kind == NOLL_TYP_SETLOC));
 
@@ -96,9 +96,9 @@ noll_var_array_find_local (noll_var_array * a, const char *name)
     {
       uid_t sz = noll_vector_size (a);
       for (uid_t i = 0; i < sz; i++)
-	if (noll_vector_at (a, i) && !strcmp (name,
-					      noll_vector_at (a, i)->vname))
-	  return i;
+        if (noll_vector_at (a, i) && !strcmp (name,
+                                              noll_vector_at (a, i)->vname))
+          return i;
     }
   return UNDEFINED_ID;
 }
@@ -110,10 +110,10 @@ noll_var_array_find_local (noll_var_array * a, const char *name)
 char *
 noll_var_name (noll_var_array * a, uid_t vid, noll_typ_t ty)
 {
-	if (&ty != &ty)
-	{
-		assert(0);     // just to avoid an "unused parameter warning"
-	}
+  if (&ty != &ty)
+    {
+      assert (0);               // just to avoid an "unused parameter warning"
+    }
 
   if (a == NULL)
     return "unknown";
@@ -124,8 +124,8 @@ noll_var_name (noll_var_array * a, uid_t vid, noll_typ_t ty)
   if (vid >= noll_vector_size (a))
     {
       printf
-	("noll_var_name: called with identifier %d not in the local environment.\n",
-	 vid);
+        ("noll_var_name: called with identifier %d not in the local environment.\n",
+         vid);
       return "unknown";
     }
   return (noll_vector_at (a, vid))->vname;
@@ -136,7 +136,7 @@ noll_var_record (noll_var_array * a, uid_t vid)
 {
   assert (a);
   if (vid == VNIL_ID)
-      return NOLL_TYP_VOID;
+    return NOLL_TYP_VOID;
   if (vid != VNIL_ID && vid >= noll_vector_size (a))
     {
       fprintf (stdout, "Incorrect id (%d) for location variable.\n", vid);
@@ -158,7 +158,7 @@ noll_var_record (noll_var_array * a, uid_t vid)
       || (noll_vector_at (records_array, tid) == NULL))
     {
       fprintf (stdout, "Unknown record type for location variable %d.\n",
-	       vid);
+               vid);
       return UNDEFINED_ID;
     }
   return tid;
@@ -182,17 +182,17 @@ noll_var_array_fprint (FILE * f, noll_var_array * a, const char *msg)
       assert (vi != NULL);
       noll_type_t *ti = vi->vty;
       if (vi->scope == NOLL_SCOPE_LOCAL)
-	fprintf (f, "?");
+        fprintf (f, "?");
       else
-	fprintf (f, " ");
+        fprintf (f, " ");
 
       if (ti->kind == NOLL_TYP_RECORD)
-	{
-	  uid_t rid = noll_vector_at (vi->vty->args, 0);
-	  fprintf (f, "%s:%s, ", vi->vname, noll_record_name (rid));
-	}
+        {
+          uid_t rid = noll_vector_at (vi->vty->args, 0);
+          fprintf (f, "%s:%s, ", vi->vname, noll_record_name (rid));
+        }
       else
-	fprintf (f, "%s:SetLoc, ", vi->vname);
+        fprintf (f, "%s:SetLoc, ", vi->vname);
     }
   fprintf (f, " - ]");
   fflush (f);

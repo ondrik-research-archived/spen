@@ -31,8 +31,7 @@
 #include "noll_vars.h"
 #include "noll_graph.h"
 
-noll_graph_t* noll_graph_of_form(noll_form_t* phi);
+noll_graph_t *noll_graph_of_form (noll_form_t * phi);
 /* Translation of formulas to graphs. */
 
 #endif /* _NOLL2GRAPH_H_ */
-

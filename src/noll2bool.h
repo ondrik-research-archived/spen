@@ -33,52 +33,51 @@
 /* Writing the boolean abstraction */
 /* ====================================================================== */
 
-void write_bool_abstr(noll_form_t* form, char* fname, int* nbv, int* nbc);
+void write_bool_abstr (noll_form_t * form, char *fname, int *nbv, int *nbc);
 /* writes the boolean abstraction of "form" in the file "fname" */
 
-int bool_abstr_pure(noll_form_t* form, FILE *out);
+int bool_abstr_pure (noll_form_t * form, FILE * out);
 /* writes the boolean abstraction of the pure part of "form": F(\Pi) and F_{eq} */
 
-int bool_abstr_space(noll_form_t* form, FILE *out);
+int bool_abstr_space (noll_form_t * form, FILE * out);
 /* writes the boolean abstraction of the spatial part of "form": F(\Sigma) */
 
-int bool_abstr_membership(noll_form_t* form, FILE *out);
+int bool_abstr_membership (noll_form_t * form, FILE * out);
 /* writes the boolean abstraction of the membership constraints of "form": F_\in */
 
-int bool_abstr_det(noll_form_t* form, FILE *out);
+int bool_abstr_det (noll_form_t * form, FILE * out);
 /* writes the boolean abstraction of the determinism constraints of "form": F_det */
 
-int bool_abstr_share(noll_form_t* form, FILE *out);
+int bool_abstr_share (noll_form_t * form, FILE * out);
 /* writes the boolean abstraction of the sharing constraints of "form": F(\Lambda) */
 
-int get_pred_of_svar(uid_t svar);
+int get_pred_of_svar (uid_t svar);
 /* returns the predicate id to which svar is bound, if any (-1 otherwise) */
 
-int type_in_predicate_of_svar(uid_t type, uid_t svar);
+int type_in_predicate_of_svar (uid_t type, uid_t svar);
 /* tests if type is a type in the predicate bounded to the variable svar */
 
 /* ====================================================================== */
 /* Calling Minisat and adding constraints */
 /* ====================================================================== */
 
-int test_in_equality(uid_t x, uid_t y, noll_pure_op_t oper, int nbv, int nbc,
-		char* file);
+int test_in_equality (uid_t x, uid_t y, noll_pure_op_t oper, int nbv, int nbc,
+                      char *file);
 /* Returns 1 if the boolean abstraction implies [x oper y]
  * returns 0, otherwise.
  * Using the boolean abstraction in the file "file",
  * initialized before calling this function */
 
-int test_satisfiability(int nbv, int nbc, char* file);
+int test_satisfiability (int nbv, int nbc, char *file);
 /* Returns 1 if form is satisfiable using
  * the file "file" which contains the boolean abstraction */
 
-void normalize(noll_form_t* form, char* file);
+void normalize (noll_form_t * form, char *file);
 /* Updates form to its normal form and
  * put in the file "file" the boolean abstraction */
 
-void normalize_incremental(noll_form_t* form, char* file);
+void normalize_incremental (noll_form_t * form, char *file);
 /* The same as "normalize" except that it uses
  * incremental minisat */
 
 #endif /* _NOLL2BOOL */
-
