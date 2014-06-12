@@ -2043,6 +2043,21 @@ noll_exp_push_pure (noll_context_t * ctx, noll_exp_t * e, noll_form_t * form)
 
 /**
  * Translates the AST in e to a space formula.
+ * @param f the AST of the emp formula
+ * @return the space formula or NULL of error
+ */
+noll_space_t *
+noll_mk_form_emp (noll_exp_t * f)
+{
+  assert (f && f->discr == NOLL_F_EMP);
+  noll_space_t *sigma = (noll_space_t *) malloc (sizeof (noll_space_t));
+  sigma->kind = NOLL_SPACE_EMP;
+  sigma->is_precise = true;
+  return sigma;
+}
+
+/**
+ * Translates the AST in e to a space formula.
  * @param f the AST of the points-to formula
  * @return the space formula or NULL of error
  */
@@ -2271,8 +2286,10 @@ noll_exp_push_space (noll_context_t * ctx, noll_exp_t * e)
   switch (e->discr)
     {
     case NOLL_F_EMP:
-      /* nothing */
-      break;
+      {
+        ret = noll_mk_form_emp (e);
+        break;
+      }
     case NOLL_F_JUNK:
       {
         ret = noll_mk_form_junk (e);

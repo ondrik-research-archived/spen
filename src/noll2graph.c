@@ -109,6 +109,12 @@ noll_graph_of_space (noll_space_t * phi, noll_graph_t * g, uint_t nedges)
 
   switch (phi->kind)
     {
+    case NOLL_SPACE_EMP:
+    case NOLL_SPACE_JUNK:
+      {
+        res = noll_uid_array_new ();
+        break;
+	  }
     case NOLL_SPACE_PTO:
       {
         res = noll_uid_array_new ();
@@ -271,6 +277,9 @@ noll_graph_of_form (noll_form_t * phi)
 {
   if (!phi)
     {
+#ifndef NDEBUG
+      fprintf(stdout, "noll_graph_of_form: NULL formula\n");
+#endif
       // emp formula, build empty graph
       return noll_graph_alloc (NULL, NULL, 0, 0, NULL);
     }
@@ -305,7 +314,10 @@ noll_graph_of_form (noll_form_t * phi)
       res->is_precise = phi->space->is_precise;
       noll_uid_array *r = noll_graph_of_space (phi->space, res, 0);
       if (r == NULL)
-        {                       // error
+        {
+#ifndef NDEBUG
+      fprintf(stdout, "noll_graph_of_form: error in building space formula\n");
+#endif                       // error
           noll_graph_free (res);
           return NULL;
         }
