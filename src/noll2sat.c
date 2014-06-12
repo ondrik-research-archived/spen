@@ -2550,11 +2550,14 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
       noll_sat_pure_t *atom = noll_vector_at (atoms, k);
       // read two lines
       // first line for equality query:
-      // - each line contains 4 white-separated words,
+      // - each line contains 4 white-separated words, starting by Bound
       // - last word is the result
-      int lres = fscanf (fres, "%s", res);      // ignore
-      lres = fscanf (fres, "%s", res);  // ignore
-      lres = fscanf (fres, "%s", res);  // ignore
+      int lres = fscanf (fres, "%s", res);
+      while (strcmp(res, "Bound") != 0) {
+        lres = fscanf (fres, "%s", res); // ignore
+	  }
+      lres = fscanf (fres, "%s", res);  // 2nd word ignore
+      lres = fscanf (fres, "%s", res);  // 3rd word ignore
 
       lres = fscanf (fres, "%s", res);
       if (lres > 0)
@@ -2590,7 +2593,10 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
         }
 
       // second line for inequality query
-      lres = fscanf (fres, "%s", res);  // ignore
+      lres = fscanf (fres, "%s", res);
+      while (strcmp(res, "Bound") != 0) {
+        lres = fscanf (fres, "%s", res); // ignore
+	  }
       lres = fscanf (fres, "%s", res);  // ignore
       lres = fscanf (fres, "%s", res);  // ignore
 

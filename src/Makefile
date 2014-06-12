@@ -57,6 +57,8 @@ SHARED_LIBS = -lsmtlib2parser \
 
 all: spen
 
+#	$(CXX) $(CXXFLAGS) -o $@ $^ \
+
 spen: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
 	$(CXX) -o $@ $^ \
 	$(LDFLAGS) \
@@ -71,8 +73,8 @@ distclean: clean
 install: spen
 	mv spen $(HOME)/bin
 
-indent: $(CCINC) $(CCSRC) clean
-	indent -nut *.?
+indent: $(CCINC) $(CCSRC) 
+	indent -nut $^
 
 #---------------------------------------
 # IMPLICIT RULES AND DEPENDENCIES

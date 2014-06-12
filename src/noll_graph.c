@@ -388,7 +388,7 @@ noll_graph_fprint (FILE * f, noll_graph_t * g)
   // low-diagonal matrix
   for (uint_t i = 0; i < g->nodes_size; i++)
     for (uint_t j = 0; j <= i; j++)
-      if (g->diff[i][j])
+      if (g->diff[i][j] == true)
         fprintf (f, "\t\tn%d != n%d\n", i, j);
 
   fprintf (f, "Graph edges: \n");
@@ -461,7 +461,7 @@ noll_graph_fprint_dot (char *fname, noll_graph_t * g)
   // low-diagonal matrix
   for (uint_t i = 0; i < g->nodes_size; i++)
     for (uint_t j = 0; j <= i; j++)
-      if (g->diff[i][j])
+      if (g->diff[i][j] == true)
         fprintf (f, "n%d -> n%d [style=dotted];\n", i, j);
 
   //fprintf(f, "Graph edges: \n");

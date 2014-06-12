@@ -1474,6 +1474,65 @@ return_select_ls:
 }
 
 /**
+ * Check well-formedness for the graphs selected &param sg2 wrt g2.
+ * @param g2    the selection
+ * @param sg2   the selection
+ * @param args2 the arguments (nodes) of e1 maped with the homomorphism
+ * @return      1 if well-formed, 0 otherwise
+ */
+int
+noll_graph_select_wf_2 (noll_graph_t* g2, noll_graph_t* sg2, noll_uid_array* args2) 
+{
+	assert (NULL != sg2);
+	assert (NULL != g2);
+	assert (NULL != args2);
+	
+	int res = 1;
+	/* condition 2: 
+	 * for any V in args2[1,...] do
+	 *   for any e'=V'--> ... in sg2 do
+	 *     check unsat Bool(g1) => ![V=V']
+	 */
+	/* collect all V' origin of some pto in sg2 */
+	noll_uid_array* src_pto = noll_uid_array_new();
+	for (uint_t eid2 = 0; eid2 < noll_vector_size(sg2->edges); eid2++)
+	{
+		noll_edge_t* e2 = noll_vector_at(sg2->edges,eid2);
+		if (e2->kind == NOLL_EDGE_PTO) 
+		{
+			uid_t src = noll_vector_at(e2->args,0);
+			noll_uid_array_push(src_pto, src);
+		}
+	}
+	if (noll_vector_empty(src_pto)) 
+	{
+		// no check needed
+		noll_uid_array_delete(src_pto);
+		return res; // 1
+	}
+	
+	/* go through the arguments in args2 
+	 * to check the boolean constraint */
+	for (uint_t i = 1; i < noll_vector_size(args2) && (res == 1); i++) {
+		uid_t nv = noll_vector_at(args2, i);
+		for (uint_t j = 0; j < noll_vector_size(src_pto) && (res == 1); j++) {
+			uid_t nvp = noll_vector_at(src_pto, j);
+			// check the query Bool(g1) => ![V=V'], i.e., 
+			// there is a difference edge between V and V'
+			// in the low diagonal matrix og g2->diff
+			uid_t ni = (nv > nvp) ? nv : nvp;
+			uid_t nj = (nv > nvp) ? nvp : nv;
+			res = (g2->diff[ni][nj]) ? 1 : 0; 
+#ifndef NDEBUG
+  NOLL_DEBUG ("\n++++ select_wf_2 for [%d != %d] returns %d\n", nv, nvp, res);
+#endif
+		}
+	}
+	noll_uid_array_delete(src_pto);
+	return res;
+}
+
+/**
  * For the dll edges (labeled by @p pid) in the graph @p g,
  * add a next edge between the target of the edge and the forward argument.
  *
@@ -1691,15 +1750,45 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
        * and also set usedg2 with the selected edges */
       noll_graph_t *sg2 =
         noll_graph_select_ls (g2, e1id, e1->label, args2, usedg2);
-      if (sg2 == NULL || !noll_graph_shom_entl (sg2, e1, args2))
+      if (sg2 == NULL)
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;
 #ifndef NDEBUG
-          fprintf (stdout, "\nshom_ls: fails!\n");
+          fprintf (stdout, "\nshom_ls: fails (select)!\n");
 #endif
           fprintf (stdout, "\nDiagnosis of failure: ");
           fprintf (stdout, "predicate edge n%d ---%s--> n%d not mapped!\n",
+                   noll_vector_at (e1->args, 0),
+                   noll_pred_name (e1->label), noll_vector_at (e1->args, 1));
+          // Warning: usedg2 is deselected also
+          goto return_shom_ls;
+        }
+      /* check well-formedness of the selection */
+      if (0 == noll_graph_select_wf_2 (g2, sg2, args2))
+        {                       /* free the allocated memory */
+          noll_graph_array_delete (ls_hom);
+          ls_hom = NULL;
+#ifndef NDEBUG
+          fprintf (stdout, "\nshom_ls: fails (well-formedness)!\n");
+#endif
+          fprintf (stdout, "\nDiagnosis of failure: ");
+          fprintf (stdout, "selection of the predicate edge n%d ---%s--> n%d is not well founded!\n",
+                   noll_vector_at (e1->args, 0),
+                   noll_pred_name (e1->label), noll_vector_at (e1->args, 1));
+          // Warning: usedg2 is deselected also
+          goto return_shom_ls;
+        }
+      /* check entailment */
+      if (0 == noll_graph_shom_entl (sg2, e1, args2))
+        {                       /* free the allocated memory */
+          noll_graph_array_delete (ls_hom);
+          ls_hom = NULL;
+#ifndef NDEBUG
+          fprintf (stdout, "\nshom_ls: fails (membership)!\n");
+#endif
+          fprintf (stdout, "\nDiagnosis of failure: ");
+          fprintf (stdout, "selection of predicate edge n%d ---%s--> n%d not entailed!\n",
                    noll_vector_at (e1->args, 0),
                    noll_pred_name (e1->label), noll_vector_at (e1->args, 1));
           // Warning: usedg2 is deselected also
@@ -1808,6 +1897,7 @@ noll_graph_shom (noll_hom_t * hs, size_t i)
    * ls_hom[e1] = g2'
    * with e1 predicate edge id in g1,
    *      g2' subgraph of g2
+   *      g2' wellformed wrt e1 in g2
    */
   ls_hom = noll_graph_shom_ls (g1, g2, n_hom, usedg2);
   if (ls_hom == NULL)
