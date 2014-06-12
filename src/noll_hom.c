@@ -1478,10 +1478,11 @@ return_select_ls:
  * @param g2    the selection
  * @param sg2   the selection
  * @param args2 the arguments (nodes) of e1 maped with the homomorphism
+ * @param isdll 1 if is a dll pred
  * @return      1 if well-formed, 0 otherwise
  */
 int
-noll_graph_select_wf_2 (noll_graph_t* g2, noll_graph_t* sg2, noll_uid_array* args2) 
+noll_graph_select_wf_2 (noll_graph_t* g2, noll_graph_t* sg2, noll_uid_array* args2, int isdll) 
 {
 	assert (NULL != sg2);
 	assert (NULL != g2);
@@ -1489,7 +1490,7 @@ noll_graph_select_wf_2 (noll_graph_t* g2, noll_graph_t* sg2, noll_uid_array* arg
 	
 	int res = 1;
 	/* condition 2: 
-	 * for any V in args2[1,...] do
+	 * for any V in args2[1+isdll,...] do
 	 *   for any e'=V'--> ... in sg2 do
 	 *     check unsat Bool(g1) => ![V=V']
 	 */
@@ -1513,7 +1514,7 @@ noll_graph_select_wf_2 (noll_graph_t* g2, noll_graph_t* sg2, noll_uid_array* arg
 	
 	/* go through the arguments in args2 
 	 * to check the boolean constraint */
-	for (uint_t i = 1; i < noll_vector_size(args2) && (res == 1); i++) {
+	for (uint_t i = 1 + isdll; i < noll_vector_size(args2) && (res == 1); i++) {
 		uid_t nv = noll_vector_at(args2, i);
 		for (uint_t j = 0; j < noll_vector_size(src_pto) && (res == 1); j++) {
 			uid_t nvp = noll_vector_at(src_pto, j);
@@ -1765,7 +1766,8 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
           goto return_shom_ls;
         }
       /* check well-formedness of the selection */
-      if (0 == noll_graph_select_wf_2 (g2, sg2, args2))
+      uint_t isdll = (0 == strncmp(noll_pred_name (e1->label), "dll", 3)) ? 1 : 0;
+      if (0 == noll_graph_select_wf_2 (g2, sg2, args2, isdll))
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;
