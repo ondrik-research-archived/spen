@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012-2013                                               */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -679,8 +675,8 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
         for (uint_t lsi = 0; lsi < noll_vector_size (res->var_pred); lsi++)
           {
             noll_space_t *ls =
-              ((noll_sat_space_t *) noll_vector_at (res->var_pred, lsi))->
-              forig;
+              ((noll_sat_space_t *)
+               noll_vector_at (res->var_pred, lsi))->forig;
             uint_t ls_pid = ls->m.ls.pid;
             // see all fields 
             /* MS: change of info on fields */
@@ -1604,8 +1600,7 @@ noll2sat_membership (noll_sat_t * fsat)
                         uint_t bvar_apto_j_k = noll2sat_get_bvar_apto (fsat,
                                                                        x_j,
                                                                        f_k,
-                                                                       ls_i->
-                                                                       forig);
+                                                                       ls_i->forig);
                         if (!flag)
                           {
                             fprintf (fsat->file, "-%d ", bvar_j_in_i);
@@ -1646,6 +1641,8 @@ noll2sat_membership (noll_sat_t * fsat)
 
 /*
  * write F_det ([x_i,f,y_i], [x_j,f,y_j]) = [x_i = x_j] ==> [x_i,f,y_i] xor [x_j,f,y_j]
+ * and (partial) transitivity by predicates, needed for weel-formedness
+ *       ([P(x1,y1,alpha)] \/ [x1 = y1]) & [y1,f,z1] & [y2,f,z2] ==> ![x1 = y2]
  */
 int
 noll2sat_det_pto_pto (noll_sat_t * fsat)
@@ -1665,6 +1662,7 @@ noll2sat_det_pto_pto (noll_sat_t * fsat)
           noll_vector_at (sat_j->forig->m.pto.fields, sat_j->m.idx);
         if (f_i == f_j)
           {
+            // first part
 #ifndef NDEBUG
             fprintf (stdout,
                      "---- [%s = %s] ==> [1->%s,%s] xor [2->field,%s]\n",
@@ -1684,8 +1682,63 @@ noll2sat_det_pto_pto (noll_sat_t * fsat)
             fprintf (fsat->file, "-%d -%d -%d 0\n", bvar_eq_i_j,
                      fsat->start_pto + i, fsat->start_pto + j);
             nb_clauses += 2;
+
+            // second part
+            // ([P(x1,x_i,alpha)] \/ [x1 = x_i]) /\ [x_i,f,z1] /\ [x_j,f,z2] ==> ![x1 = x_j]
+            for (uint_t k = 0; k < fsat->size_pred; k++)
+              {
+                noll_sat_space_t *sat_k = noll_vector_at (fsat->var_pred, k);
+                uid_t pid_k = sat_k->forig->m.ls.pid;
+                uid_t alpha_k = sat_k->forig->m.ls.sid;
+                const noll_pred_t *pred_k = noll_pred_getpred (pid_k);
+                assert (NULL != pred_k);
+                /* test if f_i is in fieldsof level 0 for pred_k */
+                /* MS: change of info on fields */
+                if (!noll_pred_is_field (pid_k, f_i, NOLL_PFLD_BORDER))
+                  continue;
+
+                // end of segment arg shall be x_i, get the source arg
+                uint_t outpos = 1 +
+                  ((strncmp ("dll", pred_k->pname, 3) == 0) ? 1 : 0);
+                uint_t xout =
+                  noll_vector_at (sat_k->forig->m.ls.args, outpos);
+                if (xout != x_i && xout != x_j)
+                  continue;
+                uint_t xoth = (x_i == xout) ? x_j : x_i;
+                uint_t xin = noll_vector_at (sat_k->forig->m.ls.args, 0);
+                if (xoth == xin)
+                  continue;
+                uint_t bvar_eq_in_out =
+                  noll2sat_get_bvar_eq (fsat, xin, xout);
+                uint_t bvar_eq_in_oth =
+                  noll2sat_get_bvar_eq (fsat, xin, xoth);
+#ifndef NDEBUG
+                fprintf (stdout,
+                         "---- ([P,%s,%s,_] | [%s = %s]) & [%s,f%d,_] & [%s,f%d,_] ==> ![%s = %s]\n",
+                         noll_vector_at (fsat->form->lvars, xin)->vname,
+                         noll_vector_at (fsat->form->lvars, xout)->vname,
+                         noll_vector_at (fsat->form->lvars, xin)->vname,
+                         noll_vector_at (fsat->form->lvars, xout)->vname,
+                         noll_vector_at (fsat->form->lvars, xout)->vname,
+                         f_i,
+                         noll_vector_at (fsat->form->lvars, xoth)->vname,
+                         f_j,
+                         noll_vector_at (fsat->form->lvars, xin)->vname,
+                         noll_vector_at (fsat->form->lvars, xoth)->vname);
+#endif
+                fprintf (fsat->file, "-%d -%d -%d -%d 0\n",
+                         fsat->start_pred + k,
+                         fsat->start_pto + i, fsat->start_pto + j,
+                         bvar_eq_in_oth);
+                fprintf (fsat->file, "-%d -%d -%d -%d 0\n",
+                         bvar_eq_in_out,
+                         fsat->start_pto + i, fsat->start_pto + j,
+                         bvar_eq_in_oth);
+                nb_clauses += 2;
+              }
           }
       }
+
   return nb_clauses;
 }
 
@@ -2568,9 +2621,10 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
       // - each line contains 4 white-separated words, starting by Bound
       // - last word is the result
       int lres = fscanf (fres, "%s", res);
-      while (strcmp(res, "Bound") != 0) {
-        lres = fscanf (fres, "%s", res); // ignore
-	  }
+      while (strcmp (res, "Bound") != 0)
+        {
+          lres = fscanf (fres, "%s", res);      // ignore
+        }
       lres = fscanf (fres, "%s", res);  // 2nd word ignore
       lres = fscanf (fres, "%s", res);  // 3rd word ignore
 
@@ -2611,9 +2665,10 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
 
       // second line for inequality query
       lres = fscanf (fres, "%s", res);
-      while (strcmp(res, "Bound") != 0) {
-        lres = fscanf (fres, "%s", res); // ignore
-	  }
+      while (strcmp (res, "Bound") != 0)
+        {
+          lres = fscanf (fres, "%s", res);      // ignore
+        }
       lres = fscanf (fres, "%s", res);  // ignore
       lres = fscanf (fres, "%s", res);  // ignore
 
@@ -2678,7 +2733,7 @@ nol2sat_normalize_iter (noll_sat_t * fsat)
   if (fsat->form->kind == NOLL_FORM_UNSAT)
     /* nothing to do */
     return;
-    
+
   /*
    * Iterate over unknown (in)equalities between used variables and
    *  - generate a problem for minisat
