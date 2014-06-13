@@ -60,7 +60,7 @@ noll_entl_init ()
 
   // init negative formulae array
   noll_prob->nform = noll_form_array_new ();
-  noll_form_array_push (noll_prob->nform, noll_form_new ());
+  // if empty aray, then SAT problem, else ENTAILMENT problem
 
   // init command
   noll_prob->cmd = NOLL_FORM_SAT;       // by default value
@@ -135,6 +135,10 @@ noll_form_t *
 noll_entl_get_nform_last ()
 {
   assert (noll_prob != NULL);
+  assert (noll_prob->nform != NULL);
+  if (noll_vector_empty(noll_prob->nform))
+    noll_form_array_push (noll_prob->nform, noll_form_new ());
+  
   return noll_vector_last (noll_prob->nform);
 }
 

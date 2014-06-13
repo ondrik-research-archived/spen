@@ -19,7 +19,7 @@ LDFLAGS = \
 -L$(SMTLIB2_PREFIX) \
 -L$(LIBVATA_LIB)
 
-DEBUG=_debug
+#DEBUG=_debug
 
 #---------------------------------------
 # Files
@@ -57,10 +57,9 @@ SHARED_LIBS = -lsmtlib2parser \
 
 all: spen
 
-#	$(CXX) $(CXXFLAGS) -o $@ $^ \
 
 spen: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
-	$(CXX) -o $@ $^ \
+	$(CXX) $(CXXFLAGS) -o $@ $^ \
 	$(LDFLAGS) \
 	$(SHARED_LIBS)
 

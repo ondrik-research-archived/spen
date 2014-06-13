@@ -44,10 +44,17 @@ NOLL_VECTOR_DEFINE (noll_sat_array, noll_sat_t *);
 noll_sat_t *
 noll_sat_new (noll_form_t * phi)
 {
-  noll_sat_t *phi_s = (noll_sat_t *) malloc (sizeof (noll_sat_t));
+  noll_sat_t *fsat = (noll_sat_t *) malloc (sizeof (noll_sat_t));
 
-  phi_s->form = phi;
-  return phi_s;
+  fsat->form = phi;
+  fsat->fname = NULL;
+  fsat->finfo = NULL;
+  fsat->var_pure = NULL;
+  fsat->var_pto = NULL;
+  fsat->var_pred = NULL;
+  fsat->var_apto = NULL;
+  fsat->var_inset = NULL;
+  return fsat;
 }
 
 /**
@@ -90,10 +97,14 @@ noll_sat_free (noll_sat_t * fsat)
     }
 
   fsat->form = NULL;
-  noll_sat_space_array_delete (fsat->var_pto);
-  noll_sat_space_array_delete (fsat->var_pred);
-  noll_sat_space_array_delete (fsat->var_apto);
-  noll_sat_in_array_delete (fsat->var_inset);
+  if (fsat->var_pto != NULL)
+    noll_sat_space_array_delete (fsat->var_pto);
+  if (fsat->var_pred != NULL)
+    noll_sat_space_array_delete (fsat->var_pred);
+  if (fsat->var_apto != NULL)
+    noll_sat_space_array_delete (fsat->var_apto);
+  if (fsat->var_inset != NULL)
+    noll_sat_in_array_delete (fsat->var_inset);
 
   free (fsat);
 }
@@ -2436,6 +2447,10 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
   assert (fsat->fname != NULL);
   assert (fsat->var_pure != NULL);
 
+  if (fsat->form->kind == NOLL_FORM_UNSAT)
+    /* nothing to do */
+    return;
+
   if (fsat->file != NULL)
     fclose (fsat->file);
 
@@ -2572,6 +2587,8 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
                                       NOLL_TYP_RECORD));
 #endif
               noll_pure_add_eq (fsat->form, atom->x, atom->y);
+              if (fsat->form->kind == NOLL_FORM_UNSAT)
+                goto return_norm_incr;
             }
           else
             {
@@ -2613,6 +2630,8 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
                                       NOLL_TYP_RECORD));
 #endif
               noll_pure_add_neq (fsat->form, atom->x, atom->y);
+              if (fsat->form->kind == NOLL_FORM_UNSAT)
+                goto return_norm_incr;
             }
           else
             {
@@ -2633,6 +2652,7 @@ nol2sat_normalize_incr (noll_sat_t * fsat)
           continue;
         }
     }
+return_norm_incr:
   free (res);
   free (fname_res);
   fclose (fres);
@@ -2655,6 +2675,10 @@ nol2sat_normalize_iter (noll_sat_t * fsat)
   if (fsat->file != NULL)
     fclose (fsat->file);
 
+  if (fsat->form->kind == NOLL_FORM_UNSAT)
+    /* nothing to do */
+    return;
+    
   /*
    * Iterate over unknown (in)equalities between used variables and
    *  - generate a problem for minisat
@@ -2787,8 +2811,6 @@ noll2sat_normalize (noll_form_t * form, char *fname, bool incr,
   if (destructive == true || form->kind == NOLL_FORM_UNSAT)
     {
       noll_sat_free (fsat);
-      noll_form_free (form);
-      free (fname);
       return NULL;
     }
   return fsat;

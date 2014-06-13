@@ -293,16 +293,6 @@ noll_pure_add_eq (noll_form_t * f, uid_t v1, uid_t v2)
   if (f->kind == NOLL_FORM_UNSAT)
     return;
 
-  /* part used only at parsing
-     uint_t size = noll_vector_size(f->lvars);
-     if ((f->pure != NULL) && (f->pure->size != size)) {
-     noll_pure_free(f->pure);
-     f->pure = NULL;
-     }
-     if (f->pure == NULL)
-     f->pure = noll_pure_new(size);
-   */
-
   assert (f->pure->size > v1 && f->pure->size > v2);
   if (v1 != v2)
     {
@@ -322,9 +312,13 @@ noll_pure_add_eq (noll_form_t * f, uid_t v1, uid_t v2)
             /* v_lin = v_col && v_lin != j => j != v_col */
             noll_pure_update_neq (f, j, v_col);
         }
+      // check if still sat
+      if (f->kind == NOLL_FORM_UNSAT)
+        return;
       // close with entries > vcol
-      for (uid_t j = v_col + 1; (j < f->pure->size) && (f->kind
-                                                        != NOLL_FORM_UNSAT);
+      for (uid_t j = v_col + 1; 
+				(j < f->pure->size) && 
+				(f->kind != NOLL_FORM_UNSAT);
            j++)
         {
           if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
