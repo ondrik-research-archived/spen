@@ -1,4 +1,8 @@
 
+2014, June 16th
+- found bug in noll2sat and noll2bool in the encoding of
+  the transitivity for = relation, all examples pass now
+
 2014, June 13th
 - fix parsing of predicates to avoid distinct 
   between first arg and args of different types
@@ -6,6 +10,10 @@
 - make norm_incr to stop as soons as the formula is unsat
 - fix memory deallocation problem for fsat
 - 0 errors in sll0a_sat
+- add to the boolean abstraction two clauses for det_pto_pto
+  in order to infer difference relation between x and z in 
+  ls(x,y)* y->u * z->v 
+  5 errors in sll0a_entl
 
 
 2014, June 12th

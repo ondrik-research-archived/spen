@@ -1018,11 +1018,17 @@ noll2sat_pure (noll_sat_t * fsat)
                     noll_pure_matrix_at (fsat->form->pure, i, j);
                   if (op == NOLL_PURE_EQ)
                     {
+#ifndef NDEBUG
+                      fprintf (stdout, "---- pure: [x%d = x%d]\n", i, j);
+#endif
                       fprintf (fsat->file, "%d 0\n", eq_i_j);
                       nb_clauses++;
                     }
                   else if (op == NOLL_PURE_NEQ)
                     {
+#ifndef NDEBUG
+                      fprintf (stdout, "---- pure: [x%d <> x%d]\n", i, j);
+#endif
                       fprintf (fsat->file, "-%d 0\n", eq_i_j);
                       nb_clauses++;
                     }
@@ -1043,8 +1049,15 @@ noll2sat_pure (noll_sat_t * fsat)
                         {
                           uint_t eq_i_k = noll2sat_get_bvar_eq (fsat, i, k);
                           uint_t eq_j_k = noll2sat_get_bvar_eq (fsat, j, k);
-                          fprintf (fsat->file, "-%d -%d %d 0\n", eq_i_j,
-                                   eq_j_k, eq_i_k);
+                          //fprintf (fsat->file, "-%d -%d %d 0\n", eq_i_j,
+                          //        eq_j_k, eq_i_k);
+                          fprintf (fsat->file, "-%d -%d %d 0\n", eq_i_k,
+                                   eq_j_k, eq_i_j);
+#ifndef NDEBUG
+                          fprintf (stdout,
+                                   "---- pure: trans[x%d=x%d] by x%d\n", i, j,
+                                   k);
+#endif
                           nb_clauses++;
                         }
                     }
@@ -1275,9 +1288,9 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
             // Warning: only for NOLL
 #ifdef NOLL_SAT
             // points to implies that source and destination are different
-            uint_t eq_src_dst = noll2sat_get_bvar_eq (fsat, vsrc, vdsti);
-            fprintf (fsat->file, "-%d 0\n", eq_src_dst);
-            nb_clauses++;
+            //uint_t eq_src_dst = noll2sat_get_bvar_eq (fsat, vsrc, vdsti);
+            //fprintf (fsat->file, "-%d 0\n", eq_src_dst);
+            //nb_clauses++;
 #endif
             // push atom in the list
             noll_uint_array_push (bvars_used, bvar_pto);
@@ -1477,10 +1490,10 @@ noll2sat_membership (noll_sat_t * fsat)
 #ifndef NDEBUG
               fprintf (stdout,
                        "---- var %s in %s (bvar %d) implies %s (bvar %d)\n",
-                       noll_var_name (NULL, xj, NOLL_TYP_RECORD),
-                       noll_var_name (NULL, alpha_i, NOLL_TYP_SETLOC),
-                       bvar_j_in_i, noll_pred_name (p_i),
-                       fsat->start_pred + lsi);
+                       noll_var_name (fsat->form->lvars, xj, NOLL_TYP_RECORD),
+                       noll_var_name (fsat->form->svars, alpha_i,
+                                      NOLL_TYP_SETLOC), bvar_j_in_i,
+                       noll_pred_name (p_i), fsat->start_pred + lsi);
 #endif
               fprintf (fsat->file, "-%d %d 0\n", bvar_j_in_i,
                        fsat->start_pred + (uint_t) lsi);
@@ -1519,9 +1532,12 @@ noll2sat_membership (noll_sat_t * fsat)
                 {
 #ifndef NDEBUG
                   fprintf (stdout, "---- var %s, %s, %s\n",
-                           noll_var_name (NULL, x_i, NOLL_TYP_RECORD),
-                           noll_var_name (NULL, x_j, NOLL_TYP_RECORD),
-                           noll_var_name (NULL, alpha_i, NOLL_TYP_SETLOC));
+                           noll_var_name (fsat->form->lvars, x_i,
+                                          NOLL_TYP_RECORD),
+                           noll_var_name (fsat->form->lvars, x_j,
+                                          NOLL_TYP_RECORD),
+                           noll_var_name (fsat->form->lvars, alpha_i,
+                                          NOLL_TYP_SETLOC));
 #endif
                   fprintf (fsat->file, "-%d -%d %d 0\n", bvar_eq_i_j,
                            bvar_in_i, bvar_in_j_i);
@@ -1600,7 +1616,8 @@ noll2sat_membership (noll_sat_t * fsat)
                         uint_t bvar_apto_j_k = noll2sat_get_bvar_apto (fsat,
                                                                        x_j,
                                                                        f_k,
-                                                                       ls_i->forig);
+                                                                       ls_i->
+                                                                       forig);
                         if (!flag)
                           {
                             fprintf (fsat->file, "-%d ", bvar_j_in_i);
@@ -1641,8 +1658,7 @@ noll2sat_membership (noll_sat_t * fsat)
 
 /*
  * write F_det ([x_i,f,y_i], [x_j,f,y_j]) = [x_i = x_j] ==> [x_i,f,y_i] xor [x_j,f,y_j]
- * and (partial) transitivity by predicates, needed for weel-formedness
- *       ([P(x1,y1,alpha)] \/ [x1 = y1]) & [y1,f,z1] & [y2,f,z2] ==> ![x1 = y2]
+ * or [x_i,f,y_i] and [x_j,f,y_j] => ![x_i = x_j]  (for syntactic x_i != xj)
  */
 int
 noll2sat_det_pto_pto (noll_sat_t * fsat)
@@ -1662,7 +1678,6 @@ noll2sat_det_pto_pto (noll_sat_t * fsat)
           noll_vector_at (sat_j->forig->m.pto.fields, sat_j->m.idx);
         if (f_i == f_j)
           {
-            // first part
 #ifndef NDEBUG
             fprintf (stdout,
                      "---- [%s = %s] ==> [1->%s,%s] xor [2->field,%s]\n",
@@ -1682,60 +1697,6 @@ noll2sat_det_pto_pto (noll_sat_t * fsat)
             fprintf (fsat->file, "-%d -%d -%d 0\n", bvar_eq_i_j,
                      fsat->start_pto + i, fsat->start_pto + j);
             nb_clauses += 2;
-
-            // second part
-            // ([P(x1,x_i,alpha)] \/ [x1 = x_i]) /\ [x_i,f,z1] /\ [x_j,f,z2] ==> ![x1 = x_j]
-            for (uint_t k = 0; k < fsat->size_pred; k++)
-              {
-                noll_sat_space_t *sat_k = noll_vector_at (fsat->var_pred, k);
-                uid_t pid_k = sat_k->forig->m.ls.pid;
-                uid_t alpha_k = sat_k->forig->m.ls.sid;
-                const noll_pred_t *pred_k = noll_pred_getpred (pid_k);
-                assert (NULL != pred_k);
-                /* test if f_i is in fieldsof level 0 for pred_k */
-                /* MS: change of info on fields */
-                if (!noll_pred_is_field (pid_k, f_i, NOLL_PFLD_BORDER))
-                  continue;
-
-                // end of segment arg shall be x_i, get the source arg
-                uint_t outpos = 1 +
-                  ((strncmp ("dll", pred_k->pname, 3) == 0) ? 1 : 0);
-                uint_t xout =
-                  noll_vector_at (sat_k->forig->m.ls.args, outpos);
-                if (xout != x_i && xout != x_j)
-                  continue;
-                uint_t xoth = (x_i == xout) ? x_j : x_i;
-                uint_t xin = noll_vector_at (sat_k->forig->m.ls.args, 0);
-                if (xoth == xin)
-                  continue;
-                uint_t bvar_eq_in_out =
-                  noll2sat_get_bvar_eq (fsat, xin, xout);
-                uint_t bvar_eq_in_oth =
-                  noll2sat_get_bvar_eq (fsat, xin, xoth);
-#ifndef NDEBUG
-                fprintf (stdout,
-                         "---- ([P,%s,%s,_] | [%s = %s]) & [%s,f%d,_] & [%s,f%d,_] ==> ![%s = %s]\n",
-                         noll_vector_at (fsat->form->lvars, xin)->vname,
-                         noll_vector_at (fsat->form->lvars, xout)->vname,
-                         noll_vector_at (fsat->form->lvars, xin)->vname,
-                         noll_vector_at (fsat->form->lvars, xout)->vname,
-                         noll_vector_at (fsat->form->lvars, xout)->vname,
-                         f_i,
-                         noll_vector_at (fsat->form->lvars, xoth)->vname,
-                         f_j,
-                         noll_vector_at (fsat->form->lvars, xin)->vname,
-                         noll_vector_at (fsat->form->lvars, xoth)->vname);
-#endif
-                fprintf (fsat->file, "-%d -%d -%d -%d 0\n",
-                         fsat->start_pred + k,
-                         fsat->start_pto + i, fsat->start_pto + j,
-                         bvar_eq_in_oth);
-                fprintf (fsat->file, "-%d -%d -%d -%d 0\n",
-                         bvar_eq_in_out,
-                         fsat->start_pto + i, fsat->start_pto + j,
-                         bvar_eq_in_oth);
-                nb_clauses += 2;
-              }
           }
       }
 
@@ -1744,6 +1705,7 @@ noll2sat_det_pto_pto (noll_sat_t * fsat)
 
 /*
  * write F_det ([x_i,f,_], [x_j,f,_]) = [x_i = x_j] ==> ![x_i,f,_] or ![x_j,f,_]
+ * or [x_i,f,_] and [x_j,f,_] ==> ![x_i = x_j] (for syntactic x_i != x_j)
  */
 int
 noll2sat_det_apto_apto (noll_sat_t * fsat)
@@ -1782,6 +1744,7 @@ noll2sat_det_apto_apto (noll_sat_t * fsat)
 
 /*
  * write F_det ([x_i,f,y_i], [x_j,f,alpha]) = [x_i = x_j] & [x_i,f,y_i] ==> ![x_j,f,alpha]
+ * or [x_i,f,y_i] & [x_j,f,alpha] => ![x_i = x_j] 
  */
 int
 noll2sat_det_pto_apto (noll_sat_t * fsat)
@@ -1802,7 +1765,7 @@ noll2sat_det_pto_apto (noll_sat_t * fsat)
           {
 #ifndef NDEBUG
             fprintf (stdout,
-                     "---- [%s = %s] & [%s->%s,%s] ==> ![%s->%s,%s]\n",
+                     "---- [%s = %s] & [%s,%s,%s] ==> ![%s,%s,%s]\n",
                      noll_vector_at (fsat->form->lvars, x_i)->vname,
                      noll_vector_at (fsat->form->lvars, x_j)->vname,
                      noll_vector_at (fsat->form->lvars, x_i)->vname,
@@ -1812,7 +1775,7 @@ noll2sat_det_pto_apto (noll_sat_t * fsat)
                                                      sat_i->m.idx))->vname,
                      noll_vector_at (fsat->form->lvars, x_j)->vname,
                      noll_vector_at (fields_array, f_i)->name,
-                     noll_var_name (NULL, sat_j->forig->m.ls.sid,
+                     noll_var_name (fsat->form->svars, sat_j->forig->m.ls.sid,
                                     NOLL_TYP_SETLOC));
 #endif
             uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_j);

@@ -120,12 +120,12 @@ bool_abstr_pure (noll_form_t * form, FILE * out)
           {
             if ((type_i == type_j)
                 && (type_i ==
-                    noll_vector_at (noll_vector_at (form->lvars, k)->vty->
-                                    args, 0)))
+                    noll_vector_at (noll_vector_at (form->lvars, k)->
+                                    vty->args, 0)))
               {
                 //test if the three variables have the same type
-                fprintf (out, "-%d -%d %d 0\n", encode_eq (i, j),
-                         encode_eq (j, k), encode_eq (i, k));
+                fprintf (out, "-%d -%d %d 0\n", encode_eq (i, k),
+                         encode_eq (j, k), encode_eq (i, j));
                 nb_clauses++;
               }
           }
@@ -400,8 +400,7 @@ bool_abstr_space (noll_form_t * form, FILE * out)
 #endif
                           struct noll_ls_t *atom1_ls = var_ls[j
                                                               -
-                                                              index_pto].
-                            predicate;
+                                                              index_pto].predicate;
                           struct noll_ls_t *atom2_ls =
                             var_ls[t - index_pto].predicate;
 
@@ -454,10 +453,8 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                           nb_clauses++;
                         }
                       else if (t < index_pto && pto_in (var_pto[t].points_to,
-                                                        NOLL_VECTOR_ARRAY (f->
-                                                                           m.
-                                                                           sep)
-                                                        [k]))
+                                                        NOLL_VECTOR_ARRAY
+                                                        (f->m.sep)[k]))
                         {
                           // ls with pto
 #ifndef NDEBUG
@@ -466,8 +463,7 @@ bool_abstr_space (noll_form_t * form, FILE * out)
 #endif
                           struct noll_ls_t *atom1_ls = var_ls[j
                                                               -
-                                                              index_pto].
-                            predicate;
+                                                              index_pto].predicate;
                           struct noll_pto_t *atom2_pto = var_pto[t].points_to;
                           uint_t source1 =
                             NOLL_VECTOR_ARRAY (atom1_ls->args)[0];
@@ -883,14 +879,17 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                      noll_vector_at (form->lvars,
                                      var_pto[j].points_to->sid)->vname,
                      noll_vector_at (fields_array,
-                                     noll_vector_at (var_pto[i].points_to->
-                                                     fields, 0))->name,
+                                     noll_vector_at (var_pto[i].
+                                                     points_to->fields,
+                                                     0))->name,
                      noll_vector_at (form->lvars,
-                                     noll_vector_at (var_pto[i].points_to->
-                                                     dest, 0))->vname,
+                                     noll_vector_at (var_pto[i].
+                                                     points_to->dest,
+                                                     0))->vname,
                      noll_vector_at (form->lvars,
-                                     noll_vector_at (var_pto[j].points_to->
-                                                     dest, 0))->vname);
+                                     noll_vector_at (var_pto[j].
+                                                     points_to->dest,
+                                                     0))->vname);
 #endif
             fprintf (out, "-%d %d %d 0\n",
                      encode_eq (var_pto[i].points_to->sid,
@@ -972,10 +971,9 @@ bool_abstr_det (noll_form_t * form, FILE * out)
         for (uint_t si = 0; si < noll_vector_size (form->svars); si++)
           {
             uint_t var1_type = noll_vector_at (noll_vector_at (form->lvars,
-                                                               var_pto[i1].
-                                                               points_to->
-                                                               sid)->vty->
-                                               args,
+                                                               var_pto
+                                                               [i1].points_to->sid)->
+                                               vty->args,
                                                0);
             uint_t var2_type =
               noll_vector_at (noll_vector_at (form->lvars, i2)->vty->args,
@@ -991,12 +989,12 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                                          var_pto[i1].points_to->sid)->vname,
                          noll_vector_at (form->lvars, i2)->vname,
                          noll_vector_at (fields_array,
-                                         noll_vector_at (var_pto[i1].
-                                                         points_to->fields,
-                                                         0))->name,
+                                         noll_vector_at (var_pto
+                                                         [i1].points_to->
+                                                         fields, 0))->name,
                          noll_vector_at (form->lvars,
-                                         noll_vector_at (var_pto[i1].
-                                                         points_to->dest,
+                                         noll_vector_at (var_pto
+                                                         [i1].points_to->dest,
                                                          0))->vname,
                          noll_vector_at (fields_array, j)->name,
                          noll_vector_at (form->svars, si)->vname);
@@ -1033,8 +1031,8 @@ bool_abstr_det (noll_form_t * form, FILE * out)
             for (uint_t k = 0; k < form->pure->size; k++)
               {
                 uint_t type_lvar =
-                  noll_vector_at (noll_vector_at (form->lvars, lvar)->vty->
-                                  args,
+                  noll_vector_at (noll_vector_at (form->lvars, lvar)->
+                                  vty->args,
                                   0);
                 uint_t type_k =
                   noll_vector_at (noll_vector_at (form->lvars, k)->vty->args,
@@ -1177,8 +1175,8 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                       0) == noll_vector_at (noll_vector_at (form->lvars,
                                                             t)->vty->args, 0))
                     && (type1 ==
-                        noll_vector_at (noll_vector_at (form->lvars, k)->vty->
-                                        args, 0)))
+                        noll_vector_at (noll_vector_at (form->lvars, k)->
+                                        vty->args, 0)))
                   {
 #ifndef NDEBUG
                     fprintf (stdout,
