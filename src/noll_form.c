@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012-2013                                               */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -523,10 +519,20 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
       {
         fprintf (f, "(pto  ");
         if (lvars == NULL)
-          fprintf (f, "*%d ...)", phi->m.pto.sid);
+          fprintf (f, "*%d ", phi->m.pto.sid);
         else
-          fprintf (f, "%s ...)",
-                   noll_vector_at (lvars, phi->m.pto.sid)->vname);
+          fprintf (f, "%s ", noll_vector_at (lvars, phi->m.pto.sid)->vname);
+        /* print the set of fields */
+        for (size_t i = 0; i < noll_vector_size (phi->m.pto.fields); i++)
+          {
+            fprintf (f, "(%s %s) ",
+                     noll_field_name (noll_vector_at (phi->m.pto.fields, i)),
+                     noll_var_name (lvars,
+                                    noll_vector_at (phi->m.pto.dest, i),
+                                    NOLL_TYP_RECORD));
+          }
+        /* end pto */
+        fprintf (f, ")");
         break;
       }
     case NOLL_SPACE_LS:

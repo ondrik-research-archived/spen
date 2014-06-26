@@ -1,4 +1,4 @@
-(set-logic QF_SLRD)
+(set-logic QF_S)
 
 (declare-sort Sll_t 0)
 
@@ -8,12 +8,14 @@
 ; singly-linked list
 (define-fun lsso ((?in Sll_t) (?out Sll_t))
   Space (tospace (or (= ?in ?out) 
-    (exists ((?u Sll_t)) (tobool (ssep
+    (exists ((?u Sll_t)) 
+    (and (distinct ?in ?out)
+    (tobool (ssep
       (pto ?in (sref
 				(ref next1 ?u)
 				(ref next2 ?u)))
       (lsso ?u ?out))
-)))))
+))))))
 
 (declare-fun x_emp () Sll_t)
 (declare-fun y_emp () Sll_t)

@@ -39,7 +39,7 @@ CCSRC = noll_types.c \
 	noll_preds.c noll_form.c \
 	noll_graph.c \
 	noll2bool.c noll2sat.c noll2graph.c \
-	noll_graph2ta.c noll_pred2ta.c \
+	noll_graph2ta.c noll_pred2ta.c noll_pred2ta_gen.c \
 	noll_hom.c noll_entl.c \
 	noll.c smtlib2noll.c \
 	noll_ta_symbols.c \

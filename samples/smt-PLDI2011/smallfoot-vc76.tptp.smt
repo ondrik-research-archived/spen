@@ -1,22 +1,39 @@
-(set-logic QF_SLRD)
 
+(set-logic QF_S)
+
+;; declare sorts
 (declare-sort Sll_t 0)
 
-(declare-fun f () (Field Sll_t Sll_t))
 
-(define-fun ls ((?in Sll_t) (?out Sll_t)) Space
-(tospace (or (= ?in ?out)
-(exists ((?u Sll_t))
-(tobool
-(ssep (pto ?in (ref f ?u)) (ls ?u ?out)
-))))))
+;; declare fields
+(declare-fun next () (Field Sll_t Sll_t))
 
-(declare-fun nil () Sll_t)
 
-(declare-fun x_emp () Sll_t)
-(declare-fun y_emp () Sll_t)
-(declare-fun z_emp () Sll_t)
-(declare-fun t_emp () Sll_t)
+;; declare predicates
+
+(define-fun ls ((?in Sll_t) (?out Sll_t) ) Space (tospace 
+	(or 
+	(and (= ?in ?out) 
+		(tobool emp
+		)
+
+	)
+ 
+	(exists ((?u Sll_t) ) 
+	(and (distinct ?in ?out) 
+		(tobool (ssep 
+		(pto ?in (ref next ?u) ) 
+		(ls ?u ?out )
+		) )
+
+	)
+ 
+	)
+
+	)
+))
+
+;; declare variables
 (declare-fun x0 () Sll_t)
 (declare-fun x1 () Sll_t)
 (declare-fun x2 () Sll_t)
@@ -25,26 +42,31 @@
 (declare-fun x5 () Sll_t)
 (declare-fun x6 () Sll_t)
 (declare-fun x7 () Sll_t)
+
+;; declare set of locations
+
 (declare-fun alpha0 () SetLoc)
 (declare-fun alpha1 () SetLoc)
-(declare-fun alpha2 () SetLoc)
-(declare-fun alpha3 () SetLoc)
-(declare-fun alpha4 () SetLoc)
-(declare-fun alpha5 () SetLoc)
-(declare-fun alpha6 () SetLoc)
-(assert
-  (and 
-    (= nil nil)
-(distinct nil x1 )
-(distinct x2 x1 )
-(distinct x2 x3 )
-(distinct x1 x3 )
-    (tobool  (ssep  (pto x1  (ref f x3 ) ) (ssep  (index alpha0 (ls x2 nil ))(ssep (pto x_emp (ref f y_emp)) (pto z_emp (ref f t_emp))))))
-  )
+
+(assert 
+	(and (= nil nil) (distinct nil x1) (distinct x1 x2) (distinct x2 x3) (distinct x1 x3) 
+	(tobool 
+	(ssep 
+		(pto x1 (ref next x3) ) 
+		(index alpha0 (ls x2 nil )) 
+	)
+
+	)
+
+	)
+
 )
-(assert
-  (not
-        (tobool  (ssep  (index alpha1 (ls x2 nil ))(ssep (pto x_emp (ref f y_emp)) (pto z_emp (ref f t_emp)))))
-  ))
+
+(assert (not 
+	(tobool 
+		(index alpha1 (ls x2 nil )) 
+	)
+
+))
 
 (check-sat)

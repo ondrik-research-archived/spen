@@ -36,12 +36,21 @@
 /* ====================================================================== */
 
 /**
- * @brief  Translates a higher-order predicate dedge into a TA
+ * @brief  Translates a higher-order predicate edge into a TA
  *
  * @param[in]  edge  The edge to be translated
  *
  * @returns  A TA representing all models that the edge denotes
  */
 noll_ta_t *noll_edge2ta (const noll_edge_t * edge);
+
+/**
+ * @brief Apply the general algorithm for the predicate translation.
+ *
+ * @param[in]  edge  The edge to be translated
+ *
+ * @returns  A TA representing all models that the edge denotes
+ */
+noll_ta_t *noll_edge2ta_gen (const noll_edge_t * edge);
 
 #endif /* NOLL_PRED2TA_H_ */

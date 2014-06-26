@@ -1,11 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2013                                                    */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    VeriFIT (Brno University of Technology)                             */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -22,7 +17,9 @@
 /**************************************************************************/
 
 /**
- * Defines translation between heap graph to tree automata
+ * Defines translation between heap graph to tree automata.
+ * Special cases are dealt here, @see noll_pred2ta_gen.c for 
+ * the general case.
  */
 
 #include "noll.h"
@@ -48,11 +45,6 @@ noll_marking_push (noll_uid_array * mark, uid_t fid)
 /* ====================================================================== */
 /* Edge translators */
 /* ====================================================================== */
-
-/* uint_t noll_pred2ta_ls (noll_ta_t * ta, noll_pred_t * pred, uid_t fid, */
-/* 			uint_t qinit, */
-/* 			noll_uid_array * vars_in, noll_uid_array * mark_in, */
-/* 			noll_uid_array * vars_out, unsigned char alias_out); */
 
 /**
  * Add to the @p ta the transitions encoding the ls predicate,
@@ -220,60 +212,6 @@ noll_edge2ta_ls (const noll_edge_t * edge)
     noll_ta_symbol_get_unique_aliased_var (end_node);
   assert (NULL != end_symbol);
   noll_pred2ta_ls (ta, pred, next_uid, 1, vars_in, mark_eps, end_symbol);
-
-  ///* the set of selectors */
-  //noll_uid_array *selectors = noll_uid_array_new ();
-  //assert (NULL != selectors);
-  //noll_uid_array_push (selectors, next_uid);
-
-  ///* marking2 = [next, eps] */
-  //noll_uid_array *marking2 = noll_uid_array_new ();
-  //assert (NULL != marking2);
-  //noll_uid_array_copy (marking2, marking1);
-  //noll_uid_array_push (marking2, next_uid);
-
-  ///* vata_symbol_t* symbol_f_mf      = "<f> [m(f)]"; */
-  //const noll_ta_symbol_t *symbol_next1 =
-  //noll_ta_symbol_get_unique_allocated (selectors, vars1, marking1);
-  //assert (NULL != symbol_next1);
-
-  ///* vata_symbol_t* symbol_f_in_mf   = "<f> [in, m(f)]"; */
-  //const noll_ta_symbol_t *symbol_next2 =
-  //noll_ta_symbol_get_unique_allocated (selectors, NULL, marking2);
-  //assert (NULL != symbol_next2);
-
-  ///* vata_symbol_t* symbol_lso_mf    = "<lso> [m(f)]"; */
-  //const noll_ta_symbol_t *symbol_lso1 =
-  //noll_ta_symbol_get_unique_higher_pred (pred, vars1, marking1);
-  //assert (NULL != symbol_lso1);
-
-  ///* vata_symbol_t* symbol_lso_in_mf = "<lso> [in, m(f)]"; */
-  //const noll_ta_symbol_t *symbol_lso2 =
-  //noll_ta_symbol_get_unique_higher_pred (pred, NULL, marking2);
-  //assert (NULL != symbol_lso2);
-
-  ///* vata_symbol_t* symbol_out       = "<> [out]"; */
-  //const noll_ta_symbol_t *symbol_end =
-  //noll_ta_symbol_get_unique_aliased_var (end_node);
-  //assert (NULL != symbol_end);
-
-  ///* build the TA */
-  //vata_set_state_root (ta, 1);
-
-  //noll_uid_array *children = noll_uid_array_new ();
-  //noll_uid_array_push (children, 2);
-
-  //vata_add_transition (ta, 1, symbol_next1, children);
-  //vata_add_transition (ta, 1, symbol_lso1, children);
-  //vata_add_transition (ta, 2, symbol_next2, children);
-  //vata_add_transition (ta, 2, symbol_lso2, children);
-  //vata_add_transition (ta, 2, symbol_end, NULL);
-
-  //noll_uid_array_delete (marking1);
-  //noll_uid_array_delete (marking2);
-  //noll_uid_array_delete (vars1);
-  //noll_uid_array_delete (children);
-  //noll_uid_array_delete (selectors);
 
   noll_uid_array_delete (mark_eps);
   noll_uid_array_delete (vars_in);
@@ -799,13 +737,6 @@ noll_edge2ta_dll (const noll_edge_t * edge)
 }
 
 
-/* uint_t noll_pred2ta_nll (noll_ta_t * ta, noll_pred_t * pred, */
-/* 			 uid_t b_fid, uid_t z_fid, uid_t n_fid, */
-/* 			 uint_t qinit, */
-/* 			 noll_uid_array * vars_in, noll_uid_array * mark_in, */
-/* 			 noll_uid_array * mark_out, unsigned char alias_out, */
-/* 			 noll_uid_array * mark_brd, unsigned char alias_brd); */
-
  /**
  * Add to the @p ta the transitions encoding the nll predicate,
  * starting from state @p qinit, labeling the first state by @p vars_in,
@@ -1103,12 +1034,6 @@ noll_edge2ta_nll (const noll_edge_t * edge)
   return ta;
 }
 
-
-/* uint_t noll_pred2ta_nlcl (noll_ta_t * ta, noll_pred_t * pred, */
-/* 			  uid_t b_fid, uid_t z_fid, uid_t n_fid, */
-/* 			  uint_t qinit, */
-/* 			  noll_uid_array * vars_in, noll_uid_array * mark_in, */
-/* 			  noll_uid_array * mark_out, unsigned char alias_out); */
 
 /**
  * Add to the @p ta the transitions encoding the nlcl predicate,
@@ -1713,15 +1638,6 @@ noll_pred2ta_skl2 (noll_ta_t * ta,
   /* the called predicate skl1 */
   noll_pred_t *pred_skl1 = noll_vector_at (preds_array, 0);
   assert (strcmp (pred_skl1->pname, "skl1") == 0);
-  /*
-     for (uint_t pid = 0;
-     pid < noll_vector_size(preds_array) &&
-     pred_skl1 != NULL;
-     pid++)
-     if (noll_vector_at(pred->typ->ppreds, pid) == 1 &&
-     pid != pred->pid)
-     pred_skl1 = noll_vector_at(preds_array,pid);
-   */
 
   /* the marking used mark_in_bkb = mark_in . b_fid */
   noll_uid_array *mark_in_bkb = noll_uid_array_new ();
@@ -2095,15 +2011,7 @@ noll_pred2ta_skl3 (noll_ta_t * ta,
   assert (strcmp (pred_skl1->pname, "skl1") == 0);
   noll_pred_t *pred_skl2 = noll_vector_at (preds_array, 1);
   assert (strcmp (pred_skl2->pname, "skl2") == 0);
-  /*
-     for (uint_t pid = 0;
-     pid < noll_vector_size(preds_array) &&
-     pred_skl1 != NULL;
-     pid++)
-     if (noll_vector_at(pred->typ->ppreds, pid) == 1 &&
-     pid != pred->pid)
-     pred_skl1 = noll_vector_at(preds_array,pid);
-   */
+
 
   /* the marking used mark_in_f3 = min . f3 */
   noll_uid_array *mark_in_f3 = noll_uid_array_new ();
@@ -2748,9 +2656,14 @@ noll_edge2ta (const noll_edge_t * edge)
     }
   else
     {
-      NOLL_DEBUG ("ERROR: translation for predicate %s not implemented!\n",
-                  pred->pname);
-      assert (false);
+      /* apply the general algorithm */
+      ta = noll_edge2ta_gen (edge);
+      if (NULL == ta)
+        {
+          NOLL_DEBUG ("ERROR: translation for predicate %s failed!\n",
+                      pred->pname);
+          assert (false);
+        }
     }
 
   NOLL_DEBUG ("Generated TA for edge:\n");

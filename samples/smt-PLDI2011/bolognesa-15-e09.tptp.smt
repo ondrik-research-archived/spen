@@ -1,22 +1,39 @@
-(set-logic QF_SLRD)
 
+(set-logic QF_S)
+
+;; declare sorts
 (declare-sort Sll_t 0)
 
-(declare-fun f () (Field Sll_t Sll_t))
 
-(define-fun ls ((?in Sll_t) (?out Sll_t)) Space
-(tospace (or (= ?in ?out)
-(exists ((?u Sll_t))
-(tobool
-(ssep (pto ?in (ref f ?u)) (ls ?u ?out)
-))))))
+;; declare fields
+(declare-fun next () (Field Sll_t Sll_t))
 
-(declare-fun nil () Sll_t)
 
-(declare-fun x_emp () Sll_t)
-(declare-fun y_emp () Sll_t)
-(declare-fun z_emp () Sll_t)
-(declare-fun t_emp () Sll_t)
+;; declare predicates
+
+(define-fun ls ((?in Sll_t) (?out Sll_t) ) Space (tospace 
+	(or 
+	(and (= ?in ?out) 
+		(tobool emp
+		)
+
+	)
+ 
+	(exists ((?u Sll_t) ) 
+	(and (distinct ?in ?out) 
+		(tobool (ssep 
+		(pto ?in (ref next ?u) ) 
+		(ls ?u ?out )
+		) )
+
+	)
+ 
+	)
+
+	)
+))
+
+;; declare variables
 (declare-fun x0 () Sll_t)
 (declare-fun x1 () Sll_t)
 (declare-fun x2 () Sll_t)
@@ -37,6 +54,9 @@
 (declare-fun x17 () Sll_t)
 (declare-fun x18 () Sll_t)
 (declare-fun x19 () Sll_t)
+
+;; declare set of locations
+
 (declare-fun alpha0 () SetLoc)
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
@@ -57,20 +77,55 @@
 (declare-fun alpha17 () SetLoc)
 (declare-fun alpha18 () SetLoc)
 (declare-fun alpha19 () SetLoc)
-(declare-fun alpha20 () SetLoc)
-(declare-fun alpha21 () SetLoc)
-(declare-fun alpha22 () SetLoc)
-(declare-fun alpha23 () SetLoc)
-(declare-fun alpha24 () SetLoc)
-(assert
-  (and 
-    (= nil nil)
-    (tobool  (ssep  (pto x2  (ref f x3 ) ) (ssep  (pto x11  (ref f x3 ) ) (ssep  (index alpha0 (ls x15 x12 )) (ssep  (pto x3  (ref f x11 ) ) (ssep  (index alpha1 (ls x10 x12 )) (ssep  (index alpha2 (ls x13 x5 )) (ssep  (pto x7  (ref f x10 ) ) (ssep  (pto x9  (ref f x5 ) ) (ssep  (index alpha3 (ls x8 x13 )) (ssep  (pto x4  (ref f x5 ) ) (ssep  (index alpha4 (ls x1 x4 )) (ssep  (pto x12  (ref f x5 ) ) (ssep  (pto x6  (ref f x3 ) ) (ssep  (index alpha5 (ls x5 x12 )) (ssep  (pto x14  (ref f x11 ) )(ssep (pto x_emp (ref f y_emp)) (pto z_emp (ref f t_emp)))))))))))))))))))
-  )
+
+(assert 
+	(and (= nil nil) 
+	(tobool 
+	(ssep 
+		(pto x2 (ref next x3) ) 
+		(pto x11 (ref next x3) ) 
+		(index alpha0 (ls x15 x12 )) 
+		(pto x3 (ref next x11) ) 
+		(index alpha1 (ls x10 x12 )) 
+		(index alpha2 (ls x13 x5 )) 
+		(pto x7 (ref next x10) ) 
+		(pto x9 (ref next x5) ) 
+		(index alpha3 (ls x8 x13 )) 
+		(pto x4 (ref next x5) ) 
+		(index alpha4 (ls x1 x4 )) 
+		(pto x12 (ref next x5) ) 
+		(pto x6 (ref next x3) ) 
+		(index alpha5 (ls x5 x12 )) 
+		(pto x14 (ref next x11) ) 
+	)
+
+	)
+
+	)
+
 )
-(assert
-  (not
-        (tobool  (ssep  (index alpha6 (ls x6 x3 )) (ssep  (index alpha7 (ls x15 x12 )) (ssep  (index alpha8 (ls x2 x3 )) (ssep  (index alpha9 (ls x9 x5 )) (ssep  (index alpha10 (ls x1 x4 )) (ssep  (index alpha11 (ls x8 x13 )) (ssep  (index alpha12 (ls x14 x11 )) (ssep  (index alpha13 (ls x3 x11 )) (ssep  (index alpha14 (ls x11 x3 )) (ssep  (index alpha15 (ls x7 x10 )) (ssep  (index alpha16 (ls x10 x5 )) (ssep  (index alpha17 (ls x4 x5 )) (ssep  (index alpha18 (ls x13 x5 )) (ssep  (index alpha19 (ls x5 x12 ))(ssep (pto x_emp (ref f y_emp)) (pto z_emp (ref f t_emp))))))))))))))))))
-  ))
+
+(assert (not 
+	(tobool 
+	(ssep 
+		(index alpha6 (ls x6 x3 )) 
+		(index alpha7 (ls x15 x12 )) 
+		(index alpha8 (ls x2 x3 )) 
+		(index alpha9 (ls x9 x5 )) 
+		(index alpha10 (ls x1 x4 )) 
+		(index alpha11 (ls x8 x13 )) 
+		(index alpha12 (ls x14 x11 )) 
+		(index alpha13 (ls x3 x11 )) 
+		(index alpha14 (ls x11 x3 )) 
+		(index alpha15 (ls x7 x10 )) 
+		(index alpha16 (ls x10 x5 )) 
+		(index alpha17 (ls x4 x5 )) 
+		(index alpha18 (ls x13 x5 )) 
+		(index alpha19 (ls x5 x12 )) 
+	)
+
+	)
+
+))
 
 (check-sat)
