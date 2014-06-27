@@ -1490,7 +1490,7 @@ noll_graph_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
   assert (NULL != args2);
 
   int res = 1;
-  /* condition 2: 
+  /* condition 2:
    * for any V in args2[1+isdll,...] do
    *   for any e'=V'--> ... in sg2 do
    *     check unsat Bool(g1) => ![V=V']
@@ -1513,7 +1513,7 @@ noll_graph_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
       return res;               // 1
     }
 
-  /* go through the arguments in args2 
+  /* go through the arguments in args2
    * to check the boolean constraint */
   for (uint_t i = 1 + isdll; i < noll_vector_size (args2) && (res == 1); i++)
     {
@@ -1521,7 +1521,7 @@ noll_graph_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
       for (uint_t j = 0; j < noll_vector_size (src_pto) && (res == 1); j++)
         {
           uid_t nvp = noll_vector_at (src_pto, j);
-          // check the query Bool(g1) => ![V=V'], i.e., 
+          // check the query Bool(g1) => ![V=V'], i.e.,
           // there is a difference edge between V and V'
           // in the low diagonal matrix og g2->diff
           uid_t ni = (nv > nvp) ? nv : nvp;
