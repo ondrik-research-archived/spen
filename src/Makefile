@@ -32,6 +32,7 @@ CCINC = noll_vector.h \
 	noll_hom.h noll_entl.h \
 	noll.h smtlib2noll.h \
 	noll_ta_symbols.h \
+	noll_tree.h \
 	libvata_noll_iface.h
 
 CCSRC = noll_types.c \
@@ -43,6 +44,7 @@ CCSRC = noll_types.c \
 	noll_hom.c noll_entl.c \
 	noll.c smtlib2noll.c \
 	noll_ta_symbols.c \
+	noll_tree.c \
 	noll-dp.c 
 
 CXXSRC = libvata_noll_iface.cc
