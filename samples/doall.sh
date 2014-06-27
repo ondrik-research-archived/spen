@@ -22,7 +22,7 @@ do
 	${SHARED_MAKE} --always-make ${LOG_FILE}
 	if [ $? -ne "0" ] ; then
 		echo "INTERNAL ERROR"
-		echo -e "result for ${i}:                                              \033[33mFAILED\033[30m"
+		echo -e "result for ${i}:                                              \e[1;33mFAILED\e[0m"
 		continue
 	fi
 	tail -1 ${LOG_FILE} > ${RESULT_FILE}
@@ -30,10 +30,10 @@ do
 	diff ${EXPECTED_FILE} ${RESULT_FILE} >/dev/null
 	if [ $? -ne "0" ] ; then
 		echo "==== received \"$(cat ${RESULT_FILE})\" while expecting \"$(cat ${EXPECTED_FILE})\""
-		echo -e "result for ${i}:                                              \033[31mERROR\033[30m"
+		echo -e "result for ${i}:                                              \e[1;31mERROR\e[0m"
 	else
 		echo "==== received expected result:    $(cat ${RESULT_FILE})"
-		echo -e "result for ${i}:                                              \033[32mOK\033[30m       in time ${RUN_TIME} sec"
+		echo -e "result for ${i}:                                              \e[1;32mOK\e[0m       in time ${RUN_TIME} sec"
 	fi
 	${SHARED_MAKE} --quiet clean
 	rm ${RESULT_FILE}
