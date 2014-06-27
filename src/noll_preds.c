@@ -592,6 +592,70 @@ noll_pred_get_minfield (uid_t pid)
   return minfield_candidate;
 }
 
+/**
+ * Build a formula from the matrix of the predicate.
+ * @param pid   predicate identifier
+ * @param args  predicate actual argument
+ * @result      a formula which contains the matrix of the predicate
+ *              instantiated with the actual arguments
+ */
+noll_form_t *
+noll_pred_get_matrix (uid_t pid)
+{
+
+  const noll_pred_t *pred = noll_pred_getpred (pid);
+  assert (pred != NULL);
+
+  /* pred->def->vars is an array built from
+   * - nil (at entry 0 of the array)
+   * - args (starting at entry 1 until pred->def->fargs
+   * - existentially quantified variables 
+   */
+
+  /* Build and empty formula */
+  noll_form_t *res = noll_form_new ();
+  res->kind = NOLL_FORM_SAT;
+  noll_var_array_copy (res->lvars, pred->def->vars);    // copy all from vars
+  /* TODO: use svars for nested predicate calls */
+  res->svars = noll_var_array_new ();   // Warning: do not use NULL
+  res->share = noll_share_array_new (); // Warning: do not use NULL
+  /* - build the pure part E != {F} U B */
+  res->pure = noll_pure_new (noll_vector_size (pred->def->vars));
+  noll_pure_add_neq (res, 1, 0);
+  for (size_t i = 2; i < noll_vector_size (pred->def->vars); i++)
+    noll_pure_add_neq (res, 1, i);
+
+  /* - build the spatial part */
+  if (pred->def->sigma_1 == NULL)
+    res->space = pred->def->sigma_0;    // TODO: make a copy
+  else
+    {
+      res->space = noll_space_new ();
+      res->space->kind = NOLL_SPACE_SSEP;
+      if (pred->def->sigma_1->kind == NOLL_SPACE_SSEP)
+        {
+          /* TODO: deal with loop */
+          noll_space_array_copy (res->space->m.sep,
+                                 pred->def->sigma_1->m.sep);
+          noll_space_array_push (res->space->m.sep, pred->def->sigma_0);
+        }
+      else
+        {
+          res->space->m.sep = noll_space_array_new ();
+          noll_space_array_push (res->space->m.sep, pred->def->sigma_0);
+          /* TODO: deal with loop */
+          noll_space_array_push (res->space->m.sep, pred->def->sigma_1);
+        }
+    }
+  /* substitute formal arguments with actual arguments */
+#ifndef NDEBUG
+  fprintf (stderr, "\n- matrix formula \n");
+  noll_form_fprint (stderr, res);
+  fflush (stderr);
+#endif
+
+  return res;
+}
 
 
 /* ====================================================================== */

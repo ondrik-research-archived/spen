@@ -170,6 +170,10 @@ extern "C"
   /* Order the fields using the predicate order.
    */
 
+  noll_form_t *noll_pred_get_matrix (uid_t pid);
+  /* Build a formula from the matrix of the predicate
+   */
+
   /* ====================================================================== */
   /* Printing */
   /* ====================================================================== */
