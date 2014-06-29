@@ -27,8 +27,11 @@
 #include "noll_ta_symbols.h"
 #include "libvata_noll_iface.h"
 
+
 /**
  * @brief  A tree node
+ *
+ * Contains a symbol and references to children
  */
 typedef struct noll_tree_node_s
 {
@@ -39,10 +42,19 @@ typedef struct noll_tree_node_s
 	noll_uid_array* children;
 } noll_tree_node_t;
 
+
 /// Inflatable array of tree nodes
 NOLL_VECTOR_DECLARE (noll_tree_node_list, noll_tree_node_t *)
 
-/// The tree - now an alias for the root node
+
+/**
+ * @brief  The tree
+ *
+ * The tree is an array of nodes (which are linked via their children
+ * attributes), where one is designated as the root. We don't check that the
+ * tree is really a tree (acyclic, etc.). If it is not, strange things may
+ * start to happen (such as demons flying out of your nose etc.).
+ */
 typedef struct noll_tree_s
 {
 	/// The array of nodes
@@ -55,6 +67,8 @@ typedef struct noll_tree_s
 
 /**
  * @brief  Creates a new tree
+ *
+ * Allocates the internal data structures.
  *
  * @returns  A new tree
  */
@@ -86,7 +100,7 @@ void noll_tree_create_node(
  *
  * @param[in]  tree  The tree to be converted into a tree automaton
  *
- * A tree automaton accepting exactly @p tree
+ * @returns  A tree automaton accepting exactly @p tree
  */
 noll_ta_t* noll_tree_to_ta(const noll_tree_t* tree);
 
@@ -99,10 +113,11 @@ noll_ta_t* noll_tree_to_ta(const noll_tree_t* tree);
  */
 void noll_tree_set_root(noll_tree_t* tree, uid_t root);
 
+
 /**
  * @brief  Frees a tree
  *
- * Recursively frees all nodes of a tree
+ * Recursively frees all nodes of a tree.
  *
  * @param[in]  tree  The tree to be freed (the pointer is invalid afterwards)
  */
