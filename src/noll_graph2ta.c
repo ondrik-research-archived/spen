@@ -31,8 +31,8 @@
 #include "noll_graph2ta.h"
 #include "noll_preds.h"
 #include "noll_ta_symbols.h"
+#include "noll_tree.h"
 #include "noll_vector.h"
-#include "libvata_noll_iface.h"
 
 /* ====================================================================== */
 /* Data types */
@@ -1224,7 +1224,7 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
  *  Translates g into a tree automaton.
  *  @return TA built or NULL
  */
-noll_ta_t *
+noll_tree_t *
 noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 {
   // check sanity of input parameters
@@ -1301,11 +1301,11 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   noll_debug_print_markings (markings);
 
   NOLL_DEBUG ("Generating the TA for the graph\n");
-  vata_ta_t *ta = vata_create_ta ();
-  assert (NULL != ta);
+	noll_tree_t* tree = noll_tree_new();
+  assert(NULL != tree);
 
   // set the initial node as the root state
-  vata_set_state_root (ta, initial_node);
+  noll_tree_set_root(tree, initial_node);
 
   // we transform the graph into a TA represting a tree (i.e. the language of
   // the TA is a singleton set) such that node 'i' is represented by the TA
@@ -1319,21 +1319,14 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
             {                   // in the case 'i' is a boundary node on some tree branch
               NOLL_DEBUG ("Found a boundary node %lu\n", i);
 
-              noll_uid_array *selectors = noll_uid_array_new ();
-              assert (NULL != selectors);
-              noll_uid_array *vars = noll_uid_array_new ();
-              assert (NULL != vars);
-
               // TODO: there should be a variable, but how to get it?
               const noll_ta_symbol_t *symbol =
                 noll_ta_symbol_get_unique_aliased_var (i);
-              vata_add_transition (ta,  // the TA
-                                   i,   // the parent
-                                   symbol,      // the symbol
-                                   NULL);       // the children
-
-              noll_uid_array_delete (selectors);
-              noll_uid_array_delete (vars);
+              noll_tree_create_node(
+                tree,        // the tree
+                i,           // the node index
+                symbol,      // the symbol
+                NULL);       // the children
             }
           else
             {
@@ -1455,7 +1448,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
               if (NULL == alias_symb)
                 {               // in the case the marking could not be deduced, we are out of power
-                  vata_free_ta (ta);
+                  noll_tree_free (tree);
 
                   NOLL_DEBUG ("WARNING: leaving ");
                   NOLL_DEBUG (__func__);
@@ -1464,9 +1457,13 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
                   return NULL;
                 }
 
-              size_t leaf_state = noll_get_unique ();
-              vata_add_transition (ta, leaf_state, alias_symb, NULL);
-              noll_uid_array_push (children, leaf_state);
+              size_t leaf_node = noll_get_unique ();
+              noll_tree_create_node(
+                tree,        // the tree
+                leaf_node,   // the node index
+                alias_symb,  // the symbol
+                NULL);       // the children
+              noll_uid_array_push (children, leaf_node);
             }
         }
 
@@ -1527,9 +1524,13 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
               NOLL_DEBUG ("  This node is marked as %s\n",
                           noll_ta_symbol_get_str (param_symb));
-              size_t leaf_state = noll_get_unique ();
-              vata_add_transition (ta, leaf_state, param_symb, NULL);
-              noll_uid_array_push (children, leaf_state);
+              size_t leaf_node = noll_get_unique ();
+              noll_tree_create_node(
+                tree,        // the tree
+                leaf_node,   // the node index
+                param_symb,  // the symbol
+                NULL);       // the children
+              noll_uid_array_push (children, leaf_node);
             }
 
           symbol =
@@ -1556,7 +1557,11 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
       NOLL_DEBUG ("Adding transition over %s\n",
                   noll_ta_symbol_get_str (symbol));
 
-      vata_add_transition (ta, i, symbol, children);
+      noll_tree_create_node(
+        tree,        // the tree
+        i,           // the node index
+        symbol,      // the symbol
+        children);   // the children
 
       noll_uid_array_delete (children);
       noll_uid_array_delete (selectors);
@@ -1565,5 +1570,5 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
   noll_marking_list_delete (markings);
 
-  return ta;
+  return tree;
 }

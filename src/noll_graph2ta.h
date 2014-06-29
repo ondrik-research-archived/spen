@@ -28,6 +28,7 @@
 #define NOLL_GRAPH2TA_H_
 
 #include "noll_graph.h"
+#include "noll_tree.h"
 #include "libvata_noll_iface.h"
 
 /* ====================================================================== */
@@ -57,7 +58,7 @@
  *
  * @returns  The TA encoding @p graph
  */
-noll_ta_t *noll_graph2ta (const noll_graph_t * graph,
+noll_tree_t *noll_graph2ta (const noll_graph_t * graph,
                           const noll_uid_array * homo);
 
 #endif /* NOLL_GRAPH2TA_H_ */

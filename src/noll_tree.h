@@ -27,10 +27,6 @@
 #include "noll_ta_symbols.h"
 #include "libvata_noll_iface.h"
 
-struct noll_tree_node_t;
-
-NOLL_VECTOR_DECLARE (noll_tree_node_array, struct noll_tree_node_t*);
-
 /**
  * @brief  A tree node
  */
@@ -40,12 +36,48 @@ typedef struct noll_tree_node_s
 	const noll_ta_symbol_t* symbol;
 
 	/// Children of the node (ordered)
-	noll_tree_node_array* children;
+	noll_uid_array* children;
 } noll_tree_node_t;
 
+/// Inflatable array of tree nodes
+NOLL_VECTOR_DECLARE (noll_tree_node_list, noll_tree_node_t *)
 
 /// The tree - now an alias for the root node
-typedef noll_tree_node_t noll_tree_t;
+typedef struct noll_tree_s
+{
+	/// The array of nodes
+	noll_tree_node_list* nodes;
+
+	/// Index of the root node
+	uid_t root;
+} noll_tree_t;
+
+
+/**
+ * @brief  Creates a new tree
+ *
+ * @returns  A new tree
+ */
+noll_tree_t* noll_tree_new(void);
+
+
+/**
+ * @brief  Creates a new node in a tree
+ *
+ * This function creates a new node in @p tree, on the index @p node_index,
+ * with the symbol @p symbol, and with @p children as its children.
+ *
+ * @param[in,out]  tree           The tree to be manipulated
+ * @param[in]      node_index     Index of the node
+ * @param[in]      symbol         The symbol of the node
+ * @param[in]      children       The children of the node
+ */
+void noll_tree_create_node(
+  noll_tree_t*             tree,
+  uid_t                    node_index,
+  const noll_ta_symbol_t*  symbol,
+  const noll_uid_array*    children);
+
 
 /**
  * @brief  Converts a tree into a tree automaton
@@ -56,6 +88,25 @@ typedef noll_tree_node_t noll_tree_t;
  *
  * A tree automaton accepting exactly @p tree
  */
-noll_ta_t* noll_tree_to_ta(noll_ta_t* tree);
+noll_ta_t* noll_tree_to_ta(const noll_tree_t* tree);
+
+
+/**
+ * @brief  Sets the root node of the tree
+ *
+ * @param[in,out]  tree  The tree to be changed
+ * @param[in]      root  Index of the new root node
+ */
+void noll_tree_set_root(noll_tree_t* tree, uid_t root);
+
+/**
+ * @brief  Frees a tree
+ *
+ * Recursively frees all nodes of a tree
+ *
+ * @param[in]  tree  The tree to be freed (the pointer is invalid afterwards)
+ */
+void noll_tree_free(noll_tree_t* tree);
+
 
 #endif /* _NOLL_TREE_H_ */
