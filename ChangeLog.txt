@@ -1,3 +1,15 @@
+2014, June 29th
+- first version of the refactoring of graph2ta: from
+  graph is built a tree (see noll_tree.*) and then a TA
+
+
+2014, June 26th
+- start implementing the general translation of predicate
+  definitions into the Tree Automata in noll_pred2ta_gen.c; 
+  this version only builds the tree of the predicate matrix 
+  based on the existing code.
+- require some refactoring of graph2ta in order to reuse
+  the marking and tree building.
 
 2014, June 16th
 - found bug in noll2sat and noll2bool in the encoding of
