@@ -182,6 +182,32 @@ extern "C"
                                                                  noll_uid_array
                                                                  * marking);
 
+/**
+ * @brief Test if the symbol is an alias relation.
+ * 
+ * @param[in]  symb  The symbol tested
+ * 
+ */
+ bool noll_ta_symbol_is_alias (const noll_ta_symbol_t* symb);
+ 
+
+/**
+ * @brief Test if the symbol is a predicate.
+ * 
+ * @param[in]  symb  The symbol tested
+ * 
+ */
+ bool noll_ta_symbol_is_pred (const noll_ta_symbol_t* symb);
+ 
+ 
+/**
+ * @brief Test if the symbol is a points-to.
+ * 
+ * @param[in]  symb  The symbol tested
+ * 
+ */
+ bool noll_ta_symbol_is_pto (const noll_ta_symbol_t* symb);
+
 
 #ifdef	__cplusplus
 }

@@ -123,5 +123,16 @@ void noll_tree_set_root(noll_tree_t* tree, uid_t root);
  */
 void noll_tree_free(noll_tree_t* tree);
 
+/**
+ * @brief  Prints a tree
+ *
+ * Print the tree into a file.
+ *
+ * @param[in]  f     The file, should be opened
+ * @param[in]  tree  The tree to be printed
+ */
+void noll_tree_fprint(FILE* f, noll_tree_t* tree);
+
+
 
 #endif /* _NOLL_TREE_H_ */

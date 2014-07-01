@@ -128,3 +128,23 @@ void noll_tree_create_node(
 
   noll_vector_at(tree->nodes, node_index) = new_node;
 }
+
+
+void noll_tree_fprint(FILE* f, noll_tree_t* tree) {
+	assert (NULL != f);
+	if (NULL == tree)
+	  fprintf (f, "Tree(NULL)");
+	  
+	fprintf (f, "Tree (root = %d):\n", tree->root);
+	for (uint_t i = 0; i < noll_vector_size(tree->nodes); i++) {
+		fprintf (f, "\t Node[%d] --> ", i);
+		noll_tree_node_t* ni = noll_vector_at(tree->nodes, i);
+		fprintf (f, "%s ", noll_ta_symbol_get_str(ni->symbol));
+		fprintf (f, "(");
+		for (uint_t j = 0; j < noll_vector_size (ni->children); j++) 
+		   fprintf (f, "n%d,", noll_vector_at(ni->children, j));
+		 fprintf (f, ")\n");
+	}
+	fflush (f);
+	return;
+}

@@ -28,23 +28,23 @@ LDFLAGS = \
 CCINC = noll_vector.h \
 	noll_types.h noll_vars.h noll_preds.h noll_form.h noll_graph.h \
 	noll2bool.h noll2sat.h noll2graph.h \
-	noll_graph2ta.h noll_pred2ta.h \
-	noll_hom.h noll_entl.h \
-	noll.h smtlib2noll.h \
+	libvata_noll_iface.h \
 	noll_ta_symbols.h \
 	noll_tree.h \
-	libvata_noll_iface.h
+	noll_graph2ta.h noll_pred2ta.h \
+	noll_hom.h noll_entl.h \
+	noll.h smtlib2noll.h 
 
 CCSRC = noll_types.c \
 	noll_vars.c \
 	noll_preds.c noll_form.c \
 	noll_graph.c \
 	noll2bool.c noll2sat.c noll2graph.c \
-	noll_graph2ta.c noll_pred2ta.c noll_pred2ta_gen.c \
-	noll_hom.c noll_entl.c \
-	noll.c smtlib2noll.c \
 	noll_ta_symbols.c \
 	noll_tree.c \
+	noll_graph2ta.c noll_pred2ta_gen.c noll_pred2ta.c \
+	noll_hom.c noll_entl.c \
+	noll.c smtlib2noll.c \
 	noll-dp.c 
 
 CXXSRC = libvata_noll_iface.cc
@@ -61,7 +61,7 @@ all: spen
 
 
 spen: $(subst .c,$(DEBUG).o,$(CCSRC)) $(subst .cc,$(DEBUG).o,$(CXXSRC))
-	$(CXX) $(CXXFLAGS) -o $@ $^ \
+	$(CXX) $(CXXFLAGS_DEBUG) -o $@ $^ \
 	$(LDFLAGS) \
 	$(SHARED_LIBS)
 
