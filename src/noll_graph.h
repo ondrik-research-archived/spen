@@ -1,10 +1,6 @@
 /**************************************************************************
  *
- *  NOLL decision procedure
- *
- *  Copyright (C) 2012-2013
- *    LIAFA (University of Paris Diderot and CNRS)
- *
+ *  SPEN decision procedure
  *
  *  you can redistribute it and/or modify it under the terms of the GNU
  *  Lesser General Public License as published by the Free Software
@@ -90,7 +86,7 @@ noll_graph_t *noll_graph_copy_nodes (noll_graph_t * g);
 /* Getters/setters */
 /* ====================================================================== */
 
-uint_t noll_graph_get_var (noll_graph_t * g, uint_t n);
+uint_t noll_graph_get_var (const noll_graph_t * g, uint_t n);
 /* Get the first location variable labeling this node */
 
 int noll_edge_in_label (noll_edge_t * e, uint_t label);

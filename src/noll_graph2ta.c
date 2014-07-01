@@ -1300,16 +1300,18 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   // print the computed markings
   noll_debug_print_markings (markings);
 
-  NOLL_DEBUG ("Generating the TA for the graph\n");
-	noll_tree_t* tree = noll_tree_new();
+  NOLL_DEBUG ("Generating the tree for the graph\n");
+  noll_tree_t* tree = noll_tree_new();
   assert(NULL != tree);
 
   // set the initial node as the root state
   noll_tree_set_root(tree, initial_node);
 
-  // we transform the graph into a TA represting a tree (i.e. the language of
+  // we transform the graph into a TA representing a tree (i.e. the language of
   // the TA is a singleton set) such that node 'i' is represented by the TA
   // state 'i'
+  // the following counter maintains the newly added (leaf) nodes
+  uint_t last_leaf = graph->nodes_size;
   for (size_t i = 0; i < graph->nodes_size; ++i)
     {
       const noll_uid_array *edges = graph->mat[i];
@@ -1319,9 +1321,8 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
             {                   // in the case 'i' is a boundary node on some tree branch
               NOLL_DEBUG ("Found a boundary node %lu\n", i);
 
-              // TODO: there should be a variable, but how to get it?
               const noll_ta_symbol_t *symbol =
-                noll_ta_symbol_get_unique_aliased_var (i);
+                noll_ta_symbol_get_unique_aliased_var (noll_graph_get_var(graph,i));
               noll_tree_create_node(
                 tree,        // the tree
                 i,           // the node index
@@ -1457,7 +1458,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
                   return NULL;
                 }
 
-              size_t leaf_node = noll_get_unique ();
+              size_t leaf_node = last_leaf++; // noll_get_unique ();
               noll_tree_create_node(
                 tree,        // the tree
                 leaf_node,   // the node index
@@ -1524,7 +1525,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
               NOLL_DEBUG ("  This node is marked as %s\n",
                           noll_ta_symbol_get_str (param_symb));
-              size_t leaf_node = noll_get_unique ();
+              size_t leaf_node = last_leaf++; // noll_get_unique ();
               noll_tree_create_node(
                 tree,        // the tree
                 leaf_node,   // the node index

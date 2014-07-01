@@ -229,7 +229,7 @@ noll_graph_copy_nodes (noll_graph_t * g)
 /* ====================================================================== */
 
 uint_t
-noll_graph_get_var (noll_graph_t * g, uint_t n)
+noll_graph_get_var (const noll_graph_t * g, uint_t n)
 {
   for (uint_t vi = 0; vi < noll_vector_size (g->lvars); vi++)
     if (g->var2node[vi] == n)

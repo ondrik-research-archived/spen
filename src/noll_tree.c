@@ -139,10 +139,19 @@ void noll_tree_fprint(FILE* f, noll_tree_t* tree) {
 	for (uint_t i = 0; i < noll_vector_size(tree->nodes); i++) {
 		fprintf (f, "\t Node[%d] --> ", i);
 		noll_tree_node_t* ni = noll_vector_at(tree->nodes, i);
-		fprintf (f, "%s ", noll_ta_symbol_get_str(ni->symbol));
+		if (ni == NULL) {
+			fprintf (f, "NULL\n");
+			continue;
+		}
+		if (ni->symbol != NULL)
+		  fprintf (f, "<%s>", noll_ta_symbol_get_str(ni->symbol));
+		else 
+		  fprintf (f, "<null>");
 		fprintf (f, "(");
+		if (ni->children != NULL) {
 		for (uint_t j = 0; j < noll_vector_size (ni->children); j++) 
 		   fprintf (f, "n%d,", noll_vector_at(ni->children, j));
+	   }
 		 fprintf (f, ")\n");
 	}
 	fflush (f);

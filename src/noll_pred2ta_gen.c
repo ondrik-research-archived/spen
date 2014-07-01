@@ -95,11 +95,16 @@ noll_edge2ta_gen (const noll_edge_t * edge)
   NOLL_DEBUG ("\nBuild the tree of the predicate matrix\n");
   /* create the homomorphism mapping formal params to actual params */
   noll_uid_array *hid = noll_uid_array_new ();
-  for (size_t i = 0; i < noll_vector_size (edge->args); i++)
+  /* for src push first arg also */
+  noll_uid_array_push (hid, gp->var2node[1]);
+  /* for dst push the X_tl */
+  noll_uid_array_push (hid, gp->var2node[1 + noll_vector_size (edge->args)]);
+  /* for border push border */
+  for (size_t i = 3; i < noll_vector_size (edge->args); i++)
     /* vars in gp are starting with null, add +1 */
     noll_uid_array_push (hid, gp->var2node[i + 1]);     //, noll_vector_at(edge->args,i));
   /* create the TA for this graph with the identity homomorpshims */
-  noll_tree_t *treep = noll_graph2ta (gp, hid);   /* TODO: change */
+  noll_tree_t *treep = noll_graph2ta (gp, hid);
 #ifndef NDEBUG
   fprintf (stdout, "\n- tree of matrix\n");
   noll_tree_fprint (stdout, treep);
