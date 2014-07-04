@@ -199,6 +199,8 @@ extern "C"
 
   noll_sterm_t *noll_sterm_copy (noll_sterm_t * a);
 /* Copy */
+  noll_space_t *noll_space_sub (noll_space_t * a, noll_uid_array * sub);
+/* Apply variable substitution and provide a copy */
 
   void noll_pure_add_eq (noll_form_t * form, uid_t v1, uid_t v2);
   void noll_pure_add_neq (noll_form_t * form, uid_t v1, uid_t v2);

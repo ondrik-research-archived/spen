@@ -196,6 +196,66 @@ noll_space_free (noll_space_t * s)
   return;
 }
 
+noll_space_t *
+noll_space_sub (noll_space_t * a, noll_uid_array * sub)
+{
+  if (NULL == a)
+    return NULL;
+  noll_space_t *r = noll_space_new ();
+  r->is_precise = a->is_precise;
+  r->kind = a->kind;
+  switch (a->kind)
+    {
+    case NOLL_SPACE_PTO:
+      {
+        assert (a->m.pto.sid < noll_vector_size (sub));
+        r->m.pto.sid = noll_vector_at (sub, a->m.pto.sid);
+        r->m.pto.fields = noll_uid_array_new ();
+        noll_uid_array_copy (r->m.pto.fields, a->m.pto.fields);
+        r->m.pto.dest = noll_uid_array_new ();
+        for (uint_t i = 0; i < noll_vector_size (a->m.pto.dest); i++)
+          {
+            uid_t v_old = noll_vector_at (a->m.pto.dest, i);
+            assert (v_old < noll_vector_size (sub));
+            uint_t v_new = noll_vector_at (sub, v_old);
+            noll_uid_array_push (r->m.pto.dest, v_new);
+          }
+        break;
+      }
+    case NOLL_SPACE_LS:
+      {
+        r->m.ls.pid = a->m.ls.pid;
+        r->m.ls.sid = a->m.ls.sid;
+        r->m.ls.is_loop = a->m.ls.is_loop;
+        r->m.ls.args = noll_uid_array_new ();
+        for (uint_t i = 0; i < noll_vector_size (a->m.ls.args); i++)
+          {
+            uid_t v_old = noll_vector_at (a->m.ls.args, i);
+            assert (v_old < noll_vector_size (sub));
+            uint_t v_new = noll_vector_at (sub, v_old);
+            noll_uid_array_push (r->m.ls.args, v_new);
+          }
+        break;
+      }
+    case NOLL_SPACE_WSEP:
+    case NOLL_SPACE_SSEP:
+      {
+        r->m.sep = noll_space_array_new ();
+        for (uint_t i = 0; i < noll_vector_size (a->m.sep); i++)
+          {
+            noll_space_t *sepi = noll_vector_at (a->m.sep, i);
+            noll_space_t *sepi_new = noll_space_sub (sepi, sub);
+            noll_space_array_push (r->m.sep, sepi_new);
+          }
+        break;
+      }
+    default:
+      break;
+    }
+
+  return r;
+}
+
 noll_sterm_t *
 noll_sterm_new_var (uid_t v, noll_sterm_kind_t kind)
 {

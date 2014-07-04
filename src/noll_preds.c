@@ -594,13 +594,14 @@ noll_pred_get_minfield (uid_t pid)
 
 /**
  * Build a formula from the matrix of the predicate.
+ * Unfolds one time the matrix.
  * @param pid   predicate identifier
  * @param args  predicate actual argument
  * @result      a formula which contains the matrix of the predicate
  *              instantiated with the actual arguments
  */
 noll_form_t *
-noll_pred_get_matrix (uid_t pid)
+noll_pred_get_matrix1 (uid_t pid)
 {
 
   const noll_pred_t *pred = noll_pred_getpred (pid);
@@ -648,6 +649,154 @@ noll_pred_get_matrix (uid_t pid)
         }
     }
   /* substitute formal arguments with actual arguments */
+#ifndef NDEBUG
+  fprintf (stderr, "\n- matrix formula \n");
+  noll_form_fprint (stderr, res);
+  fflush (stderr);
+#endif
+
+  return res;
+}
+
+
+/**
+ * Build a formula from the matrix of the predicate.
+ * Unfolds two times the matrix.
+ * @param pid   predicate identifier
+ * @param args  predicate actual argument
+ * @result      a formula which contains the matrix of the predicate
+ *              instantiated with the actual arguments
+ */
+noll_form_t *
+noll_pred_get_matrix (uid_t pid)
+{
+
+  const noll_pred_t *pred = noll_pred_getpred (pid);
+  assert (pred != NULL);
+
+  /* pred->def->vars is an array built from
+   * - nil (at entry 0 of the array)
+   * - args (starting at entry 1 until pred->def->fargs
+   * - existentially quantified variables 
+   */
+
+  /* Build and empty formula */
+  noll_form_t *res = noll_form_new ();
+  res->kind = NOLL_FORM_SAT;
+  /* copy all from vars */
+  noll_var_array_copy (res->lvars, pred->def->vars);
+  /* insert a copy of existential variables from X_tl+1 ... */
+  for (size_t i = pred->def->fargs + 2;
+       i < noll_vector_size (pred->def->vars); i++)
+    {
+      noll_var_t *vi = noll_vector_at (pred->def->vars, i);
+      noll_var_t *vip = noll_var_copy (vi);
+      /* change the name by adding a p suffix */
+      size_t nlen = strlen (vi->vname) + 2;     // p and \O
+      vip->vname = (char *) realloc (vip->vname, nlen * sizeof (char));
+      snprintf (vip->vname, nlen, "%sp", vi->vname);
+      vip->vid =
+        noll_vector_size (pred->def->vars) + i - pred->def->fargs - 1;
+      noll_var_array_push (res->lvars, vip);
+    }
+#ifndef NDEBUG
+  fprintf (stderr, "\n- new list of variables \n");
+  noll_var_array_fprint (stderr, res->lvars, ", ");
+  fflush (stderr);
+#endif
+
+  /* TODO: use svars for nested predicate calls */
+  res->svars = noll_var_array_new ();   // Warning: do not use NULL
+  res->share = noll_share_array_new (); // Warning: do not use NULL
+
+  /* - build the pure part 
+   *     E != {NULL, F} U B 
+   *     X_tl != {NULL, F} U B
+   *     TODO: E != X_tl is computed by normalisation 
+   */
+  res->pure = noll_pure_new (noll_vector_size (res->lvars));
+  uid_t id_in = 1;
+  uid_t id_x_tl = pred->def->fargs + 1;
+  /* E != NULL, X_tl != NULL */
+  noll_pure_add_neq (res, id_in, 0);
+  noll_pure_add_neq (res, id_x_tl, 0);
+  /* E != X_tl */
+  noll_pure_add_neq (res, id_x_tl, id_in);
+  for (uid_t i = 1; i < pred->def->fargs; i++)
+    {
+      /* args in res->lvars are shifted by 1 to introduce NULL */
+      noll_pure_add_neq (res, id_in, i + 1);
+      noll_pure_add_neq (res, id_x_tl, i + 1);
+    }
+
+  /* - build the spatial part */
+  uint_t res_size = 0;
+  res->space = noll_space_new ();
+  res->space->kind = NOLL_SPACE_SSEP;
+  res->space->m.sep = noll_space_array_new ();
+  /*    + push the first unfolding */
+  noll_space_array_push (res->space->m.sep, pred->def->sigma_0);        // TODO: make a copy
+  res_size++;
+  if (pred->def->sigma_1 != NULL)
+    {
+      if (pred->def->sigma_1->kind == NOLL_SPACE_SSEP)
+        {
+          /* TODO: unfold the loop construct */
+          for (uint_t i = 0;
+               i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
+            {
+              noll_space_array_push (res->space->m.sep,
+                                     noll_vector_at (pred->def->sigma_1->m.
+                                                     sep, i));
+              res_size++;
+            }
+        }
+      else
+        {
+          /* TODO: unfold the loop construct */
+          noll_space_array_push (res->space->m.sep, pred->def->sigma_1);
+          res_size++;
+        }
+    }
+
+  /*    + push the second unfolding and substitute existentials by new vars */
+  noll_uid_array *alpha = noll_uid_array_new ();
+  noll_uid_array_push (alpha, 0);       // null unchanged
+  noll_uid_array_push (alpha, id_x_tl); // E is replaced by X_tl
+  for (uid_t i = 1; i < pred->def->fargs; i++)
+    noll_uid_array_push (alpha, i + 1); // args are unchanged
+  noll_uid_array_push (alpha, 2);       // X_tl is replaced by F
+  /* the newly introduced vars replace the old ones */
+  for (uid_t i = pred->def->fargs + 2;
+       i < noll_vector_size (pred->def->vars); i++)
+    /* new existential variables replace the old ones */
+    noll_uid_array_push (alpha, noll_vector_size (pred->def->vars) + i + 1);
+#ifndef NDEBUG
+  fprintf (stderr, "\n- substitution: ");
+  for (uid_t i = 0; i < noll_vector_size (alpha); i++)
+    fprintf (stderr, "%s -> %s, ",
+             noll_var_name (res->lvars, i, NOLL_TYP_RECORD),
+             noll_var_name (res->lvars, noll_vector_at (alpha, i),
+                            NOLL_TYP_RECORD));
+  fprintf (stderr, "\n");
+  fflush (stderr);
+#endif
+
+  for (uint_t j = 0; j < res_size; j++)
+    {
+      noll_space_t *sj = noll_vector_at (res->space->m.sep, j);
+      noll_space_t *sj_sub = noll_space_sub (sj, alpha);
+#ifndef NDEBUG
+      fprintf (stderr, "\n\tsub-%d formula \n", j);
+      noll_space_fprint (stderr, res->lvars, NULL, sj_sub);
+      fflush (stderr);
+#endif
+      noll_space_array_push (res->space->m.sep, sj_sub);
+    }
+
+  /* free allocated memory */
+  noll_uid_array_delete (alpha);
+
 #ifndef NDEBUG
   fprintf (stderr, "\n- matrix formula \n");
   noll_form_fprint (stderr, res);

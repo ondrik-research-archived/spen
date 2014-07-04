@@ -61,7 +61,7 @@ noll_edge2ta_gen (const noll_edge_t * edge)
    * pred->def->sigma0 (points-to)
    * pred->def->sigma1 (nested predicate calls)
    */
-  
+
 #ifndef NDEBUG
   fprintf (stdout, "Exposing the predicate matrix:\n\t- pto part:\n");
   noll_space_fprint (stdout, pred->def->vars, NULL, pred->def->sigma_0);
@@ -97,12 +97,12 @@ noll_edge2ta_gen (const noll_edge_t * edge)
   noll_uid_array *hid = noll_uid_array_new ();
   /* for src push first arg also */
   noll_uid_array_push (hid, gp->var2node[1]);
-  /* for dst push the X_tl */
-  noll_uid_array_push (hid, gp->var2node[1 + noll_vector_size (edge->args)]);
+  /* for dst push second arg */
+  noll_uid_array_push (hid, gp->var2node[2]);
   /* for border push border */
-  for (size_t i = 3; i < noll_vector_size (edge->args); i++)
+  for (size_t i = 2; i < noll_vector_size (edge->args); i++)
     /* vars in gp are starting with null, add +1 */
-    noll_uid_array_push (hid, gp->var2node[i + 1]);     //, noll_vector_at(edge->args,i));
+    noll_uid_array_push (hid, gp->var2node[i + 1]);
   /* create the TA for this graph with the identity homomorpshims */
   noll_tree_t *treep = noll_graph2ta (gp, hid);
 #ifndef NDEBUG
@@ -111,7 +111,7 @@ noll_edge2ta_gen (const noll_edge_t * edge)
   fflush (stdout);
 #endif
 
-  noll_ta_t* tap = noll_tree_to_ta (treep); /* TODO */
+  noll_ta_t *tap = noll_tree_to_ta (treep);     /* TODO */
 
-  return tap;                 /* TODO */
+  return tap;                   /* TODO */
 }
