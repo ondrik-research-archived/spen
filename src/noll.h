@@ -275,7 +275,7 @@ extern "C"
 
 #define NOLL_DEBUG(...) \
 	do { \
-			fprintf (stderr, __VA_ARGS__); \
+			fprintf (stdout, __VA_ARGS__); \
 	} while (0)
 
 #else                           /* #ifndef NDEBUG */

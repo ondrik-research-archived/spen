@@ -1037,3 +1037,24 @@ noll_ta_symbol_get_unique_higher_pred (const noll_pred_t * pred,
 
   return ret_sym;
 }
+
+
+bool
+noll_ta_symbol_is_alias (const noll_ta_symbol_t * symb)
+{
+  return symb->label_type == NOLL_TREE_LABEL_ALIASING_VARIABLE
+    || symb->label_type == NOLL_TREE_LABEL_ALIASING_MARKING;
+}
+
+
+bool
+noll_ta_symbol_is_pred (const noll_ta_symbol_t * symb)
+{
+  return symb->label_type == NOLL_TREE_LABEL_HIGHER_PRED;
+}
+
+bool
+noll_ta_symbol_is_pto (const noll_ta_symbol_t * symb)
+{
+  return symb->label_type == NOLL_TREE_LABEL_ALLOCATED;
+}
