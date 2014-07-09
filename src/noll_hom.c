@@ -1661,9 +1661,9 @@ noll_graph_shom_entl (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
       return 0;
     }
 
-	noll_ta_t* g2_ta = noll_tree_to_ta(g2_tree);
-  assert(NULL != g2_ta);
-  noll_tree_free(g2_tree);
+  noll_ta_t *g2_ta = noll_tree_to_ta (g2_tree);
+  assert (NULL != g2_ta);
+  noll_tree_free (g2_tree);
 #ifndef NDEBUG
   NOLL_DEBUG ("\nGraph TA:\n");
   vata_print_ta (g2_ta);

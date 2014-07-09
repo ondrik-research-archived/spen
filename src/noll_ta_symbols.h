@@ -40,13 +40,13 @@ extern "C"
   typedef struct noll_ta_symbol noll_ta_symbol_t;
 
 /* ====================================================================== */
-/* Constants */
+/* Constantes */
 /* ====================================================================== */
 
 #define NOLL_MARKINGS_EPSILON ((uid_t)-1)
 
 /* ====================================================================== */
-/* Functionz */
+/* Functions */
 /* ====================================================================== */
 
 
@@ -65,6 +65,44 @@ extern "C"
  * Releases allocated memory and does all the housekeeping.
  */
   void noll_ta_symbol_destroy (void);
+
+
+/**
+ * @brief Test if the symbol is an alias relation.
+ * 
+ * @param[in]  symb  The symbol tested
+ * 
+ */
+  bool noll_ta_symbol_is_alias (const noll_ta_symbol_t * symb);
+
+
+/**
+ * @brief Test if the symbol is a predicate.
+ * 
+ * @param[in]  symb  The symbol tested
+ * 
+ */
+  bool noll_ta_symbol_is_pred (const noll_ta_symbol_t * symb);
+
+
+/**
+ * @brief Test if the symbol is a points-to.
+ * 
+ * @param[in]  symb  The symbol tested
+ * 
+ */
+  bool noll_ta_symbol_is_pto (const noll_ta_symbol_t * symb);
+
+
+/**
+ * @brief  Retrieves the marking in the symbol
+ *
+ * @param[in]  symb  The input symbol
+ *
+ * @returns  The marking of @p symb
+ */
+  const noll_uid_array *noll_ta_symbol_get_marking (const noll_ta_symbol_t *
+                                                    symb);
 
 
 /**
@@ -147,16 +185,16 @@ extern "C"
                                                                         *
                                                                         alias_marking);
 
-/// TODO
-  const noll_ta_symbol_t
-    *noll_ta_symbol_get_unique_aliased_marking_up_up (const noll_uid_array *
-                                                      alias_marking);
 
-/// TODO
   const noll_ta_symbol_t
-    *noll_ta_symbol_get_unique_aliased_marking_up_down_fst (const
-                                                            noll_uid_array *
-                                                            alias_marking);
+    * noll_ta_symbol_get_unique_aliased_marking_up_up (const noll_uid_array *
+                                                       alias_marking);
+
+
+  const noll_ta_symbol_t
+    * noll_ta_symbol_get_unique_aliased_marking_up_down_fst (const
+                                                             noll_uid_array *
+                                                             alias_marking);
 
 /**
  * @brief  Creates a unique TA symbol of a node with higher-order predicate
@@ -182,31 +220,26 @@ extern "C"
                                                                  noll_uid_array
                                                                  * marking);
 
-/**
- * @brief Test if the symbol is an alias relation.
- * 
- * @param[in]  symb  The symbol tested
- * 
- */
- bool noll_ta_symbol_is_alias (const noll_ta_symbol_t* symb);
- 
 
 /**
- * @brief Test if the symbol is a predicate.
+ * @brief Renames components of a symbol
  * 
- * @param[in]  symb  The symbol tested
+ * Translates the variables and the markings in the input symbol 
+ * using the input mappings.
  * 
+ * @param[in] sym     A symbol to be renamed
+ * @param[in] vmap    The mapping used for vars
+ * @param[in] mmap    The mapping used for markings
+ * @return            A new symbol
  */
- bool noll_ta_symbol_is_pred (const noll_ta_symbol_t* symb);
- 
- 
-/**
- * @brief Test if the symbol is a points-to.
- * 
- * @param[in]  symb  The symbol tested
- * 
- */
- bool noll_ta_symbol_is_pto (const noll_ta_symbol_t* symb);
+  const noll_ta_symbol_t *noll_ta_symbol_get_unique_renamed (const
+                                                             noll_ta_symbol_t
+                                                             * sym,
+                                                             noll_uid_array *
+                                                             vmap,
+                                                             noll_uid_array *
+                                                             mmap);
+
 
 
 #ifdef	__cplusplus

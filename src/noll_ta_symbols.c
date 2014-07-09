@@ -101,14 +101,14 @@ typedef struct noll_ta_symbol
 NOLL_VECTOR_DECLARE (noll_ta_symbol_array, noll_ta_symbol_t *)
 NOLL_VECTOR_DEFINE (noll_ta_symbol_array, noll_ta_symbol_t *)
 /* ====================================================================== */
-/* Globalz */
+/* Globals */
 /* ====================================================================== */
 /// The global database of symbols
 /// @todo: it would be more efficient to have 3 databases for every label_type
      static noll_ta_symbol_array *g_ta_symbols;
 
 /* ====================================================================== */
-/* Functionz */
+/* Functions */
 /* ====================================================================== */
 
      char *noll_marking_tostring (const noll_uid_array * marking)
@@ -342,6 +342,24 @@ noll_ta_symbol_match (const noll_ta_symbol_t * lhs,
 }
 
 
+const noll_uid_array *
+noll_ta_symbol_get_marking (const noll_ta_symbol_t * symb)
+{
+  // check input
+  assert (NULL != symb);
+
+  switch (symb->label_type)
+    {
+    case NOLL_TREE_LABEL_ALLOCATED:
+      return symb->allocated.marking;
+    case NOLL_TREE_LABEL_HIGHER_PRED:
+      return symb->higher_pred.marking;
+    default:
+      break;
+    }
+  return noll_uid_array_new ();
+}
+
 const char *
 noll_ta_symbol_get_str (const noll_ta_symbol_t * symb)
 {
@@ -500,6 +518,28 @@ noll_ta_symbol_destroy ()
     }
 
   noll_ta_symbol_array_delete (g_ta_symbols);
+}
+
+
+bool
+noll_ta_symbol_is_alias (const noll_ta_symbol_t * symb)
+{
+  return symb->label_type == NOLL_TREE_LABEL_ALIASING_VARIABLE
+    || symb->label_type == NOLL_TREE_LABEL_ALIASING_MARKING;
+}
+
+
+bool
+noll_ta_symbol_is_pred (const noll_ta_symbol_t * symb)
+{
+  return symb->label_type == NOLL_TREE_LABEL_HIGHER_PRED;
+}
+
+
+bool
+noll_ta_symbol_is_pto (const noll_ta_symbol_t * symb)
+{
+  return symb->label_type == NOLL_TREE_LABEL_ALLOCATED;
 }
 
 
@@ -1039,22 +1079,92 @@ noll_ta_symbol_get_unique_higher_pred (const noll_pred_t * pred,
 }
 
 
-bool
-noll_ta_symbol_is_alias (const noll_ta_symbol_t * symb)
+/*
+ * @brief Renames components of a symbol
+ * 
+ * Translates the variables and the markings in the input symbol 
+ * using the input mappings.
+ * 
+ * @param[in] sym     A symbol to be renamed
+ * @param[in] vmap    The mapping used for vars
+ * @param[in] mmap    The mapping used for markings
+ * @return            A new symbol
+ */
+const noll_ta_symbol_t *
+noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
+                                   noll_uid_array * vmap,
+                                   noll_uid_array * mmap)
 {
-  return symb->label_type == NOLL_TREE_LABEL_ALIASING_VARIABLE
-    || symb->label_type == NOLL_TREE_LABEL_ALIASING_MARKING;
-}
+  // check inputs
+  assert (NULL != sym);
 
+  // TODO: mmap not used at the present time, avoid warning
+  if (mmap != NULL)
+    return sym;
 
-bool
-noll_ta_symbol_is_pred (const noll_ta_symbol_t * symb)
-{
-  return symb->label_type == NOLL_TREE_LABEL_HIGHER_PRED;
-}
+  switch (sym->label_type)
+    {
+    case NOLL_TREE_LABEL_ALLOCATED:
+      {
+        // change the vars field
+        noll_uid_array *vars = noll_uid_array_new ();
+        for (uid_t i = 0; i < noll_vector_size (sym->allocated.vars); i++)
+          if (i < noll_vector_size (vmap))
+            noll_uid_array_push (vars, noll_vector_at (vmap, i));
+          else
+            noll_uid_array_push (vars, i);      // TODO: assert false?
 
-bool
-noll_ta_symbol_is_pto (const noll_ta_symbol_t * symb)
-{
-  return symb->label_type == NOLL_TREE_LABEL_ALLOCATED;
+        // TODO: change here markings with the mmap
+
+        const noll_ta_symbol_t *ret_sym =
+          noll_ta_symbol_get_unique_allocated (sym->allocated.sels, vars,
+                                               sym->allocated.marking);
+        noll_uid_array_delete (vars);
+        return ret_sym;
+      }
+
+    case NOLL_TREE_LABEL_ALIASING_VARIABLE:
+      {
+        const noll_ta_symbol_t *ret_sym =
+          (sym->alias_var <
+           noll_vector_size (vmap)) ?
+          noll_ta_symbol_get_unique_aliased_var (noll_vector_at
+                                                 (vmap,
+                                                  sym->alias_var)) : sym;
+        return ret_sym;
+      }
+
+    case NOLL_TREE_LABEL_ALIASING_MARKING:
+      {
+        // TODO: change here with the mmap
+        return sym;
+      }
+
+    case NOLL_TREE_LABEL_HIGHER_PRED:
+      {
+        // change the vars field
+        noll_uid_array *vars = noll_uid_array_new ();
+        for (uid_t i = 0; i < noll_vector_size (sym->higher_pred.vars); i++)
+          if (i < noll_vector_size (vmap))
+            noll_uid_array_push (vars, noll_vector_at (vmap, i));
+          else
+            noll_uid_array_push (vars, i);      // TODO: assert false?
+
+        // TODO: change here markings with the mmap
+
+        const noll_ta_symbol_t *ret_sym =
+          noll_ta_symbol_get_unique_higher_pred (sym->higher_pred.pred, vars,
+                                                 sym->higher_pred.marking);
+        noll_uid_array_delete (vars);
+        return ret_sym;
+      }
+
+    default:
+      {
+        NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        assert (false);
+      }
+    }
+
+  return sym;
 }

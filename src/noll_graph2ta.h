@@ -59,6 +59,6 @@
  * @returns  The TA encoding @p graph
  */
 noll_tree_t *noll_graph2ta (const noll_graph_t * graph,
-                          const noll_uid_array * homo);
+                            const noll_uid_array * homo);
 
 #endif /* NOLL_GRAPH2TA_H_ */

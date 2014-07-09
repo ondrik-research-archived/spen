@@ -35,18 +35,16 @@
  */
 typedef struct noll_tree_node_s
 {
-	/// The symbol in the node
-	const noll_ta_symbol_t* symbol;
+  /// The symbol in the node
+  const noll_ta_symbol_t *symbol;
 
-	/// Children of the node (ordered)
-	noll_uid_array* children;
+  /// Children of the node (ordered)
+  noll_uid_array *children;
 } noll_tree_node_t;
 
 
 /// Inflatable array of tree nodes
 NOLL_VECTOR_DECLARE (noll_tree_node_list, noll_tree_node_t *)
-
-
 /**
  * @brief  The tree
  *
@@ -55,14 +53,14 @@ NOLL_VECTOR_DECLARE (noll_tree_node_list, noll_tree_node_t *)
  * tree is really a tree (acyclic, etc.). If it is not, strange things may
  * start to happen (such as demons flying out of your nose etc.).
  */
-typedef struct noll_tree_s
-{
-	/// The array of nodes
-	noll_tree_node_list* nodes;
+     typedef struct noll_tree_s
+     {
+       /// The array of nodes
+       noll_tree_node_list *nodes;
 
-	/// Index of the root node
-	uid_t root;
-} noll_tree_t;
+       /// Index of the root node
+       uid_t root;
+     } noll_tree_t;
 
 
 /**
@@ -72,7 +70,7 @@ typedef struct noll_tree_s
  *
  * @returns  A new tree
  */
-noll_tree_t* noll_tree_new(void);
+     noll_tree_t *noll_tree_new (void);
 
 
 /**
@@ -86,11 +84,10 @@ noll_tree_t* noll_tree_new(void);
  * @param[in]      symbol         The symbol of the node
  * @param[in]      children       The children of the node
  */
-void noll_tree_create_node(
-  noll_tree_t*             tree,
-  uid_t                    node_index,
-  const noll_ta_symbol_t*  symbol,
-  const noll_uid_array*    children);
+     void noll_tree_create_node (noll_tree_t * tree,
+                                 uid_t node_index,
+                                 const noll_ta_symbol_t * symbol,
+                                 const noll_uid_array * children);
 
 
 /**
@@ -102,7 +99,7 @@ void noll_tree_create_node(
  *
  * @returns  A tree automaton accepting exactly @p tree
  */
-noll_ta_t* noll_tree_to_ta(const noll_tree_t* tree);
+     noll_ta_t *noll_tree_to_ta (const noll_tree_t * tree);
 
 
 /**
@@ -111,7 +108,7 @@ noll_ta_t* noll_tree_to_ta(const noll_tree_t* tree);
  * @param[in,out]  tree  The tree to be changed
  * @param[in]      root  Index of the new root node
  */
-void noll_tree_set_root(noll_tree_t* tree, uid_t root);
+     void noll_tree_set_root (noll_tree_t * tree, uid_t root);
 
 
 /**
@@ -121,7 +118,7 @@ void noll_tree_set_root(noll_tree_t* tree, uid_t root);
  *
  * @param[in]  tree  The tree to be freed (the pointer is invalid afterwards)
  */
-void noll_tree_free(noll_tree_t* tree);
+     void noll_tree_free (noll_tree_t * tree);
 
 /**
  * @brief  Prints a tree
@@ -131,7 +128,7 @@ void noll_tree_free(noll_tree_t* tree);
  * @param[in]  f     The file, should be opened
  * @param[in]  tree  The tree to be printed
  */
-void noll_tree_fprint(FILE* f, noll_tree_t* tree);
+     void noll_tree_fprint (FILE * f, noll_tree_t * tree);
 
 
 
