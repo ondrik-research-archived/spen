@@ -20,7 +20,7 @@
 #include "noll_ta_symbols.h"
 
 /* ====================================================================== */
-/* Data typez */
+/* Data types */
 /* ====================================================================== */
 
 /// Enumeration of possible aliasing of nodes
@@ -343,6 +343,25 @@ noll_ta_symbol_match (const noll_ta_symbol_t * lhs,
 
 
 const noll_uid_array *
+noll_ta_symbol_get_vars (const noll_ta_symbol_t * symb)
+{
+  // check input
+  assert (NULL != symb);
+
+  switch (symb->label_type)
+    {
+    case NOLL_TREE_LABEL_ALLOCATED:
+      return symb->allocated.vars;
+    case NOLL_TREE_LABEL_HIGHER_PRED:
+      return symb->higher_pred.vars;
+    default:
+      break;
+    }
+  return noll_uid_array_new ();
+}
+
+
+const noll_uid_array *
 noll_ta_symbol_get_marking (const noll_ta_symbol_t * symb)
 {
   // check input
@@ -358,6 +377,19 @@ noll_ta_symbol_get_marking (const noll_ta_symbol_t * symb)
       break;
     }
   return noll_uid_array_new ();
+}
+
+
+uid_t
+noll_ta_symbol_get_pid (const noll_ta_symbol_t * symb)
+{
+  // check input
+  assert (NULL != symb);
+
+  if (symb->label_type == NOLL_TREE_LABEL_HIGHER_PRED)
+      return symb->higher_pred.pred->pid;
+  
+  return UNDEFINED_ID;
 }
 
 const char *

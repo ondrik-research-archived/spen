@@ -1,11 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2013                                                    */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    VeriFIT (Brno University of Technology)                             */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -95,6 +90,16 @@ extern "C"
 
 
 /**
+ * @brief  Retrieves the list of variables in the symbol
+ *
+ * @param[in]  symb  The input symbol
+ *
+ * @returns  The list of variables of @p symb
+ */
+  const noll_uid_array *noll_ta_symbol_get_vars (const noll_ta_symbol_t *
+                                                    symb);
+
+/**
  * @brief  Retrieves the marking in the symbol
  *
  * @param[in]  symb  The input symbol
@@ -103,6 +108,15 @@ extern "C"
  */
   const noll_uid_array *noll_ta_symbol_get_marking (const noll_ta_symbol_t *
                                                     symb);
+
+/**
+ * @brief  Retrieves the pid of the predicate in the symbol
+ *
+ * @param[in]  symb  The input symbol
+ *
+ * @returns  The pid of the predicate in @p symb
+ */
+  uid_t noll_ta_symbol_get_pid (const noll_ta_symbol_t * symb);
 
 
 /**
