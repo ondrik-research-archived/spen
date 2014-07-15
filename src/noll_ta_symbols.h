@@ -97,7 +97,7 @@ extern "C"
  * @returns  The list of variables of @p symb
  */
   const noll_uid_array *noll_ta_symbol_get_vars (const noll_ta_symbol_t *
-                                                    symb);
+                                                 symb);
 
 /**
  * @brief  Retrieves the marking in the symbol
@@ -249,6 +249,7 @@ extern "C"
   const noll_ta_symbol_t *noll_ta_symbol_get_unique_renamed (const
                                                              noll_ta_symbol_t
                                                              * sym,
+                                                             bool doSub,
                                                              noll_uid_array *
                                                              vmap,
                                                              noll_uid_array *

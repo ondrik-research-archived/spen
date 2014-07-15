@@ -339,6 +339,7 @@ noll_ta_symbol_match (const noll_ta_symbol_t * lhs,
         assert (false);
       }
     }
+  return false;
 }
 
 
@@ -387,8 +388,8 @@ noll_ta_symbol_get_pid (const noll_ta_symbol_t * symb)
   assert (NULL != symb);
 
   if (symb->label_type == NOLL_TREE_LABEL_HIGHER_PRED)
-      return symb->higher_pred.pred->pid;
-  
+    return symb->higher_pred.pred->pid;
+
   return UNDEFINED_ID;
 }
 
@@ -1124,6 +1125,7 @@ noll_ta_symbol_get_unique_higher_pred (const noll_pred_t * pred,
  */
 const noll_ta_symbol_t *
 noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
+                                   bool doSub,
                                    noll_uid_array * vmap,
                                    noll_uid_array * mmap)
 {
@@ -1139,19 +1141,26 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
     case NOLL_TREE_LABEL_ALLOCATED:
       {
         // change the vars field
-        noll_uid_array *vars = noll_uid_array_new ();
-        for (uid_t i = 0; i < noll_vector_size (sym->allocated.vars); i++)
-          if (i < noll_vector_size (vmap))
-            noll_uid_array_push (vars, noll_vector_at (vmap, i));
-          else
-            noll_uid_array_push (vars, i);      // TODO: assert false?
-
+        noll_uid_array *vars = NULL;
+        if (doSub)
+          {
+            vars = noll_uid_array_new ();
+            for (uid_t i = 0; i < noll_vector_size (sym->allocated.vars); i++)
+              {
+                uid_t vi = noll_vector_at (sym->allocated.vars, i);
+                if (vi < noll_vector_size (vmap))
+                  noll_uid_array_push (vars, noll_vector_at (vmap, vi));
+                else
+                  noll_uid_array_push (vars, vi);       // TODO: assert false?
+              }
+          }
         // TODO: change here markings with the mmap
 
         const noll_ta_symbol_t *ret_sym =
           noll_ta_symbol_get_unique_allocated (sym->allocated.sels, vars,
                                                sym->allocated.marking);
-        noll_uid_array_delete (vars);
+        if (NULL != vars)
+          noll_uid_array_delete (vars);
         return ret_sym;
       }
 
@@ -1160,9 +1169,9 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
         const noll_ta_symbol_t *ret_sym =
           (sym->alias_var <
            noll_vector_size (vmap)) ?
-          noll_ta_symbol_get_unique_aliased_var (noll_vector_at
-                                                 (vmap,
-                                                  sym->alias_var)) : sym;
+          noll_ta_symbol_get_unique_aliased_var (noll_vector_at (vmap,
+                                                                 sym->alias_var))
+          : sym;
         return ret_sym;
       }
 
@@ -1175,19 +1184,24 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
     case NOLL_TREE_LABEL_HIGHER_PRED:
       {
         // change the vars field
-        noll_uid_array *vars = noll_uid_array_new ();
-        for (uid_t i = 0; i < noll_vector_size (sym->higher_pred.vars); i++)
-          if (i < noll_vector_size (vmap))
-            noll_uid_array_push (vars, noll_vector_at (vmap, i));
-          else
-            noll_uid_array_push (vars, i);      // TODO: assert false?
-
+        noll_uid_array *vars = NULL;
+        if (doSub)
+          {
+            vars = noll_uid_array_new ();
+            for (uid_t i = 0; i < noll_vector_size (sym->higher_pred.vars);
+                 i++)
+              if (i < noll_vector_size (vmap))
+                noll_uid_array_push (vars, noll_vector_at (vmap, i));
+              else
+                noll_uid_array_push (vars, i);  // TODO: assert false?
+          }
         // TODO: change here markings with the mmap
 
         const noll_ta_symbol_t *ret_sym =
           noll_ta_symbol_get_unique_higher_pred (sym->higher_pred.pred, vars,
                                                  sym->higher_pred.marking);
-        noll_uid_array_delete (vars);
+        if (NULL != vars)
+          noll_uid_array_delete (vars);
         return ret_sym;
       }
 

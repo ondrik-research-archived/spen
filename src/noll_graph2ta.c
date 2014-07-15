@@ -1,11 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2013                                                    */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*    VeriFIT (Brno University of Technology)                             */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -979,6 +974,9 @@ is_the_first_successor_of_with_marking (uid_t dst,
   assert (noll_vector_size (marking_list) == graph->nodes_size);
   assert (noll_uid_array_equal (marking, noll_vector_at (marking_list, dst)));
 
+  if (dst != dst)
+    return false; /* to remove warning on unused parameter */
+
   const noll_uid_array *src_marking = noll_vector_at (marking_list, src);
   assert (NULL != src_marking);
 
@@ -1057,6 +1055,13 @@ is_the_last_successor_of_with_marking (uid_t dst,
   assert (src < graph->nodes_size);
   assert (noll_vector_size (marking_list) == graph->nodes_size);
   assert (noll_uid_array_equal (marking, noll_vector_at (marking_list, dst)));
+
+  if ((dst != dst) ||
+      (src != src) ||
+      (marking != marking) ||
+      (graph != graph) ||
+      (marking_list != marking_list))
+    return false; /* to remove warning on unused parameter */
 
   NOLL_DEBUG ("WARNING: ");
   NOLL_DEBUG (__func__);
@@ -1211,8 +1216,8 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
   else
     {
       NOLL_DEBUG ("Could not find a marking!!!\n");
-      return NULL;
     }
+  return NULL;
 }
 
 

@@ -696,7 +696,7 @@ noll_pred_get_matrix (uid_t pid)
       vip->vname = (char *) realloc (vip->vname, nlen * sizeof (char));
       snprintf (vip->vname, nlen, "%sp", vi->vname);
       vip->vid =
-        noll_vector_size (pred->def->vars) + i - pred->def->fargs - 1;
+        noll_vector_size (pred->def->vars) + i - pred->def->fargs - 2;
       noll_var_array_push (res->lvars, vip);
     }
 #ifndef NDEBUG
@@ -746,8 +746,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->m.
-                                                     sep, i));
+                                     noll_vector_at (pred->def->sigma_1->
+                                                     m.sep, i));
               res_size++;
             }
         }
@@ -769,8 +769,12 @@ noll_pred_get_matrix (uid_t pid)
   /* the newly introduced vars replace the old ones */
   for (uid_t i = pred->def->fargs + 2;
        i < noll_vector_size (pred->def->vars); i++)
-    /* new existential variables replace the old ones */
-    noll_uid_array_push (alpha, noll_vector_size (pred->def->vars) + i + 1);
+    {
+      /* new existential variables substitute ones in the definition */
+
+      noll_uid_array_push (alpha, noll_vector_size (pred->def->vars)
+                           + i - pred->def->fargs - 2);
+    }
 #ifndef NDEBUG
   fprintf (stderr, "\n- substitution: ");
   for (uid_t i = 0; i < noll_vector_size (alpha); i++)

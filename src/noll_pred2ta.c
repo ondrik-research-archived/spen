@@ -27,6 +27,31 @@
 #include "noll_pred2ta.h"
 
 
+
+NOLL_VECTOR_DEFINE (noll_tree_array, noll_tree_t *);
+
+/* ====================================================================== */
+/* Globals */
+/* ====================================================================== */
+
+noll_tree_array *pred2tree_array = NULL;
+
+void
+noll_pred2tree_init ()
+{
+  pred2tree_array = noll_tree_array_new ();
+  noll_tree_array_resize (pred2tree_array, noll_vector_size (preds_array));
+}
+
+noll_graph_array *pred2graph_array = NULL;
+
+void
+noll_pred2graph_init ()
+{
+  pred2graph_array = noll_graph_array_new ();
+  noll_graph_array_resize (pred2graph_array, noll_vector_size (preds_array));
+}
+
 /* ====================================================================== */
 /* Markings */
 /* ====================================================================== */
@@ -2610,7 +2635,7 @@ noll_edge2ta (const noll_edge_t * edge)
   const noll_pred_binding_t *def = pred->def;
   assert (NULL != def);
   NOLL_DEBUG ("definition:\n");
-  NOLL_DEBUG ("  arguments: %lu\n", def->pargs);
+  NOLL_DEBUG ("  arguments: %zu\n", def->pargs);
   NOLL_DEBUG ("  formal arguments: %u\n", def->fargs);
 
   assert (NULL != def->sigma_0);
@@ -2656,6 +2681,9 @@ noll_edge2ta (const noll_edge_t * edge)
     }
   else
     {
+      /* init of global arrays */
+      noll_pred2graph_init ();
+      noll_pred2tree_init ();
       /* apply the general algorithm */
       ta = noll_edge2ta_gen (edge);
       if (NULL == ta)

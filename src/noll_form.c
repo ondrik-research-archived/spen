@@ -600,14 +600,13 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
         const noll_pred_t *pred = noll_pred_getpred (phi->m.ls.pid);
         assert (NULL != pred);
         fprintf (f, "(%s_", pred->pname);
-        if (svars == NULL)
-          fprintf (f, "*%d", phi->m.ls.sid);
-        else
+        if ((svars != NULL) && (noll_vector_size (svars) > phi->m.ls.sid))
           {
-            assert (noll_vector_size (svars) > phi->m.ls.sid);
-
             fprintf (f, "%s", noll_vector_at (svars, phi->m.ls.sid)->vname);
           }
+        else
+          fprintf (f, "*%d", phi->m.ls.sid);
+
         for (uid_t i = 0; i < noll_vector_size (phi->m.ls.args); i++)
           {
             uint_t vi = noll_vector_at (phi->m.ls.args, i);
@@ -616,7 +615,11 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
             else if (vi == VNIL_ID)
               fprintf (f, " nil ");
             else
-              fprintf (f, " %s ", noll_vector_at (lvars, vi)->vname);
+              {
+                noll_var_t *vari = noll_vector_at (lvars, vi);
+                assert (vari != NULL);
+                fprintf (f, " %s ", vari->vname);
+              }
           }
         fprintf (f, ")");
         break;
