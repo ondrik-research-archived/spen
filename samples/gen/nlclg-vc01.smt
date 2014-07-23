@@ -11,7 +11,7 @@
 (declare-fun down () (Field NLL_lvl2_t NLL_lvl1_t))
 
 ; singly-linked list
-(define-fun lso ((?in NLL_lvl1_t) (?out NLL_lvl1_t) ) Space (tospace
+(define-fun lsg ((?in NLL_lvl1_t) (?out NLL_lvl1_t) ) Space (tospace
         (or
         (and (= ?in ?out)
                 (tobool emp
@@ -23,7 +23,7 @@
         (and (distinct ?in ?out)
                 (tobool (ssep
                 (pto ?in (ref next1 ?u) )
-                (lso ?u ?out )
+                (lsg ?u ?out )
                 ) )
 
         )
@@ -36,7 +36,7 @@
 
 
 ; singly-linked list of cyclic singly-linked lists
-(define-fun nlcl ((?in NLL_lvl2_t) (?out NLL_lvl2_t))
+(define-fun nlclg ((?in NLL_lvl2_t) (?out NLL_lvl2_t))
   Space (tospace 
         (or
         (and (= ?in ?out)
@@ -49,8 +49,8 @@
         (and (distinct ?in ?out)
                 (tobool (ssep
                 (pto ?in (sref (ref next2 ?u) (ref down ?Z1) ) )
-                (loop (lso ?Z1 ?Z1))
-                (nlcl ?u ?out)
+                (loop (lsg ?Z1 ?Z1))
+                (nlclg ?u ?out)
                 ) )
 
         )
@@ -91,7 +91,7 @@
 )))
 
 (assert (not (tobool (index alpha1
-  (nlcl x1 nil)
+  (nlclg x1 nil)
 ))))
 
 (check-sat)

@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012-2013                                               */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -28,7 +24,8 @@
 #include "noll2bool.h"
 
 /**
- * Compute the number of nodes from the equalities in the pure formula.
+ * @brief Compute the number of nodes from the pure formula.
+ * 
  * @param phi input formula
  * @param vars array of size locs_array, giving the labeling of variables
  * @return number of nodes = number of equivalence classes
@@ -67,41 +64,72 @@ noll_nodes_of_form (noll_form_t * phi, uint_t * vars)
   return nodes_size;
 }
 
+/**
+ * @brief Counts the number of atoms of kind @p op in @p phi.
+ * 
+ * Loops are counted in @p nloop as two edges 
+ * only if @p isMatrix is true and @p op is NOLL_SPACE_LS.
+ * 
+ * @param phi      Formula analysed
+ * @param isMatrix True if @p phi is a predicate matrix
+ * @param op       Kind of formula to be counted
+ * @param nloop    Number of loops of list segments
+ */
 uint_t
-noll_atom_of_form (noll_space_t * phi, noll_space_op_t op)
+noll_atom_of_form (noll_space_t * phi, bool isMatrix, 
+                   noll_space_op_t op, uint_t* nloop)
 {
   uint_t res = 0;
   if (!phi)
     return res;
   if (op == NOLL_SPACE_PTO && phi->kind == op)
     return noll_vector_size (phi->m.pto.fields);
-  if (op == phi->kind && op == NOLL_SPACE_LS)
+  if (op == NOLL_SPACE_PTO && 
+      phi->kind == NOLL_SPACE_LS && 
+      phi->m.ls.is_loop == true)
+    return (isMatrix == false) ? 1 : 0;
+  if (op == NOLL_SPACE_LS && phi->kind == op) 
+  {
+    if (phi->m.ls.is_loop == true)
+    {
+      /// increment @p nloop if @p not isMatrix
+      assert (NULL != nloop);
+      *nloop = *nloop + ((isMatrix == false) ? 1 : 0);
+      /// always 1 list segment
+      return 1;
+	}
+    else
     {
       uint_t src = noll_vector_at (phi->m.ls.args, 0);
       uint_t dst = noll_vector_at (phi->m.ls.args, 1);
-      // remove ls edges between equal variables
+      /// remove ls edges between equal variables
+      /// because only acyclic predicates are allowed
       return (src == dst) ? 0 : 1;
     }
+  }
   if (phi->kind != NOLL_SPACE_WSEP && phi->kind != NOLL_SPACE_SSEP)
     return res;
   // else recursive call over separated formula
   if (phi->m.sep)
     {
       for (uint_t i = 0; i < noll_vector_size (phi->m.sep); i++)
-        res += noll_atom_of_form (noll_vector_at (phi->m.sep, i), op);
+        res += noll_atom_of_form (noll_vector_at (phi->m.sep, i), isMatrix, op, nloop);
     }
   return res;
 }
 
 /**
- * Compute the edges and the strong separation information.
+ * @brief Compute the edges and the strong separation information.
+ * 
  * @param phi    formulas to be translated
  * @param g      graph to be filled
  * @param nedge  start id to be assigned to edges in this formula
+ * @param lnode  last auxiliary node used (for loops encoding)
  * @return array of identifiers of edges generated from phi
  */
 noll_uid_array *
-noll_graph_of_space (noll_space_t * phi, noll_graph_t * g, uint_t nedges)
+noll_graph_of_space (noll_space_t * phi, bool isMatrix, 
+				     noll_graph_t * g, uint_t nedges, uint_t* lnode)
 {
   noll_uid_array *res = NULL;
   if (!phi)
@@ -119,9 +147,9 @@ noll_graph_of_space (noll_space_t * phi, noll_graph_t * g, uint_t nedges)
       {
         res = noll_uid_array_new ();
         noll_uid_array_reserve (res, noll_vector_size (phi->m.pto.fields));
-        // source node
+        /// source node
         uint_t nsrc = g->var2node[phi->m.pto.sid];
-        // to each pto formula correspond several edges
+        /// to each pto formula correspond several edges
         for (uint_t i = 0; i < noll_vector_size (phi->m.pto.fields); i++)
           {
             uint_t fi = noll_vector_at (phi->m.pto.fields, i);
@@ -153,17 +181,28 @@ noll_graph_of_space (noll_space_t * phi, noll_graph_t * g, uint_t nedges)
       }
     case NOLL_SPACE_LS:
       {
+		/// resulting array of edge identifiers
         res = noll_uid_array_new ();
-        noll_uid_array_reserve (res, noll_vector_size (phi->m.pto.fields));
-        // source node
+        noll_uid_array_reserve (res, noll_vector_size (phi->m.ls.args));
+        /// source node
         uint_t nsrc = g->var2node[noll_vector_at (phi->m.ls.args, 0)];
         assert (nsrc < g->nodes_size);
-        // destination node
+        /// destination node
         uint_t ndst = g->var2node[noll_vector_at (phi->m.ls.args, 1)];
         assert (ndst < g->nodes_size);
-        if (nsrc == ndst)
-          return res;           // no edge is built
-        // build the edge
+        if (nsrc == ndst) {
+			/// simple case, no loop
+			if (phi->m.ls.is_loop == false)
+              return res;           /// no edge is built
+            else if (isMatrix == false)
+              {
+				  /// shall copy the matrix of the called predicate 
+				  fprintf (stdout, "Loop in formula: Not yet implemented!\nquit.\n");
+				  assert (0);
+			  }
+			/// else, continue like for an ls edge
+		}
+        /// build the edge
         noll_edge_t *e =
           noll_edge_alloc (NOLL_EDGE_PRED, nsrc, ndst, phi->m.ls.pid);
         for (uint_t i = 2; i < noll_vector_size (phi->m.ls.args); i++)
@@ -205,8 +244,8 @@ noll_graph_of_space (noll_space_t * phi, noll_graph_t * g, uint_t nedges)
         for (uint_t i = 0; i < noll_vector_size (phi->m.sep); i++)
           {
             noll_uid_array *ri =
-              noll_graph_of_space (noll_vector_at (phi->m.sep, i), g,
-                                   new_nedges);
+              noll_graph_of_space (noll_vector_at (phi->m.sep, i), isMatrix, 
+								   g, new_nedges, lnode);
             // update the number of edges
             new_nedges += (ri) ? noll_vector_size (ri) : 0;
             // update the separation constraints
@@ -245,7 +284,8 @@ noll_graph_of_space (noll_space_t * phi, noll_graph_t * g, uint_t nedges)
 }
 
 /**
- * Fill with the inequality edges the adj matrix of g.
+ * @brief Fill with the inequality edges the adj matrix of g.
+ * 
  * @param phi
  * @param g
  */
@@ -273,7 +313,7 @@ noll_graph_of_pure (noll_pure_t * phi, noll_graph_t * g)
 }
 
 noll_graph_t *
-noll_graph_of_form (noll_form_t * phi)
+noll_graph_of_form (noll_form_t * phi, bool isMatrix)
 {
   if (!phi)
     {
@@ -287,23 +327,27 @@ noll_graph_of_form (noll_form_t * phi)
   if (phi->kind == NOLL_FORM_UNSAT)
     return NULL;
 
-  // the result graph
+  /// the result graph
   noll_graph_t *res = NULL;
 
-  // compute the number of nodes from the pure part
+  /// compute the number of nodes from the pure part
   uint_t *vars = (uint_t *) malloc (noll_vector_size (phi->lvars)
                                     * sizeof (uint_t));
   uint_t nsize = noll_nodes_of_form (phi, vars);
-
-  // count edges pto and pred
-  uint_t max_pto = noll_atom_of_form (phi->space, NOLL_SPACE_PTO);
-  uint_t max_ls = noll_atom_of_form (phi->space, NOLL_SPACE_LS);
+  /// this number of node is exact if isMatrix, 
+  /// otherwise new nodes are added if not isMatrix and loop subformula
+  
+  /// count edges pto and pred
+  uint_t max_pto = noll_atom_of_form (phi->space, isMatrix, NOLL_SPACE_PTO, NULL);
+  uint_t nloop = 0;
+  uint_t max_ls = noll_atom_of_form (phi->space, isMatrix, NOLL_SPACE_LS, &nloop);
+  nsize += nloop;
   res = noll_graph_alloc (phi->lvars, phi->svars, nsize, max_pto + max_ls,
                           vars);
 
-  // go through the space formula,
-  // assign identifiers to edges, and
-  // fill information in the graph
+  /// go through the space formula,
+  ///   assign identifiers to edges, and
+  ///   fill information in the graph
   if (phi->space == NULL)
     {
       // emp formula
@@ -312,7 +356,8 @@ noll_graph_of_form (noll_form_t * phi)
   else
     {
       res->is_precise = phi->space->is_precise;
-      noll_uid_array *r = noll_graph_of_space (phi->space, res, 0);
+      uint_t lnode_aux = nsize - nloop; /// used to encode loops if needed
+      noll_uid_array *r = noll_graph_of_space (phi->space, isMatrix, res, 0, &lnode_aux);
       if (r == NULL)
         {
 #ifndef NDEBUG
@@ -325,10 +370,10 @@ noll_graph_of_form (noll_form_t * phi)
         noll_uid_array_delete (r);
     }
 
-  // go through pure constraints to obtain distinct edges
+  /// go through pure constraints to obtain distinct edges
   noll_graph_of_pure (phi->pure, res);
 
-  // aliasing of sharing constraints in the graph
+  /// aliasing of sharing constraints in the graph
   noll_share_array_copy (res->share, phi->share);
 
   // TODO: sort variables and

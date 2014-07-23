@@ -143,7 +143,8 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
       /* Predicate transitions (7) */
       else if (noll_ta_symbol_is_pred (node->symbol))
         {
-          NOLL_DEBUG ("Node %d : pred\n", i);
+          NOLL_DEBUG ("Node %d : pred with %d border params\n", i,
+                      (node->children == NULL) ? 0 : noll_vector_size(node->children));
           /* rename node symbol arguments with markings wrt 
            * the source node of the edge */
           /* TODO: compute the marking wrt source node */
@@ -414,7 +415,7 @@ noll_pred2graph (const noll_pred_t * pred)
    */
   NOLL_DEBUG ("\nBuild the graph of the predicate matrix\n");
   noll_form_t *phip = noll_pred_get_matrix (pred->pid);
-  g = noll_graph_of_form (phip);
+  g = noll_graph_of_form (phip, true);
   assert ((pred->def->fargs + 1) <= noll_vector_size (g->lvars));
 #ifndef NDEBUG
   noll_graph_fprint (stdout, g);

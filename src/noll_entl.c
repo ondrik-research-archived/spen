@@ -643,7 +643,7 @@ noll_entl_to_graph (void)
                 noll_vector_at (pform->lvars, j)->vname);
 #endif
 
-  noll_prob->pgraph = noll_graph_of_form (pform);
+  noll_prob->pgraph = noll_graph_of_form (pform, false);
 
 #ifndef NDEBUG
   fprintf (stdout, "\n*****pos_graph: file graph-p.dot\n");
@@ -663,7 +663,7 @@ noll_entl_to_graph (void)
       for (size_t i = 0; i < noll_vector_size (nform); i++)
         {
           noll_form_t *nform_i = noll_vector_at (nform, i);
-          noll_graph_t *nform_i_graph = noll_graph_of_form (nform_i);
+          noll_graph_t *nform_i_graph = noll_graph_of_form (nform_i, false);
           noll_vector_at (noll_prob->ngraph, i) = nform_i_graph;
 #ifndef NDEBUG
           fprintf (stdout, "\n*****neg_graph: file graph-n%zu.dot\n", i);

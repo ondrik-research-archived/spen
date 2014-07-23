@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012                                                    */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -31,7 +27,7 @@
 #include "noll_vars.h"
 #include "noll_graph.h"
 
-noll_graph_t *noll_graph_of_form (noll_form_t * phi);
+noll_graph_t *noll_graph_of_form (noll_form_t * phi, bool isMatrix);
 /* Translation of formulas to graphs. */
 
 #endif /* _NOLL2GRAPH_H_ */
