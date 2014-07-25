@@ -98,8 +98,8 @@ typedef struct noll_ta_symbol
 } noll_ta_symbol_t;
 
 // a database of symbols
-NOLL_VECTOR_DECLARE (noll_ta_symbol_array, noll_ta_symbol_t *)
-NOLL_VECTOR_DEFINE (noll_ta_symbol_array, noll_ta_symbol_t *)
+NOLL_VECTOR_DEFINE (noll_ta_symbol_array, const noll_ta_symbol_t *)
+
 /* ====================================================================== */
 /* Globals */
 /* ====================================================================== */
@@ -353,6 +353,11 @@ noll_ta_symbol_get_vars (const noll_ta_symbol_t * symb)
     {
     case NOLL_TREE_LABEL_ALLOCATED:
       return symb->allocated.vars;
+    case NOLL_TREE_LABEL_ALIASING_VARIABLE: {
+      noll_uid_array* r = noll_uid_array_new();
+      noll_uid_array_push (r, symb->alias_var);
+      return r;
+  }
     case NOLL_TREE_LABEL_HIGHER_PRED:
       return symb->higher_pred.vars;
     default:
@@ -372,6 +377,8 @@ noll_ta_symbol_get_marking (const noll_ta_symbol_t * symb)
     {
     case NOLL_TREE_LABEL_ALLOCATED:
       return symb->allocated.marking;
+    case NOLL_TREE_LABEL_ALIASING_MARKING:
+      return symb->alias_marking.marking;
     case NOLL_TREE_LABEL_HIGHER_PRED:
       return symb->higher_pred.marking;
     default:
@@ -545,7 +552,7 @@ noll_ta_symbol_destroy ()
 
   for (size_t i = 0; i < noll_vector_size (g_ta_symbols); ++i)
     {
-      noll_ta_symbol_t *smb = noll_vector_at (g_ta_symbols, i);
+      const noll_ta_symbol_t *smb = noll_vector_at (g_ta_symbols, i);
       assert (NULL != smb);
       noll_ta_symbol_kill (smb);
     }
@@ -1126,7 +1133,7 @@ noll_ta_symbol_get_unique_higher_pred (const noll_pred_t * pred,
 const noll_ta_symbol_t *
 noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
                                    bool doSub,
-                                   noll_uid_array * vmap,
+                                   const noll_ta_symbol_array * vmap,
                                    noll_uid_array * mmap)
 {
   // check inputs
@@ -1147,11 +1154,18 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
             vars = noll_uid_array_new ();
             for (uid_t i = 0; i < noll_vector_size (sym->allocated.vars); i++)
               {
+                // formal variable in symbol
                 uid_t vi = noll_vector_at (sym->allocated.vars, i);
+                // actual parameter symbol
+                const noll_ta_symbol_t* si = NULL;
                 if (vi < noll_vector_size (vmap))
-                  noll_uid_array_push (vars, noll_vector_at (vmap, vi));
-                else
-                  noll_uid_array_push (vars, vi);       // TODO: assert false?
+                  si = noll_vector_at (vmap, vi);
+                assert (NULL != si);
+                // aliased vars in si
+                const noll_uid_array* si_vars = noll_ta_symbol_get_vars (si);
+                if ((NULL != si_vars) && 
+                    (noll_vector_size (si_vars) >= 1))
+                   noll_uid_array_push (vars, noll_vector_at(si_vars,0));
               }
           }
         // TODO: change here markings with the mmap
@@ -1166,13 +1180,31 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
 
     case NOLL_TREE_LABEL_ALIASING_VARIABLE:
       {
-        const noll_ta_symbol_t *ret_sym =
-          (sym->alias_var <
-           noll_vector_size (vmap)) ?
-          noll_ta_symbol_get_unique_aliased_var (noll_vector_at (vmap,
-                                                                 sym->alias_var))
-          : sym;
-        return ret_sym;
+        // formal variable in symbol
+        uid_t vi = sym->alias_var;
+        // actual parameter symbol
+        const noll_ta_symbol_t* si = NULL;
+        if (vi < noll_vector_size (vmap))
+          {
+            si = noll_vector_at (vmap, vi);
+            // aliased vars in si
+            const noll_uid_array* si_vars = noll_ta_symbol_get_vars (si);
+            if ((NULL != si_vars) && noll_vector_size (si_vars) >= 1)
+              {
+                const noll_ta_symbol_t *ret_sym =
+                noll_ta_symbol_get_unique_aliased_var (noll_vector_at (si_vars,0));
+                return ret_sym;
+              }
+            // formal param mapped to a marking
+            const noll_uid_array *si_mark = noll_ta_symbol_get_marking (si);
+            if (NULL != si_mark)
+              {
+                const noll_ta_symbol_t *ret_sym = // TODO: check
+                noll_ta_symbol_get_unique_aliased_marking_up_down_fst (si_mark);
+                return ret_sym;
+              }
+          }
+        return sym;
       }
 
     case NOLL_TREE_LABEL_ALIASING_MARKING:
@@ -1187,13 +1219,22 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
         noll_uid_array *vars = NULL;
         if (doSub)
           {
+            // TODO AN: with the model for allocated
             vars = noll_uid_array_new ();
-            for (uid_t i = 0; i < noll_vector_size (sym->higher_pred.vars);
-                 i++)
-              if (i < noll_vector_size (vmap))
-                noll_uid_array_push (vars, noll_vector_at (vmap, i));
-              else
-                noll_uid_array_push (vars, i);  // TODO: assert false?
+            for (uid_t i = 0; i < noll_vector_size (sym->allocated.vars); i++)
+              {
+                // formal variable in symbol
+                uid_t vi = noll_vector_at (sym->allocated.vars, i);
+                // actual parameter symbol
+                const noll_ta_symbol_t* si = NULL;
+                if (vi < noll_vector_size (vmap))
+                  si = noll_vector_at (vmap, vi);
+                assert (NULL != si);
+                // aliased vars in si
+                const noll_uid_array* si_vars = noll_ta_symbol_get_vars (si);
+                assert (NULL != si_vars);
+                noll_uid_array_push (vars, noll_vector_at(si_vars,0));
+              }
           }
         // TODO: change here markings with the mmap
 
@@ -1213,4 +1254,37 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
     }
 
   return sym;
+}
+
+/*
+ * A sound? approximation of the desired result 
+ */
+const noll_ta_symbol_t *
+noll_ta_symbol_get_unique_aliased_symbol (const noll_ta_symbol_t * sym,
+                                          const noll_ta_symbol_array * vmap)
+{
+  const noll_ta_symbol_t *ren_sym =
+    noll_ta_symbol_get_unique_renamed (sym, true, vmap, NULL);
+  if ((sym->label_type == NOLL_TREE_LABEL_ALLOCATED) || 
+      (sym->label_type == NOLL_TREE_LABEL_HIGHER_PRED))
+    {
+      const noll_uid_array* si_vars = noll_ta_symbol_get_vars (ren_sym);
+      if ((NULL != si_vars) && 
+          (noll_vector_size (si_vars) >= 1))
+        {
+          const noll_ta_symbol_t *ret_sym =
+            noll_ta_symbol_get_unique_aliased_var (noll_vector_at (si_vars,0));
+          return ret_sym;
+        }
+        // formal param mapped to a marking
+        const noll_uid_array* si_mark = noll_ta_symbol_get_marking (ren_sym);
+        if (NULL != si_mark)
+          {
+            const noll_ta_symbol_t *ret_sym = // TODO: check
+            noll_ta_symbol_get_unique_aliased_marking_up_down_fst (si_mark);
+            return ret_sym;
+          }
+    }
+
+  return ren_sym;
 }

@@ -34,6 +34,9 @@ extern "C"
 
   typedef struct noll_ta_symbol noll_ta_symbol_t;
 
+  // a database of symbols
+  NOLL_VECTOR_DECLARE (noll_ta_symbol_array, const noll_ta_symbol_t *);
+
 /* ====================================================================== */
 /* Constantes */
 /* ====================================================================== */
@@ -246,15 +249,18 @@ extern "C"
  * @param[in] mmap    The mapping used for markings
  * @return            A new symbol
  */
-  const noll_ta_symbol_t *noll_ta_symbol_get_unique_renamed (const
-                                                             noll_ta_symbol_t
-                                                             * sym,
-                                                             bool doSub,
-                                                             noll_uid_array *
-                                                             vmap,
-                                                             noll_uid_array *
-                                                             mmap);
-
+  const noll_ta_symbol_t *
+  noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t* sym,
+                                     bool doSub,
+                                     const noll_ta_symbol_array * vmap,
+                                     noll_uid_array * mmap);
+/**
+ * @brief Comput an alias symbol from @p sym
+ * 
+ */
+  const noll_ta_symbol_t *
+  noll_ta_symbol_get_unique_aliased_symbol (const noll_ta_symbol_t * sym,
+                                            const noll_ta_symbol_array * vmap);
 
 
 #ifdef	__cplusplus

@@ -83,7 +83,7 @@ extern "C"
   } noll_pred_t;
 
   /** Type of the global array of predicates. */
-    NOLL_VECTOR_DECLARE (noll_pred_array, noll_pred_t *);
+  NOLL_VECTOR_DECLARE (noll_pred_array, noll_pred_t *);
 
   /* ====================================================================== */
   /* Globals */
@@ -109,13 +109,13 @@ extern "C"
    * actuals_ty of length size.
    */
 
-        /**
-	 * @brief  Returns the predicate with given Predicate ID
-	 *
-	 * @param[in]  pid   ID of the desired predicate
-	 *
-	 * @returns  The desired predicate
-	 */
+  /**
+   * @brief  Returns the predicate with given Predicate ID
+   *
+   * @param[in]  pid   ID of the desired predicate
+   *
+   * @returns  The desired predicate
+   */
   const noll_pred_t *noll_pred_getpred (uid_t pid);
 
   const char *noll_pred_name (uid_t pid);
@@ -138,18 +138,18 @@ extern "C"
   bool noll_pred_is_backbone_field (uid_t fid);
   /* Test if fid is a backbone for some predicate */
 
-        /**
-	 * @brief  Checks whether the field as the main backbone field of a predicate
-	 *
-	 * Checks whether @p fid denoters the main backbone firld of some predicate.
-	 * That is, the least backbone field (w.r.t. the field ordering) that goes to
-	 * @p X_tl.
-	 *
-	 * @param[in]  fid  The field identifier
-	 *
-	 * @returns  @p true iff @p fid denotes the main backbone field of some
-	 *           predicate, @p false otherwise
-	 */
+  /**
+   * @brief  Checks whether the field as the main backbone field of a predicate
+   *
+   * Checks whether @p fid denoters the main backbone firld of some predicate.
+   * That is, the least backbone field (w.r.t. the field ordering) that goes to
+   * @p X_tl.
+   *
+   * @param[in]  fid  The field identifier
+   *
+   * @returns  @p true iff @p fid denotes the main backbone field of some
+   *           predicate, @p false otherwise
+   */
   bool noll_pred_is_main_backbone_field (uid_t fid);
 
 
@@ -157,13 +157,13 @@ extern "C"
   /* Type the predicate definitions.
    */
 
-        /**
-	 * @brief  Retrieves the minimum field of a predicate
-	 *
-	 * @param[in]  pid  ID of the predicate
-	 *
-	 * @returns  The minimum field of the predicate with the ID @p pid
-	 */
+  /**
+   * @brief  Retrieves the minimum field of a predicate
+   *
+   * @param[in]  pid  ID of the predicate
+   *
+   * @returns  The minimum field of the predicate with the ID @p pid
+   */
   uid_t noll_pred_get_minfield (uid_t pid);
 
   int noll_field_order (void);

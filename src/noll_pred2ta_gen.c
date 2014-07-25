@@ -28,6 +28,64 @@
 #include "noll_graph2ta.h"
 #include "noll_ta_symbols.h"
 
+/**
+ * @brief Compute parameters for the next nested predicate
+ *        (next call of noll_edge2ta_gen_aux)
+ * 
+ * @param
+ */
+void
+noll_edge2ta_gen_param (noll_tree_t * tree,
+                      const noll_pred_t * pred,
+                      const noll_tree_node_t *node_i,
+                      size_t i,
+                      uid_t q_src, uid_t q_dst,
+                      uid_t init_node, uid_t end_node,
+                      uint_t offset,
+                      const noll_ta_symbol_array *y,
+                      uid_t *pid_i,
+                      uid_t *q_i, uid_t *q_j,
+                      noll_ta_symbol_array *vmap_i)
+{
+      *pid_i = noll_ta_symbol_get_pid (node_i->symbol);
+      const noll_pred_t *pred_i = noll_pred_getpred (*pid_i);
+      assert (i != init_node);
+      assert (i != end_node);
+      *q_i = i + offset;
+
+      uid_t j = noll_vector_at (node_i->children, 0);
+      const noll_tree_node_t *node_j = noll_vector_at (tree->nodes, j);
+
+      *q_j = j;
+      if (*q_j == init_node)
+        *q_j = q_src;
+      else if (*q_j == end_node)
+        *q_j = q_dst;
+      else
+        *q_j = j + offset;
+
+      // TODO: update with good values when the args of a
+      // predicate label are filled
+      /*noll_uid_array_push (vmap_i, 0); // null mapped to null 
+      noll_uid_array_push (vmap_i, *q_i);
+      noll_uid_array_push (vmap_i, *q_j);*/
+      // null mapped to null 
+      noll_ta_symbol_array_push (vmap_i,
+        noll_ta_symbol_get_unique_aliased_var (0)); 
+      // first arg mapeed to node_i 
+      noll_ta_symbol_array_push (vmap_i,  
+        noll_ta_symbol_get_unique_aliased_symbol(node_i->symbol, y));
+      // first arg mapeed to node_j 
+      noll_ta_symbol_array_push (vmap_i,  
+        noll_ta_symbol_get_unique_aliased_symbol(node_j->symbol, y));
+    
+      // border arguments
+      // TODO: update when tree symbols store predicate args
+      for (size_t i = 2; i < pred->def->fargs; i++)
+        noll_ta_symbol_array_push (vmap_i, 
+          noll_ta_symbol_get_unique_aliased_var (i)); // not correct!
+
+}
 
 /**
  * @brief Builds the TA with the specified arguments.
@@ -37,8 +95,8 @@
  * @param q_src      the initial state
  * @param src_symbol symbol for the initial state
  * @param q_dst      the end state
- * @param y          array of actual param
- * @param offset   
+ * @param y          array of actual param symbols with y[0] is null
+ * @param offset     used to add more states in the TA
  * @return           the number of the last state generated
  */
 uint_t
@@ -46,13 +104,15 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
                       const uid_t pid,
                       uint_t q_src,
                       const noll_ta_symbol_t * src_symbol,
-                      uint_t q_dst, noll_uid_array * y, uint_t offset)
+                      uint_t q_dst, 
+                      const noll_ta_symbol_array * y,
+                      uint_t offset)
 {
   NOLL_DEBUG ("\nWARNING: Generating a nested TA for %s\n",
               noll_pred_name (pid));
 
   assert (NULL != ta);
-  assert (NULL != src_symbol);
+  assert (NULL != y);
 
   /* informations about the predicate in the global tables */
   const noll_pred_t *pred = noll_pred_getpred (pid);
@@ -108,7 +168,7 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
       if (node->children != NULL)
         {
           q_children = noll_uid_array_new ();
-          // TODO: push all node->children in q_children with offset
+          // push all node->children in q_children with offset
           // except init_node, end_node which are push with 
           // resp q_src and q_dst
           for (size_t j = 0; j < noll_vector_size (node->children); j++)
@@ -126,7 +186,7 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
       /* Alias transitions (6) */
       if (noll_ta_symbol_is_alias (node->symbol))
         {
-          NOLL_DEBUG ("Node %d : alias\n", i);
+          NOLL_DEBUG ("Node %zu : alias\n", i);
           if ((i != end_node) || (offset == 0))
             {
               /* alias is added on the end node only at then topmost level */
@@ -135,15 +195,15 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
               const noll_ta_symbol_t *asymbol =
                 noll_ta_symbol_get_unique_renamed (node->symbol,
                                                    (offset ==
-                                                    0) ? true : false, y,
-                                                   NULL);
+                                                    0) ? true : false,
+                                                   y, NULL);
               vata_add_transition (ta, q_i, asymbol, NULL);
             }
         }
       /* Predicate transitions (7) */
       else if (noll_ta_symbol_is_pred (node->symbol))
         {
-          NOLL_DEBUG ("Node %d : pred with %d border params\n", i,
+          NOLL_DEBUG ("Node %zu : pred with %d border params\n", i,
                       (node->children == NULL) ? 0 : noll_vector_size(node->children));
           /* rename node symbol arguments with markings wrt 
            * the source node of the edge */
@@ -157,10 +217,10 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
       /* Points-to edges (8)(9) */
       else if (noll_ta_symbol_is_pto (node->symbol))
         {
-          NOLL_DEBUG ("Node %d : pto\n", i);
+          NOLL_DEBUG ("Node %zu : pto\n", i);
           if (i == tree->root)
             {
-              NOLL_DEBUG ("Node %d (root): add pto loops in %d\n", i,
+              NOLL_DEBUG ("Node %zu (root): add pto loops in %d\n", i,
                           x_tl_node);
               // Transitions (9')
               vata_add_transition (ta, q_x_tl,
@@ -170,7 +230,7 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
             }
           if (i == x_tl_node)
             {
-              NOLL_DEBUG ("Node %d: add pto in %d\n", i, init_node);
+              NOLL_DEBUG ("Node %zu: add pto in %d\n", i, init_node);
               // Transitions (9'')
               /* rename formal parameters to actual parameters */
               const noll_ta_symbol_t *asymbol =
@@ -192,14 +252,6 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
           vata_add_transition (ta, q_i, asymbol, q_children);
         }
     }
-
-  /* Transitions (10) 
-     NOLL_DEBUG ("Node %d: add alias to 2nd arg\n", end_node);
-     const noll_ta_symbol_t *end_symbol =
-     noll_ta_symbol_get_unique_aliased_var (noll_vector_at (edge->args, 1));
-
-     vata_add_transition (ta, end_node, end_symbol, NULL);
-   */
 
   /* Transitions (13-14): predicate edge from q(node(x_tl)) */
   const noll_uid_array *x_tl_mark =
@@ -231,53 +283,38 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
 
   noll_uid_array_delete (pred_children1);
   noll_uid_array_delete (pred_children2);
-
+  
+  
   /* 2) Include the ta of called preds */
   /* For each node of the tree */
-  for (size_t i = 0; i < noll_vector_size (tree->nodes); ++i)
+  for (uint_t i = 0; i < noll_vector_size (tree->nodes); ++i)
     {
-      const noll_tree_node_t *node = noll_vector_at (tree->nodes, i);
-      if (NULL == node)
+      const noll_tree_node_t *node_i = noll_vector_at (tree->nodes, i);
+      if (NULL == node_i)
         /* some nodes are not filled in the tree, e.g., null */
         continue;
 
-      assert (NULL != node->symbol);
-      if (!noll_ta_symbol_is_pred (node->symbol))
+      assert (NULL != node_i->symbol);
+      if (!noll_ta_symbol_is_pred (node_i->symbol))
         continue;
-
+      
+      uid_t pid_i = UNDEFINED_ID;
+      uid_t q_i = UNDEFINED_ID, q_j = UNDEFINED_ID;
+      noll_ta_symbol_array *vmap_i = noll_ta_symbol_array_new ();
       /* from i starts an edge with a predicate call,
        * call recursively the function to include the 
        * transitions of the matrix of this predicate
        */
-      uid_t pid_i = noll_ta_symbol_get_pid (node->symbol);
-      const noll_pred_t *pred_i = noll_pred_getpred (pid_i);
-      assert (i != init_node);
-      assert (i != end_node);
-      uid_t q_i = i + offset;
-
-      uid_t q_j = noll_vector_at (node->children, 0);
-
-      if (q_j == init_node)
-        q_j = q_src;
-      else if (q_j == end_node)
-        q_j = q_dst;
-      else
-        q_j = q_j + offset;
-
-      // TODO: update with good values when the args of a
-      // predicate label are filled
-      noll_uid_array *vmap_i = noll_uid_array_new ();
-      noll_uid_array_push (vmap_i, 0);  // null mapped to null
-      noll_uid_array_push (vmap_i, q_i);
-      noll_uid_array_push (vmap_i, q_j);
-      // TODO: not correct!
-      for (size_t i = 2; i < pred->def->fargs; i++)
-        noll_uid_array_push (vmap_i, i);
-
-      q_last = noll_edge2ta_gen_aux (ta,
-                                     pid_i,
-                                     q_i, node->symbol, q_j, vmap_i, q_last);
-
+      noll_edge2ta_gen_param (tree, pred, node_i, i,
+                              q_src, q_dst,
+                              init_node, end_node, offset,
+                              y,
+                              &pid_i, &q_i, &q_j,
+                              vmap_i);
+                              
+      q_last = noll_edge2ta_gen_aux (ta, pid_i,
+                                     q_i, node_i->symbol, q_j,
+                                     vmap_i, q_last);
     }
 
   /* 3) If nested call, insert alias to q_dst from q_src */
@@ -285,8 +322,7 @@ noll_edge2ta_gen_aux (noll_ta_t * ta,
     {
       // TODO: fill with alias var only if the parameter is an aliased var
       // otherwise use an aliased marking
-      const noll_ta_symbol_t *asymbol =
-        noll_ta_symbol_get_unique_aliased_var (noll_vector_at (y, 2));
+      const noll_ta_symbol_t *asymbol = noll_vector_at (y, 2);
       assert (asymbol != NULL);
       vata_add_transition (ta, q_src, asymbol, NULL);
     }
@@ -323,15 +359,17 @@ noll_edge2ta_gen (const noll_edge_t * edge)
   /* the actual parameters (their identifiers) are in edge->args, 
    * @see noll_graph.h */
 
-  NOLL_DEBUG ("\nBuild the renaming of formal params\n");
+  NOLL_DEBUG ("\nBuild the symbols for actual params\n");
   /*
    * The formals vars in pred->def->vars[0,pred->def->fargs] 
    * are mapped to 0(null) o edge->args
    */
-  noll_uid_array *vmap = noll_uid_array_new ();
-  noll_uid_array_push (vmap, 0);        // null mapped to null
+  noll_ta_symbol_array *vmap = noll_ta_symbol_array_new ();
+  noll_ta_symbol_array_push (vmap, 
+  noll_ta_symbol_get_unique_aliased_var (0));     // null mapped to null
   for (size_t i = 0; i < noll_vector_size (edge->args); i++)
-    noll_uid_array_push (vmap, noll_vector_at (edge->args, i));
+    noll_ta_symbol_array_push (vmap, 
+    noll_ta_symbol_get_unique_aliased_var (noll_vector_at (edge->args, i)));
 
   /* 
    * The matrix of the predicate is stored in
@@ -388,7 +426,7 @@ noll_edge2ta_gen (const noll_edge_t * edge)
   fflush (stdout);
 #endif
 
-  noll_uid_array_delete (vmap);
+  noll_ta_symbol_array_delete (vmap);
 
   return tap;
 }

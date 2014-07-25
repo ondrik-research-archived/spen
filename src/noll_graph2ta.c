@@ -90,7 +90,7 @@ noll_debug_print_markings (const noll_marking_list * markings)
     {
       const noll_uid_array *mark = noll_vector_at (markings, j);
 
-      NOLL_DEBUG ("Node %lu: ", j);
+      NOLL_DEBUG ("Node %zu: ", j);
       if (NULL == mark)
         {
           NOLL_DEBUG ("empty");
@@ -451,7 +451,7 @@ update_marking_from (uint_t node,
         {
           const noll_marking_list *list = noll_vector_at (markings_list, i);
           assert (NULL != list);
-          NOLL_DEBUG ("Node %lu: {", i);
+          NOLL_DEBUG ("Node %zu: {", i);
           for (size_t j = 0; j < noll_vector_size (list); ++j)
             {
               noll_debug_print_one_mark (noll_vector_at (list, j));
@@ -606,7 +606,7 @@ compute_markings (const noll_graph_t * graph,
     {
       const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
       assert (NULL != list);
-      NOLL_DEBUG ("Node %lu: {", i);
+      NOLL_DEBUG ("Node %zu: {", i);
       for (size_t j = 0; j < noll_vector_size (list); ++j)
         {
           noll_debug_print_one_mark (noll_vector_at (list, j));
@@ -618,7 +618,7 @@ compute_markings (const noll_graph_t * graph,
   // compute the least marking for every node
   for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
     {
-      NOLL_DEBUG ("Going over node %lu\n", i);
+      NOLL_DEBUG ("Going over node %zu\n", i);
       const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
       assert (NULL != list);
       if (0 == noll_vector_size (list))
@@ -652,7 +652,7 @@ compute_markings (const noll_graph_t * graph,
     {
       const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
       assert (NULL != list);
-      NOLL_DEBUG ("Node %lu: {", i);
+      NOLL_DEBUG ("Node %zu: {", i);
       for (size_t j = 0; j < noll_vector_size (list); ++j)
         {
           noll_debug_print_one_mark (noll_vector_at (list, j));
@@ -1253,7 +1253,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   NOLL_DEBUG ("LVars:\n");
   for (size_t i = 0; i < noll_vector_size (graph->lvars); ++i)
     {
-      NOLL_DEBUG ("  (*graph->lvars)[%lu] = %p, ", i,
+      NOLL_DEBUG ("  (*graph->lvars)[%zu] = %p, ", i,
                   noll_vector_at (graph->lvars, i));
       const noll_var_t *var = noll_vector_at (graph->lvars, i);
       assert (NULL != var);
@@ -1263,7 +1263,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   NOLL_DEBUG ("SVars:\n");
   for (size_t i = 0; i < noll_vector_size (graph->svars); ++i)
     {
-      NOLL_DEBUG ("  (*graph->svars)[%lu] = %p, ", i,
+      NOLL_DEBUG ("  (*graph->svars)[%zu] = %p, ", i,
                   noll_vector_at (graph->svars, i));
       const noll_var_t *var = noll_vector_at (graph->svars, i);
       assert (NULL != var);
@@ -1272,7 +1272,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   NOLL_DEBUG ("Edges:\n");
   for (size_t i = 0; i < noll_vector_size (graph->edges); ++i)
     {
-      NOLL_DEBUG ("  (*graph->edges)[%lu] = %p, ", i,
+      NOLL_DEBUG ("  (*graph->edges)[%zu] = %p, ", i,
                   noll_vector_at (graph->edges, i));
       const noll_edge_t *edge = noll_vector_at (graph->edges, i);
       assert (NULL != edge);
@@ -1287,7 +1287,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   NOLL_DEBUG ("  dst -> %u\n", noll_vector_at (homo, 1));
   for (size_t i = 2; i < noll_vector_size (homo); ++i)
     {
-      NOLL_DEBUG ("  param_%lu -> %u\n", i, noll_vector_at (homo, i));
+      NOLL_DEBUG ("  param_%zu -> %u\n", i, noll_vector_at (homo, i));
     }
 
 
@@ -1324,7 +1324,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
         {                       // if there are no edges leaving 'i'
           if (noll_uid_array_contains (homo, i))
             {                   // in the case 'i' is a boundary node on some tree branch
-              NOLL_DEBUG ("Found a boundary node %lu\n", i);
+              NOLL_DEBUG ("Found a boundary node %zu\n", i);
 
               const noll_ta_symbol_t *symbol =
                 noll_ta_symbol_get_unique_aliased_var (noll_graph_get_var(graph,i));
@@ -1337,7 +1337,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
           else
             {
               NOLL_DEBUG
-                ("WARNING: found a non-boundary node %lu without output edges\n",
+                ("WARNING: found a non-boundary node %zu without output edges\n",
                  i);
             }
 
@@ -1353,7 +1353,7 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
       if (noll_uid_array_contains (homo, i))
         {                       // in the case 'i' is pointed by a variable
-          NOLL_DEBUG ("  adding variable ref %lu\n", i);
+          NOLL_DEBUG ("  adding variable ref %zu\n", i);
           noll_uid_array_push (vars, i);
         }
 
