@@ -20,6 +20,7 @@
  */
 
 #include "noll.h"
+#include "noll_option.h"
 #include "noll_ta_symbols.h"
 
 /* ====================================================================== */
@@ -27,7 +28,6 @@
 /* ====================================================================== */
 
 int noll_error_parsing = 0;
-int fixed_def = 0;
 
 /*
  * ======================================================================
@@ -1023,7 +1023,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 
   noll_pred_binding_t *pdef = NULL;
 
-  if (fixed_def == 0)
+  if (noll_option_is_preds_builtin() == 0)
     // not fixed definitions, build the predicate
     pdef = noll_mk_pred_userdef (ctx, name, npar, rety, def);
   else

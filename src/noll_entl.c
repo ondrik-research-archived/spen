@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include "noll.h"
+#include "noll_option.h"
 #include "noll_form.h"
 #include "noll_entl.h"
 #include "noll2bool.h"          // for old normalization call
@@ -36,8 +37,6 @@
 /* ====================================================================== */
 
 noll_entl_t *noll_prob;         // problem of entailment in noll
-
-bool tosat_old = false;         /* choice of boolean abstraction */
 
 /* ====================================================================== */
 /* Constructors/destructors */
@@ -572,7 +571,7 @@ noll_entl_normalize ()
   if (pform)
     {
       noll_prob->pabstr = NULL;
-      if (tosat_old == true)
+      if (noll_option_is_tosat(0) == true)
         normalize_incremental (pform, "p-out.txt");
       else
         noll_prob->pabstr = noll2sat_normalize (pform, "p-out.txt", true,
@@ -599,7 +598,7 @@ noll_entl_normalize ()
           fprintf (stdout, "\t\t(nform_%zu): begin normalize\n", i);
           fflush (stdout);
 #endif
-          if (tosat_old == true)
+          if (noll_option_is_tosat(0) == true)
             normalize_incremental (nform_i, "n-out.txt");
           else
             nform_i_abstr = noll2sat_normalize (nform_i, "n-out.txt", true,

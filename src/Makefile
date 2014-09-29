@@ -26,6 +26,7 @@ LDFLAGS = \
 #---------------------------------------
 
 CCINC = noll_vector.h \
+        noll_option.h \
 	noll_types.h noll_vars.h noll_preds.h noll_form.h noll_graph.h \
 	noll2bool.h noll2sat.h noll2graph.h \
 	libvata_noll_iface.h \
@@ -39,6 +40,7 @@ CCSRC = noll_types.c \
 	noll_vars.c \
 	noll_preds.c noll_form.c \
 	noll_graph.c \
+        noll_option.c \
 	noll2bool.c noll2sat.c noll2graph.c \
 	noll_ta_symbols.c \
 	noll_tree.c \
