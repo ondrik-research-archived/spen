@@ -12,23 +12,34 @@
 
 ; singly-linked list
 (define-fun lso ((?in NLL_lvl1_t) (?out NLL_lvl1_t))
-  Space (tospace (or (= ?in ?out) 
-    (exists ((?u NLL_lvl1_t)) (tobool (ssep
-      (pto ?in (ref next1 ?u))
-      (lso ?u ?out))
-)))))
+  Space (tospace (or 
+    (and (= ?in ?out) (tobool emp))
+    (exists ((?u NLL_lvl1_t)) (and 
+           (distinct ?in ?out)
+           (tobool (ssep
+              (pto ?in (ref next1 ?u))
+              (lso ?u ?out)
+           ))
+    ))
+        ))
+)
 
 ; singly-linked list of cyclic singly-linked lists
 (define-fun nlcl ((?in NLL_lvl2_t) (?out NLL_lvl2_t))
-  Space (tospace (or (= ?in ?out)
+  Space (tospace (or 
+    (and (= ?in ?out) (tobool emp))
     (exists ((?u NLL_lvl2_t) (?Z1 NLL_lvl1_t)) 
-      (tobool (ssep
+      (and (distinct ?in ?out)
+           (tobool (ssep
       (pto ?in (sref
         (ref next2 ?u)
         (ref down ?Z1)))
       (loop (lso ?Z1 ?Z1)) 
-      (nlcl ?u ?out))
-)))))
+      (nlcl ?u ?out)
+	   ))
+   ))
+))
+)
 
 (declare-fun x1 () NLL_lvl2_t)
 (declare-fun x1_1 () NLL_lvl1_t)
@@ -46,7 +57,8 @@
 ; two unfoldings of nlcl(x1,nil)
 ; exp: unsat
 ;
-(assert (tobool (ssep
+(assert (and
+  (tobool (ssep
   (pto x1 (sref
     (ref next2 x2)
     (ref down x1_1)))
@@ -57,7 +69,9 @@
     (ref down x2_1)))
   (pto x2_1 (ref next1 x2_2))
   (index alpha2 (lso x2_2 x2_1))
-)))
+  ))
+  (distinct x2_1 x2_2)
+))
 
 (assert (not (tobool (index alpha1
   (nlcl x1 nil)

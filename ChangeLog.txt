@@ -1,3 +1,24 @@
+2014, September 29th
+- add options to trigger different optimisations of the
+  decision procedure.
+
+2014, July 25th
+- new version of the algorithm for translating general
+  predicate definitions to tree automata
+
+2014, July 23rd
+- deal with nested loops in predicate matrix by translating it
+  into an predicate edge in the matrix graph.
+
+2014, July 15th
+- generate correct labels for the nodes of trees generated
+  from nested calls of predicates in TA.
+
+2014, July 4th
+- new algorithm for general predicate definitions,
+  where the formula with two unfoldings of the matrix is 
+  used to build the tree automaton.
+
 2014, June 29th
 - first version of the refactoring of graph2ta: from
   graph is built a tree (see noll_tree.*) and then a TA
