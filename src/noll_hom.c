@@ -20,6 +20,7 @@
  * Homomorphism definition and computation.
  */
 
+#include <stdbool.h>
 #include "noll_types.h"
 #include "noll_hom.h"
 #include "noll_entl.h"
@@ -1475,7 +1476,155 @@ return_select_ls:
 }
 
 /**
- * Check well-formedness for the graphs selected &param sg2 wrt g2.
+ * Check well-formedness condition 0 
+ * for the graph selected @param sg2 wrt @param g2, i.e.,
+ * if sg2 contains a pto, 
+ * then g2 ==> args2[0] != args2[1+isdll] [+ dll]
+ * 
+ * @param g2    the selection
+ * @param sg2   the selection
+ * @param args2 the arguments (nodes) of e1 maped with the homomorphism
+ * @param isdll 1 if is a dll pred
+ * @return      1 if well-formed, 0 otherwise
+ */
+int
+noll_graph_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
+                        noll_uid_array * args2, int isdll)
+{
+  assert (NULL != sg2);
+  assert (NULL != g2);
+  assert (NULL != args2);
+
+  int res = 1;
+  /* search for a pto edge in sg2 */
+  bool found = false;
+  for (uint_t eid2 = 0;
+       eid2 < noll_vector_size (sg2->edges) && !found; eid2++)
+    {
+      noll_edge_t *e2 = noll_vector_at (sg2->edges, eid2);
+      if (e2->kind == NOLL_EDGE_PTO)
+        {
+          found = true;
+        }
+    }
+  if (found == false)
+    return res;                 /* 1 */
+
+  /* if found, then check that the non-empty case of the predicate
+   * is satisfied, i.e.,
+   * - for one direction lists : g2 ==> args2[0] != args2[>=1]
+   * - for dll lists : g2 ==> (args2[0] != args2[>=1+isdll] && args[1] != args[2])
+   */
+  /* go through the arguments in args2
+   * to check the boolean constraint */
+  uid_t fst = noll_vector_at (args2, 0);
+  for (uint_t i = 1 + isdll; i < noll_vector_size (args2) && (res == 1); i++)
+    {
+      uid_t nv = noll_vector_at (args2, i);
+      // check the query Bool(g2) => ![fst=nv], i.e.,
+      uid_t ni = (nv > fst) ? nv : fst;
+      uid_t nj = (nv > fst) ? fst : nv;
+      res = (g2->diff[ni][nj]) ? 1 : 0;
+#ifndef NDEBUG
+      NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", nv,
+                  fst, res);
+#endif
+      if (res != 1)             /* diagnosis */
+        {
+          fprintf (stdout, "\nDiagnosis of failure: ");
+          fprintf (stdout, "\n\tConstraint [v%d != v%d] not found!\n",
+                   noll_graph_get_var (g2, fst), noll_graph_get_var (g2, nv));
+          return 0;
+        }
+    }
+  if (isdll >= 1)
+    {
+      uid_t bk = noll_vector_at (args2, 1);
+      uid_t pr = noll_vector_at (args2, 2);
+      uid_t ni = (bk > pr) ? bk : pr;
+      uid_t nj = (bk > pr) ? pr : bk;
+      res = (g2->diff[ni][nj]) ? 1 : 0;
+#ifndef NDEBUG
+      NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", bk,
+                  pr, res);
+#endif
+      if (res != 1)             /* diagnosis */
+        {
+          fprintf (stdout, "\nDiagnosis of failure: ");
+          fprintf (stdout, "\n\tConstraint [v%d != v%d] not found!\n",
+                   noll_graph_get_var (g2, bk), noll_graph_get_var (g2, pr));
+          return 0;
+        }
+    }
+  return 1;
+}
+
+/**
+ * Check well-formedness condition 1 
+ * for the graph selected @param sg2 wrt @param g2, i.e.,
+ * for any predicate edge P(E,F,...) in sg2, 
+ *   check that (g2 \ sg2) /\ E != F ==> args2[1] allocated or nil 
+ *          (for dll check args2[2] and args[3] allocated or nil)
+ * @param g2    the selection
+ * @param sg2   the selection
+ * @param args2 the arguments (nodes) of e1 maped with the homomorphism
+ * @param isdll 1 if is a dll pred
+ * @return      1 if well-formed, 0 otherwise
+ */
+int
+noll_graph_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
+                        noll_uid_array * args2, int isdll)
+{
+  assert (NULL != sg2);
+  assert (NULL != g2);
+  assert (NULL != args2);
+
+  /* case args2[1+isdll] is nil */
+  if ((isdll == 0) && (noll_vector_at (args2, 1) == g2->var2node[0]))
+    {
+#ifndef NDEBUG
+      NOLL_DEBUG ("\n++++ select_wf_1: not dll and nxt is nil\n");
+#endif
+      return 1;
+    }
+  if ((isdll >= 1) &&
+      (noll_vector_at (args2, 2) == g2->var2node[0]) &&
+      (noll_vector_at (args2, 3) == g2->var2node[0]))
+    {
+#ifndef NDEBUG
+      NOLL_DEBUG ("\n++++ select_wf_1: dll and nxt+prv are nil\n");
+#endif
+      return 1;
+    }
+  /* case g2 \ sg2 is empty */
+  if ((NOLL_VECTOR_SIZE (g2->edges) == NOLL_VECTOR_SIZE (sg2->edges)) &&
+      (NOLL_VECTOR_SIZE (sg2->edges) >= 2))
+    {
+#ifndef NDEBUG
+      NOLL_DEBUG ("\n++++ select_wf_1: empty g2 \\ sg2!\n");
+#endif
+      /* weaker condition: if there are predicate edges in sg2, return 0 */
+      for (uint_t eid2 = 0; eid2 < noll_vector_size (sg2->edges); eid2++)
+        {
+          noll_edge_t *e2 = noll_vector_at (sg2->edges, eid2);
+          if (e2->kind == NOLL_EDGE_PRED)
+            {
+              return 0;
+            }
+        }
+    }
+#ifndef NDEBUG
+  NOLL_DEBUG ("\n++++ select_wf_1: NYI!\n");
+#endif
+  return 1;                     /* TODO */
+}
+
+/**
+ * Check well-formedness condition 2
+ * for the graph selected, i.e., @param sg2 wrt @param g2, i.e.,
+ * for any pto in sg2 from some V' 
+ *   check that g2 ==> V' != V
+ * 
  * @param g2    the selection
  * @param sg2   the selection
  * @param args2 the arguments (nodes) of e1 maped with the homomorphism
@@ -1532,9 +1681,54 @@ noll_graph_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
           NOLL_DEBUG ("\n++++ select_wf_2 for [%d != %d] returns %d\n", nv,
                       nvp, res);
 #endif
+          if (res == 0)
+            {                   /* print diagnosis */
+              fprintf (stdout, "\nDiagnosis of failure:");
+              fprintf (stdout,
+                       "\n\tWell formedness constraint 2 [v%d != v%d] not found!\n",
+                       noll_graph_get_var (g2, ni), noll_graph_get_var (g2,
+                                                                        nj));
+            }
         }
     }
   noll_uid_array_delete (src_pto);
+  return res;
+}
+
+/**
+ * Check well-formedness for the graphs selected &param sg2 wrt g2.
+ * @param g2    the selection
+ * @param sg2   the selection
+ * @param args2 the arguments (nodes) of e1 maped with the homomorphism
+ * @param isdll 1 if is a dll pred
+ * @return      1 if well-formed, 0 otherwise
+ */
+int
+noll_graph_select_wf (noll_graph_t * g2, noll_graph_t * sg2,
+                      noll_uid_array * args2, int isdll)
+{
+  assert (NULL != sg2);
+  assert (NULL != g2);
+  assert (NULL != args2);
+
+  /* check wf condition 0: 
+   * if sg2 contains a pto, 
+   * then g2 ==> args2[0] != args2[1+isdll] */
+  int res = noll_graph_select_wf_0 (g2, sg2, args2, isdll);
+  if (res == 0)
+    return res;
+  /* check wf condition 1:
+   * for any predicate edge P(E,F,...) in sg2, 
+   *   check that (g2 \ sg2) /\ E != F ==> args2[1+isdll] allocated or nil 
+   */
+  res = noll_graph_select_wf_1 (g2, sg2, args2, isdll);
+  if (res == 0)
+    return res;
+  /* check wf condition 2: 
+   * for any pto in sg2 from some V' 
+   *   check that g2 ==> V' != V
+   */
+  res = noll_graph_select_wf_2 (g2, sg2, args2, isdll);
   return res;
 }
 
@@ -1781,7 +1975,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
       /* check well-formedness of the selection */
       uint_t isdll =
         (0 == strncmp (noll_pred_name (e1->label), "dll", 3)) ? 1 : 0;
-      if (0 == noll_graph_select_wf_2 (g2, sg2, args2, isdll))
+      if (0 == noll_graph_select_wf (g2, sg2, args2, isdll))
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;

@@ -98,17 +98,46 @@ noll_option_is_pred2ta_opt (void)
   return pred2ta_opt;
 }
 
+
+/* ====================================================================== */
+/* Verbosity. */
+/* ====================================================================== */
+
+bool print_diagnosis = false;
+
+void
+noll_option_set_diag (void)
+{
+  print_diagnosis = true;
+}
+
+bool
+noll_option_is_diag (void)
+{
+  return print_diagnosis;
+}
+
+
+/* ====================================================================== */
+/* Set/Print. */
+/* ====================================================================== */
+
 void
 noll_option_set (char *option)
 {
-  if (strcmp (option, "-n") == 0)
-    {
-      noll_option_set_tosat (0);        /* set old version */
-      return;
-    }
   if (strcmp (option, "-b") == 0)
     {
       noll_option_set_preds (true);     /* builtin predicates */
+      return;
+    }
+  if (strcmp (option, "-d") == 0)
+    {
+      noll_option_set_diag ();  /* set diagnosis */
+      return;
+    }
+  if (strcmp (option, "-n") == 0)
+    {
+      noll_option_set_tosat (0);        /* set old version */
       return;
     }
   if (strcmp (option, "-o1") == 0)
@@ -135,9 +164,10 @@ void
 noll_option_print (FILE * f)
 {
 
-  fprintf (f, "\t-n:     internal switch to old normalisation procedure\n");
   fprintf (f,
            "\t-b:     use predefined recursive definitions (set from name)\n");
+  fprintf (f, "\t-d:     print diagnosis messages\n");
+  fprintf (f, "\t-n:     internal switch to old normalisation procedure\n");
   fprintf (f, "\t-o:     apply all optimizations\n");
   fprintf (f, "\t-o1:    optimized check of LS edges\n");
   fprintf (f, "\t-o2:    optimized construction of tree automata\n");

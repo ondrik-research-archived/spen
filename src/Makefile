@@ -9,10 +9,10 @@ include ../Makefile.config
 #---------------------------------------
 
 # Use ICFLAGS to specify machine-independent compilation flags.
-ICFLAGS = -g -I. \
+ICFLAGS = -I. \
 -I$(SMTLIB2_PREFIX)
 
-ICXXFLAGS = -g \
+ICXXFLAGS = \
 -I$(LIBVATA_INCLUDE)
 
 LDFLAGS = \

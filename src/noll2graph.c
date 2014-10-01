@@ -76,44 +76,56 @@ noll_nodes_of_form (noll_form_t * phi, uint_t * vars)
  * @param nloop    Number of loops of list segments
  */
 uint_t
-noll_atom_of_form (noll_space_t * phi, bool isMatrix, 
-                   noll_space_op_t op, uint_t* nloop)
+noll_atom_of_form (noll_space_t * phi, bool isMatrix,
+                   noll_space_op_t op, uint_t * nloop)
 {
   uint_t res = 0;
   if (!phi)
     return res;
   if (op == NOLL_SPACE_PTO && phi->kind == op)
     return noll_vector_size (phi->m.pto.fields);
-  if (op == NOLL_SPACE_PTO && 
-      phi->kind == NOLL_SPACE_LS && 
-      phi->m.ls.is_loop == true)
+  if (op == NOLL_SPACE_PTO &&
+      phi->kind == NOLL_SPACE_LS && phi->m.ls.is_loop == true)
     return (isMatrix == false) ? 1 : 0;
-  if (op == NOLL_SPACE_LS && phi->kind == op) 
-  {
-    if (phi->m.ls.is_loop == true)
+  if (op == NOLL_SPACE_LS && phi->kind == op)
     {
-      /// increment @p nloop if @p not isMatrix
-      assert (NULL != nloop);
-      *nloop = *nloop + ((isMatrix == false) ? 1 : 0);
-      /// always 1 list segment
-      return 1;
-	}
-    else
-    {
-      uint_t src = noll_vector_at (phi->m.ls.args, 0);
-      uint_t dst = noll_vector_at (phi->m.ls.args, 1);
-      /// remove ls edges between equal variables
-      /// because only acyclic predicates are allowed
-      return (src == dst) ? 0 : 1;
+      if (phi->m.ls.is_loop == true)
+        {
+          /// increment @p nloop if @p not isMatrix
+          assert (NULL != nloop);
+          *nloop = *nloop + ((isMatrix == false) ? 1 : 0);
+          /// always 1 list segment
+          return 1;
+        }
+      else if (strncmp (noll_pred_name (phi->m.ls.pid), "dll", 3) == 0)
+        {
+          assert (noll_vector_size (phi->m.ls.args) >= 4);
+          uint_t fst = noll_vector_at (phi->m.ls.args, 0);
+          uint_t bk = noll_vector_at (phi->m.ls.args, 1);
+          uint_t prv = noll_vector_at (phi->m.ls.args, 2);
+          uint_t nxt = noll_vector_at (phi->m.ls.args, 3);
+          /// remove ls edges between equal variables
+          /// because only acyclic predicates are allowed
+          return ((fst == nxt) && (bk == prv)) ? 0 : 1;
+        }
+      else
+        {
+          uint_t src = noll_vector_at (phi->m.ls.args, 0);
+          uint_t dst = noll_vector_at (phi->m.ls.args, 1);
+          /// remove ls edges between equal variables
+          /// because only acyclic predicates are allowed
+          return (src == dst) ? 0 : 1;
+        }
     }
-  }
   if (phi->kind != NOLL_SPACE_WSEP && phi->kind != NOLL_SPACE_SSEP)
     return res;
   // else recursive call over separated formula
   if (phi->m.sep)
     {
       for (uint_t i = 0; i < noll_vector_size (phi->m.sep); i++)
-        res += noll_atom_of_form (noll_vector_at (phi->m.sep, i), isMatrix, op, nloop);
+        res +=
+          noll_atom_of_form (noll_vector_at (phi->m.sep, i), isMatrix, op,
+                             nloop);
     }
   return res;
 }
@@ -128,8 +140,8 @@ noll_atom_of_form (noll_space_t * phi, bool isMatrix,
  * @return array of identifiers of edges generated from phi
  */
 noll_uid_array *
-noll_graph_of_space (noll_space_t * phi, bool isMatrix, 
-				     noll_graph_t * g, uint_t nedges, uint_t* lnode)
+noll_graph_of_space (noll_space_t * phi, bool isMatrix,
+                     noll_graph_t * g, uint_t nedges, uint_t * lnode)
 {
   noll_uid_array *res = NULL;
   if (!phi)
@@ -142,7 +154,7 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
       {
         res = noll_uid_array_new ();
         break;
-	  }
+      }
     case NOLL_SPACE_PTO:
       {
         res = noll_uid_array_new ();
@@ -181,7 +193,7 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
       }
     case NOLL_SPACE_LS:
       {
-		/// resulting array of edge identifiers
+        /// resulting array of edge identifiers
         res = noll_uid_array_new ();
         noll_uid_array_reserve (res, noll_vector_size (phi->m.ls.args));
         /// source node
@@ -190,25 +202,43 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
         /// destination node
         uint_t ndst = g->var2node[noll_vector_at (phi->m.ls.args, 1)];
         assert (ndst < g->nodes_size);
-        if (nsrc == ndst) {
-			/// simple case, no loop
-			if (phi->m.ls.is_loop == false)
-              return res;           /// no edge is built
+        bool isDLL =
+          (strncmp (noll_pred_name (phi->m.ls.pid), "dll", 3) ==
+           0) ? true : false;
+        /// one direction list segments
+        if (!isDLL && (nsrc == ndst))
+          {
+            /// simple case, no loop
+            if (phi->m.ls.is_loop == false)
+              return res;       /// no edge is built
             else if (isMatrix == false)
               {
-				  /// shall copy the matrix of the called predicate 
-				  fprintf (stdout, "Loop in formula: Not yet implemented!\nquit.\n");
-				  assert (0);
-			  }
-			/// else, continue like for an ls edge
-		}
+                /// shall copy the matrix of the called predicate 
+                fprintf (stdout,
+                         "Loop in formula: Not yet implemented!\nquit.\n");
+                assert (0);
+              }
+            /// else, continue like for an ls edge
+          }
+        else if (isDLL == true)
+          {
+            assert (noll_vector_size (phi->m.ls.args) >= 4);
+            uint_t fst = noll_vector_at (phi->m.ls.args, 0);
+            uint_t bk = noll_vector_at (phi->m.ls.args, 1);
+            uint_t prv = noll_vector_at (phi->m.ls.args, 2);
+            uint_t nxt = noll_vector_at (phi->m.ls.args, 3);
+            if ((fst == nxt) && (bk == prv))
+              return res;       /// no edge is built
+            /// else, continue like for an ls edge
+          }
+
         /// build the edge
         noll_edge_t *e =
           noll_edge_alloc (NOLL_EDGE_PRED, nsrc, ndst, phi->m.ls.pid);
         for (uint_t i = 2; i < noll_vector_size (phi->m.ls.args); i++)
           noll_uid_array_push (e->args,
-                               g->
-                               var2node[noll_vector_at (phi->m.ls.args, i)]);
+                               g->var2node[noll_vector_at
+                                           (phi->m.ls.args, i)]);
         e->id = nedges;
         // put the edge in graph
         noll_edge_array_push (g->edges, e);
@@ -244,8 +274,8 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
         for (uint_t i = 0; i < noll_vector_size (phi->m.sep); i++)
           {
             noll_uid_array *ri =
-              noll_graph_of_space (noll_vector_at (phi->m.sep, i), isMatrix, 
-								   g, new_nedges, lnode);
+              noll_graph_of_space (noll_vector_at (phi->m.sep, i), isMatrix,
+                                   g, new_nedges, lnode);
             // update the number of edges
             new_nedges += (ri) ? noll_vector_size (ri) : 0;
             // update the separation constraints
@@ -318,7 +348,7 @@ noll_graph_of_form (noll_form_t * phi, bool isMatrix)
   if (!phi)
     {
 #ifndef NDEBUG
-      fprintf(stdout, "noll_graph_of_form: NULL formula\n");
+      fprintf (stdout, "noll_graph_of_form: NULL formula\n");
 #endif
       // emp formula, build empty graph
       return noll_graph_alloc (NULL, NULL, 0, 0, NULL);
@@ -336,11 +366,13 @@ noll_graph_of_form (noll_form_t * phi, bool isMatrix)
   uint_t nsize = noll_nodes_of_form (phi, vars);
   /// this number of node is exact if isMatrix, 
   /// otherwise new nodes are added if not isMatrix and loop subformula
-  
+
   /// count edges pto and pred
-  uint_t max_pto = noll_atom_of_form (phi->space, isMatrix, NOLL_SPACE_PTO, NULL);
+  uint_t max_pto =
+    noll_atom_of_form (phi->space, isMatrix, NOLL_SPACE_PTO, NULL);
   uint_t nloop = 0;
-  uint_t max_ls = noll_atom_of_form (phi->space, isMatrix, NOLL_SPACE_LS, &nloop);
+  uint_t max_ls =
+    noll_atom_of_form (phi->space, isMatrix, NOLL_SPACE_LS, &nloop);
   nsize += nloop;
   res = noll_graph_alloc (phi->lvars, phi->svars, nsize, max_pto + max_ls,
                           vars);
@@ -357,12 +389,14 @@ noll_graph_of_form (noll_form_t * phi, bool isMatrix)
     {
       res->is_precise = phi->space->is_precise;
       uint_t lnode_aux = nsize - nloop; /// used to encode loops if needed
-      noll_uid_array *r = noll_graph_of_space (phi->space, isMatrix, res, 0, &lnode_aux);
+      noll_uid_array *r =
+        noll_graph_of_space (phi->space, isMatrix, res, 0, &lnode_aux);
       if (r == NULL)
         {
 #ifndef NDEBUG
-      fprintf(stdout, "noll_graph_of_form: error in building space formula\n");
-#endif                       // error
+          fprintf (stdout,
+                   "noll_graph_of_form: error in building space formula\n");
+#endif // error
           noll_graph_free (res);
           return NULL;
         }

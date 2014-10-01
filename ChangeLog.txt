@@ -1,3 +1,8 @@
+2014, October 1st
+- add a weak test for well-formedness of acyclic list
+  segments and special test for dll segments.
+- change of status for some benchmarks in dll.
+
 2014, September 29th
 - add options to trigger different optimisations of the
   decision procedure.

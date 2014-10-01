@@ -84,6 +84,19 @@ bool noll_option_is_pred2ta_opt (void);
 
 
 /**
+ * @brief Trigger diagnosis feature.
+ *
+ * Default is false (i.e., no diagnosis).
+ */
+void noll_option_set_diag (void);
+
+/**
+ * @brief Status of the diagnosis.
+ */
+bool noll_option_is_diag (void);
+
+
+/**
  * @brief Set option using the input string of the form '-'optioncode.
  */
 void noll_option_set (char *option);
