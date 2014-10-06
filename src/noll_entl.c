@@ -570,19 +570,24 @@ noll_entl_normalize ()
 
   if (pform)
     {
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, "    o normalize positive formula\n");
       noll_prob->pabstr = NULL;
-      if (noll_option_is_tosat(0) == true)
+      if (noll_option_is_tosat (0) == true)
         normalize_incremental (pform, "p-out.txt");
       else
         noll_prob->pabstr = noll2sat_normalize (pform, "p-out.txt", true,
                                                 false);
     }
-#ifndef NDEBUG
-  fprintf (stdout, "*** check-sat: normalized pform: \n");
-  noll_form_fprint (stdout, noll_prob->pform);
-  fprintf (stdout, "\n\n*** check-sat: normalize nform: \n");
-  fflush (stdout);
-#endif
+  if (noll_option_is_diag () == true)
+    {
+      FILE *f_norm = fopen ("form-pos-norm.txt", "w");
+      noll_form_fprint (f_norm, noll_prob->pform);
+      fclose (f_norm);
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout,
+                 "      normalized positive formula: form-pos-norm.txt\n");
+    }
 
   if (nform)
     {
@@ -594,20 +599,23 @@ noll_entl_normalize ()
         {
           noll_form_t *nform_i = noll_vector_at (nform, i);
           noll_sat_t *nform_i_abstr = NULL;
-#ifndef NDEBUG
-          fprintf (stdout, "\t\t(nform_%zu): begin normalize\n", i);
-          fflush (stdout);
-#endif
-          if (noll_option_is_tosat(0) == true)
+          if (noll_option_get_verb () > 0)
+            fprintf (stdout, "    o normalize negative formula %zu\n", i);
+
+          if (noll_option_is_tosat (0) == true)
             normalize_incremental (nform_i, "n-out.txt");
           else
             nform_i_abstr = noll2sat_normalize (nform_i, "n-out.txt", true,
                                                 false);
-#ifndef NDEBUG
-          fprintf (stdout, "\t\t(nform_%zu): end normalize\n", i);
-          noll_form_fprint (stdout, nform_i);
-          fflush (stdout);
-#endif
+          if (noll_option_is_diag () == true)
+            {
+              FILE *f_norm = fopen ("form-neg-norm.txt", "w");
+              noll_form_fprint (f_norm, noll_prob->pform);
+              fclose (f_norm);
+              if (noll_option_get_verb () > 0)
+                fprintf (stdout,
+                         "      normalized negative formula: form-neg-norm.txt\n");
+            }
           noll_vector_at (nform, i) = nform_i;
           noll_vector_at (noll_prob->nabstr, i) = nform_i_abstr;
         }
@@ -622,7 +630,7 @@ noll_entl_normalize ()
 }
 
 /**
- * Translate to graph representation all formulae in entailment
+ * Translate to graph representation all formulas in entailment
  * @return 1 if ok, 0 otherwise
  */
 int
@@ -642,16 +650,21 @@ noll_entl_to_graph (void)
                 noll_vector_at (pform->lvars, j)->vname);
 #endif
 
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "    o graph of the positive formula: ...\n");
   noll_prob->pgraph = noll_graph_of_form (pform, false);
 
-#ifndef NDEBUG
-  fprintf (stdout, "\n*****pos_graph: file graph-p.dot\n");
-  noll_graph_fprint_dot ("graph-p.dot", noll_prob->pgraph);
-#else
-  fprintf (stdout, "\n*****pos_graph: (%d nodes, %d spatial edges)\n",
-           noll_prob->pgraph->nodes_size,
-           noll_vector_size (noll_prob->pgraph->edges));
-#endif
+  if (noll_option_is_diag () == true)
+    {
+      noll_graph_fprint_dot ("graph-p.dot", noll_prob->pgraph);
+      if (noll_option_get_verb () > 0)
+        {
+          fprintf (stdout,
+                   "      file graph-p.dot: (%d nodes, %d spatial edges)\n",
+                   noll_prob->pgraph->nodes_size,
+                   noll_vector_size (noll_prob->pgraph->edges));
+        }
+    }
 
   if (nform)
     {
@@ -662,21 +675,25 @@ noll_entl_to_graph (void)
       for (size_t i = 0; i < noll_vector_size (nform); i++)
         {
           noll_form_t *nform_i = noll_vector_at (nform, i);
+          if (noll_option_get_verb () > 0)
+            fprintf (stdout, "    o graph of the negative formula %zu: ...\n",
+                     i);
           noll_graph_t *nform_i_graph = noll_graph_of_form (nform_i, false);
           noll_vector_at (noll_prob->ngraph, i) = nform_i_graph;
-#ifndef NDEBUG
-          fprintf (stdout, "\n*****neg_graph: file graph-n%zu.dot\n", i);
-          char fname[20] = "\0";
-          sprintf (fname, "graph-n%zu.dot", i);
-          noll_graph_fprint_dot (fname, nform_i_graph);
-          fflush (stdout);
-#else
-          fprintf (stdout,
-                   "\n*****neg_graph-%zu: (%d nodes, %d spatial edges)\n", i,
-                   nform_i_graph->nodes_size,
-                   noll_vector_size (nform_i_graph->edges));
-#endif
 
+          if (noll_option_is_diag () == true)
+            {
+              char fname[20] = "\0";
+              sprintf (fname, "graph-n%zu.dot", i);
+              noll_graph_fprint_dot (fname, nform_i_graph);
+              if (noll_option_get_verb () > 0)
+                {
+                  fprintf (stdout,
+                           "      file graph-n%zu.dot: (%d nodes, %d spatial edges)\n",
+                           i, nform_i_graph->nodes_size,
+                           noll_vector_size (nform_i_graph->edges));
+                }
+            }
         }
     }
   return 1;
@@ -691,17 +708,19 @@ noll_entl_to_homomorphism (void)
 {
 
   int res = 1;
-#ifndef NDEBUG
-  fprintf (stdout, "*** check-sat: test homomorphism:\n");
-#endif
 
   res = noll_graph_homomorphism ();
-
-#ifdef NDEBUG
-  fprintf (stdout, "\n*** check-sat: homomorphism found = ");
-  noll_hom_fprint (stdout, noll_prob->hom);
-  fflush (stdout);
-#endif
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "    homomorphism found\n");
+  if (noll_option_is_diag () == true)
+    {
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, "    see file graph-hom.txt\n");
+      FILE *f_hom = fopen ("graph-hom.txt", "w");
+      noll_hom_fprint (f_hom, noll_prob->hom);
+      fflush (f_hom);
+      fclose (f_hom);
+    }
 
   /*
    * Check sharing constraints entailment for the found homomorphism
@@ -736,9 +755,8 @@ noll_entl_solve_special (bool isSyn)
   /* unsat = unsat(pform) */
   if (noll_prob->pform == NULL)
     {
-#ifdef NDEBUG
-      fprintf (stdout, "*** check-sat: special case pform=empty ...\n");
-#endif
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, "    special case: empty (null) positive formula\n");
       return 0;
     }
 
@@ -746,18 +764,16 @@ noll_entl_solve_special (bool isSyn)
   /* unsat = unsat(pform) */
   if (noll_form_is_unsat (noll_prob->pform))
     {
-//#ifdef NDEBUG
-      fprintf (stdout, "*** check-sat: special case unsat(pform) ...\n");
-//#endif
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, "    special case: unsat positive formula\n");
       return 0;
     }
 
   assert (NULL != noll_prob->nform);
   if (noll_form_array_is_valid (noll_prob->nform))
     {
-//#ifdef NDEBUG
-      fprintf (stdout, "*** check-sat: special case valid(nform) ...\n");
-//#endif
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, "    special case: valid negative formula\n");
       return 1;
     }
 
@@ -769,10 +785,9 @@ noll_entl_solve_special (bool isSyn)
   if ((noll_prob->nform == NULL)
       || noll_form_array_is_unsat (noll_prob->nform))
     {
-//#ifdef NDEBUG
-      fprintf (stdout,
-               "*** check-sat: special case unsat(nform) and sat(pform) ...\n");
-//#endif
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout,
+                 "    special case: sat positive and unsat negative formulas\n");
       return 1;
     }
   return -1;
@@ -800,15 +815,19 @@ noll_entl_solve (void)
   /*
    * Test special (syntactic) cases, before normalizing the formulas
    */
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "  > check special cases\n");
+
   res = noll_entl_solve_special (true);
   if (res != -1)
     return res;
 
-#ifndef NDEBUG
-  fprintf (stdout, "\n*** check-%ssat: not special case\n",
-           (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
-  fflush (stdout);
-#endif
+  if (noll_option_get_verb () > 0)
+    {
+      fprintf (stdout, "    not a special case for check-%ssat!\n",
+               (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
+      fflush (stdout);
+    }
 
   struct timeval tvBegin, tvEnd, tvDiff;
 
@@ -817,6 +836,9 @@ noll_entl_solve (void)
   /*
    * Compute typing infos
    */
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "  > typing formulas\n");
+
   noll_entl_type ();
 
 #ifndef NDEBUG
@@ -830,13 +852,10 @@ noll_entl_solve (void)
   /*
    * Normalize both formulas (which also test satisfiability)
    */
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "  > normalizing formulas\n");
 
   noll_entl_normalize ();
-
-#ifndef NDEBUG
-  fprintf (stdout, "\n*** check-%ssat: normalize\n",
-           (noll_prob->cmd == NOLL_FORM_SAT) ? "" : "un");
-#endif
 
   /*
    * Test the satisfiability of pform /\ not(\/_i nform)
@@ -852,6 +871,9 @@ noll_entl_solve (void)
    * If both formulas are not empty,
    * translate formulas to graphs.
    */
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "  > translation to graphs\n");
+
   res = noll_entl_to_graph ();
   if (res == 0)
     {
@@ -863,6 +885,8 @@ noll_entl_solve (void)
   /*
    * Check graph homomorphism
    */
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "  > check graph homomorphism\n");
   /* build homomorphism from right to left */
   res = noll_entl_to_homomorphism ();
   /* sharing constraints in pos_graph are updated and tested! */

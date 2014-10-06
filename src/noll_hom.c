@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include "noll_types.h"
+#include "noll_option.h"
 #include "noll_hom.h"
 #include "noll_entl.h"
 #include "noll.h"
@@ -98,15 +99,16 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
           fprintf (f, "[\n");
           isempty = false;
         }
-      fprintf (f, "Simple Hom %d for n-graph %zu: \n", i, shi->ngraph);
-      fprintf (f, "\tNode mapping (n -> p): ");
+      fprintf (f, "Simple Homomorphism %d for graph-n%zu: \n", i,
+               shi->ngraph);
+      fprintf (f, "\tNode mapping (graph-n%d --> graph-p): ", i);
       fprintf (f, "[");
       for (uint_t j = 0; j < ngi->nodes_size; j++)
         fprintf (f, "n%d --> n%d,", j, shi->node_hom[j]);
       fprintf (f, "]");
 
       /* print edge mapping */
-      fprintf (f, "\n\tEdge mapping (p -> n): ");
+      fprintf (f, "\n\tEdge mapping (graph-p --> graph-n%d): ", i);
       if (shi->pused == NULL)
         fprintf (f, "NULL\n");
       else
@@ -1198,10 +1200,17 @@ noll_graph_shom_pto (noll_graph_t * g1, noll_graph_t * g2,
 #ifndef NDEBUG
           fprintf (stdout, "\t not found!");
 #endif
-          /* failure */
-          fprintf (stdout, "\nDiagnosis of failure: ");
-          fprintf (stdout, "points-to edge n%d ---%s--> n%d not mapped!\n",
-                   nsrc_e1, noll_field_name (e1->label), ndst_e1);
+          if (noll_option_is_diag () == true)
+            {
+              /* failure */
+              fprintf (stdout, "\nDiagnosis of failure: ");
+              fprintf (stdout,
+                       "\n\tConstraint not entailed: %s |--> { .. (%s,%s) .. }\n",
+                       noll_var_name (g2->lvars, nsrc_e1, NOLL_TYP_RECORD),
+                       noll_field_name (e1->label), noll_var_name (g2->lvars,
+                                                                   ndst_e1,
+                                                                   NOLL_TYP_RECORD));
+            }
         }
       /* else, continue */
     }
@@ -1529,11 +1538,19 @@ noll_graph_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
       NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", nv,
                   fst, res);
 #endif
-      if (res != 1)             /* diagnosis */
+      if (res != 1)
         {
-          fprintf (stdout, "\nDiagnosis of failure: ");
-          fprintf (stdout, "\n\tConstraint [v%d != v%d] not found!\n",
-                   noll_graph_get_var (g2, fst), noll_graph_get_var (g2, nv));
+          if (noll_option_is_diag () == true)
+            {
+              fprintf (stdout, "\nDiagnosis of failure: ");
+              fprintf (stdout, "\n\tMissing constraint: %s != %s\n",
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2, fst),
+                                      NOLL_TYP_RECORD),
+                       noll_var_name (g2->lvars, noll_graph_get_var (g2, nv),
+                                      NOLL_TYP_RECORD));
+              fprintf (stdout, "\t(required by well formedness).\n");
+            }
           return 0;
         }
     }
@@ -1548,11 +1565,19 @@ noll_graph_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
       NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", bk,
                   pr, res);
 #endif
-      if (res != 1)             /* diagnosis */
+      if (res != 1)
         {
-          fprintf (stdout, "\nDiagnosis of failure: ");
-          fprintf (stdout, "\n\tConstraint [v%d != v%d] not found!\n",
-                   noll_graph_get_var (g2, bk), noll_graph_get_var (g2, pr));
+          if (noll_option_is_diag () == true)
+            {
+              fprintf (stdout, "\nDiagnosis of failure: ");
+              fprintf (stdout, "\n\tMissing constraint: %s != %s\n",
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2, bk),
+                                      NOLL_TYP_RECORD),
+                       noll_var_name (g2->lvars, noll_graph_get_var (g2, pr),
+                                      NOLL_TYP_RECORD));
+              fprintf (stdout, "\t(required by well formedness).\n");
+            }
           return 0;
         }
     }
@@ -1596,27 +1621,33 @@ noll_graph_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
 #endif
       return 1;
     }
-  /* case g2 \ sg2 is empty */
-  if ((NOLL_VECTOR_SIZE (g2->edges) == NOLL_VECTOR_SIZE (sg2->edges)) &&
-      (NOLL_VECTOR_SIZE (sg2->edges) >= 2))
+  /* check condition for any e2 in sg2 such that e2(dst) != args2[1+isdll] */
+  for (uint_t eid2 = 0; eid2 < noll_vector_size (sg2->edges); eid2++)
     {
-#ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_1: empty g2 \\ sg2!\n");
-#endif
-      /* weaker condition: if there are predicate edges in sg2, return 0 */
-      for (uint_t eid2 = 0; eid2 < noll_vector_size (sg2->edges); eid2++)
+      noll_edge_t *e2 = noll_vector_at (sg2->edges, eid2);
+      if ((e2->kind == NOLL_EDGE_PRED) &&
+          (noll_vector_at (e2->args, 1 + isdll) ==
+           noll_vector_at (args2, 1 + isdll)))
         {
-          noll_edge_t *e2 = noll_vector_at (sg2->edges, eid2);
-          if (e2->kind == NOLL_EDGE_PRED)
-            {
-              return 0;
-            }
+          /* ignore edges of sg2 with the same destination node */
+          continue;
+        }
+      else if ((e2->kind == NOLL_EDGE_PRED) &&
+               (NOLL_VECTOR_SIZE (g2->edges) ==
+                NOLL_VECTOR_SIZE (sg2->edges)))
+        {
+#ifndef NDEBUG
+          NOLL_DEBUG ("\n++++ select_wf_1: empty g2 \\ sg2!\n");
+#endif
+          /* weaker condition: */
+          /* not the same target, and empty remaining graph */
+          return 0;
         }
     }
 #ifndef NDEBUG
   NOLL_DEBUG ("\n++++ select_wf_1: NYI!\n");
 #endif
-  return 1;                     /* TODO */
+  return 1;
 }
 
 /**
@@ -1682,12 +1713,20 @@ noll_graph_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
                       nvp, res);
 #endif
           if (res == 0)
-            {                   /* print diagnosis */
-              fprintf (stdout, "\nDiagnosis of failure:");
-              fprintf (stdout,
-                       "\n\tWell formedness constraint 2 [v%d != v%d] not found!\n",
-                       noll_graph_get_var (g2, ni), noll_graph_get_var (g2,
-                                                                        nj));
+            {
+              if (noll_option_is_diag () == true)
+                {
+                  fprintf (stdout, "\nDiagnosis of failure:");
+                  fprintf (stdout, "\n\tMissing constraint: %s != %s\n",
+                           noll_var_name (g2->lvars,
+                                          noll_graph_get_var (g2, ni),
+                                          NOLL_TYP_RECORD),
+                           noll_var_name (g2->lvars,
+                                          noll_graph_get_var (g2, nj),
+                                          NOLL_TYP_RECORD));
+                  fprintf (stdout, "\t(required by well formedness).\n");
+                }
+              // loop is broken
             }
         }
     }
@@ -1965,10 +2004,25 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 #ifndef NDEBUG
           fprintf (stdout, "\nshom_ls: fails (select)!\n");
 #endif
-          fprintf (stdout, "\nDiagnosis of failure: ");
-          fprintf (stdout, "predicate edge n%d ---%s--> n%d not mapped!\n",
-                   noll_vector_at (e1->args, 0),
-                   noll_pred_name (e1->label), noll_vector_at (e1->args, 1));
+          if (noll_option_is_diag () == true)
+            {
+              fprintf (stdout, "\nDiagnosis of failure: ");
+              fprintf (stdout, "\n\tConstraint not entailed: %s(%s,%s,...)\n",
+                       noll_pred_name (e1->label),
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2,
+                                                          noll_vector_at (e1->
+                                                                          args,
+                                                                          0)),
+                                      NOLL_TYP_RECORD),
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2,
+                                                          noll_vector_at (e1->
+                                                                          args,
+                                                                          1)),
+                                      NOLL_TYP_RECORD));
+              fprintf (stdout, "\t(empty selection of space constraints).\n");
+            }
           // Warning: usedg2 is deselected also
           goto return_shom_ls;
         }
@@ -1982,11 +2036,26 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 #ifndef NDEBUG
           fprintf (stdout, "\nshom_ls: fails (well-formedness)!\n");
 #endif
-          fprintf (stdout, "\nDiagnosis of failure: ");
-          fprintf (stdout,
-                   "selection of the predicate edge n%d ---%s--> n%d is not well founded!\n",
-                   noll_vector_at (e1->args, 0), noll_pred_name (e1->label),
-                   noll_vector_at (e1->args, 1));
+          if (noll_option_is_diag () == true)
+            {
+              fprintf (stdout, "\nDiagnosis of failure: ");
+              fprintf (stdout, "\n\tConstraint not entailed: %s(%s,%s,...)\n",
+                       noll_pred_name (e1->label),
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2,
+                                                          noll_vector_at (e1->
+                                                                          args,
+                                                                          0)),
+                                      NOLL_TYP_RECORD),
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2,
+                                                          noll_vector_at (e1->
+                                                                          args,
+                                                                          1)),
+                                      NOLL_TYP_RECORD));
+              fprintf (stdout,
+                       "\t(selected space constraints not well formed).\n");
+            }
           // Warning: usedg2 is deselected also
           goto return_shom_ls;
         }
@@ -1998,11 +2067,26 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
 #ifndef NDEBUG
           fprintf (stdout, "\nshom_ls: fails (membership)!\n");
 #endif
-          fprintf (stdout, "\nDiagnosis of failure: ");
-          fprintf (stdout,
-                   "selection of predicate edge n%d ---%s--> n%d not entailed!\n",
-                   noll_vector_at (e1->args, 0), noll_pred_name (e1->label),
-                   noll_vector_at (e1->args, 1));
+          if (noll_option_is_diag () == true)
+            {
+              fprintf (stdout, "\nDiagnosis of failure: ");
+              fprintf (stdout, "\n\tConstraint not entailed: %s(%s,%s,...)\n",
+                       noll_pred_name (e1->label),
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2,
+                                                          noll_vector_at (e1->
+                                                                          args,
+                                                                          0)),
+                                      NOLL_TYP_RECORD),
+                       noll_var_name (g2->lvars,
+                                      noll_graph_get_var (g2,
+                                                          noll_vector_at (e1->
+                                                                          args,
+                                                                          1)),
+                                      NOLL_TYP_RECORD));
+              fprintf (stdout,
+                       "\t(selected space constraints do not entail the above constraint).\n");
+            }
           // Warning: usedg2 is deselected also
           goto return_shom_ls;
         }

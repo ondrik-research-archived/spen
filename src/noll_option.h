@@ -50,12 +50,12 @@ bool noll_option_is_tosat (int version);
 void noll_option_set_preds (bool isbuiltin);
 
 /**
- * @brief Return the version of the boolean abstraction.
+ * @brief True if builtin encoding of predicates is used.
  */
 bool noll_option_is_preds_builtin (void);
 
 /**
- * @brief Select the procedure to be used for ls predicate.
+ * @brief Select the procedure to be used for the ls predicate.
  *
  * Default version is 1 (use tree automata)
  * Other versions are:
@@ -70,17 +70,30 @@ bool noll_option_is_checkLS (int version);
 
 
 /**
- * @brief Trigger optimisation for the use if general algorithm 
- *        for tree automata instantiation.
+ * @brief Trigger the level of optimisation to be used for the
+ *        algorithm building tree automata.
  *
- * Default is false (i.e., no optimization).
+ * Default is  0 (i.e., no optimization).
  */
-void noll_option_set_pred2ta_opt (void);
+void noll_option_set_pred2ta_opt (int lelev);
 
 /**
- * @brief Status of the optimisation for pred2ta
+ * @brief Level of the optimisation for pred2ta
  */
-bool noll_option_is_pred2ta_opt (void);
+int noll_option_get_pred2ta_opt (void);
+
+
+/**
+ * @brief Trigger verbosity level.
+ *
+ * Default is 0 (i.e., no message).
+ */
+void noll_option_set_verb (int level);
+
+/**
+ * @brief Level of verbosity.
+ */
+int noll_option_get_verb (void);
 
 
 /**
@@ -94,7 +107,6 @@ void noll_option_set_diag (void);
  * @brief Status of the diagnosis.
  */
 bool noll_option_is_diag (void);
-
 
 /**
  * @brief Set option using the input string of the form '-'optioncode.

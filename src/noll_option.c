@@ -84,16 +84,16 @@ noll_option_is_checkLS (int version)
     return (version != 0) ? true : false;
 }
 
-bool pred2ta_opt = false;
+int pred2ta_opt = 0;
 
 void
-noll_option_set_pred2ta_opt (void)
+noll_option_set_pred2ta_opt (int level)
 {
-  pred2ta_opt = true;
+  pred2ta_opt = (level > 0) ? level : 0;
 }
 
-bool
-noll_option_is_pred2ta_opt (void)
+int
+noll_option_get_pred2ta_opt (void)
 {
   return pred2ta_opt;
 }
@@ -118,6 +118,21 @@ noll_option_is_diag (void)
 }
 
 
+int verbosity_level = 0;
+
+void
+noll_option_set_verb (int level)
+{
+  verbosity_level = (level > 0) ? level : 0;
+}
+
+int
+noll_option_get_verb (void)
+{
+  return verbosity_level;
+}
+
+
 /* ====================================================================== */
 /* Set/Print. */
 /* ====================================================================== */
@@ -127,7 +142,7 @@ noll_option_set (char *option)
 {
   if (strcmp (option, "-b") == 0)
     {
-      noll_option_set_preds (true);     /* builtin predicates */
+      noll_option_set_preds (true);     /* NYI: builtin predicates */
       return;
     }
   if (strcmp (option, "-d") == 0)
@@ -137,23 +152,28 @@ noll_option_set (char *option)
     }
   if (strcmp (option, "-n") == 0)
     {
-      noll_option_set_tosat (0);        /* set old version */
+      noll_option_set_tosat (0);        /* use old version of boolean abstraction */
       return;
     }
   if (strcmp (option, "-o1") == 0)
     {
-      noll_option_set_checkLS (0);      /* special check for LS edges */
+      noll_option_set_checkLS (0);      /* NYI: special check for LS edges */
       return;
     }
   if (strcmp (option, "-o2") == 0)
     {
-      noll_option_set_pred2ta_opt ();   /* optimized check for predicate edges */
+      noll_option_set_pred2ta_opt (1);  /* NYI: optimized check for predicate edges */
       return;
     }
   if (strcmp (option, "-o") == 0)
     {
-      noll_option_set_checkLS (0);      /* apply all optimizations */
-      noll_option_set_pred2ta_opt ();
+      noll_option_set_checkLS (0);      /* NYI: apply all optimizations */
+      noll_option_set_pred2ta_opt (1);
+      return;
+    }
+  if (strcmp (option, "-v") == 0)
+    {
+      noll_option_set_verb (1); /* verbosity level */
       return;
     }
   printf ("Unknown option: %s! ignore.\n", option);

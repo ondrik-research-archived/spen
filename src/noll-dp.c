@@ -61,6 +61,8 @@ main (int argc, char **argv)
       for (int i = 1; i < arg_file; i++)
         noll_option_set (argv[i]);
     }
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "spen on file %s\n", argv[arg_file]);
 
   // Step 1: Parse the file and initialize the problem
   // pre: the file shall exists.
@@ -77,6 +79,9 @@ main (int argc, char **argv)
   // initialize the problem
   noll_entl_init ();
   noll_entl_set_fname (argv[arg_file]);
+
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "  > parse file %s\n", argv[arg_file]);
   // call the parser
   smtlib2_noll_parser *sp = smtlib2_noll_parser_new ();
   smtlib2_abstract_parser_parse ((smtlib2_abstract_parser *) sp, f);

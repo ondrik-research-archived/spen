@@ -438,7 +438,7 @@ noll_graph_fprint_dot (char *fname, noll_graph_t * g)
       fprintf (stderr, "File %s not found! quit.", fname);
       return;
     }
-  fprintf (f, "digraph %s {\nnode [shape=record];\n", fname);
+  fprintf (f, "digraph SLGraph {\nnode [shape=record];\n");
   // print nodes
   for (uint_t n = 0; n < g->nodes_size; n++)
     {
@@ -468,14 +468,16 @@ noll_graph_fprint_dot (char *fname, noll_graph_t * g)
       fprintf (f, "\n");
     }
 
-  fprintf (f, "\tshare [label=\"{share|");
-  if (g->share)
-    {
-      noll_share_fprint_dot (f, g->lvars, g->svars, g->share);
-    }
-  else
-    fprintf (f, "\t\tnull\n");
-  fprintf (f, "}\"];\n");
+  /* NYI
+     fprintf (f, "\tshare [label=\"{share|");
+     if (g->share)
+     {
+     noll_share_fprint_dot (f, g->lvars, g->svars, g->share);
+     }
+     else
+     fprintf (f, "\t\tnull\n");
+     fprintf (f, "}\"];\n");
+   */
 
   fprintf (f, "\n}\n");
   fflush (f);

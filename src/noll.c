@@ -442,26 +442,6 @@ noll_exp_typecheck_pred_basic_case (const char *name,
 }
 
 /**
- * Build a predefined predicate definition using the input name in
- * ls, dll0a, nll0a, skl3
- */
-noll_pred_binding_t *
-noll_mk_pred_predef (noll_context_t * ctx, const char *name, uint_t npar,
-                     noll_type_t * rety, noll_exp_t * def)
-{
-  assert (NULL != ctx);
-  assert (NULL != name);
-  assert (npar == npar);
-  assert (NULL != rety);
-  assert (NULL != def);
-  if (ctx == ctx && name == name && npar == npar && rety == rety
-      && def == def)
-    return NULL;
-  // TODO
-  return NULL;
-}
-
-/**
  * Build a user predicate definition using the input
  */
 noll_pred_binding_t *
@@ -722,20 +702,20 @@ noll_mk_pred_userdef (noll_context_t * ctx, const char *name, uint_t npar,
         }
     }
   // check diseq to have the good form, i.e., E != F U B 
-  if (0 != strcmp (name, "dll")) 
-  { 
-    for (uint_t i = 2; i <= npar; i++)
+  if (0 != strcmp (name, "dll"))
     {
-	  uint_t rid_i = noll_var_record(ctx->lvar_env, i);
-      if ((diseq[i] != 1) && (pred_ty == rid_i))
+      for (uint_t i = 2; i <= npar; i++)
         {
-          noll_error (1, "Building predicate definition ", name);
-          noll_error (1, "Formula inside exists ",
-                      "first argument not distinct from last and border");
-          return NULL;
+          uint_t rid_i = noll_var_record (ctx->lvar_env, i);
+          if ((diseq[i] != 1) && (pred_ty == rid_i))
+            {
+              noll_error (1, "Building predicate definition ", name);
+              noll_error (1, "Formula inside exists ",
+                          "first argument not distinct from last and border");
+              return NULL;
+            }
         }
     }
-  }
   //TODO: see dll
   free (diseq);
 
@@ -996,6 +976,23 @@ noll_mk_pred_userdef (noll_context_t * ctx, const char *name, uint_t npar,
 }
 
 /**
+ * Build a predefined predicate definition using the input name in
+ * ls, dll0a, nll0a, skl3
+ */
+noll_pred_binding_t *
+noll_mk_pred_predef (noll_context_t * ctx, const char *name, uint_t npar,
+                     noll_type_t * rety, noll_exp_t * def)
+{
+  assert (NULL != ctx);
+  assert (NULL != name);
+  assert (npar == npar);
+  assert (NULL != rety);
+  assert (NULL != def);
+  // TODO
+  return noll_mk_pred_userdef (ctx, name, npar, rety, def);
+}
+
+/**
  * Define a predicate.
  *
  * @param ctx   contains the parameters and local variables
@@ -1023,7 +1020,7 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
 
   noll_pred_binding_t *pdef = NULL;
 
-  if (noll_option_is_preds_builtin() == 0)
+  if (noll_option_is_preds_builtin () == false)
     // not fixed definitions, build the predicate
     pdef = noll_mk_pred_userdef (ctx, name, npar, rety, def);
   else
@@ -2055,11 +2052,12 @@ noll_mk_form_emp (noll_exp_t * f)
 {
   assert (NULL != f);
   noll_space_t *sigma = NULL;
-  if (f->discr == NOLL_F_EMP) {
-  sigma = (noll_space_t *) malloc (sizeof (noll_space_t));
-  sigma->kind = NOLL_SPACE_EMP;
-  sigma->is_precise = true;
-}
+  if (f->discr == NOLL_F_EMP)
+    {
+      sigma = (noll_space_t *) malloc (sizeof (noll_space_t));
+      sigma->kind = NOLL_SPACE_EMP;
+      sigma->is_precise = true;
+    }
   return sigma;
 }
 

@@ -21,6 +21,7 @@
  */
 
 #include "noll2sat.h"
+#include "noll_option.h"
 
 NOLL_VECTOR_DEFINE (noll_sat_pure_array, noll_sat_pure_t *);
 
@@ -1616,8 +1617,7 @@ noll2sat_membership (noll_sat_t * fsat)
                         uint_t bvar_apto_j_k = noll2sat_get_bvar_apto (fsat,
                                                                        x_j,
                                                                        f_k,
-                                                                       ls_i->
-                                                                       forig);
+                                                                       ls_i->forig);
                         if (!flag)
                           {
                             fprintf (fsat->file, "-%d ", bvar_j_in_i);
@@ -2801,6 +2801,11 @@ noll2sat_normalize (noll_form_t * form, char *fname, bool incr,
   /*
    * Build the boolean abstraction.
    */
+  if (noll_option_get_verb () > 0)
+    {
+      fprintf (stdout, "      * build the boolean abstraction ...");
+      fflush (stdout);
+    }
   noll_sat_t *fsat = noll2sat (form, fname);
 
   /*
@@ -2810,17 +2815,19 @@ noll2sat_normalize (noll_form_t * form, char *fname, bool incr,
   if (!noll2sat_is_sat (fsat))
     {
       form->kind = NOLL_FORM_UNSAT;
-#ifndef NDEBUG
-      fprintf (stdout,
-               "+++++++++++The formula is unsatisfiable+++++++++++++\n");
-#endif
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, " unsat formula!\n");
       noll_sat_free (fsat);
       return NULL;
     }
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, " sat formula!\n");
 
   /*
    * Check the implied (in)equalities.
    */
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, "      * infer implied (in)equalities ...");
   if (incr == true)
     nol2sat_normalize_incr (fsat);
   else
@@ -2828,8 +2835,13 @@ noll2sat_normalize (noll_form_t * form, char *fname, bool incr,
 
   if (destructive == true || form->kind == NOLL_FORM_UNSAT)
     {
+      if (noll_option_get_verb () > 0)
+        fprintf (stdout, " unsat formula!\n");
       noll_sat_free (fsat);
       return NULL;
     }
+  if (noll_option_get_verb () > 0)
+    fprintf (stdout, " sat formula!\n");
+
   return fsat;
 }

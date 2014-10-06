@@ -7,7 +7,7 @@ OPTION=
 .PHONY: clean purge
 
 clean:
-	rm -f *out.txt result.txt *.dot
+	rm -f *out.txt result.txt graph-*.txt form-*.txt *.dot gmon.out
 
 purge: clean
 	rm -f *.log
