@@ -484,3 +484,110 @@ noll_graph_fprint_dot (char *fname, noll_graph_t * g)
   fclose (f);
   return;
 }
+
+void
+noll_graph_fprint_sl (char *fname, noll_graph_t * g)
+{
+  assert (fname);
+  if (!g)
+    {
+      fprintf (stderr, "null graph");
+      return;
+    }
+  FILE *f = fopen (fname, "w");
+  if (!f)
+    {
+      fprintf (stderr, "File %s not found! quit.", fname);
+      return;
+    }
+
+  /*
+   * Print the pure part as (dis-)equalities of labels for nodes
+   */
+  char **node2var = (char **) malloc (g->nodes_size * sizeof (char *));
+  for (uint_t i = 0; i < g->nodes_size; i++)
+    node2var[i] = NULL;
+  bool isempty = true;
+  // fprintf(f, "Pure equality atoms: \n");
+  for (uint_t n = 0; n < g->nodes_size; n++)
+    {
+      for (uint_t v = 0; v < noll_vector_size (g->lvars); v++)
+        if (g->var2node[v] == n)
+          {
+            if (node2var[n] == NULL)
+              node2var[n] = noll_var_name (g->lvars, v, NOLL_TYP_RECORD);
+            else
+              {
+                fprintf (f, "%s=%s and ", node2var[n],
+                         noll_var_name (g->lvars, v, NOLL_TYP_RECORD));
+                isempty = false;
+              }
+          }
+    }
+
+  // fprintf(f, "Pure difference atoms: \n");
+  assert (g->diff != NULL);
+  // low-diagonal matrix
+  for (uint_t i = 0; i < g->nodes_size; i++)
+    for (uint_t j = 0; j <= i; j++)
+      if (g->diff[i][j] == true)
+        {
+          fprintf (f, "%s <> %s and ", node2var[i], node2var[j]);
+          isempty = false;
+        }
+
+  //fprintf(f, "Spatial atoms: \n");
+  assert (g->edges);
+  // print edges sourcing each node
+  for (uint_t n = 0; n < g->nodes_size; n++)
+    {
+      char *vname = node2var[n];
+      if (g->mat[n] == NULL)
+        continue;
+
+      /// print all edges, if any
+      /// notice that there is no predicate + pto edge from the same node
+      bool isempty_pto = true;
+      for (uint_t ei = 0; ei < noll_vector_size (g->mat[n]); ei++)
+        {
+          noll_edge_t *e = noll_vector_at (g->edges,
+                                           noll_vector_at (g->mat[n], ei));
+          assert (e != NULL);
+
+          if (e->kind == NOLL_EDGE_PTO)
+            {
+              if (isempty_pto == true)
+                {
+                  isempty_pto = isempty = false;
+                  fprintf (f, "%s -> {", vname);
+                }
+              else
+                fprintf (f, ",");
+              fprintf (f, "(f%d,%s)", e->label,
+                       node2var[noll_vector_at (e->args, 1)]);
+
+            }
+          else
+            {
+              fprintf (f, "%s(%s,%s", noll_pred_name (e->label),
+                       vname, node2var[noll_vector_at (e->args, 1)]);
+              for (uint_t i = 2; i < noll_vector_size (e->args); i++)
+                fprintf (f, ",%s", node2var[noll_vector_at (e->args, i)]);
+              fprintf (f, ") * ");
+            }
+        }
+      if (isempty_pto == false)
+        fprintf (f, "} * ");
+
+    }
+  fprintf (f, "emp\n");
+
+  // free allocated memory 
+  for (uint_t i = 0; i < g->nodes_size; i++)
+    node2var[i] = NULL;
+  free (node2var);
+
+  fflush (f);
+  fclose (f);
+  return;
+}

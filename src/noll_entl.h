@@ -139,6 +139,4 @@ int noll_share_check (noll_var_array * lvars, noll_var_array * svars,
 /* Check satisfiability (if one of formula is NULL)
  * or entailment (lambda1 => lambda2) of share formulas */
 
-
-
 #endif /* NOLL_ENTL_H_ */

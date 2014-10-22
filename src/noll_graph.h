@@ -98,7 +98,10 @@ int noll_edge_in_label (noll_edge_t * e, uint_t label);
 /* ====================================================================== */
 
 void noll_graph_fprint (FILE * f, noll_graph_t * g);
+/* Print to file in text --debug format */
 void noll_graph_fprint_dot (char *fname, noll_graph_t * g);
-/* Print to file in text or dot formats. */
+/* Print to file in dot format */
+void noll_graph_fprint_sl (char *fname, noll_graph_t * g);
+/* Print to file in SL format */
 
 #endif /* _NOLL_GRAPH_H_ */
