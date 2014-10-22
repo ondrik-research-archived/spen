@@ -31,10 +31,10 @@
 void
 print_help (void)
 {
-  printf ("spen: decision procedure for SLRD, version 0.1\n");
-  printf ("Usage: spen <options> <file>\n");
-  noll_option_print (stdin);
-  printf ("\t<file>: input file in SMTLIB2 format\n");
+  printf ("spen: decision procedure for SLRD, version 1.1\n");
+  printf ("Usage: spen [options] file\n");
+  noll_option_print (stdout);
+  printf ("  file   input file in SMTLIB2 format\n");
   printf
     ("See http://www.liafa.univ-paris-diderot.fr/spen for more details.\n");
 }

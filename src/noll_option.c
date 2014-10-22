@@ -184,12 +184,13 @@ void
 noll_option_print (FILE * f)
 {
 
+  fprintf (f, "Options:\n");
   fprintf (f,
-           "\t-b:     use predefined recursive definitions (set from name)\n");
-  fprintf (f, "\t-d:     print diagnosis messages\n");
-  fprintf (f, "\t-n:     internal switch to old normalisation procedure\n");
-  fprintf (f, "\t-o:     apply all optimizations\n");
-  fprintf (f, "\t-o1:    optimized check of LS edges\n");
-  fprintf (f, "\t-o2:    optimized construction of tree automata\n");
+           "  -b     use predefined recursive definitions (set from name)\n");
+  fprintf (f, "  -d     print diagnosis messages\n");
+  fprintf (f, "  -n     internal switch to old normalisation procedure\n");
+  fprintf (f, "  -o     apply all optimizations\n");
+  fprintf (f, "  -o1    optimized check of LS edges\n");
+  fprintf (f, "  -o2    optimized construction of tree automata\n");
 
 }

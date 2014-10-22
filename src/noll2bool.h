@@ -27,7 +27,6 @@
 #include "noll_types.h"
 #include "noll_form.h"
 #include "noll_preds.h"
-#include "noll2bool.h"
 
 /* ====================================================================== */
 /* Writing the boolean abstraction */

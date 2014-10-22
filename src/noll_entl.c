@@ -28,6 +28,7 @@
 #include "noll_form.h"
 #include "noll_entl.h"
 #include "noll2bool.h"          // for old normalization call
+#include "noll_sat.h"
 #include "noll2graph.h"
 #include "noll_hom.h"
 #include "noll_pred2ta.h"
@@ -163,6 +164,20 @@ noll_entl_set_cmd (noll_form_kind_t pb)
 
 
 /* ====================================================================== */
+/* Predicates */
+/* ====================================================================== */
+int
+noll_entl_is_sat (void)
+{
+  assert (noll_prob != NULL);
+
+  if (noll_prob->nform == NULL || noll_vector_empty (noll_prob->nform))
+    return 1;
+  return 0;
+}
+
+
+/* ====================================================================== */
 /* Printers */
 /* ====================================================================== */
 
@@ -277,10 +292,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       fprintf (out_decl, "(not ");
                     fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                     noll_vector_at
-                                                                    (atom->t_right,
-                                                                     0)->svar)->vname,
-                             noll_vector_at (lvars,
-                                             atom->t_left->lvar)->vname);
+                                                                    (atom->
+                                                                     t_right,
+                                                                     0)->
+                                                                    svar)->
+                             vname, noll_vector_at (lvars,
+                                                    atom->t_left->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -295,8 +313,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->
-                                             lvar)->vname);
+                                                             0)->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -315,10 +333,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       {
                         fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                         noll_vector_at
-                                                                        (atom->t_right,
-                                                                         i)->svar)->vname,
-                                 noll_vector_at (lvars,
-                                                 atom->t_left->lvar)->vname);
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        svar)->
+                                 vname, noll_vector_at (lvars,
+                                                        atom->t_left->lvar)->
+                                 vname);
                       }
                     else
                       {
@@ -369,8 +390,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->
-                                             lvar)->vname);
+                                                             0)->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -452,13 +473,19 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                         == NOLL_STERM_SVAR)
                       fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
                                                                       noll_vector_at
-                                                                      (atom->t_right,
-                                                                       i)->svar)->vname);
+                                                                      (atom->
+                                                                       t_right,
+                                                                       i)->
+                                                                      svar)->
+                               vname);
                     else
                       fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
                                                                         noll_vector_at
-                                                                        (atom->t_right,
-                                                                         i)->lvar)->vname);
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        lvar)->
+                               vname);
                   }
                 fprintf (out_decl, ") ) )");
                 if (!sign)
@@ -576,8 +603,7 @@ noll_entl_normalize ()
       if (noll_option_is_tosat (0) == true)
         normalize_incremental (pform, "p-out.txt");
       else
-        noll_prob->pabstr = noll2sat_normalize (pform, "p-out.txt", true,
-                                                false);
+        noll_prob->pabstr = noll_normalize (pform, "p-out.txt", true, false);
     }
   if (noll_option_is_diag () == true)
     {
@@ -605,8 +631,8 @@ noll_entl_normalize ()
           if (noll_option_is_tosat (0) == true)
             normalize_incremental (nform_i, "n-out.txt");
           else
-            nform_i_abstr = noll2sat_normalize (nform_i, "n-out.txt", true,
-                                                false);
+            nform_i_abstr = noll_normalize (nform_i, "n-out.txt", true,
+                                            false);
           if (noll_option_is_diag () == true)
             {
               FILE *f_norm = fopen ("form-neg-norm.txt", "w");
@@ -813,7 +839,14 @@ noll_entl_solve (void)
 #endif
 
   /*
-   * Test special (syntactic) cases, before normalizing the formulas
+   * Special case of sat solving, when no negative formula
+   */
+  if (noll_entl_is_sat ())
+    return noll_sat_solve (noll_prob->pform);
+
+  /*
+   * Test special (syntactic) cases of entailment, 
+   * before normalizing the formulas
    */
   if (noll_option_get_verb () > 0)
     fprintf (stdout, "  > check special cases\n");

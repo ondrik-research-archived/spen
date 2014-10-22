@@ -145,7 +145,14 @@ void noll_sat_free (noll_sat_t * a);
 /* ====================================================================== */
 
 noll_sat_t *noll2sat_fill_bvar (noll_form_t * form, char *fname);
-/* writes the boolean variables and fill sat informations */
+/* Writes the boolean variables and fill sat informations */
+
+/* ====================================================================== */
+/* Getters for the boolean abstraction */
+/* ====================================================================== */
+
+uint_t noll2sat_get_bvar_eq (noll_sat_t * fsat, uint_t vi, uint_t vj);
+/* Get the code of the boolean variable encoding vi==vj */
 
 /* ====================================================================== */
 /* Printing the boolean abstraction */
@@ -185,11 +192,5 @@ int noll2sat_is_sat (noll_sat_t * fsat);
 int noll2sat_is_in (noll_sat_t * fsat, uid_t x, uid_t alpha);
 /* Returns 1 if the boolean abstraction fsat
  * implies that x in alpha, otherwise return 0 */
-
-noll_sat_t *noll2sat_normalize (noll_form_t * form, char *fname, bool incr,
-                                bool destructive);
-/* Updates form to its normal form and
- * put in the file "file" the boolean abstraction;
- * use incremental minisat if incr = true */
 
 #endif /* NOLL2SAT_H_ */

@@ -25,9 +25,11 @@
 
 #include <stdio.h>
 #include "noll_form.h"
+#include "noll2sat.h"
+#include "noll_norm.h"
+#include "noll_sat.h"
 #include "noll_graph.h"
 #include "noll_hom.h"
-#include "noll2sat.h"
 
 
 /* ====================================================================== */
@@ -99,6 +101,13 @@ noll_form_array *noll_entl_get_nform (void);
 void noll_entl_set_fname (char *fname);
 /* Set source file information */
 void noll_entl_set_cmd (noll_form_kind_t pb);
+
+/* ====================================================================== */
+/* Predicates */
+/* ====================================================================== */
+
+int noll_entl_is_sat (void);
+/* Test if it is a satisfiability problem, i.e., empty negative formulas  */
 
 /* ====================================================================== */
 /* Printers */

@@ -1,3 +1,10 @@
+2014, October 22nd
+- options improvement 
+- better printing of sat diagnosis
+
+2014, October 6th
+- clean the options and add a verbosity level
+
 2014, October 1st
 - add a weak test for well-formedness of acyclic list
   segments and special test for dll segments.

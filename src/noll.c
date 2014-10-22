@@ -1086,7 +1086,7 @@ noll_check (noll_context_t * ctx)
   if (noll_error_parsing > 0)
     {
       assert (noll_prob->smt_fname != NULL);
-      noll_error (0, "noll_check", "stop check because of parsing error");
+      noll_error (0, "noll_check", "stop because of parsing error");
       return 0;
     }
 
