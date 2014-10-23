@@ -1,0 +1,10 @@
+To obtain incremental minisat:
+
+export MROOT=<path to the minisat-inc dir>
+
+cd minisat-inc/core
+
+make r
+
+mv minisat_release <bin path>/minisat_inc
+

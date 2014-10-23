@@ -1,0 +1,10 @@
+To obtain unsat proof for minisat:
+
+export MROOT=<path to the minisat-unsat dir>
+
+cd minisat-unsat/core
+
+make r
+
+mv minisat_release <bin path>/minisat
+

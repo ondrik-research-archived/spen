@@ -1,0 +1,14 @@
+
+This directory contains two versions of the minisat solver
+(incremental and with unsat proofs)
+obtained from the minisat-2.2.0 available at www.minisat.se
+by patching the code with the respectives .patch files.
+
+
+To obtain these sources from the original minisat-2.2.0 sources
+execute, for each version in icnf or unsat:
+
+mv minisat-2.2.0-for-<version>.patch minisat-2.2.0
+cd minisat-2.2.0/minisat
+patch -p1 -l -i minisat-2.2.0-for-<version>.patch
+
