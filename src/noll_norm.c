@@ -135,7 +135,9 @@ noll_normalize_incr (noll_sat_t * fsat)
   // print the minisat command
   memset (command, 0, (100 + 4 * fname_len) * sizeof (char));
   sprintf (command,
-           "minisat_inc -verb=0 full_%s 1> results_%s", fsat->fname,
+           /// MS: below is version init
+           /// "minisat_inc -verb=0 full_%s 1> results_%s", fsat->fname,
+           "minisat_inc -verb=0 full_%s results_%s 1> /dev/null", fsat->fname,
            fsat->fname);
   if (system (command) == -1)
     assert (0);
@@ -146,28 +148,15 @@ noll_normalize_incr (noll_sat_t * fsat)
   memset (fname_res, 0, (fname_len + 20) * sizeof (char));
   sprintf (fname_res, "results_%s", fsat->fname);
   FILE *fres = fopen (fname_res, "r");
-  char *res = (char *) malloc (100 * sizeof (char));
-  assert (res != NULL);
+  char *res = NULL;
+  size_t lres = 0;
 
   for (uint_t k = 0; k < noll_vector_size (atoms); k++)
     {
       noll_sat_pure_t *atom = noll_vector_at (atoms, k);
-      // read two lines
-      // first line for equality query:
-      // - each line contains 4 white-separated words, starting by Bound
-      // - last word is the result
-      int lres = fscanf (fres, "%s", res);
-      while (strcmp (res, "Bound") != 0)
+      if (getline (&res, &lres, fres) != -1)
         {
-          lres = fscanf (fres, "%s", res);      // ignore
-        }
-      lres = fscanf (fres, "%s", res);  // 2nd word ignore
-      lres = fscanf (fres, "%s", res);  // 3rd word ignore
-
-      lres = fscanf (fres, "%s", res);
-      if (lres > 0)
-        {
-          if (strcmp (res, "UNSATISFIABLE") == 0)
+          if (strncmp (res, "UNSAT", 5) == 0)
             {
 #ifndef NDEBUG
               fprintf (stdout, "New eq between %s and %s\n",
@@ -200,18 +189,9 @@ noll_normalize_incr (noll_sat_t * fsat)
         }
 
       // second line for inequality query
-      lres = fscanf (fres, "%s", res);
-      while (strcmp (res, "Bound") != 0)
+      if (getline (&res, &lres, fres) != -1)
         {
-          lres = fscanf (fres, "%s", res);      // ignore
-        }
-      lres = fscanf (fres, "%s", res);  // ignore
-      lres = fscanf (fres, "%s", res);  // ignore
-
-      lres = fscanf (fres, "%s", res);
-      if (lres > 0)
-        {
-          if (strcmp (res, "UNSATISFIABLE") == 0)
+          if (strncmp (res, "UNSAT", 5) == 0)
             {
 #ifndef NDEBUG
               fprintf (stdout, "New ineq between %s and %s\n",
@@ -244,7 +224,8 @@ noll_normalize_incr (noll_sat_t * fsat)
         }
     }
 return_norm_incr:
-  free (res);
+  if (res != NULL)
+    free (res);
   free (fname_res);
   fclose (fres);
   noll_sat_pure_array_delete (atoms);

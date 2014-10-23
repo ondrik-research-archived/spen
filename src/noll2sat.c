@@ -1617,8 +1617,7 @@ noll2sat_membership (noll_sat_t * fsat)
                         uint_t bvar_apto_j_k = noll2sat_get_bvar_apto (fsat,
                                                                        x_j,
                                                                        f_k,
-                                                                       ls_i->
-                                                                       forig);
+                                                                       ls_i->forig);
                         if (!flag)
                           {
                             fprintf (fsat->file, "-%d ", bvar_j_in_i);
@@ -2279,8 +2278,8 @@ noll2sat_is_eq (noll_sat_t * fsat, uid_t x, uid_t y, noll_pure_op_t oper)
   // print the minisat command
   memset (command, 0, (100 + 4 * fname_len) * sizeof (char));
   sprintf (command,
-           "minisat -verb=0 full_new_%s result.txt 1> msat_%s", fsat->fname,
-           fsat->fname);
+           "minisat_inc -verb=0 full_new_%s result.txt 1> msat_%s",
+           fsat->fname, fsat->fname);
   if (system (command) != -1)
     {
       FILE *fres = fopen ("result.txt", "r");
