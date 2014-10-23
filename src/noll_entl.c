@@ -50,6 +50,7 @@ noll_entl_init (void)
   noll_prob = (noll_entl_t *) malloc (sizeof (noll_entl_t));
   // init file name
   noll_prob->smt_fname = NULL;
+  noll_prob->output_fname = NULL;
 
   // init positive formula
   noll_prob->pform = noll_form_new ();
@@ -160,7 +161,14 @@ void
 noll_entl_set_fname (char *fname)
 {
   assert (noll_prob->smt_fname == NULL);
-  noll_prob->smt_fname = fname;
+  noll_prob->smt_fname = strdup (fname);
+}
+
+void
+noll_entl_set_foutput (char *fname)
+{
+  assert (noll_prob->output_fname == NULL);
+  noll_prob->output_fname = strdup (fname);
 }
 
 void
@@ -282,10 +290,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       fprintf (out_decl, "(not ");
                     fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                     noll_vector_at
-                                                                    (atom->t_right,
-                                                                     0)->svar)->vname,
-                             noll_vector_at (lvars,
-                                             atom->t_left->lvar)->vname);
+                                                                    (atom->
+                                                                     t_right,
+                                                                     0)->
+                                                                    svar)->
+                             vname, noll_vector_at (lvars,
+                                                    atom->t_left->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -300,8 +311,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->
-                                             lvar)->vname);
+                                                             0)->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -320,10 +331,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       {
                         fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                         noll_vector_at
-                                                                        (atom->t_right,
-                                                                         i)->svar)->vname,
-                                 noll_vector_at (lvars,
-                                                 atom->t_left->lvar)->vname);
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        svar)->
+                                 vname, noll_vector_at (lvars,
+                                                        atom->t_left->lvar)->
+                                 vname);
                       }
                     else
                       {
@@ -374,8 +388,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->
-                                             lvar)->vname);
+                                                             0)->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -457,13 +471,19 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                         == NOLL_STERM_SVAR)
                       fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
                                                                       noll_vector_at
-                                                                      (atom->t_right,
-                                                                       i)->svar)->vname);
+                                                                      (atom->
+                                                                       t_right,
+                                                                       i)->
+                                                                      svar)->
+                               vname);
                     else
                       fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
                                                                         noll_vector_at
-                                                                        (atom->t_right,
-                                                                         i)->lvar)->vname);
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        lvar)->
+                               vname);
                   }
                 fprintf (out_decl, ") ) )");
                 if (!sign)

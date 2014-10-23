@@ -558,14 +558,19 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
 {
   if (!phi)
     {
-      fprintf (f, "emp (null)\n");
+#ifndef NDEBUG
+      fprintf (f, "(null) ");
+#endif
+      fprintf (f, "emp\n");
       return;
     }
 
+#ifndef NDEBUG
   if (phi->is_precise == true)
     fprintf (f, "[precise] ");
   else
     fprintf (f, "[junk] ");
+#endif
 
   switch (phi->kind)
     {

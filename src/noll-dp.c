@@ -32,9 +32,10 @@ void
 print_help (void)
 {
   printf ("spen: decision procedure for SLRD, version 1.1\n");
-  printf ("Usage: spen [options] file\n");
+  printf ("Usage: spen [options] file [output]\n");
   noll_option_print (stdout);
   printf ("  file   input file in SMTLIB2 format\n");
+  printf ("  output proof of sat/unsat\n");
   printf
     ("See http://www.liafa.univ-paris-diderot.fr/spen for more details.\n");
 }
@@ -55,12 +56,27 @@ main (int argc, char **argv)
       return 1;
     }
   int arg_file = 1;
-  if (argc >= 3)
+  while (arg_file < argc)
     {
-      arg_file = argc - 1;
-      for (int i = 1; i < arg_file; i++)
-        noll_option_set (argv[i]);
+      int opt = noll_option_set (argv[arg_file]);
+      if (opt == 1)
+        arg_file++;
+      else if (opt == -1)
+        {
+          print_help ();
+          return 1;
+        }
+      else
+        break;
     }
+  if (arg_file >= argc)
+    {
+
+      printf ("no input file\n");
+      print_help ();
+      return 1;
+    }
+
   if (noll_option_get_verb () > 0)
     fprintf (stdout, "spen on file %s\n", argv[arg_file]);
 
@@ -79,6 +95,8 @@ main (int argc, char **argv)
   // initialize the problem
   noll_entl_init ();
   noll_entl_set_fname (argv[arg_file]);
+  if ((arg_file + 1) < argc)
+    noll_entl_set_foutput (argv[arg_file + 1]);
 
   if (noll_option_get_verb () > 0)
     fprintf (stdout, "  > parse file %s\n", argv[arg_file]);

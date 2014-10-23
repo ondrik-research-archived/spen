@@ -631,9 +631,9 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
   /* fill bvars used for [x = y] encoding only for used variables in phi */
   res->start_pure = 1;          /* 0 index is used to signal clause end */
   res->size_pure = 0;
-  res->var_pure =
-    (uint_t **) malloc (sizeof (uint_t *) * noll_vector_size (form->lvars));
-  for (uint_t i = 0; i < noll_vector_size (form->lvars); i++)
+  res->size_var_pure = noll_vector_size (form->lvars);
+  res->var_pure = (uint_t **) malloc (sizeof (uint_t *) * res->size_var_pure);
+  for (uint_t i = 0; i < res->size_var_pure; i++)
     {
       if (res->finfo->used_lvar[i] == true)
         {
@@ -860,6 +860,41 @@ noll2sat_get_bvar_pred (noll_sat_t * fsat, noll_space_t * subform,
   free (target);
   return pos;
 }
+
+int
+noll2sat_get_sat_pure (noll_sat_t * fsat, uint_t bvar,
+                       uint_t * vi, uint_t * vj)
+{
+  assert (fsat != NULL);
+
+  // pure formulas are encoded in bvar
+  // between [fsat->start_pure, fsat->start_pto)
+  if (bvar < fsat->start_pure || bvar >= fsat->start_pto)
+    return -1;
+  uint_t ivar = fsat->start_pure;
+  bool found = false;
+  for (uint_t i = 0; i < fsat->size_var_pure && !found; i++)
+    {
+      if (fsat->var_pure[i] != NULL && bvar < (ivar + i + 1))
+        {
+          for (uint_t j = 0; j <= i; j++)
+            {
+              if (fsat->var_pure[i][j] == bvar)
+                {
+                  *vi = i;
+                  *vj = j;
+                  found = true;
+                }
+            }
+        }
+      else
+        ivar += (i + 1);
+    }
+  if (!found)
+    return -1;
+  return 1;
+}
+
 
 noll_sat_space_t *
 noll2sat_get_sat_space (noll_sat_t * fsat, uint_t bvar)
@@ -2321,27 +2356,36 @@ noll2sat_is_sat (noll_sat_t * fsat)
       // print the minisat command
       memset (command, '\0', command_len * sizeof (char));
       sprintf (command,
-               "minisat -verb=0 sat_%s result.txt 1> msat_%s", fsat->fname,
+               "minisat -verb=0 sat_%s drup_%s 1> result.txt", fsat->fname,
                fsat->fname);
 
       // call minisat
       if (system (command) != -1)
         {
           FILE *rfile = fopen ("result.txt", "r");
-          char s[10];
-          fscanf (rfile, "%s", s);
-#ifndef NDEBUG
-          fprintf (stdout, "*********************%s**************\n", s);
-#endif
-          fclose (rfile);
-          if (strcmp (s, "UNSAT") == 0)
+          char *line = NULL;
+          size_t linelen = 0;
+          /// read result of minisat with output for SAT-COMP
+          while (getline (&line, &linelen, rfile) != -1)
             {
+              if (line[0] != 's')
+                continue;
 #ifndef NDEBUG
-              fprintf (stdout,
-                       "*******************UNSAT*******************\n");
+              fprintf (stdout, "*********************%s**************\n",
+                       line);
 #endif
-              result = 0;
+              if (strncmp (line, "s UNSAT", 7) == 0)
+                {
+#ifndef NDEBUG
+                  fprintf (stdout,
+                           "*******************UNSAT*******************\n");
+#endif
+                  result = 0;
+                }
+              break;
             }
+          if (line != NULL)
+            free (line);
         }
     }
   free (command);

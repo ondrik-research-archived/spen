@@ -96,7 +96,8 @@ typedef struct noll_sat_s
   /* encoding of constraints [x = y] for any x, y in environment */
   uint_t start_pure;            /* id of first variable */
   uint_t size_pure;             /* number of boolean variables */
-  uid_t **var_pure;             /* lower diagonal array [i][j] j <= i,
+  uint_t size_var_pure;         /* number of lines in array below */
+  uid_t **var_pure;             /* lower diagonal matrix [i][j] j <= i,
                                    storing boolean var id */
 
   /* encoding of points-to atoms [x,f,y] of phi */
@@ -153,6 +154,13 @@ noll_sat_t *noll2sat_fill_bvar (noll_form_t * form, char *fname);
 
 uint_t noll2sat_get_bvar_eq (noll_sat_t * fsat, uint_t vi, uint_t vj);
 /* Get the code of the boolean variable encoding vi==vj */
+
+int noll2sat_get_sat_pure (noll_sat_t * fsat, uint_t bvar, uint_t * vi,
+                           uint_t * vj);
+/* Translate the code bvar into an equality, -1 if not possible */
+
+noll_sat_space_t *noll2sat_get_sat_space (noll_sat_t * fsat, uint_t bvar);
+/* Translate the code bvar into a space formula, NULL if not possible */
 
 /* ====================================================================== */
 /* Printing the boolean abstraction */

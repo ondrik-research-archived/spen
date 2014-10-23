@@ -54,7 +54,85 @@ noll_sat_diag_unsat (noll_form_t * form, noll_sat_t * fsat)
 {
   assert (form != NULL);
   assert (fsat != NULL);
-  fprintf (stdout, "[diag] unsat: NYI!\nquit.\n");
+  assert (form == noll_prob->pform);
+  assert (form == fsat->form);
+
+  /// file containing the boolean abstraction fsat->file, is closed
+  assert (fsat->file == NULL);
+  FILE *foutput = fopen ((noll_prob->output_fname == NULL) ? "unsat-out.txt" :
+                         noll_prob->output_fname, "a");
+  assert (foutput != NULL);
+
+  /// file with proof is in drup_fname with fname=fsat->fname
+  assert (fsat->fname != NULL);
+  char fnameDRUP[1024];
+  fnameDRUP[0] = '\0';
+  sprintf (fnameDRUP, "drup_%s", fsat->fname);
+  FILE *fDRUP = fopen (fnameDRUP, "r");
+  assert (fDRUP != NULL);
+  char *line = NULL;
+  size_t lineLen = 0;
+  while (getline (&line, &lineLen, fDRUP) != -1)
+    {
+      if (line[0] != 'd')
+        continue;
+      fprintf (foutput, "(");
+      /// read disjuncts from line+2 until 0
+      int d = 0;
+      size_t offset = 2;
+      while (offset < strlen (line))
+        {
+          if (line[offset] == '-')
+            d = -1;
+          else if (line[offset] <= '9' && line[offset] >= '1')
+            d = d * 10 + (line[offset] - '0');
+          else if (line[offset] == ' ' && d != 0)
+            {
+              uint_t bvar = (d < 0) ? -d : d;
+              /// end of some term, lookup in tables
+              uint_t vi = 0;
+              uint_t vj = 0;
+              noll_sat_space_t *fspace = NULL;
+              if (noll2sat_get_sat_pure (fsat, bvar, &vi, &vj) != -1)
+                {
+                  fprintf (foutput, "%s %s %s",
+                           noll_var_name (form->lvars, vi, NOLL_TYP_RECORD),
+                           (d < 0) ? "<>" : "=",
+                           noll_var_name (form->lvars, vj, NOLL_TYP_RECORD));
+                }
+              else if ((fspace = noll2sat_get_sat_space (fsat, bvar)) != NULL)
+                {
+                  if (fspace->forig->kind == NOLL_SPACE_LS && d < 0)
+                    {
+                      /// negative predicate means empty list segment
+                      fprintf (foutput, "%s = %s",
+                               noll_var_name (form->lvars,
+                                              noll_vector_at (fspace->forig->
+                                                              m.ls.args, 0),
+                                              NOLL_TYP_RECORD),
+                               noll_var_name (form->lvars,
+                                              noll_vector_at (fspace->forig->
+                                                              m.ls.args, 1),
+                                              NOLL_TYP_RECORD));
+                    }
+                  else
+                    noll_space_fprint (foutput, form->lvars, form->svars,
+                                       fspace->forig);
+                }
+              else
+                {
+                  fprintf (foutput, "ERROR: %d", d);
+                }
+              fprintf (foutput, " %s ",
+                       (line[offset + 1] == '0') ? "" : " or ");
+              d = 0;
+            }
+          offset++;
+        }
+      fprintf (foutput, ")\n * ");
+    }
+  fprintf (foutput, "emp\n");
+  fclose (foutput);
 }
 
 void
@@ -63,6 +141,7 @@ noll_sat_diag_sat (noll_form_t * form, noll_sat_t * fsat)
   assert (form != NULL);
   assert (fsat != NULL);
   assert (form == noll_prob->pform);
+  assert (form == fsat->form);
 
   if (noll_option_get_verb () > 0)
     fprintf (stdout, "[diag] sat: \n");
@@ -77,7 +156,9 @@ noll_sat_diag_sat (noll_form_t * form, noll_sat_t * fsat)
   if (noll_option_is_diag () == true)
     {
       // in SL
-      noll_graph_fprint_sl ("sat-form.txt", noll_prob->pgraph);
+      noll_graph_fprint_sl ((noll_prob->output_fname == NULL) ?
+                            "sat-out.txt" : noll_prob->output_fname,
+                            noll_prob->pgraph);
       // as graph
       noll_graph_fprint_dot ("sat-graph.dot", noll_prob->pgraph);
       if (noll_option_get_verb () > 0)
@@ -88,7 +169,6 @@ noll_sat_diag_sat (noll_form_t * form, noll_sat_t * fsat)
                    noll_vector_size (noll_prob->pgraph->edges));
         }
     }
-
 }
 
 /* ====================================================================== */
@@ -194,7 +274,7 @@ noll_sat_solve (noll_form_t * form)
   fflush (stdout);
 #endif
 
-  noll_sat_t *fsat = noll_normalize (form, "f-out.txt", true, false);
+  noll_prob->pabstr = noll_normalize (form, "f-out.txt", true, false);
 
   /*
    * FIN
@@ -212,7 +292,7 @@ check_end:
       if (noll_option_get_verb () > 0)
         fprintf (stdout, " unsat formula!\n");
       if (noll_option_is_diag ())
-        noll_sat_diag_unsat (form, fsat);
+        noll_sat_diag_unsat (form, noll_prob->pabstr);
       res = 0;
     }
   else
@@ -221,7 +301,7 @@ check_end:
       if (noll_option_get_verb () > 0)
         fprintf (stdout, " sat formula!\n");
       if (noll_option_is_diag ())
-        noll_sat_diag_sat (form, fsat);
+        noll_sat_diag_sat (form, noll_prob->pabstr);
     }
   /*
    * Free the allocated memory

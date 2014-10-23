@@ -111,7 +111,7 @@ bool noll_option_is_diag (void);
 /**
  * @brief Set option using the input string of the form '-'optioncode.
  */
-void noll_option_set (char *option);
+int noll_option_set (char *option);
 
 /**
  * @brief Print options.

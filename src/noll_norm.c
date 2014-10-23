@@ -135,8 +135,6 @@ noll_normalize_incr (noll_sat_t * fsat)
   // print the minisat command
   memset (command, 0, (100 + 4 * fname_len) * sizeof (char));
   sprintf (command,
-           /// MS: below is version init
-           /// "minisat_inc -verb=0 full_%s 1> results_%s", fsat->fname,
            "minisat_inc -verb=0 full_%s results_%s 1> /dev/null", fsat->fname,
            fsat->fname);
   if (system (command) == -1)

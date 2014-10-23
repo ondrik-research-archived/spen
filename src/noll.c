@@ -85,7 +85,6 @@ noll_init ()
   noll_field_init ();
   //TODO:remove noll_vars_init();
   noll_pred_init ();
-  noll_entl_init ();
 }
 
 /*

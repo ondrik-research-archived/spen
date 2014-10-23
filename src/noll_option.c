@@ -137,46 +137,51 @@ noll_option_get_verb (void)
 /* Set/Print. */
 /* ====================================================================== */
 
-void
+int
 noll_option_set (char *option)
 {
   if (strcmp (option, "-b") == 0)
     {
       noll_option_set_preds (true);     /* NYI: builtin predicates */
-      return;
+      return 1;
     }
   if (strcmp (option, "-d") == 0)
     {
       noll_option_set_diag ();  /* set diagnosis */
-      return;
+      return 1;
     }
   if (strcmp (option, "-n") == 0)
     {
       noll_option_set_tosat (0);        /* use old version of boolean abstraction */
-      return;
+      return 1;
     }
   if (strcmp (option, "-o1") == 0)
     {
       noll_option_set_checkLS (0);      /* NYI: special check for LS edges */
-      return;
+      return 1;
     }
   if (strcmp (option, "-o2") == 0)
     {
       noll_option_set_pred2ta_opt (1);  /* NYI: optimized check for predicate edges */
-      return;
+      return 1;
     }
   if (strcmp (option, "-o") == 0)
     {
       noll_option_set_checkLS (0);      /* NYI: apply all optimizations */
       noll_option_set_pred2ta_opt (1);
-      return;
+      return 1;
     }
   if (strcmp (option, "-v") == 0)
     {
       noll_option_set_verb (1); /* verbosity level */
-      return;
+      return 1;
     }
-  printf ("Unknown option: %s! ignore.\n", option);
+  if (option != NULL && option[0] == '-')
+    {
+      printf ("Unknown option: %s! ignore.\n", option);
+      return -1;
+    }
+  return 0;
 }
 
 

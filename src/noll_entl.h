@@ -55,6 +55,7 @@
 typedef struct noll_entl_t
 {
   char *smt_fname;              // smt file with entailment
+  char *output_fname;           // output file with proof
   noll_form_t *pform;           // positive formula phi
   noll_form_array *nform;       // array of negative formulae psi
   noll_form_kind_t cmd;         // command given: check-sat (default),
@@ -100,6 +101,8 @@ noll_form_array *noll_entl_get_nform (void);
 
 void noll_entl_set_fname (char *fname);
 /* Set source file information */
+void noll_entl_set_foutput (char *fname);
+/* Set output file information */
 void noll_entl_set_cmd (noll_form_kind_t pb);
 
 /* ====================================================================== */
