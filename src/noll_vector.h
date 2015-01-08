@@ -52,6 +52,7 @@ void name ## _reserve(name *v, uint_t cap);                          \
 void name ## _clear(name *v);                                        \
 void name ## _copy(name *dest, const name *src);                     \
 void name ## _swap(name *v1, name *v2);                              \
+void name ## _set(name *v1, uint_t idx, type elem);                  \
 bool name ## _equal(const name *v1, const name *v2);
 
 #define NOLL_VECTOR_SIZE(v) ((v)->size_)
@@ -176,6 +177,15 @@ void name ## _swap(name *v1, name *v2)                                  \
     tmp2 = v1->data_;                                                   \
     v1->data_ = v2->data_;                                              \
     v2->data_ = tmp2;                                                   \
+}                                                                       \
+                                                                        \
+void name ## _set(name *v, uint_t idx, type elem)                       \
+{                                                                       \
+    assert(NULL != v);                                                  \
+    size_t size = noll_vector_size(v);                                  \
+    if (idx >= size)                                                    \
+        return;                                                         \
+    v->data_[idx] = elem;                                               \
 }                                                                       \
                                                                         \
 bool name ## _equal(const name *v1, const name *v2)                     \

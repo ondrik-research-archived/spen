@@ -67,21 +67,43 @@ noll_option_is_preds_builtin (void)
   return preds_builtin;
 }
 
-int pred_ls_check = 1;
+/**
+ * Global option for the decision procedure used.
+ * 0 - checking only LS predicates syntactically
+ * 1 - checking using tree automata (default)
+ * 2 - checking using syntactic procedure
+ */
+int check_proc = 1;
+
 
 void
-noll_option_set_checkLS (int version)
+noll_option_set_check (int version)
 {
-  pred_ls_check = (version == 0) ? 0 : 1;
+  if (version >= 0 && version <= 1)
+    check_proc = version;
+  else
+    check_proc = 2;
 }
 
 bool
 noll_option_is_checkLS (int version)
 {
-  if (pred_ls_check == 0)
+  if (check_proc == 0)
     return (version == 0) ? true : false;
   else
     return (version != 0) ? true : false;
+}
+
+bool
+noll_option_is_checkTA (void)
+{
+  return (check_proc == 1) ? true : false;
+}
+
+bool
+noll_option_is_checkSY (void)
+{
+  return (check_proc == 2) ? true : false;
 }
 
 int pred2ta_opt = 0;
@@ -155,19 +177,25 @@ noll_option_set (char *option)
       noll_option_set_tosat (0);        /* use old version of boolean abstraction */
       return 1;
     }
-  if (strcmp (option, "-o1") == 0)
+  if (strcmp (option, "-sll") == 0)
     {
-      noll_option_set_checkLS (0);      /* NYI: special check for LS edges */
+      noll_option_set_check (0);        /* special check for sll edges */
       return 1;
     }
-  if (strcmp (option, "-o2") == 0)
+  if (strcmp (option, "-ta") == 0)
     {
-      noll_option_set_pred2ta_opt (1);  /* NYI: optimized check for predicate edges */
+      noll_option_set_check (1);        /* use tree automata and */
+      noll_option_set_pred2ta_opt (1);  /* optimized check for predicate edges */
+      return 1;
+    }
+  if (strcmp (option, "-syn") == 0)
+    {
+      noll_option_set_check (2);        /* use syntactic check */
       return 1;
     }
   if (strcmp (option, "-o") == 0)
     {
-      noll_option_set_checkLS (0);      /* NYI: apply all optimizations */
+      noll_option_set_check (0);        /* apply all optimizations */
       noll_option_set_pred2ta_opt (1);
       return 1;
     }
@@ -194,8 +222,9 @@ noll_option_print (FILE * f)
            "  -b     use predefined recursive definitions (set from name)\n");
   fprintf (f, "  -d     print diagnosis messages\n");
   fprintf (f, "  -n     internal switch to old normalisation procedure\n");
-  fprintf (f, "  -o     apply all optimizations\n");
-  fprintf (f, "  -o1    optimized check of LS edges\n");
-  fprintf (f, "  -o2    optimized construction of tree automata\n");
+  fprintf (f, "  -o     combines -sll and -ta\n");
+  fprintf (f, "  -sll   use special procedure for sll predicates\n");
+  fprintf (f, "  -syn   use procedure based on unfolding and lemma\n");
+  fprintf (f, "  -ta    use procedure based on tree automata\n");
 
 }

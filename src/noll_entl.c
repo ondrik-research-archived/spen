@@ -290,13 +290,10 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       fprintf (out_decl, "(not ");
                     fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                     noll_vector_at
-                                                                    (atom->
-                                                                     t_right,
-                                                                     0)->
-                                                                    svar)->
-                             vname, noll_vector_at (lvars,
-                                                    atom->t_left->lvar)->
-                             vname);
+                                                                    (atom->t_right,
+                                                                     0)->svar)->vname,
+                             noll_vector_at (lvars,
+                                             atom->t_left->lvar)->vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -311,8 +308,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->lvar)->
-                             vname);
+                                                             0)->
+                                             lvar)->vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -331,13 +328,10 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       {
                         fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                         noll_vector_at
-                                                                        (atom->
-                                                                         t_right,
-                                                                         i)->
-                                                                        svar)->
-                                 vname, noll_vector_at (lvars,
-                                                        atom->t_left->lvar)->
-                                 vname);
+                                                                        (atom->t_right,
+                                                                         i)->svar)->vname,
+                                 noll_vector_at (lvars,
+                                                 atom->t_left->lvar)->vname);
                       }
                     else
                       {
@@ -388,8 +382,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->lvar)->
-                             vname);
+                                                             0)->
+                                             lvar)->vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -471,19 +465,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                         == NOLL_STERM_SVAR)
                       fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
                                                                       noll_vector_at
-                                                                      (atom->
-                                                                       t_right,
-                                                                       i)->
-                                                                      svar)->
-                               vname);
+                                                                      (atom->t_right,
+                                                                       i)->svar)->vname);
                     else
                       fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
                                                                         noll_vector_at
-                                                                        (atom->
-                                                                         t_right,
-                                                                         i)->
-                                                                        lvar)->
-                               vname);
+                                                                        (atom->t_right,
+                                                                         i)->lvar)->vname);
                   }
                 fprintf (out_decl, ") ) )");
                 if (!sign)
@@ -750,13 +738,13 @@ noll_entl_to_homomorphism (void)
    * Check sharing constraints entailment for the found homomorphism
    */
 #ifndef NDEBUG
-  fprintf (stdout, "*** check-sat: test sharing:\n");
-  fprintf (stdout, "\n*****pos_graph: file graph-p-co.dot\n");
-  noll_graph_fprint (stdout, noll_prob->pgraph);
-  noll_graph_fprint_dot ("graph-p-co.dot", noll_prob->pgraph);
-  fprintf (stdout, "\n*****neg_graph: file graph-n-co.dot\n");
+  //fprintf (stdout, "*** check-sat: test sharing:\n");
+  //fprintf (stdout, "\n*****pos_graph: file graph-p-co.dot\n");
+  //noll_graph_fprint (stdout, noll_prob->pgraph);
+  //noll_graph_fprint_dot ("graph-p-co.dot", noll_prob->pgraph);
+  //fprintf (stdout, "\n*****neg_graph: file graph-n-co.dot\n");
   //noll_graph_fprint_dot ("graph-n0-co.dot", noll_vector_at(nol_prob->ngraph,0));
-  fflush (stdout);
+  //fflush (stdout);
 #endif
 // TODO: when updated share constraints in graphs
 // do union of variables
@@ -940,6 +928,7 @@ noll_entl_solve (void)
         break;
       }
     default:
+      res = 2;
       break;
     }
 

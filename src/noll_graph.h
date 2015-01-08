@@ -90,7 +90,7 @@ uint_t noll_graph_get_var (const noll_graph_t * g, uint_t n);
 /* Get the first location variable labeling this node */
 
 int noll_edge_in_label (noll_edge_t * e, uint_t label);
-/* Returns 1 if the edge e has its baled in the set of labels
+/* Returns 1 if the edge e has its label in the set of labels
  * of the predicate label */
 
 /* ====================================================================== */
