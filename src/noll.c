@@ -1074,6 +1074,8 @@ noll_assert (noll_context_t * ctx, noll_exp_t * term)
 
 /**
  * Sets the command.
+ * @return if only one formula then 0, 1, -1 for sat, unsat, unknown
+ *         if entailment (two formulas) then 0, 1, -1 for valid, invalid, unknown
  */
 int
 noll_check (noll_context_t * ctx)

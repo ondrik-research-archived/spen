@@ -1084,7 +1084,7 @@ noll_graph_homomorphism (void)
     {
       res = noll_graph_shom (h, i);
       /* TODO: update with the algo for disjunctions */
-      if (res == 1 || res == 2)
+      if (res == 1)
         {
           break;
         }
@@ -2445,7 +2445,7 @@ noll_graph_shom_entl_syn (noll_graph_t * g2, noll_edge_t * e1,
     }
   else
     {
-      res = 2;
+      res = -1; // UNKNOWN
     }
   return res;
 }
@@ -2462,6 +2462,8 @@ noll_graph_shom_entl_syn (noll_graph_t * g2, noll_edge_t * e1,
  * @param g1     domain graph for the homomorphism (in)
  * @param g2     co-domain graph (in)
  * @param n_hom  node mapping (in)
+ * @param usedg2 mapping of edges in g2 to edges of g1
+ * @param res    store the status of the result (0 if no mapping, 1 if mapping, -1 if unknown)
  * @return       the mapping built, NULL otherwise
  */
 noll_graph_array *
@@ -2525,6 +2527,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;
+          *res = 0;
 #ifndef NDEBUG
           fprintf (stdout, "\nshom_ls: fails (select)!\n");
 #endif
@@ -2555,6 +2558,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;
+          *res = 0;
 #ifndef NDEBUG
           fprintf (stdout, "\nshom_ls: fails (well-formedness)!\n");
 #endif
@@ -2585,6 +2589,7 @@ noll_graph_shom_ls (noll_graph_t * g1, noll_graph_t * g2,
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);
           ls_hom = NULL;
+          // *res is set above
 #ifndef NDEBUG
           fprintf (stdout, "\nshom_ls: fails (code %d)!\n", *res);
 #endif
@@ -2625,7 +2630,7 @@ return_shom_ls:
  *
  * @param hs   the homomorphism to be built
  * @param i    the source graph to be considered
- * @return     1 if found, 2 if incomplete, 0 otherwise
+ * @return     1 if found, -1 if incomplete, 0 otherwise
  */
 int
 noll_graph_shom (noll_hom_t * hs, size_t i)
@@ -2751,11 +2756,11 @@ return_shom:
     }
   noll_shom_t *h = (noll_shom_t *) malloc (sizeof (noll_shom_t));
   h->ngraph = i;
-  h->is_empty = (res == 0) ? true : false;
-  h->node_hom = (res == 0) ? NULL : n_hom;
-  h->pto_hom = (res == 0) ? NULL : pto_hom;
-  h->ls_hom = (res == 0) ? NULL : ls_hom;
-  h->pused = (res == 0) ? NULL : usedg2;
+  h->is_empty = (res != 1) ? true : false;
+  h->node_hom = (res != 1) ? NULL : n_hom;
+  h->pto_hom = (res != 1) ? NULL : pto_hom;
+  h->ls_hom = (res != 1) ? NULL : ls_hom;
+  h->pused = (res != 1) ? NULL : usedg2;
   // push hom found in hs
   if (hs->is_empty)
     hs->is_empty = false;

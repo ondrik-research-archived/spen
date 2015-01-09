@@ -713,7 +713,7 @@ noll_entl_to_graph (void)
 
 /**
  *  Build the homomorphism for this entailment problem
- *  @return 1 if h found, 0 otherwise
+ *  @return 1 if homomorphism found, 0 otherwise
  */
 int
 noll_entl_to_homomorphism (void)
@@ -813,6 +813,7 @@ noll_entl_solve_special (bool isSyn)
  *
  * @return 1 if satisfiable, (i.e. invalid entailment)
  *         0 if not satisfiable (i.e., valid entailment)
+ *         
  */
 int
 noll_entl_solve (void)
@@ -928,7 +929,7 @@ noll_entl_solve (void)
         break;
       }
     default:
-      res = 2;
+      assert (res == -1);
       break;
     }
 
