@@ -65,6 +65,21 @@ extern "C"
     NOLL_F_PRED,
     NOLL_F_EQ,                  /* pure operators */
     NOLL_F_DISTINCT,
+    NOLL_F_ITE,
+    NOLL_F_LT,                  /* Integer theory */
+    NOLL_F_GT,
+    NOLL_F_LE,
+    NOLL_F_GE,
+    NOLL_F_PLUS,
+    NOLL_F_MINUS,
+    NOLL_F_SETSINGLE,           /* SetInt theory */
+    NOLL_F_SETEMPTY,
+    NOLL_F_SETLT,
+    NOLL_F_SETGT,
+    NOLL_F_SETLE,
+    NOLL_F_SETGE,
+    NOLL_F_SETUNION,
+    NOLL_F_SETDIFF,
     NOLL_F_EMP,                 /* space operators */
     NOLL_F_JUNK,
     NOLL_F_WSEP,
@@ -208,6 +223,36 @@ extern "C"
                           uint_t size);
   noll_exp_t *noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args,
                                 uint_t size);
+  noll_exp_t *noll_mk_ite (noll_context_t * ctx, noll_exp_t ** args,
+                           uint_t size);
+  noll_exp_t *noll_mk_lt (noll_context_t * ctx, noll_exp_t ** args,
+                          uint_t size);
+  noll_exp_t *noll_mk_gt (noll_context_t * ctx, noll_exp_t ** args,
+                          uint_t size);
+  noll_exp_t *noll_mk_le (noll_context_t * ctx, noll_exp_t ** args,
+                          uint_t size);
+  noll_exp_t *noll_mk_ge (noll_context_t * ctx, noll_exp_t ** args,
+                          uint_t size);
+  noll_exp_t *noll_mk_plus (noll_context_t * ctx, noll_exp_t ** args,
+                            uint_t size);
+  noll_exp_t *noll_mk_minus (noll_context_t * ctx, noll_exp_t ** args,
+                             uint_t size);
+  noll_exp_t *noll_mk_setsingle (noll_context_t * ctx, noll_exp_t ** args,
+                                 uint_t size);
+  noll_exp_t *noll_mk_setempty (noll_context_t * ctx, noll_exp_t ** args,
+                                uint_t size);
+  noll_exp_t *noll_mk_setlt (noll_context_t * ctx, noll_exp_t ** args,
+                             uint_t size);
+  noll_exp_t *noll_mk_setgt (noll_context_t * ctx, noll_exp_t ** args,
+                             uint_t size);
+  noll_exp_t *noll_mk_setle (noll_context_t * ctx, noll_exp_t ** args,
+                             uint_t size);
+  noll_exp_t *noll_mk_setge (noll_context_t * ctx, noll_exp_t ** args,
+                             uint_t size);
+  noll_exp_t *noll_mk_setunion (noll_context_t * ctx, noll_exp_t ** args,
+                                uint_t size);
+  noll_exp_t *noll_mk_setdiff (noll_context_t * ctx, noll_exp_t ** args,
+                               uint_t size);
   noll_exp_t *noll_mk_emp (noll_context_t * ctx);
   noll_exp_t *noll_mk_junk (noll_context_t * ctx);
   noll_exp_t *noll_mk_wsep (noll_context_t * ctx, noll_exp_t ** args,
@@ -240,6 +285,7 @@ extern "C"
                                uint_t size);
   noll_exp_t *noll_mk_loop (noll_context_t * ctx, noll_exp_t ** args,
                             uint_t size);
+
 
 /* ====================================================================== */
 /* Typechecking */

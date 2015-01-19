@@ -1476,6 +1476,203 @@ noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
 }
 
 noll_exp_t *
+noll_mk_ite (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 3)
+    noll_error_args (1, "noll_mk_ite", size, "= 3");
+  return noll_mk_op (NOLL_F_ITE, args, size);
+}
+
+noll_exp_t *
+noll_mk_lt (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_lt", size, "= 2");
+  return noll_mk_op (NOLL_F_LT, args, size);
+}
+
+noll_exp_t *
+noll_mk_gt (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_gt", size, "= 2");
+  return noll_mk_op (NOLL_F_GT, args, size);
+}
+
+noll_exp_t *
+noll_mk_le (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_le", size, "= 2");
+  return noll_mk_op (NOLL_F_LE, args, size);
+}
+
+noll_exp_t *
+noll_mk_ge (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_ge", size, "= 2");
+  return noll_mk_op (NOLL_F_GE, args, size);
+}
+
+noll_exp_t *
+noll_mk_plus (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size < 2)
+    noll_error_args (1, "noll_mk_plus", size, "< 2");
+  return noll_mk_op (NOLL_F_PLUS, args, size);
+}
+
+noll_exp_t *
+noll_mk_minus (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_minus", size, "= 2");
+  return noll_mk_op (NOLL_F_MINUS, args, size);
+}
+
+noll_exp_t *
+noll_mk_setsingle (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 1)
+    noll_error_args (1, "noll_mk_setsingle", size, "= 1");
+  return noll_mk_op (NOLL_F_SETSINGLE, args, size);
+}
+
+noll_exp_t *
+noll_mk_setempty (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx && args != args)
+    {
+      assert (0);
+    }
+  if (size != 0)
+    noll_error_args (1, "noll_mk_setempty", size, "= 0");
+
+  noll_exp_t *res = (noll_exp_t *) malloc (sizeof (struct noll_exp_t));
+  res->discr = NOLL_F_SETEMPTY;
+  return res;
+}
+
+noll_exp_t *
+noll_mk_setlt (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_setlt", size, "= 2");
+  return noll_mk_op (NOLL_F_SETLT, args, size);
+}
+
+noll_exp_t *
+noll_mk_setgt (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_setgt", size, "= 2");
+  return noll_mk_op (NOLL_F_SETGT, args, size);
+}
+
+noll_exp_t *
+noll_mk_setle (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_setle", size, "= 2");
+  return noll_mk_op (NOLL_F_SETLE, args, size);
+}
+
+noll_exp_t *
+noll_mk_setge (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_setge", size, "= 2");
+  return noll_mk_op (NOLL_F_SETGE, args, size);
+}
+
+noll_exp_t *
+noll_mk_setunion (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size < 2)
+    noll_error_args (1, "noll_mk_setunion", size, "< 2");
+  return noll_mk_op (NOLL_F_SETUNION, args, size);
+}
+
+noll_exp_t *
+noll_mk_setdiff (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
+{
+  if (&ctx != &ctx)
+    {
+      assert (0);
+    }
+
+  if (size != 2)
+    noll_error_args (1, "noll_mk_setdiff", size, "= 2");
+  return noll_mk_op (NOLL_F_SETDIFF, args, size);
+}
+
+noll_exp_t *
 noll_mk_emp (noll_context_t * ctx)
 {
   if (&ctx != &ctx)
@@ -1696,6 +1893,7 @@ noll_mk_loop (noll_context_t * ctx, noll_exp_t ** args, uint_t size)
   return noll_mk_op (NOLL_F_LOOP, args, size);
 }
 
+
 /*
  * ======================================================================
  * Printing
@@ -1883,6 +2081,26 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
     case NOLL_F_LOOP:
       {
         fprintf (f, " (loop \n\t");
+        break;
+      }
+    case NOLL_F_LT:
+      {
+        fprintf (f, " (< ");
+        break;
+      }
+    case NOLL_F_GT:
+      {
+        fprintf (f, " (> ");
+        break;
+      }
+    case NOLL_F_LE:
+      {
+        fprintf (f, " (<= ");
+        break;
+      }
+    case NOLL_F_GE:
+      {
+        fprintf (f, " (>= ");
         break;
       }
     default:

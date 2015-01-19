@@ -189,6 +189,15 @@ noll_mk_type_int ()
 }
 
 noll_type_t *
+noll_mk_type_setint ()
+{
+  noll_type_t *ret = (noll_type_t *) malloc (sizeof (struct noll_type_t));
+  ret->kind = NOLL_TYP_SETINT;
+  ret->args = noll_uid_array_new ();
+  return ret;
+}
+
+noll_type_t *
 noll_mk_type_field (uid_t src, uid_t dst)
 {
   noll_type_t *ret = (noll_type_t *) malloc (sizeof (struct noll_type_t));

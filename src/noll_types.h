@@ -57,6 +57,7 @@ extern "C"
     NOLL_TYP_BOOL = 0,
     NOLL_TYP_FIELD,
     NOLL_TYP_INT,
+    NOLL_TYP_SETINT,
     NOLL_TYP_RECORD,
     NOLL_TYP_SETLOC,
     NOLL_TYP_SETREF,
@@ -153,6 +154,7 @@ extern "C"
 
   noll_type_t *noll_mk_type_bool (void);
   noll_type_t *noll_mk_type_int (void);
+  noll_type_t *noll_mk_type_setint (void);
   noll_type_t *noll_mk_type_field (uid_t src, uid_t dest);
   noll_type_t *noll_mk_type_record (uid_t rid);
   noll_type_t *noll_mk_type_setloc (void);
