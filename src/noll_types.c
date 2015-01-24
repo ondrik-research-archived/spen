@@ -1,10 +1,6 @@
 /**************************************************************************/
 /*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012                                                    */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
+/*  SPEN decision procedure                                               */
 /*                                                                        */
 /*  you can redistribute it and/or modify it under the terms of the GNU   */
 /*  Lesser General Public License as published by the Free Software       */
@@ -29,6 +25,8 @@
 NOLL_VECTOR_DEFINE (noll_uid_array, uid_t);
 
 NOLL_VECTOR_DEFINE (noll_uint_array, uint_t);
+
+NOLL_VECTOR_DEFINE (noll_type_array, noll_type_t *);
 
 NOLL_VECTOR_DEFINE (noll_record_array, noll_record_t *);
 
@@ -123,8 +121,9 @@ noll_field_new (const char *name, uid_t ty_src, uid_t ty_dst)
 {
   noll_field_t *f = (noll_field_t *) malloc (sizeof (noll_field_t));
   f->name = strdup (name);
-  f->pto_r = ty_dst;
   f->src_r = ty_src;
+  f->pto_r = ty_dst;
+  f->pto_ty = (ty_dst == UNDEFINED_ID) ? NOLL_TYP_INT : NOLL_TYP_RECORD;
   return f;
 }
 
@@ -189,23 +188,23 @@ noll_mk_type_int ()
 }
 
 noll_type_t *
-noll_mk_type_setint ()
+noll_mk_type_bagint ()
 {
   noll_type_t *ret = (noll_type_t *) malloc (sizeof (struct noll_type_t));
-  ret->kind = NOLL_TYP_SETINT;
+  ret->kind = NOLL_TYP_BAGINT;
   ret->args = noll_uid_array_new ();
   return ret;
 }
 
 noll_type_t *
-noll_mk_type_field (uid_t src, uid_t dst)
+noll_mk_type_field (noll_type_t * src, noll_type_t * dst)
 {
   noll_type_t *ret = (noll_type_t *) malloc (sizeof (struct noll_type_t));
   ret->kind = NOLL_TYP_FIELD;
   ret->args = noll_uid_array_new ();
-  noll_uid_array_reserve (ret->args, 1);
-  noll_uid_array_push (ret->args, src);
-  noll_uid_array_push (ret->args, dst);
+  noll_uid_array_reserve (ret->args, 2);
+  noll_uid_array_push (ret->args, noll_type_get_record (src));
+  noll_uid_array_push (ret->args, noll_type_get_record (dst));
   return ret;
 }
 
@@ -271,15 +270,108 @@ noll_type_free (noll_type_t * a)
   free (a);
 }
 
+void
+noll_type_fprint (FILE * f, noll_type_t * a)
+{
+  if (a == NULL)
+    fprintf (f, "(null)");
+  switch (a->kind)
+    {
+    case NOLL_TYP_BOOL:
+      fprintf (f, "Bool");
+      break;
+    case NOLL_TYP_INT:
+      fprintf (f, "Int");
+      break;
+    case NOLL_TYP_BAGINT:
+      fprintf (f, "BagInt");
+      break;
+    case NOLL_TYP_RECORD:
+      fprintf (f, "%s", noll_record_name (noll_vector_at (a->args, 0)));
+      break;
+    case NOLL_TYP_SETLOC:
+      fprintf (f, "SetLoc");
+      break;
+    case NOLL_TYP_FIELD:
+      fprintf (f, "Field");
+      break;
+    case NOLL_TYP_SETREF:
+      fprintf (f, "SetRef");
+      break;
+    case NOLL_TYP_SPACE:
+      fprintf (f, "Space");
+      break;
+    default:
+      fprintf (f, "(unknown)");
+      break;
+    }
+}
+
 /* ====================================================================== */
 /* Other methods */
 
 /* ====================================================================== */
 
+bool
+noll_type_is_vartype (noll_type_t * t)
+{
+  assert (NULL != t);
+  /// depends on logic  // TODO NEW
+  if ((t->kind >= NOLL_TYP_INT) && (t->kind <= NOLL_TYP_SETLOC))
+    return true;
+  return false;
+}
+
+bool
+noll_type_is_fldtype (noll_type_t * t)
+{
+  assert (NULL != t);
+  /// depends on logic  // TODO NEW
+  if ((t->kind == NOLL_TYP_INT) || (t->kind == NOLL_TYP_RECORD))
+    return true;
+  return false;
+}
+
+bool
+noll_type_match (noll_type_t * fty, noll_type_t * aty)
+{
+  assert (fty != NULL);
+#ifndef NDEBUG
+  printf ("noll_type_match: fty=%d, atyp=%d\n",
+          fty->kind, (aty == NULL) ? NOLL_TYP_VOID : aty->kind);
+#endif
+  bool res = true;
+  if (aty == NULL)              /// void
+    res = (fty->kind == NOLL_TYP_RECORD) ? true : false;
+  else if ((aty->kind == NOLL_TYP_RECORD) && (fty->kind == NOLL_TYP_RECORD))
+    {
+      uid_t fty_r = noll_vector_at (fty->args, 0);
+      uid_t aty_r = noll_vector_at (aty->args, 0);
+#ifndef NDEBUG
+      printf ("noll_type_match: fty=rec-%d, atyp=rec-%d\n", fty_r, aty_r);
+#endif
+      /// void is also encoded by aty_r == 0
+      res = ((aty_r == NOLL_TYP_VOID) || (aty_r == fty_r)) ? true : false;
+    }
+  else
+    res = (fty->kind == aty->kind) ? true : false;
+  return res;
+}
+
 uid_t
 noll_is_record (uid_t rid)
 {
   return (rid < noll_vector_size (records_array)) ? rid : UNDEFINED_ID;
+}
+
+uid_t
+noll_type_get_record (noll_type_t * ty)
+{
+  if (NULL == ty)
+    return 0;                   /// void
+  if (ty->kind == NOLL_TYP_RECORD)
+    return noll_vector_at (ty->args, 0);
+  return UNDEFINED_ID;
 }
 
 char *
@@ -350,7 +442,8 @@ noll_fields_array_fprint (FILE * f, const char *msg)
       noll_field_t *fi = noll_vector_at (fields_array, i);
       fprintf (f, " %s:%s->%s (%d-th, in pid-%d),",
                fi->name, noll_record_name (fi->src_r),
-               noll_record_name (fi->pto_r), fi->order, fi->pid);
+               (fi->pto_ty == NOLL_TYP_RECORD) ?
+               noll_record_name (fi->pto_r) : "data", fi->order, fi->pid);
     }
   fprintf (f, " - ]");
 }

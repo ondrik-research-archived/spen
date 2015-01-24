@@ -76,7 +76,8 @@ void
 noll_var_register (noll_var_array * a, const char *name, noll_type_t * ty,
                    noll_scope_e scope)
 {
-  assert (ty && (ty->kind == NOLL_TYP_RECORD || ty->kind == NOLL_TYP_SETLOC));
+  assert (NULL != ty);
+  assert (noll_type_is_vartype (ty) == true);
 
   noll_var_t *v = noll_var_new (name, ty, scope);
   v->scope = scope;
@@ -127,22 +128,32 @@ noll_var_name (noll_var_array * a, uid_t vid, noll_typ_t ty)
   return (noll_vector_at (a, vid))->vname;
 }
 
-uid_t
-noll_var_record (noll_var_array * a, uid_t vid)
+
+noll_type_t *
+noll_var_type (noll_var_array * a, uid_t vid)
 {
   assert (a);
-  if (vid == VNIL_ID)
-    return NOLL_TYP_VOID;
+  //if (vid == VNIL_ID)
+  //  return NOLL_TYP_VOID;
   if (vid != VNIL_ID && vid >= noll_vector_size (a))
     {
-      fprintf (stdout, "Incorrect id (%d) for location variable.\n", vid);
-      return UNDEFINED_ID;
+      fprintf (stdout,
+               "Error: incorrect id (%d > %d) for location variable.\n", vid,
+               noll_vector_size (a));
+      return NULL;
     }
   noll_var_t *v = noll_vector_at (a, vid);
   noll_type_t *ty = v->vty;
+  return ty;
+}
+
+uid_t
+noll_var_record (noll_var_array * a, uid_t vid)
+{
+  noll_type_t *ty = noll_var_type (a, vid);
   if ((ty == NULL) || (ty->kind != NOLL_TYP_RECORD) || (ty->args == NULL))
     {
-      fprintf (stdout, "Incorrect type for location variable %d.\n", vid);
+      /// NEW: do not signal an error because of Int and BagInt types
       return UNDEFINED_ID;
     }
 #ifndef NDEBUG
@@ -159,6 +170,7 @@ noll_var_record (noll_var_array * a, uid_t vid)
     }
   return tid;
 }
+
 
 void
 noll_var_array_fprint (FILE * f, noll_var_array * a, const char *msg)
@@ -181,14 +193,9 @@ noll_var_array_fprint (FILE * f, noll_var_array * a, const char *msg)
         fprintf (f, "?");
       else
         fprintf (f, " ");
-
-      if (ti->kind == NOLL_TYP_RECORD)
-        {
-          uid_t rid = noll_vector_at (vi->vty->args, 0);
-          fprintf (f, "%s:%s, ", vi->vname, noll_record_name (rid));
-        }
-      else
-        fprintf (f, "%s:SetLoc, ", vi->vname);
+      fprintf (f, "%s:", vi->vname);
+      noll_type_fprint (f, ti);
+      fprintf (f, ", ");
     }
   fprintf (f, " - ]");
   fflush (f);

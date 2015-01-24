@@ -163,7 +163,7 @@ noll_normalize_incr (noll_sat_t * fsat)
                        noll_var_name (fsat->form->lvars, atom->y,
                                       NOLL_TYP_RECORD));
 #endif
-              noll_pure_add_eq (fsat->form, atom->x, atom->y);
+              noll_form_add_eq (fsat->form, atom->x, atom->y);
               if (fsat->form->kind == NOLL_FORM_UNSAT)
                 goto return_norm_incr;
             }
@@ -198,7 +198,7 @@ noll_normalize_incr (noll_sat_t * fsat)
                        noll_var_name (fsat->form->lvars, atom->y,
                                       NOLL_TYP_RECORD));
 #endif
-              noll_pure_add_neq (fsat->form, atom->x, atom->y);
+              noll_form_add_neq (fsat->form, atom->x, atom->y);
               if (fsat->form->kind == NOLL_FORM_UNSAT)
                 goto return_norm_incr;
             }

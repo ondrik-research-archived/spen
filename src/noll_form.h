@@ -39,8 +39,78 @@ extern "C"
 /* Datatypes */
 /* ====================================================================== */
 
-/** Pure atomic formulas.
- *  Encoded as an upper diagonal matrix of size = nb variables:
+/** Theory of formulas.
+ */
+  typedef enum noll_logic_t
+  {
+    NOLL_LOGIC_NOLL,            /* ESOP'13 */
+    NOLL_LOGIC_SLL,             /* APLAS'14 */
+    NOLL_LOGIC_SLRD,            /* SLCOMP'14 */
+    NOLL_LOGIC_SLRDI,
+    NOLL_LOGIC_OTHER            /* NOT SUPPORTED */
+  } noll_logic_t;
+
+/** Data formulas.
+ *  Encoded by smtlib expressions in noll.h
+ */
+  typedef enum noll_data_op_t
+  {
+    NOLL_DATA_INT = 0,
+    NOLL_DATA_VAR,
+    NOLL_DATA_EMPTYBAG,
+    NOLL_DATA_FIELD,
+    NOLL_DATA_EQ,
+    NOLL_DATA_NEQ,
+    NOLL_DATA_ITE,
+    NOLL_DATA_LT,
+    NOLL_DATA_GT,
+    NOLL_DATA_LE,
+    NOLL_DATA_GE,
+    NOLL_DATA_PLUS,
+    NOLL_DATA_MINUS,
+    NOLL_DATA_BAG,
+    NOLL_DATA_BAGUNION,
+    NOLL_DATA_BAGMINUS,
+    NOLL_DATA_SUBSET,
+    NOLL_DATA_IMPLIES,
+    NOLL_DATA_OTHER             /* NOT TO BE USED */
+  } noll_data_op_t;
+
+  typedef struct noll_dterm_s noll_dterm_t;     /* forward definition */
+    NOLL_VECTOR_DECLARE (noll_dterm_array, noll_dterm_t *);
+
+  struct noll_dterm_s
+  {
+    noll_data_op_t kind;        // only data terms
+    noll_typ_t typ;             // either NOLL_TYP_INT or NOLL_TYP_BAGINT
+
+    union
+    {
+      long value;               // integer constant
+      uid_t sid;                // symbol (variable or field) identifier
+    } p;
+
+    noll_dterm_array *args;     // NULL for 0-arity terms
+  };
+
+  typedef struct noll_dform_s noll_dform_t;     /* forward definition */
+    NOLL_VECTOR_DECLARE (noll_dform_array, noll_dform_t *);
+
+  struct noll_dform_s
+  {
+    noll_data_op_t kind;        // only data formulas
+    noll_typ_t typ;             // either NOLL_TYP_INT or NOLL_TYP_BAGINT
+
+    union
+    {
+      noll_dterm_array *targs;  // term arguments
+      noll_dform_array *bargs;  // boolean arguments iff kind == NOLL_DATA_IMPLIES
+    } p;
+  };
+
+
+/** Pure formulas.
+ *  Encoded as an upper diagonal matrix of size = nb location variables:
  *  for (v1(id) < v2(id))
  *    m[v1][v2] = NOLL_PURE_EQ if v1=v2,
  *                NOLL_PURE_NEQ if v1 != v2,
@@ -55,6 +125,7 @@ extern "C"
   {
     noll_pure_op_t **m;         // matrix of equality and inequality constraints
     uint_t size;                // allocated size for the matrix, 0 if empty or == locs_array size
+    noll_dform_array *data;     // set (conjunction of) pure constraints on data
   } noll_pure_t;
 
 /**
@@ -179,10 +250,18 @@ extern "C"
     NOLL_VECTOR_DECLARE (noll_form_array, noll_form_t *);
 
 /* ====================================================================== */
+/* Globals */
+/* ====================================================================== */
+
+  extern noll_logic_t noll_form_logic;
+
+/* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
 
   noll_form_t *noll_form_new (void);
+  noll_dterm_t *noll_dterm_new (void);
+  noll_dform_t *noll_dform_new (void);
   noll_pure_t *noll_pure_new (uint_t size);
   noll_space_t *noll_space_new (void);
   noll_share_array *noll_share_new (void);
@@ -192,6 +271,8 @@ extern "C"
 
   void noll_form_free (noll_form_t * f);
   void noll_form_set_unsat (noll_form_t * f);
+  void noll_dterm_free (noll_dterm_t * t);
+  void noll_dform_free (noll_dform_t * d);
   void noll_pure_free (noll_pure_t * p);
   void noll_space_free (noll_space_t * s);
   void noll_share_free (noll_share_array * s);
@@ -202,8 +283,11 @@ extern "C"
   noll_space_t *noll_space_sub (noll_space_t * a, noll_uid_array * sub);
 /* Apply variable substitution and provide a copy */
 
-  void noll_pure_add_eq (noll_form_t * form, uid_t v1, uid_t v2);
-  void noll_pure_add_neq (noll_form_t * form, uid_t v1, uid_t v2);
+  int noll_pure_add_dform (noll_pure_t * form, noll_dform_t * df);
+  noll_form_kind_t noll_pure_add_eq (noll_pure_t * form, uid_t v1, uid_t v2);
+  noll_form_kind_t noll_pure_add_neq (noll_pure_t * form, uid_t v1, uid_t v2);
+  void noll_form_add_eq (noll_form_t * form, uid_t v1, uid_t v2);
+  void noll_form_add_neq (noll_form_t * form, uid_t v1, uid_t v2);
 /* Add equality/inequality pure formula */
 
 /* ====================================================================== */

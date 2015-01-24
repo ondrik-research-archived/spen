@@ -36,15 +36,31 @@ extern "C"
   /* Datatypes */
   /* ====================================================================== */
 
+  /** Predicate rule
+   */
+  typedef struct noll_pred_rule_t
+  {
+    noll_var_array *vars;       // nil + formal arguments + existentially quantified variables
+    uint_t fargs;               // limit of formal arguments
+    noll_pure_t *pure;          // pure part of the rule (including data)
+    noll_space_t *pto;          // points-to part, if any
+    noll_space_t *nst;          // calls to predicates, non-recrusive
+    noll_space_t *rec;          // recursive calls
+  } noll_pred_rule_t;
+
+    NOLL_VECTOR_DECLARE (noll_pred_rule_array, noll_pred_rule_t *);
+
   /** Predicate definition
    */
   typedef struct noll_pred_binding_t
   {
     size_t pargs;               // type of list = number of arguments of this record type 2 or 4
-    noll_var_array *vars;       // nil + formal arguments + local variables
+    noll_var_array *vars;       // nil + formal arguments + old: local variables for sigma_0, sigma_1
     uint_t fargs;               // number of formal arguments in the array above
-    noll_space_t *sigma_0;      // points-to part
-    noll_space_t *sigma_1;      // nested part
+    noll_space_t *sigma_0;      // old: points-to part
+    noll_space_t *sigma_1;      // old: nested part
+    noll_pred_rule_array *base_rules;   // set of base rules
+    noll_pred_rule_array *rec_rules;    // set of base rules
   } noll_pred_binding_t;
 
   /** Predicate typing infos
@@ -59,7 +75,7 @@ extern "C"
      */
     noll_uint_array *ptypes;
     /* array of size @global fields_array 
-     * with values of @type noll_pfld_t for each field used in pred
+     * with values of @type noll_field_e for each field used in pred
      */
     noll_uint_array *pfields;
     bool useNil;                /* the predicate use fields to nil */
@@ -83,7 +99,7 @@ extern "C"
   } noll_pred_t;
 
   /** Type of the global array of predicates. */
-  NOLL_VECTOR_DECLARE (noll_pred_array, noll_pred_t *);
+    NOLL_VECTOR_DECLARE (noll_pred_array, noll_pred_t *);
 
   /* ====================================================================== */
   /* Globals */
@@ -95,6 +111,25 @@ extern "C"
   /* Initialize global arrays of predicates */
 
   /* ====================================================================== */
+  /* Constructors/Destructors */
+  /* ====================================================================== */
+
+  noll_pred_rule_t *noll_pred_rule_new (void);
+  /* Allocate a new rule for the predicate and initialize the fields to 0 */
+
+  void noll_pred_rule_delete (noll_pred_rule_t * r);
+  /* Free the rule @p r */
+
+  noll_pred_binding_t *noll_pred_binding_new (void);
+  /* Allocate a new biding for the predicate and initialize the fields to 0 */
+
+  void noll_pred_binding_delete (noll_pred_binding_t * def);
+  /* Free the binding @p def */
+
+  void noll_pred_binding_push_rule (noll_pred_binding_t * def,
+                                    noll_pred_rule_t * r, bool isRec);
+
+  /* ====================================================================== */
   /* Other methods */
   /* ====================================================================== */
 
@@ -104,10 +139,8 @@ extern "C"
   uid_t noll_pred_register (const char *pname, noll_pred_binding_t * def);
   /* Insert the predicate definition in the global array */
 
-  uid_t noll_pred_typecheck_call (uid_t pid, uid_t * actuals_ty, uid_t size);
-  /* Typecheck the call of name with the types of parameters given in
-   * actuals_ty of length size.
-   */
+  uid_t noll_pred_typecheck_call (uid_t pid, noll_type_array * actuals_ty);
+  /* Typecheck the call of name with the types of @p actuals_ty */
 
   /**
    * @brief  Returns the predicate with given Predicate ID

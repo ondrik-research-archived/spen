@@ -72,14 +72,13 @@ extern "C"
     NOLL_F_GE,
     NOLL_F_PLUS,
     NOLL_F_MINUS,
-    NOLL_F_SETSINGLE,           /* SetInt theory */
-    NOLL_F_SETEMPTY,
-    NOLL_F_SETLT,
-    NOLL_F_SETGT,
-    NOLL_F_SETLE,
-    NOLL_F_SETGE,
-    NOLL_F_SETUNION,
-    NOLL_F_SETDIFF,
+    NOLL_F_INT,                 /* integer constant */
+    NOLL_F_DFIELD,              /* integer field selection */
+    NOLL_F_BAG,                 /* Bag_of_Int theory */
+    NOLL_F_EMPTYBAG,
+    NOLL_F_BAGUNION,
+    NOLL_F_BAGMINUS,
+    NOLL_F_SUBSET,
     NOLL_F_EMP,                 /* space operators */
     NOLL_F_JUNK,
     NOLL_F_WSEP,
@@ -88,6 +87,7 @@ extern "C"
     NOLL_F_REF,
     NOLL_F_SREF,
     NOLL_F_INDEX,
+    NOLL_F_LOOP,                /* loop of length at least one */
     NOLL_F_SLOC,                /* share operators */
     NOLL_F_UNLOC,
     NOLL_F_INLOC,
@@ -95,9 +95,8 @@ extern "C"
     NOLL_F_EQLOC,
     NOLL_F_LELOC,
     NOLL_F_SELOC,
-    NOLL_F_TOBOOL,
+    NOLL_F_TOBOOL,              /* conversion ops */
     NOLL_F_TOSPACE,
-    NOLL_F_LOOP,                /* loop of length at least one */
     NOLL_F_OTHER
 /* NOT TO BE USED */
   } noll_expkind_t;
@@ -111,6 +110,9 @@ extern "C"
       /* user-defined function or symbol name */
       uint_t sid;
 
+      /* constant */
+      long value;
+
       /* quantifiers */
       struct
       {
@@ -123,6 +125,7 @@ extern "C"
         uint_t sstart;          /* index starting the set of location quantified variables */
         uint_t send;            /* index ending the set of location quantified variables */
       } quant;
+
     } p;
 
     struct noll_exp_t **args;   /* array of expression args or NULL */
@@ -179,8 +182,6 @@ extern "C"
   noll_context_t *noll_mk_context (void);
   void noll_del_context (noll_context_t * ctx);
 /* Allocator/deallocator. */
-  void noll_pop_context (noll_context_t * ctx);
-/* Pop the local variables. */
 
 /* Parsing logic */
   int noll_set_logic (noll_context_t * ctx, const char *logic);
@@ -208,7 +209,10 @@ extern "C"
   noll_exp_t *noll_mk_exists (noll_context_t * ctx, noll_exp_t * term);
   noll_exp_t *noll_mk_app (noll_context_t * ctx, const char *name,
                            noll_exp_t ** args, uint_t size);
+  noll_exp_t *noll_mk_number (noll_context_t * ctx, const char *str);
   noll_exp_t *noll_mk_symbol (noll_context_t * ctx, const char *name);
+  noll_exp_t *noll_mk_dfield (noll_context_t * ctx, const char *name,
+                              noll_exp_t ** args, uint_t size);
   noll_exp_t *noll_mk_pred (noll_context_t * ctx, const char *name,
                             noll_exp_t ** args, uint_t size);
   noll_exp_t *noll_mk_true (noll_context_t * ctx);
@@ -219,6 +223,8 @@ extern "C"
                           uint_t size);
   noll_exp_t *noll_mk_not (noll_context_t * ctx, noll_exp_t ** args,
                            uint_t size);
+  noll_exp_t *noll_mk_implies (noll_context_t * ctx, noll_exp_t ** args,
+                               uint_t size);
   noll_exp_t *noll_mk_eq (noll_context_t * ctx, noll_exp_t ** args,
                           uint_t size);
   noll_exp_t *noll_mk_distinct (noll_context_t * ctx, noll_exp_t ** args,
@@ -237,22 +243,17 @@ extern "C"
                             uint_t size);
   noll_exp_t *noll_mk_minus (noll_context_t * ctx, noll_exp_t ** args,
                              uint_t size);
-  noll_exp_t *noll_mk_setsingle (noll_context_t * ctx, noll_exp_t ** args,
-                                 uint_t size);
-  noll_exp_t *noll_mk_setempty (noll_context_t * ctx, noll_exp_t ** args,
-                                uint_t size);
+  noll_exp_t *noll_mk_bag (noll_context_t * ctx, noll_exp_t ** args,
+                           uint_t size);
+  noll_exp_t *noll_mk_emptybag (noll_context_t * ctx);
   noll_exp_t *noll_mk_setlt (noll_context_t * ctx, noll_exp_t ** args,
                              uint_t size);
-  noll_exp_t *noll_mk_setgt (noll_context_t * ctx, noll_exp_t ** args,
-                             uint_t size);
-  noll_exp_t *noll_mk_setle (noll_context_t * ctx, noll_exp_t ** args,
-                             uint_t size);
-  noll_exp_t *noll_mk_setge (noll_context_t * ctx, noll_exp_t ** args,
-                             uint_t size);
-  noll_exp_t *noll_mk_setunion (noll_context_t * ctx, noll_exp_t ** args,
+  noll_exp_t *noll_mk_bagunion (noll_context_t * ctx, noll_exp_t ** args,
                                 uint_t size);
-  noll_exp_t *noll_mk_setdiff (noll_context_t * ctx, noll_exp_t ** args,
-                               uint_t size);
+  noll_exp_t *noll_mk_bagminus (noll_context_t * ctx, noll_exp_t ** args,
+                                uint_t size);
+  noll_exp_t *noll_mk_subset (noll_context_t * ctx, noll_exp_t ** args,
+                              uint_t size);
   noll_exp_t *noll_mk_emp (noll_context_t * ctx);
   noll_exp_t *noll_mk_junk (noll_context_t * ctx);
   noll_exp_t *noll_mk_wsep (noll_context_t * ctx, noll_exp_t ** args,
@@ -297,13 +298,21 @@ extern "C"
 /* ====================================================================== */
 /* Translation */
 /* ====================================================================== */
-/* Build a space formula from AST in args */
-  void noll_exp_push_pure (noll_context_t * ctx, noll_exp_t * e,
-                           noll_form_t * f);
+/* Build a formula from AST in args */
+  noll_dterm_t *noll_exp_push_dterm (noll_exp_t * e, noll_var_array * lvar);
+  noll_dform_t *noll_exp_push_dform (noll_exp_t * e, noll_var_array * lvar,
+                                     int nst);
+  int noll_exp_push_pure (noll_form_t * form, noll_pure_t * pure,
+                          noll_exp_t * e, noll_var_array * lenv,
+                          const char *msg, const char *ctx);
   noll_space_t *noll_mk_form_junk (noll_exp_t * e);
   noll_space_t *noll_mk_form_pto (noll_context_t * ctx, noll_exp_t * e);
-  noll_space_t *noll_mk_form_loop (noll_context_t * ctx, noll_exp_t * e);
-  noll_space_t *noll_mk_form_pred (noll_context_t * ctx, noll_exp_t * e);
+  noll_space_t *noll_mk_form_loop (noll_context_t * ctx,
+                                   noll_var_array * lvar, const char *name,
+                                   noll_exp_t * e);
+  noll_space_t *noll_mk_form_pred (noll_context_t * ctx,
+                                   noll_var_array * lvar, const char *name,
+                                   noll_exp_t * e);
   noll_space_t *noll_exp_push_space (noll_context_t * ctx, noll_exp_t * e);
   void noll_exp_push (noll_context_t * ctx, noll_exp_t * e, int ispos);
 /* Translates the expression into a formula and push in global formulas. */

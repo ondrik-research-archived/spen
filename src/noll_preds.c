@@ -22,6 +22,8 @@
 
 #include "noll_preds.h"
 
+NOLL_VECTOR_DEFINE (noll_pred_rule_array, noll_pred_rule_t *);
+
 NOLL_VECTOR_DEFINE (noll_pred_array, noll_pred_t *);
 
 /* ====================================================================== */
@@ -38,8 +40,101 @@ noll_pred_init ()
 }
 
 /* ====================================================================== */
-/* Other methods */
+/* Constructors/Destructors */
 /* ====================================================================== */
+
+noll_pred_rule_t *
+noll_pred_rule_new (void)
+{
+  noll_pred_rule_t *r =
+    (noll_pred_rule_t *) malloc (sizeof (noll_pred_rule_t));
+  r->vars = NULL;
+  r->fargs = 0;
+  r->pure = NULL;
+  r->pto = NULL;
+  r->nst = NULL;
+  r->rec = NULL;
+  return r;
+}
+
+void
+noll_pred_rule_delete (noll_pred_rule_t * r)
+{
+  if (r == NULL)
+    return;
+  if (r->vars != NULL)
+    noll_var_array_delete (r->vars);
+  if (r->pure != NULL)
+    noll_pure_free (r->pure);
+  if (r->pto != NULL)
+    noll_space_free (r->pto);
+  if (r->nst != NULL)
+    noll_space_free (r->nst);
+  if (r->rec != NULL)
+    noll_space_free (r->rec);
+  free (r);
+}
+
+noll_pred_binding_t *
+noll_pred_binding_new (void)
+{
+  noll_pred_binding_t *pdef =
+    (noll_pred_binding_t *) malloc (sizeof (noll_pred_binding_t));
+  pdef->pargs = 0;
+  pdef->fargs = 0;
+  pdef->vars = NULL;
+  pdef->sigma_0 = NULL;
+  pdef->sigma_1 = NULL;
+  pdef->base_rules = NULL;
+  pdef->rec_rules = NULL;
+  return pdef;
+}
+
+void
+noll_pred_binding_delete (noll_pred_binding_t * pdef)
+{
+  if (pdef == NULL)
+    return;
+  if (pdef->vars != NULL)
+    noll_var_array_delete (pdef->vars);
+  if (pdef->sigma_0 != NULL)
+    noll_space_free (pdef->sigma_0);
+  if (pdef->sigma_1 != NULL)
+    noll_space_free (pdef->sigma_1);
+  if (pdef->base_rules != NULL)
+    noll_pred_rule_array_delete (pdef->base_rules);
+  if (pdef->rec_rules != NULL)
+    noll_pred_rule_array_delete (pdef->rec_rules);
+  free (pdef);
+}
+
+void
+noll_pred_binding_push_rule (noll_pred_binding_t * def, noll_pred_rule_t * r,
+                             bool isRec)
+{
+  assert (def != NULL);
+  assert (r != NULL);
+  noll_pred_rule_array *rules = NULL;
+  if (isRec == true)
+    {
+      if (def->rec_rules == NULL)
+        def->rec_rules = noll_pred_rule_array_new ();
+      rules = def->rec_rules;
+    }
+  else
+    {
+      if (def->base_rules == NULL)
+        def->base_rules = noll_pred_rule_array_new ();
+      rules = def->base_rules;
+    }
+  noll_pred_rule_array_push (rules, r);
+  if ((isRec == true) && (def->sigma_0 == NULL) && (r->rec != NULL))
+    {
+      def->vars = r->vars;      // TODO NEW: it is kept after that ? Yes, it seems
+      def->sigma_0 = r->pto;
+      def->sigma_1 = r->nst;
+    }
+}
 
 noll_pred_t *
 noll_pred_new (const char *name, uid_t pid, noll_pred_binding_t * def)
@@ -53,6 +148,10 @@ noll_pred_new (const char *name, uid_t pid, noll_pred_binding_t * def)
 
   return p;
 }
+
+/* ====================================================================== */
+/* Other methods */
+/* ====================================================================== */
 
 uid_t
 noll_pred_array_find (const char *name)
@@ -97,32 +196,33 @@ noll_pred_register (const char *pname, noll_pred_binding_t * def)
 }
 
 uid_t
-noll_pred_typecheck_call (uid_t pid, uid_t * actuals_ty, uid_t size)
+noll_pred_typecheck_call (uid_t pid, noll_type_array * actuals_ty)
 {
   if (pid == UNDEFINED_ID)
     return UNDEFINED_ID;
   const noll_pred_t *p = noll_pred_getpred (pid);
   assert (NULL != p);
-  if (size != p->def->fargs)
+  if (noll_vector_size (actuals_ty) != p->def->fargs)
     {
       // TODO: make error message
-      printf
-        ("Predicate call `%s': called with %d parameters instead of %d.\n",
-         p->pname, size, p->def->fargs);
+      fprintf
+        (stderr,
+         "Predicate call `%s': called with %d parameters instead of %d.\n",
+         p->pname, noll_vector_size (actuals_ty), p->def->fargs);
       return UNDEFINED_ID;
     }
-  for (uint_t i = 0; i < size; i++)
+  /// p->def->vars includes nil in position 0, 
+  /// while actuals_ty does not
+  for (uint_t i = 1; i < p->def->fargs; i++)
     {
-      noll_var_t *fi = noll_vector_at (p->def->vars, i + 1);    /* +1 for nil */
-      uid_t fi_ty = NOLL_TYP_VOID;
-      if (fi->vid != VNIL_ID)
-        fi_ty = (fi->vty && fi->vty->kind == NOLL_TYP_RECORD) ?
-          noll_vector_at (fi->vty->args, 0) : UNDEFINED_ID;
-      if ((actuals_ty[i] != NOLL_TYP_VOID) && (actuals_ty[i] != fi_ty))
+      noll_var_t *fi = noll_vector_at (p->def->vars, i);
+      noll_type_t *fi_ty = fi->vty;
+      noll_type_t *ai_ty = noll_vector_at (actuals_ty, i - 1);  /* -1 for nil */
+      if (noll_type_match (fi_ty, ai_ty) == false)
         {
           // TODO: make error message
-          printf ("Predicate call `%s': bad type for the %d-th parameter.\n",
-                  p->pname, i);
+          printf ("Predicate call `%s': bad type for parameter %s.\n",
+                  p->pname, fi->vname);
           return UNDEFINED_ID;
         }
     }
@@ -345,7 +445,8 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
 
             /* fill type infos with type of dst */
             uid_t dst_r = noll_var_record (p->def->vars, dst);
-            noll_vector_at (p->typ->ptypes, dst_r) = 1;
+            if (dst_r != UNDEFINED_ID)
+              noll_vector_at (p->typ->ptypes, dst_r) = 1;
 
             /* fill field info depending on dst */
             /* dst is in 0 -- NULL -- to noll_vector_size(p->def->vars) */
@@ -364,6 +465,11 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
               {
                 /* dst == first existential var, then level 0 */
                 noll_vector_at (p->typ->pfields, fid) = NOLL_PFLD_BCKBONE;
+              }
+            else if (dst_r == UNDEFINED_ID)
+              {
+                /* dst is a data variable */
+                noll_vector_at (p->typ->pfields, fid) = NOLL_PFLD_DATA;
               }
             else
               {
@@ -618,9 +724,9 @@ noll_pred_get_matrix1 (uid_t pid)
   res->share = noll_share_array_new (); // Warning: do not use NULL
   /* - build the pure part E != {F} U B */
   res->pure = noll_pure_new (noll_vector_size (pred->def->vars));
-  noll_pure_add_neq (res, 1, 0);
+  noll_form_add_neq (res, 1, 0);
   for (size_t i = 2; i < noll_vector_size (pred->def->vars); i++)
-    noll_pure_add_neq (res, 1, i);
+    noll_form_add_neq (res, 1, i);
 
   /* - build the spatial part */
   if (pred->def->sigma_1 == NULL)
@@ -714,15 +820,15 @@ noll_pred_get_matrix (uid_t pid)
   uid_t id_in = 1;
   uid_t id_x_tl = pred->def->fargs + 1;
   /* E != NULL, X_tl != NULL */
-  noll_pure_add_neq (res, id_in, 0);
-  noll_pure_add_neq (res, id_x_tl, 0);
+  noll_form_add_neq (res, id_in, 0);
+  noll_form_add_neq (res, id_x_tl, 0);
   /* E != X_tl */
-  noll_pure_add_neq (res, id_x_tl, id_in);
+  noll_form_add_neq (res, id_x_tl, id_in);
   for (uid_t i = 1; i < pred->def->fargs; i++)
     {
       /* args in res->lvars are shifted by 1 to introduce NULL */
-      noll_pure_add_neq (res, id_in, i + 1);
-      noll_pure_add_neq (res, id_x_tl, i + 1);
+      noll_form_add_neq (res, id_in, i + 1);
+      noll_form_add_neq (res, id_x_tl, i + 1);
     }
 
   /* - build the spatial part */
@@ -742,8 +848,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->
-                                                     m.sep, i));
+                                     noll_vector_at (pred->def->sigma_1->m.
+                                                     sep, i));
               res_size++;
             }
         }

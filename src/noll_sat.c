@@ -143,6 +143,9 @@ noll_sat_diag_sat (noll_form_t * form, noll_sat_t * fsat)
   assert (form == noll_prob->pform);
   assert (form == fsat->form);
 
+  if (fsat != fsat || form != form)
+    assert (0);                 // to remove warning on unused parameter
+
   if (noll_option_get_verb () > 0)
     fprintf (stdout, "[diag] sat: \n");
 
@@ -223,6 +226,9 @@ noll_sat_free_aux (noll_form_t * form)
 {
   assert (noll_prob != NULL);
   assert (noll_prob->pform == form);
+
+  if (form != form)
+    assert (0);                 // to remove warning on unused parameter
 
   if (noll_prob->pabstr != NULL)
     {

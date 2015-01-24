@@ -55,11 +55,11 @@ extern "C"
   typedef enum
   {
     NOLL_TYP_BOOL = 0,
-    NOLL_TYP_FIELD,
     NOLL_TYP_INT,
-    NOLL_TYP_SETINT,
+    NOLL_TYP_BAGINT,
     NOLL_TYP_RECORD,
     NOLL_TYP_SETLOC,
+    NOLL_TYP_FIELD,
     NOLL_TYP_SETREF,
     NOLL_TYP_SPACE,
     NOLL_TYP_OTHER
@@ -72,6 +72,9 @@ extern "C"
     noll_typ_t kind;
     noll_uid_array *args;       // type arguments, including the record index
   } noll_type_t;
+
+/** Type of the global array of records. */
+    NOLL_VECTOR_DECLARE (noll_type_array, noll_type_t *);
 
 /** Record information:
  * - the name of the record declared in the program
@@ -98,20 +101,22 @@ extern "C"
     NOLL_PFLD_INNER,            /* F^1 */
     NOLL_PFLD_NULL,             /* F^2 needed? */
     NOLL_PFLD_BORDER,           /* F^2 */
-    NOLL_PFLD_NESTED
+    NOLL_PFLD_NESTED,
+    NOLL_PFLD_DATA
   } noll_field_e;
 
 /** Field information:
  * - the name of the field declared in the program
  * - the source record
- * - the target record
+ * - the target record / UNDEFINED_ID for data fields
  */
   typedef struct noll_field_t
   {
     char *name;                 // declaration name
     uid_t fid;                  // field identifier
     uid_t src_r;                // identifier of the source record
-    uid_t pto_r;                // identifier of the target record
+    uid_t pto_r;                // identifier of the target record / or UNDEFINED_ID for data
+    noll_typ_t pto_ty;          // kind of type for pto
     uid_t order;                // order number wrt use in predicates
     uid_t pid;                  // predicate where the fields is used in the matrix
     noll_field_e kind;          // kind of the field wrt predicate pid
@@ -154,8 +159,8 @@ extern "C"
 
   noll_type_t *noll_mk_type_bool (void);
   noll_type_t *noll_mk_type_int (void);
-  noll_type_t *noll_mk_type_setint (void);
-  noll_type_t *noll_mk_type_field (uid_t src, uid_t dest);
+  noll_type_t *noll_mk_type_bagint (void);
+  noll_type_t *noll_mk_type_field (noll_type_t * src, noll_type_t * dest);
   noll_type_t *noll_mk_type_record (uid_t rid);
   noll_type_t *noll_mk_type_setloc (void);
   noll_type_t *noll_mk_type_setref (uid_t ty);
@@ -163,13 +168,26 @@ extern "C"
 /* Constructors for the predefined types. */
   noll_type_t *noll_type_clone (noll_type_t * a);
   void noll_type_free (noll_type_t * a);
+  void noll_type_fprint (FILE * f, noll_type_t * a);
 
 /* ====================================================================== */
 /* Other methods */
 /* ====================================================================== */
 
+  bool noll_type_is_vartype (noll_type_t * t);
+/* True if type may be used for a variable */
+
+  bool noll_type_is_fldtype (noll_type_t * t);
+/* True if type may be used for co-domain of a field */
+
+  bool noll_type_match (noll_type_t * fty, noll_type_t * aty);
+/* True if a value of type @p aty may be assigned to @p fty */
+
   uid_t noll_is_record (uid_t rid);
-/* Returns rid if the arguments is a valid record index, otherwise UNDEFINED_ID. */
+/* Returns rid if the argument is a valid record index, otherwise UNDEFINED_ID */
+
+  uid_t noll_type_get_record (noll_type_t * t);
+/* Returns record identifier if the type is a record, otherwise UNDEFINED_ID */
 
 // searching
 

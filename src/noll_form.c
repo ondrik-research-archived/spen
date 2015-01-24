@@ -29,6 +29,10 @@
 #include "noll2graph.h"
 #include "noll_graph.h"
 
+NOLL_VECTOR_DEFINE (noll_dterm_array, noll_dterm_t *);
+
+NOLL_VECTOR_DEFINE (noll_dform_array, noll_dform_t *);
+
 NOLL_VECTOR_DEFINE (noll_space_array, noll_space_t *);
 
 NOLL_VECTOR_DEFINE (noll_share_array, noll_atom_share_t *);
@@ -39,6 +43,12 @@ NOLL_VECTOR_DEFINE (noll_form_array, noll_form_t *);
 
 /* ====================================================================== */
 /* Globals */
+/* ====================================================================== */
+
+noll_logic_t noll_form_logic;
+
+/* ====================================================================== */
+/* Constructors/destructors */
 /* ====================================================================== */
 
 noll_form_t *
@@ -90,7 +100,6 @@ noll_form_free (noll_form_t * form)
 void
 noll_form_set_unsat (noll_form_t * form)
 {
-
   form->kind = NOLL_FORM_UNSAT;
   // DO NOT FREE variables, already pointed by the context
   if (form->pure != NULL)
@@ -108,6 +117,54 @@ noll_form_set_unsat (noll_form_t * form)
       noll_share_free (form->share);
       form->share = NULL;
     }
+}
+
+noll_dterm_t *
+noll_dterm_new (void)
+{
+  noll_dterm_t *ret = (noll_dterm_t *) malloc (sizeof (struct noll_dterm_s));
+  ret->kind = NOLL_DATA_INT;
+  ret->typ = NOLL_TYP_INT;
+  ret->p.value = 0;
+  return ret;
+}
+
+void
+noll_dterm_free (noll_dterm_t * d)
+{
+  if (d == NULL)
+    return;
+  if ((d->kind > NOLL_DATA_EMPTYBAG) && (d->args != NULL))
+    noll_dterm_array_delete (d->args);
+  free (d);
+}
+
+noll_dform_t *
+noll_dform_new (void)
+{
+  noll_dform_t *ret = (noll_dform_t *) malloc (sizeof (struct noll_dform_s));
+  ret->kind = NOLL_DATA_EMPTYBAG;
+  ret->typ = NOLL_TYP_BAGINT;
+  ret->p.targs = NULL;
+  return ret;
+}
+
+void
+noll_dform_free (noll_dform_t * d)
+{
+  if (d == NULL)
+    return;
+  if (d->kind != NOLL_DATA_IMPLIES)
+    {
+      if (d->p.targs != NULL)
+        noll_dterm_array_delete (d->p.targs);
+    }
+  else
+    {
+      if (d->p.bargs != NULL)
+        noll_dform_array_delete (d->p.bargs);
+    }
+  free (d);
 }
 
 noll_pure_t *
@@ -131,6 +188,7 @@ noll_pure_new (uint_t size)
             ret->m[i][j] = NOLL_PURE_OTHER;
         }
     }
+  ret->data = NULL;
   return ret;
 }
 
@@ -146,6 +204,10 @@ noll_pure_free (noll_pure_t * p)
           free (p->m[i]);
 
       free (p->m);
+    }
+  if (p->data)
+    {
+      noll_dform_array_delete (p->data);
     }
   free (p);
 }
@@ -304,153 +366,182 @@ noll_sterm_copy (noll_sterm_t * a)
   return tv;
 }
 
-void
-noll_pure_update_eq (noll_form_t * f, uid_t l, uid_t c)
+int
+noll_pure_add_dform (noll_pure_t * form, noll_dform_t * df)
+{
+  assert (form != NULL);
+  assert (df != NULL);
+  if (form->data == NULL)
+    form->data = noll_dform_array_new ();
+  noll_dform_array_push (form->data, df);
+  return 1;
+}
+
+noll_form_kind_t
+noll_pure_update_eq (noll_pure_t * f, uid_t l, uid_t c)
 {
   assert (f);
-  if (f->kind == NOLL_FORM_UNSAT)
-    return;
-  assert (f->pure && f->pure->m);
-  assert ((l < f->pure->size) && (c < f->pure->size) && (l < c));
-  if (noll_pure_matrix_at (f->pure, l, c) == NOLL_PURE_NEQ)
+  assert (l < c);
+
+  if (noll_pure_matrix_at (f, l, c) == NOLL_PURE_NEQ)
     {
 #ifndef NDEBUG
       fprintf (stdout, "noll_pure_update_eq(%d,%d): set unsat!\n", l, c);
 #endif
-      noll_form_set_unsat (f);
-      return;
+      return NOLL_FORM_UNSAT;
     }
-  noll_pure_matrix_at (f->pure, l, c) = NOLL_PURE_EQ;
+  noll_pure_matrix_at (f, l, c) = NOLL_PURE_EQ;
+  return NOLL_FORM_SAT;
 }
 
-void
-noll_pure_update_neq (noll_form_t * f, uid_t l, uid_t c)
+noll_form_kind_t
+noll_pure_update_neq (noll_pure_t * f, uid_t l, uid_t c)
 {
   assert (f);
-  if (f->kind == NOLL_FORM_UNSAT)
-    return;
-  assert (f->pure && f->pure->m);
-  assert ((l < f->pure->size) && (c < f->pure->size) && (l < c));
-  if (noll_pure_matrix_at (f->pure, l, c) == NOLL_PURE_EQ)
+  assert (l < c);
+
+  if (noll_pure_matrix_at (f, l, c) == NOLL_PURE_EQ)
     {
 #ifndef NDEBUG
       fprintf (stdout, "noll_pure_update_neq(%d,%d): set unsat!\n", l, c);
 #endif
-      noll_form_set_unsat (f);
-      return;
+      return NOLL_FORM_UNSAT;
     }
-  noll_pure_matrix_at (f->pure, l, c) = NOLL_PURE_NEQ;
+  noll_pure_matrix_at (f, l, c) = NOLL_PURE_NEQ;
+  return NOLL_FORM_SAT;
 }
 
-void
-noll_pure_add_eq (noll_form_t * f, uid_t v1, uid_t v2)
+noll_form_kind_t
+noll_pure_close_eq (noll_pure_t * pure, uid_t l, uid_t c)
 {
-  assert (f != NULL);
-  if (f->kind == NOLL_FORM_UNSAT)
-    return;
+  assert (pure->size > l && pure->size > c);
+  assert (l < c);
 
-  assert (f->pure->size > v1 && f->pure->size > v2);
-  if (v1 != v2)
+  noll_form_kind_t res = NOLL_FORM_SAT;
+  // close with entries < c-1
+  for (uid_t j = l + 1; (j < c) && (res != NOLL_FORM_UNSAT); j++)
     {
-      // set the entry in form->pure->m to 0
-      uid_t v_lin = (v1 <= v2) ? v1 : v2;
-      uid_t v_col = (v1 <= v2) ? v2 : v1;
-      noll_pure_update_eq (f, v_lin, v_col);
-      // close with entries < vcol-1
-      for (uid_t j = v_lin + 1; (j < v_col) && (f->kind != NOLL_FORM_UNSAT);
-           j++)
-        {
-          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
-            /* v_lin = v_col && v_lin = j => j = v_col */
-            noll_pure_update_eq (f, j, v_col);
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, l, j) == NOLL_PURE_EQ))
+        /* l = c && l = j => j = c */
+        res = noll_pure_update_eq (pure, j, c);
 
-          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_NEQ)
-            /* v_lin = v_col && v_lin != j => j != v_col */
-            noll_pure_update_neq (f, j, v_col);
-        }
-      // check if still sat
-      if (f->kind == NOLL_FORM_UNSAT)
-        return;
-      // close with entries > vcol
-      for (uid_t j = v_col + 1;
-           (j < f->pure->size) && (f->kind != NOLL_FORM_UNSAT); j++)
-        {
-          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
-            /* v_lin = v_col && v_lin = j =>  v_col = j */
-            noll_pure_update_eq (f, v_col, j);
-
-          if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_NEQ)
-            /* v_lin = v_col && v_lin != j => j != v_col */
-            noll_pure_update_neq (f, v_col, j);
-
-          if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_EQ)
-            /* v_lin = v_col && v_col = j =>  v_lin = j */
-            noll_pure_update_eq (f, v_lin, j);
-
-          if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_NEQ)
-            /* v_lin = v_col && v_col != j => v_lin != j */
-            noll_pure_update_neq (f, v_lin, j);
-        }
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, l, j) == NOLL_PURE_NEQ))
+        /* l = c && l != j => j != c */
+        res = noll_pure_update_neq (pure, j, c);
     }
-  if (f->kind != NOLL_FORM_UNSAT)
-    f->kind = NOLL_FORM_SAT;
+
+  // close with entries > vcol
+  for (uid_t j = c + 1; (j < pure->size) && (res != NOLL_FORM_UNSAT); j++)
+    {
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, l, j) == NOLL_PURE_EQ))
+        /* v_lin = v_col && v_lin = j =>  v_col = j */
+        res = noll_pure_update_eq (pure, c, j);
+
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, l, j) == NOLL_PURE_NEQ))
+        /* v_lin = v_col && v_lin != j => j != v_col */
+        res = noll_pure_update_neq (pure, c, j);
+
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, c, j) == NOLL_PURE_EQ))
+        /* v_lin = v_col && v_col = j =>  v_lin = j */
+        res = noll_pure_update_eq (pure, l, j);
+
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, c, j) == NOLL_PURE_NEQ))
+        /* v_lin = v_col && v_col != j => v_lin != j */
+        res = noll_pure_update_neq (pure, l, j);
+    }
+  return res;
 }
 
-void
-noll_pure_add_neq (noll_form_t * f, uid_t v1, uid_t v2)
+noll_form_kind_t
+noll_pure_close_neq (noll_pure_t * pure, uid_t l, uid_t c)
 {
-  assert (f != NULL);
-  if (f->kind == NOLL_FORM_UNSAT)
-    return;
+  assert (pure->size > l && pure->size > c);
+  assert (l < c);
 
-  /* part used only at parsing
-     unt_t size = noll_vector_size(f->lvars);
-     if (f->pure != NULL)
-     if (f->pure->size != size) {
-     noll_pure_free(f->pure);
-     f->pure = NULL;
-     }
-     if (f->pure == NULL)
-     f->pure = noll_pure_new(size);
-   */
-
-  assert (f->pure->size > v1 && f->pure->size > v2);
-  // set the entry in form->pure->m to 0
-  uid_t v_lin = (v1 <= v2) ? v1 : v2;
-  uid_t v_col = (v1 <= v2) ? v2 : v1;
-  if (v_lin == v_col)
-    {
-      // try to add x != x
-#ifndef NDEBUG
-      fprintf (stdout, "noll_pure_add_neq(%d,%d): set unsat!\n", v1, v2);
-#endif
-      noll_form_set_unsat (f);
-      return;
-    }
-  noll_pure_update_neq (f, v_lin, v_col);
+  noll_form_kind_t res = NOLL_FORM_SAT;
   // close with entries < vcol-1
-  for (uid_t j = v_lin + 1; (f->kind != NOLL_FORM_UNSAT) && (j < v_col); j++)
+  for (uid_t j = l + 1; (res != NOLL_FORM_UNSAT) && (j < c); j++)
     {
-      if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
+      if (noll_pure_matrix_at (pure, l, j) == NOLL_PURE_EQ)
         /* v_lin != v_col && v_lin = j => j != v_col */
-        noll_pure_update_neq (f, j, v_col);
+        res = noll_pure_update_neq (pure, j, c);
     }
   // close with entries > vcol
-  for (uid_t j = v_col + 1; (f->kind != NOLL_FORM_UNSAT) && (j
-                                                             < f->pure->size);
-       j++)
+  for (uid_t j = c + 1; (res != NOLL_FORM_UNSAT) && (j < pure->size); j++)
     {
-      if (noll_pure_matrix_at (f->pure, v_lin, j) == NOLL_PURE_EQ)
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, l, j) == NOLL_PURE_EQ))
         /* v_lin != v_col && v_lin = j =>  v_col != j */
-        noll_pure_update_neq (f, v_col, j);
+        res = noll_pure_update_neq (pure, c, j);
 
-      if (noll_pure_matrix_at (f->pure, v_col, j) == NOLL_PURE_EQ)
+      if ((res == NOLL_FORM_SAT) &&
+          (noll_pure_matrix_at (pure, c, j) == NOLL_PURE_EQ))
         /* v_lin != v_col && v_col = j =>  v_lin != j */
-        noll_pure_update_neq (f, v_lin, j);
+        res = noll_pure_update_neq (pure, l, j);
     }
-  if (f->kind != NOLL_FORM_UNSAT)
-    f->kind = NOLL_FORM_SAT;
+  return res;
 }
+
+noll_form_kind_t
+noll_pure_add_eq (noll_pure_t * f, uid_t v1, uid_t v2)
+{
+  assert (f && f->m);
+  if (v1 == v2)
+    return NOLL_FORM_SAT;
+  uid_t l = (v1 < v2) ? v1 : v2;
+  uid_t c = (v1 < v2) ? v2 : v1;
+
+  noll_form_kind_t status = noll_pure_update_eq (f, l, c);
+  /// call closure 
+  status = noll_pure_close_eq (f, l, c);
+  return status;
+}
+
+noll_form_kind_t
+noll_pure_add_neq (noll_pure_t * f, uid_t v1, uid_t v2)
+{
+  assert (f && f->m);
+  if (v1 == v2)
+    return NOLL_FORM_UNSAT;
+  uid_t l = (v1 < v2) ? v1 : v2;
+  uid_t c = (v1 < v2) ? v2 : v1;
+
+  noll_form_kind_t status = noll_pure_update_neq (f, l, c);
+  /// call closure
+  status = noll_pure_close_neq (f, l, c);
+  return status;
+}
+
+void
+noll_form_add_eq (noll_form_t * f, uid_t v1, uid_t v2)
+{
+  assert (f != NULL);
+  if (f->kind == NOLL_FORM_UNSAT)
+    return;
+
+  /// add the equality and do the closure
+  f->kind = noll_pure_add_eq (f->pure, v1, v2);
+  return;
+}
+
+void
+noll_form_add_neq (noll_form_t * f, uid_t v1, uid_t v2)
+{
+  assert (f != NULL);
+  if (f->kind == NOLL_FORM_UNSAT)
+    return;
+
+  /// add the equality and do the closure
+  f->kind = noll_pure_add_neq (f->pure, v1, v2);
+  return;
+}
+
 
 /* ====================================================================== */
 /* Typing */

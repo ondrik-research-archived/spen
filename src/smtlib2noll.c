@@ -84,6 +84,10 @@ static smtlib2_term smtlib2_noll_parser_mk_function (smtlib2_context ctx,
                                                      smtlib2_sort sort,
                                                      smtlib2_vector * index,
                                                      smtlib2_vector * args);
+static smtlib2_term smtlib2_noll_parser_mk_number (smtlib2_context ctx,
+                                                   const char *rep,
+                                                   unsigned int width,
+                                                   unsigned int base);
 #define SMTLIB2_NOLL_DECLHANDLER(name)				      \
     static smtlib2_term smtlib2_noll_parser_mk_ ## name (              \
         smtlib2_context ctx,                                            \
@@ -94,6 +98,7 @@ static smtlib2_term smtlib2_noll_parser_mk_function (smtlib2_context ctx,
 SMTLIB2_NOLL_DECLHANDLER (and);
 SMTLIB2_NOLL_DECLHANDLER (or);
 SMTLIB2_NOLL_DECLHANDLER (not);
+SMTLIB2_NOLL_DECLHANDLER (implies);
 SMTLIB2_NOLL_DECLHANDLER (eq);
 SMTLIB2_NOLL_DECLHANDLER (distinct);
 SMTLIB2_NOLL_DECLHANDLER (ite);
@@ -103,14 +108,11 @@ SMTLIB2_NOLL_DECLHANDLER (le);
 SMTLIB2_NOLL_DECLHANDLER (ge);
 SMTLIB2_NOLL_DECLHANDLER (plus);
 SMTLIB2_NOLL_DECLHANDLER (minus);
-SMTLIB2_NOLL_DECLHANDLER (setsingle);
-SMTLIB2_NOLL_DECLHANDLER (setempty);
-SMTLIB2_NOLL_DECLHANDLER (setlt);
-SMTLIB2_NOLL_DECLHANDLER (setgt);
-SMTLIB2_NOLL_DECLHANDLER (setle);
-SMTLIB2_NOLL_DECLHANDLER (setge);
-SMTLIB2_NOLL_DECLHANDLER (setunion);
-SMTLIB2_NOLL_DECLHANDLER (setdiff);
+SMTLIB2_NOLL_DECLHANDLER (bag);
+//SMTLIB2_NOLL_DECLHANDLER (emptybag);
+SMTLIB2_NOLL_DECLHANDLER (bagunion);
+SMTLIB2_NOLL_DECLHANDLER (bagminus);
+SMTLIB2_NOLL_DECLHANDLER (subset);
 //SMTLIB2_NOLL_DECLHANDLER (emp);
 //SMTLIB2_NOLL_DECLHANDLER (junk);
 SMTLIB2_NOLL_DECLHANDLER (wsep);
@@ -180,10 +182,13 @@ smtlib2_noll_parser_new (void)
   /* for symbols and user-defined function application */
   smtlib2_term_parser_set_function_handler (tp,
                                             smtlib2_noll_parser_mk_function);
+  smtlib2_term_parser_set_number_handler (tp, smtlib2_noll_parser_mk_number);
+
   /* for logic pre-defined operators */
   SMTLIB2_NOLL_SETHANDLER (tp, "or", or);
   SMTLIB2_NOLL_SETHANDLER (tp, "and", and);
   SMTLIB2_NOLL_SETHANDLER (tp, "not", not);
+  SMTLIB2_NOLL_SETHANDLER (tp, "=>", implies);
   SMTLIB2_NOLL_SETHANDLER (tp, "=", eq);
   SMTLIB2_NOLL_SETHANDLER (tp, "distinct", distinct);
   SMTLIB2_NOLL_SETHANDLER (tp, "ite", ite);
@@ -193,14 +198,11 @@ smtlib2_noll_parser_new (void)
   SMTLIB2_NOLL_SETHANDLER (tp, ">=", ge);
   SMTLIB2_NOLL_SETHANDLER (tp, "+", plus);
   SMTLIB2_NOLL_SETHANDLER (tp, "-", minus);
-  SMTLIB2_NOLL_SETHANDLER (tp, "singleton", setsingle);
-  SMTLIB2_NOLL_SETHANDLER (tp, "emptyset", setempty);
-  SMTLIB2_NOLL_SETHANDLER (tp, "set-lt", setlt);
-  SMTLIB2_NOLL_SETHANDLER (tp, "set-gt", setgt);
-  SMTLIB2_NOLL_SETHANDLER (tp, "set-le", setle);
-  SMTLIB2_NOLL_SETHANDLER (tp, "set-ge", setge);
-  SMTLIB2_NOLL_SETHANDLER (tp, "set-union", setunion);
-  SMTLIB2_NOLL_SETHANDLER (tp, "set-diff", setdiff);
+  SMTLIB2_NOLL_SETHANDLER (tp, "bag", bag);
+  //SMTLIB2_NOLL_SETHANDLER (tp, "emptybag", emptybag);
+  SMTLIB2_NOLL_SETHANDLER (tp, "bagunion", bagunion);
+  SMTLIB2_NOLL_SETHANDLER (tp, "bagminus", bagminus);
+  SMTLIB2_NOLL_SETHANDLER (tp, "subset", subset);
   SMTLIB2_NOLL_SETHANDLER (tp, "wsep", wsep);
   SMTLIB2_NOLL_SETHANDLER (tp, "ssep", ssep);
   SMTLIB2_NOLL_SETHANDLER (tp, "pto", pto);
@@ -217,22 +219,13 @@ smtlib2_noll_parser_new (void)
   SMTLIB2_NOLL_SETHANDLER (tp, "tospace", tospace);
   SMTLIB2_NOLL_SETHANDLER (tp, "loop", loop);
 
-  /* Initialize the logic pre-defined sorts */
+  /* Initialize the logic basic sorts */
   smtlib2_hashtable_set (ret->sorts_,
                          (intptr_t) (void *) smtlib2_strdup ("Bool"),
                          (intptr_t) (void *) noll_mk_type_bool ());
   smtlib2_hashtable_set (ret->sorts_,
-                         (intptr_t) (void *) smtlib2_strdup ("Int"),
-                         (intptr_t) (void *) noll_mk_type_int ());
-  smtlib2_hashtable_set (ret->sorts_,
-                         (intptr_t) (void *) smtlib2_strdup ("SetInt"),
-                         (intptr_t) (void *) noll_mk_type_setint ());
-  smtlib2_hashtable_set (ret->sorts_,
                          (intptr_t) (void *) smtlib2_strdup ("Field"),
                          (intptr_t) (void *) noll_mk_type_field (0, 0));
-  smtlib2_hashtable_set (ret->sorts_,
-                         (intptr_t) (void *) smtlib2_strdup ("SetLoc"),
-                         (intptr_t) (void *) noll_mk_type_setloc ());
   smtlib2_hashtable_set (ret->sorts_,
                          (intptr_t) (void *) smtlib2_strdup ("SetRef"),
                          (intptr_t) (void *) noll_mk_type_setref (0));
@@ -263,7 +256,11 @@ smtlib2_noll_parser_delete (smtlib2_noll_parser * p)
 
 /**
  * Command (set-logic logic)
- * Only "QF_NOLL" is supported.
+ * Logics supported:
+ * QF_NOLL : theory of ESOP'13 paper
+ * QF_SLL  : theory of APLAS'14 paper
+ * QF_SLRD : theory of SL-COMP'14
+ * QF_SLRDI: theory with integer data 
  */
 static void
 smtlib2_noll_parser_set_logic (smtlib2_parser_interface * p,
@@ -274,19 +271,42 @@ smtlib2_noll_parser_set_logic (smtlib2_parser_interface * p,
   /* fix logic only one time */
   if (ap->response_ != SMTLIB2_RESPONSE_ERROR)
     {
-      /* check that the logic is supported, i.e., QF_SLRD or QF_NOLL */
-      if (strcmp (logic, "QF_NOLL") > 0 && strcmp (logic, "QF_SLRD") > 0)
+      /* check that the logic is supported */
+
+      switch (noll_set_logic (noll_ctx (p), logic))
         {
-          ap->response_ = SMTLIB2_RESPONSE_ERROR;
-          ap->errmsg_ =
-            smtlib2_sprintf ("logic `%s' is not supported", logic);
+        case NOLL_LOGIC_OTHER:
+          {
+            ap->response_ = SMTLIB2_RESPONSE_ERROR;
+            ap->errmsg_ =
+              smtlib2_sprintf ("logic `%s' is not supported", logic);
+            break;
+          }
+        case NOLL_LOGIC_SLRDI:
+          {
+            /* declare theory primitive sorts Int and BagInt */
+            noll_type_t *ty = noll_mk_type_int ();
+            smtlib2_hashtable_set (noll_sorts (p),
+                                   (intptr_t) (void *) smtlib2_strdup ("Int"),
+                                   (intptr_t) (void *) ty);
+            ty = noll_mk_type_bagint ();
+            smtlib2_hashtable_set (noll_sorts (p),
+                                   (intptr_t) (void *)
+                                   smtlib2_strdup ("BagInt"),
+                                   (intptr_t) (void *) ty);
+            // break; // TODO NEW: put break because SetLoc is not useful in SLRDI
+          }
+        default:
+          {
+            /* declare theory primitive sort SetLoc */
+            noll_type_t *ty = noll_mk_type_setloc ();
+            smtlib2_hashtable_set (noll_sorts (p),
+                                   (intptr_t) (void *)
+                                   smtlib2_strdup ("SetLoc"),
+                                   (intptr_t) (void *) ty);
+            break;
+          }
         }
-      /* if it is, declare primitive sorts */
-      /* register the SetLoc sort */
-      noll_type_t *ty = noll_mk_type_setloc ();
-      smtlib2_hashtable_set (noll_sorts (p),
-                             (intptr_t) (void *) smtlib2_strdup ("SetLoc"),
-                             (intptr_t) (void *) ty);
     }
   else
     noll_error (0, "smtlib2parser_set_logic", "previous syntax error");
@@ -422,13 +442,12 @@ smtlib2_noll_parser_declare_variable (smtlib2_parser_interface * p,
                 smtlib2_sprintf ("local variable `%s' is not a constant.",
                                  name);
             }
-          else if ((ty->kind != NOLL_TYP_RECORD) && (ty->kind
-                                                     != NOLL_TYP_SETLOC))
+          else if (noll_type_is_vartype (ty) == false)
             {
               ap->response_ = SMTLIB2_RESPONSE_ERROR;
               ap->errmsg_ =
                 smtlib2_sprintf
-                ("local variable `%s' is not of primitive type.", name);
+                ("local variable `%s' is not of primitive sort.", name);
             }
           else
             {
@@ -505,8 +524,8 @@ smtlib2_noll_parser_define_function (smtlib2_parser_interface * p,
                     smtlib2_sprintf
                     ("predicate definition `%s' is not correct.", name);
                 }
-              /* remove the local context */
-              noll_pop_context (ctx);
+              /* the local context of the definition (parameters)
+               * is removed by noll_pop_quant */
             }
         }
     }
@@ -660,12 +679,9 @@ smtlib2_noll_parser_make_parametric_sort (smtlib2_parser_interface * p,
               noll_type_t *src = (noll_type_t *) smtlib2_vector_at (tps, 0);
               noll_type_t *dst = (noll_type_t *) smtlib2_vector_at (tps, 1);
 
-              if (src->kind == NOLL_TYP_RECORD && dst->kind
-                  == NOLL_TYP_RECORD)
-                res =
-                  (smtlib2_sort)
-                  noll_mk_type_field (noll_vector_at (src->args, 0),
-                                      noll_vector_at (dst->args, 0));
+              if ((src->kind == NOLL_TYP_RECORD) &&
+                  (noll_type_is_fldtype (dst) == true))
+                res = (smtlib2_sort) noll_mk_type_field (src, dst);
               else
                 {
                   ap->response_ = SMTLIB2_RESPONSE_ERROR;
@@ -810,6 +826,21 @@ smtlib2_noll_parser_mk_function (smtlib2_context ctx,
   return (smtlib2_term) res;
 }
 
+static smtlib2_term
+smtlib2_noll_parser_mk_number (smtlib2_context ctx,
+                               const char *rep,
+                               unsigned int width, unsigned int base)
+{
+  noll_context_t *sctx = noll_ctx (ctx);
+  noll_exp_t *ret = NULL;
+  if ((width == 0) && (base == 10))
+    {
+      // parse only only base 10 numbers, not arrays
+      ret = noll_mk_number (sctx, rep);
+    }
+  return (smtlib2_term) ret;
+}
+
 SMTLIB2_NOLL_DECLHANDLER (and)
 {
   if (symbol != symbol && sort != sort && idx != idx)
@@ -841,6 +872,17 @@ SMTLIB2_NOLL_DECLHANDLER (not)
   return noll_mk_not (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
+}
+
+SMTLIB2_NOLL_DECLHANDLER (implies)
+{
+  if (symbol != symbol && sort != sort && idx != idx)
+    {
+      assert (0);               // to remove warnings in unsed parameters
+    }
+  return noll_mk_implies (noll_ctx (ctx),
+                          (noll_exp_t **) (smtlib2_vector_array (args)),
+                          smtlib2_vector_size (args));
 }
 
 SMTLIB2_NOLL_DECLHANDLER (eq)
@@ -942,92 +984,48 @@ SMTLIB2_NOLL_DECLHANDLER (minus)
                         smtlib2_vector_size (args));
 }
 
-SMTLIB2_NOLL_DECLHANDLER (setsingle)
+SMTLIB2_NOLL_DECLHANDLER (bag)
 {
   if (symbol != symbol && sort != sort && idx != idx)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
-  return noll_mk_setsingle (noll_ctx (ctx),
-                            (noll_exp_t **) (smtlib2_vector_array (args)),
-                            smtlib2_vector_size (args));
+  return noll_mk_bag (noll_ctx (ctx),
+                      (noll_exp_t **) (smtlib2_vector_array (args)),
+                      smtlib2_vector_size (args));
 }
 
-SMTLIB2_NOLL_DECLHANDLER (setempty)
+SMTLIB2_NOLL_DECLHANDLER (bagunion)
 {
   if (symbol != symbol && sort != sort && idx != idx)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
-  return noll_mk_setempty (noll_ctx (ctx),
+  return noll_mk_bagunion (noll_ctx (ctx),
                            (noll_exp_t **) (smtlib2_vector_array (args)),
                            smtlib2_vector_size (args));
 }
 
-SMTLIB2_NOLL_DECLHANDLER (setlt)
+SMTLIB2_NOLL_DECLHANDLER (bagminus)
 {
   if (symbol != symbol && sort != sort && idx != idx)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
-  return noll_mk_setlt (noll_ctx (ctx),
-                        (noll_exp_t **) (smtlib2_vector_array (args)),
-                        smtlib2_vector_size (args));
-}
-
-SMTLIB2_NOLL_DECLHANDLER (setgt)
-{
-  if (symbol != symbol && sort != sort && idx != idx)
-    {
-      assert (0);               // to remove warnings in unsed parameters
-    }
-  return noll_mk_setgt (noll_ctx (ctx),
-                        (noll_exp_t **) (smtlib2_vector_array (args)),
-                        smtlib2_vector_size (args));
-}
-
-SMTLIB2_NOLL_DECLHANDLER (setle)
-{
-  if (symbol != symbol && sort != sort && idx != idx)
-    {
-      assert (0);               // to remove warnings in unsed parameters
-    }
-  return noll_mk_setle (noll_ctx (ctx),
-                        (noll_exp_t **) (smtlib2_vector_array (args)),
-                        smtlib2_vector_size (args));
-}
-
-SMTLIB2_NOLL_DECLHANDLER (setge)
-{
-  if (symbol != symbol && sort != sort && idx != idx)
-    {
-      assert (0);               // to remove warnings in unsed parameters
-    }
-  return noll_mk_setge (noll_ctx (ctx),
-                        (noll_exp_t **) (smtlib2_vector_array (args)),
-                        smtlib2_vector_size (args));
-}
-
-SMTLIB2_NOLL_DECLHANDLER (setunion)
-{
-  if (symbol != symbol && sort != sort && idx != idx)
-    {
-      assert (0);               // to remove warnings in unsed parameters
-    }
-  return noll_mk_setunion (noll_ctx (ctx),
+  return noll_mk_bagminus (noll_ctx (ctx),
                            (noll_exp_t **) (smtlib2_vector_array (args)),
                            smtlib2_vector_size (args));
 }
 
-SMTLIB2_NOLL_DECLHANDLER (setdiff)
+SMTLIB2_NOLL_DECLHANDLER (subset)
 {
   if (symbol != symbol && sort != sort && idx != idx)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
-  return noll_mk_setdiff (noll_ctx (ctx),
-                          (noll_exp_t **) (smtlib2_vector_array (args)),
-                          smtlib2_vector_size (args));
+  return noll_mk_subset (noll_ctx (ctx),
+                         (noll_exp_t **) (smtlib2_vector_array (args)),
+                         smtlib2_vector_size (args));
 }
 
 SMTLIB2_NOLL_DECLHANDLER (wsep)

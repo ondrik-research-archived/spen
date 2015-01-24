@@ -71,7 +71,7 @@ bool noll_option_is_checkLS (int version);
 /**
  * @brief Select the decision procedure.
  *
- * Default version is 1 (use tree automata)
+ * Default version is 1 (use tree automata).
  * Other versions are:
  *   - 0: use syntactic check for LS
  *   - 2: use syntactic check for all
@@ -79,12 +79,12 @@ bool noll_option_is_checkLS (int version);
 void noll_option_set_check (int version);
 
 /**
- * @brief Return the version of the procedure used for ls predicate
+ * @brief Return true iff the procedure uses TA
  */
 bool noll_option_is_checkTA (void);
 
 /**
- * @brief Return the version of the procedure used for ls predicate
+ * @brief Return true iff the procedure uses syntactic check
  */
 bool noll_option_is_checkSY (void);
 

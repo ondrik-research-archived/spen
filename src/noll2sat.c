@@ -672,7 +672,7 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
     if (res->finfo->used_lvar[xi] == true)
       {
         noll_var_t *x = noll_vector_at (form->lvars, xi);
-        uint_t tid_x = noll_vector_at (x->vty->args, 0);
+        uint_t tid_x = noll_var_record (form->lvars, xi);
         for (uint_t lsi = 0; lsi < noll_vector_size (res->var_pred); lsi++)
           {
             noll_space_t *ls =

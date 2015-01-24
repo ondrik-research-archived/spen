@@ -101,6 +101,7 @@ extern "C"
 
   char *noll_var_name (noll_var_array * a, uid_t vid, noll_typ_t ty);
   uint_t noll_var_record (noll_var_array * a, uid_t vid);
+  noll_type_t *noll_var_type (noll_var_array * a, uid_t vid);
 /* Accessors */
 
 /* ====================================================================== */

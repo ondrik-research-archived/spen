@@ -1,3 +1,14 @@
+2015, January 10th
+- exteded ast and typing for theory of data
+
+2015, January 5th
+- added dp with unfolding check and lemma generation
+
+2014, December 10th
+- added in syntax the theory of Int and Bag_of_Int
+  not yet supported by the dp
+- added dp with unfolding check 
+
 2014, October 22nd
 - options improvement 
 - better printing of sat diagnosis
