@@ -33,6 +33,9 @@ ${SED} 's/bag-union /bagunion /g' ${FILE}
 # replace 'bag-sub' by 'subset'
 ${SED} 's/bag-sub /subset /g' ${FILE}
 
+# replace '(data ' by '(ref data '
+${SED} 's/(data /(ref data /g' ${FILE}
+
 # replace '(or (not ...)' by '(=> \1'
 ${SED} 's/or (not /=> /g' ${FILE}
 ${SED} 's/)) (subset /) (subset /g' ${FILE}

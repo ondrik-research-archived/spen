@@ -1428,10 +1428,22 @@ noll_graph_select_ls (noll_graph_t * g, uint_t eid, uint_t label,
   /* check that all arguments have been explored */
   for (uint_t i = 0; i < noll_vector_size (args); i++)
     {
-      if (vg[noll_vector_at (args, i)] != 2)
+      uint_t ni = noll_vector_at (args, i);
+      uint_t vi = noll_graph_get_var (g, ni);
+      noll_type_t *ty_i = NULL;
+      if (vi != UNDEFINED_ID)
+        ty_i = noll_var_type (g->lvars, vi);
+      if ((vg[noll_vector_at (args, i)] != 2) &&
+          (ty_i != NULL) && (noll_type_get_record (ty_i) != UNDEFINED_ID))
         {
-          fprintf (stdout, "select_ls: %dth argument unexplored!\n", i);
+          fprintf (stdout, "select_ls: argument %d unexplored!\n", i);
           goto return_select_ls_error;
+        }
+      else if ((ty_i != NULL) &&
+               ((ty_i->kind == NOLL_TYP_INT) ||
+                (ty_i->kind == NOLL_TYP_BAGINT)))
+        {                       /// it is a data argument, mark it as explored
+          vg[noll_vector_at (args, i)] = 2;
         }
     }
   /* redo marking of border arguments */
@@ -1656,12 +1668,12 @@ noll_graph_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
 
 /**
  * Check well-formedness condition 1 
- * for the graph selected @param sg2 wrt @param g2, i.e.,
+ * for the graph selected @p sg2 wrt @p g2, i.e.,
  * for any predicate edge P(E,F,...) in sg2, 
  *   check that (g2 \ sg2) /\ E != F ==> args2[1] allocated or nil 
  *          (for dll check args2[2] and args[3] allocated or nil)
- * @param g2    the selection
- * @param sg2   the selection
+ * @param g2    the origin of the selection
+ * @param sg2   the selected graph
  * @param args2 the arguments (nodes) of e1 maped with the homomorphism
  * @param isdll 1 if is a dll pred
  * @return      1 if well-formed, 0 otherwise
@@ -1682,6 +1694,22 @@ noll_graph_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
 #endif
       return 1;
     }
+  /// case args[1+isdll] is not a location variable
+  uint_t nF = noll_vector_at (args2, 1 + isdll);
+  uint_t vF = noll_graph_get_var (g2, nF);
+  noll_type_t *ty_F = noll_var_type (sg2->lvars, vF);
+#ifndef NDEBUG
+  fprintf (stdout, "\n++++ select_wf_1: arg-%d of type %d\n",
+           1 + isdll, ty_F->kind);
+#endif
+  if (ty_F->kind != NOLL_TYP_RECORD)
+    {
+#ifndef NDEBUG
+      NOLL_DEBUG ("\n++++ select_wf_1: not a location arg\n");
+#endif
+      return 1;
+    }
+
   if ((isdll >= 1) &&
       (noll_vector_at (args2, 2) == g2->var2node[0]) &&
       (noll_vector_at (args2, 3) == g2->var2node[0]))
@@ -1695,16 +1723,25 @@ noll_graph_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
   for (uint_t eid2 = 0; eid2 < noll_vector_size (sg2->edges); eid2++)
     {
       noll_edge_t *e2 = noll_vector_at (sg2->edges, eid2);
-      if ((e2->kind == NOLL_EDGE_PRED) &&
-          (noll_vector_at (e2->args, 1 + isdll) ==
-           noll_vector_at (args2, 1 + isdll)))
+      if (e2->kind != NOLL_EDGE_PRED)
+        continue;
+      /// only if e2->args[1+isdll] is a location argument then do the check
+      uint_t nF = noll_vector_at (e2->args, 1 + isdll);
+      uint_t vF = noll_graph_get_var (sg2, nF);
+      noll_type_t *ty_F = noll_var_type (sg2->lvars, vF);
+#ifndef NDEBUG
+      fprintf (stdout, "\n++++ select_wf_1: arg-%d of type %d\n",
+               1 + isdll, ty_F->kind);
+#endif
+      if (ty_F->kind != NOLL_TYP_RECORD)
+        continue;
+      if (noll_vector_at (e2->args, 1 + isdll) ==
+          noll_vector_at (args2, 1 + isdll))
         {
           /* ignore edges of sg2 with the same destination node */
           continue;
         }
-      else if ((e2->kind == NOLL_EDGE_PRED) &&
-               (NOLL_VECTOR_SIZE (g2->edges) ==
-                NOLL_VECTOR_SIZE (sg2->edges)))
+      else if (NOLL_VECTOR_SIZE (g2->edges) == NOLL_VECTOR_SIZE (sg2->edges))
         {
 #ifndef NDEBUG
           NOLL_DEBUG ("\n++++ select_wf_1: empty g2 \\ sg2!\n");
@@ -2117,7 +2154,7 @@ noll_uid_array *noll_graph_check0 (noll_graph_t * g2, uid_t pid,
  * 
  * @param g2     the graph 
  * @param fpto   the predicate atom 
- * @param sigma  the mapping of vars in @p fpto to nodes in @p g2
+ * @param sigma  the mapping of vars in @p fpred to nodes in @p g2
  * @param eid1   the edge unfolded here 
  * @return       the edges of @p g2 matched or NULL
  */
@@ -2445,7 +2482,7 @@ noll_graph_shom_entl_syn (noll_graph_t * g2, noll_edge_t * e1,
     }
   else
     {
-      res = -1; // UNKNOWN
+      res = -1;                 // UNKNOWN
     }
   return res;
 }

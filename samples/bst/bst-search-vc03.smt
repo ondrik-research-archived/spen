@@ -1,7 +1,7 @@
 
 ; Extending QF_S:
 ; constant emptybag, 
-; the function bag, 
+; the function singleton, 
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bag-union, intersection, difference of multisets
 ; an element is contained in a multiset
@@ -38,7 +38,7 @@
 		(bst ?Y ?M2)
 		)
 		)
-		(= ?M (bagunion (bag ?d) ?M1 ?M2) )
+		(= ?M (bagunion (bag ?d) (bagunion ?M1 ?M2) ) )
 		(< ?M1 (bag ?d))
 		(< (bag ?d) ?M2)
 	)
@@ -66,7 +66,7 @@
 		(bsthole ?Y ?F ?M4 ?M2)
 		)
 		)
-		(= ?M1  (bagunion (bag ?d) ?M3 ?M4)  )
+		(= ?M1  (bagunion (bag ?d) (bagunion ?M3 ?M4) ) )
 		(< ?M3 (bag ?d) )
 		(< (bag ?d) ?M4 )
 	) 
@@ -80,7 +80,7 @@
 		(bst ?Y ?M4)
 		)
 		)
-		(= ?M1 (bagunion (bag ?d) ?M3 ?M4)  )
+		(= ?M1 (bagunion (bag ?d) (bagunion ?M3 ?M4) ) )
 		(< ?M3 (bag ?d) )
 		(< (bag ?d) ?M4 )
 	) 
@@ -91,10 +91,15 @@
 ;; declare variables
 (declare-fun root () Bst_t)
 (declare-fun cur1 () Bst_t)
+(declare-fun cur2 () Bst_t)
+(declare-fun X () Bst_t)
+(declare-fun Y () Bst_t)
+(declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
 (declare-fun M2 () BagInt)
+(declare-fun M3 () BagInt)
 (declare-fun key () Int)
-(declare-fun ret () Bst_t)
+(declare-fun d () Int)
 
 ;; declare set of locations
 
@@ -102,22 +107,28 @@
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
 (declare-fun alpha4 () SetLoc)
+(declare-fun alpha5 () SetLoc)
 
-;; bsthole(root,cur1,M1,M2) * bst(cur1,M2) & (key in M1 <=> key in M2) & cur1 != nil & cur1.data = key & ret = cur1 |- 
-;; bsthole(root,cur1,M1,M2) * bst(cur1,M2) & ret != nil & ret.data = key
+;; VC3: bsthole(root,cur1,M0,M1) * cur1 |-> (((left,X),(right,Y)),(data,d)) * bst(X,M3) * bst(Y,M2) & 
+;; M1 = {d} cup M3 cup M2 & M3 < d < M2 & d < key & (key in M0 <=> key in M1) & cur2 = Y |-
+;; bsthole(root,cur2,M0,M2) * bst(cur2,M2) & (key in M0 <=> key in M2)
 
 (assert 
 	(and
 	(tobool 
 	(ssep 
-		(index alpha1 (bsthole root cur1 M1 M2) ) 
-		(index alpha2 (bst cur1 M2) )
+		(index alpha1 (bsthole root cur1 M0 M1) )
+		(pto cur1 (sref (ref left X) (ref right Y) (ref data d) ) ) 
+		(index alpha2 (bst X M3) )
+		(index alpha3 (bst Y M2) )
 	))
-	(=> (subset (bag key) M1) (subset (bag key) M2)) 
-	(=> (subset (bag key) M2) (subset (bag key) M1)) 
-	(distinct cur1 nil)
-	(= (data cur1) key)
-	(= ret cur1)
+	(= M1 (bagunion (bag d) (bagunion M3 M2)) )
+	(< M3 (bag d) )
+	(< (bag d) M2)
+	(< d key)
+	(=> (subset (bag key) M0) (subset (bag key) M1) ) 
+	(=> (subset (bag key) M1) (subset (bag key) M0) ) 
+	(= cur2 Y)
 	)
 )
 
@@ -125,12 +136,12 @@
 	(and 
 	(tobool 
 		(ssep 
-		(index alpha3 (bsthole root cur1 M1 M2 )) 
-		(index alpha4 (bst cur1 M2))
+		(index alpha4 (bsthole root cur2 M0 M2 )) 
+		(index alpha5 (bst cur2 M2))
 		)
 	)
-	(distinct ret nil)
-	(= (data ret) key )
+	(=> (subset (bag key) M0) (subset (bag key) M2))
+	(=> (subset (bag key) M2) (subset (bag key) M0))
 	)
 ))
 

@@ -92,12 +92,14 @@
 (declare-fun root () Bst_t)
 (declare-fun cur1 () Bst_t)
 (declare-fun X () Bst_t)
+(declare-fun Y () Bst_t)
+(declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
 (declare-fun M2 () BagInt)
 (declare-fun M3 () BagInt)
-(declare-fun M4 () BagInt)
 (declare-fun key () Int)
 (declare-fun d () Int)
+(declare-fun ret () Int)
 
 ;; declare set of locations
 
@@ -105,40 +107,36 @@
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
 (declare-fun alpha4 () SetLoc)
-(declare-fun alpha5 () SetLoc)
 
-;; bsthole(root,cur1,M1,M2) * cur1 |->((left,X),(right,cur2)) * bst(X,M4) * bst(cur2,M3) & 
-;; M2 = {cur1.data} cup M4 cup M3 & M4 < cur1.data < M3 & (key in M1 <=> key in M2) & cur1.data < key |-
-;; bsthole(root,cur2,M1,M3) * bst(cur2,M3) & (key in M1 <=> key in M3)
+;; VC1: bsthole(root, cur1, M0, M1) * cur1 |->((left,X), (right, Y), (data, d)) * bst(X,M2) * bst(Y, M3) & M1 = {d} cup M2 cup M3 & 
+;; M2 < d < M3 & (key in M0 <=> key in M1) & cur1 != nil & d = key & ret = 1 |- 
+;; bst(root, M0) & ret = 1 & key in M0
 
 (assert 
 	(and
 	(tobool 
 	(ssep 
-		(index alpha1 (bsthole root cur1 M1 M2) )
-		(pto cur1 (sref (ref left X) (ref right cur2) (data d) ) ) 
-		(index alpha2 (bst X M4) )
-		(index alpha3 (bst cur2 M3) )
+		(index alpha1 (bsthole root cur1 M0 M1) ) 
+		(pto cur1 (sref (ref left X) (ref right Y) (ref data d) ) ) 
+		(index alpha2 (bst X M2) )
+		(index alpha3 (bst Y M3) )
 	))
-	(= M2 (bagunion (bag d) (bagunion M4 M3)) )
-	(< M4 (bag d) )
+	(= M1 (bagunion (bag d) M2 M3))
+	(< M2 (bag d))
 	(< (bag d) M3)
-	(=> (subset (bag key) M1) (subset (bag key) M2)) 
-	(=> (subset (bag key) M2) (subset (bag key) M1)) 
-	(< d (bag key) )
+	(=> (subset (bag key) M0) (subset (bag key) M1)) 
+	(=> (subset (bag key) M1) (subset (bag key) M0)) 
+	(distinct cur1 nil)
+	(= d key)
+	(= ret 1)
 	)
 )
 
 (assert (not 
 	(and 
-	(tobool 
-		(ssep 
-		(index alpha4 (bsthole root cur2 M1 M3 )) 
-		(index alpha5 (bst cur2 M3))
-		)
-	)
-	(=> (subset (bag key) M1) (subset (bag key) M3))
-	(=> (subset (bag key) M3) (subset (bag key) M1))
+	(tobool (index alpha4 (bst root M0 )) )
+	(= ret 1)
+	(subset (bag key) M0)
 	)
 ))
 

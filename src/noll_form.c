@@ -615,6 +615,144 @@ noll_form_array_is_valid (noll_form_array * phi1_phiN)
 /* ====================================================================== */
 
 void
+noll_dterm_fprint (FILE * f, noll_var_array * lvars, noll_dterm_t * dt)
+{
+
+  if (dt == NULL)
+    {
+      fprintf (f, "null");
+      return;
+    }
+
+  switch (dt->kind)
+    {
+    case NOLL_DATA_INT:
+      fprintf (f, "%ld", dt->p.value);
+      break;
+    case NOLL_DATA_VAR:
+      fprintf (f, "%s", noll_var_name (lvars, dt->p.sid, dt->typ));
+      break;
+    case NOLL_DATA_EMPTYBAG:
+      fprintf (f, "emptybag");
+      break;
+    case NOLL_DATA_FIELD:
+      fprintf (f, "(%s ", noll_field_name (dt->p.sid));
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, ")");
+      break;
+    case NOLL_DATA_PLUS:
+      fprintf (f, "(+ ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, " ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
+      fprintf (f, ")");
+      break;
+    case NOLL_DATA_MINUS:
+      fprintf (f, "(- ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, " ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
+      fprintf (f, ")");
+      break;
+    case NOLL_DATA_BAG:
+      fprintf (f, "(bag ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, ")");
+      break;
+    case NOLL_DATA_BAGUNION:
+      fprintf (f, "(bagunion ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, " ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
+      fprintf (f, ")");
+      break;
+    case NOLL_DATA_BAGMINUS:
+      fprintf (f, "(bagminus ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, " ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
+      fprintf (f, ")");
+      break;
+    default:
+      fprintf (f, "(error)");
+      break;
+    }
+}
+
+void
+noll_dform_fprint (FILE * f, noll_var_array * lvars, noll_dform_t * df)
+{
+  if (df == NULL)
+    {
+      fprintf (f, "null\n");
+      return;
+    }
+  if (df->kind == NOLL_DATA_IMPLIES)
+    {
+      fprintf (f, "(=> ");
+      noll_dform_fprint (f, lvars, noll_vector_at (df->p.bargs, 0));
+      noll_dform_fprint (f, lvars, noll_vector_at (df->p.bargs, 1));
+      fprintf (f, ")");
+      return;
+    }
+  switch (df->kind)
+    {
+    case NOLL_DATA_EQ:
+      fprintf (f, "(= ");
+      break;
+    case NOLL_DATA_NEQ:
+      fprintf (f, "(<> ");
+      break;
+    case NOLL_DATA_ITE:
+      fprintf (f, "(ite ");
+      break;
+    case NOLL_DATA_LT:
+      fprintf (f, "(< ");
+      break;
+    case NOLL_DATA_GT:
+      fprintf (f, "(> ");
+      break;
+    case NOLL_DATA_LE:
+      fprintf (f, "(<= ");
+      break;
+    case NOLL_DATA_GE:
+      fprintf (f, "(>= ");
+      break;
+    case NOLL_DATA_SUBSET:
+      fprintf (f, "(subset ");
+      break;
+    default:
+      break;                    /// print only the term
+    }
+  if (df->p.targs != NULL)
+    for (uint_t i = 0; i < noll_vector_size (df->p.targs); i++)
+      {
+        noll_dterm_fprint (f, lvars, noll_vector_at (df->p.targs, i));
+        fprintf (f, " ");
+      }
+  fprintf (f, ")");
+}
+
+void
+noll_dform_array_fprint (FILE * f, noll_var_array * lvars,
+                         noll_dform_array * df)
+{
+  if (df == NULL)
+    {
+      fprintf (f, "null\n");
+      return;
+    }
+
+  fprintf (f, "\n(and ");
+  for (uint_t i = 0; i < noll_vector_size (df); i++)
+    {
+      fprintf (f, "\n\t");
+      noll_dform_fprint (f, lvars, noll_vector_at (df, i));
+    }
+  fprintf (f, "\n)\n");
+}
+
+void
 noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi)
 {
   if (!phi || !phi->m)
@@ -640,6 +778,7 @@ noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi)
           }
         fprintf (f, "%s, ", noll_var_name (lvars, c, NOLL_TYP_RECORD));
       }
+  noll_dform_array_fprint (f, lvars, phi->data);
   fprintf (f, "\n");
 }
 

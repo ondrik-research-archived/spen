@@ -58,6 +58,7 @@ typedef struct noll_graph_t
   noll_uid_array **mat;         // adjacency matrix, mat[i] is the list of edge identifiers from node i
   noll_uid_array **rmat;        // reverse adjacency matrix, rmat[i] is the list of edge identifiers to node i
   bool **diff;                  // low-diagonal matrix, diff[n1][n2] = true iff n1 != n2 and n1 > n2
+  noll_dform_array *data;       // data constraints
   uint_t *sloc2edge;            // mapping set variables to edges in graph
   noll_share_array *share;      // TODO: sharing constraints (on set variables) (related to overlapping)
   bool isComplete;              // if all implicit constraints have been computed

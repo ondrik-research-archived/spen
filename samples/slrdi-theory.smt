@@ -15,7 +15,8 @@
          (par (A B) (ref (Field A B) B (SetRef A)))
          (par (A) (sref (SetRef A) (SetRef A) (SetRef A) :left-assoc))
          (index SetLoc Space Space)
-         (loop Space)
+         (loop Space Space)
+         (emptybag BagInt)
          (bag Int BagInt)
          (bagunion BagInt BagInt BagInt :left-assoc)
          (bagminus BagInt BagInt BagInt)
@@ -62,6 +63,8 @@
         using the predicate called in sp;
 
    - for all i in Int, b1, b2 in BagInt:
+      - emptybag denotes a empty bag;
+
       - (bag i) denotes the singleton bag of element i;
 
       - (bagunion b1 b2) denotes bag union;

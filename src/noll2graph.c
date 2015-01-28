@@ -340,6 +340,7 @@ noll_graph_of_pure (noll_pure_t * phi, noll_graph_t * g)
 
         }
     }
+  g->data = phi->data;
 }
 
 noll_graph_t *

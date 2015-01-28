@@ -90,55 +90,43 @@
 
 ;; declare variables
 (declare-fun root () Bst_t)
-(declare-fun cur1 () Bst_t)
+(declare-fun cur () Bst_t)
 (declare-fun X () Bst_t)
+(declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
-(declare-fun M2 () BagInt)
-(declare-fun M3 () BagInt)
-(declare-fun M4 () BagInt)
 (declare-fun key () Int)
-(declare-fun d () Int)
+(declare-fun ret () Int)
 
 ;; declare set of locations
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
-(declare-fun alpha4 () SetLoc)
-(declare-fun alpha5 () SetLoc)
 
-;; bsthole(root,cur1,M1,M2) * cur1 |->((left,cur2),(right,X)) * bst(cur2,M3) * bst(X,M4) & 
-;; M2 = {cur1.data} cup M3 cup M4 & M3 < cur1.data < M4 & (key in M1 <=> key in M2) & cur1.data > key |-
-;; bsthole(root,cur2,M1,M3) * bst(cur2,M3) & (key in M1 <=> key in M3)
+;; VC4: bsthole(root,cur,M0,M1) * bst(cur,M1) & (key in M0 <=> key in M1) & cur = nil & ret = 0 |-
+;; bst(root, M0) & !key in M0 & ret = 0
 
 (assert 
 	(and
 	(tobool 
 	(ssep 
-		(index alpha1 (bsthole root cur1 M1 M2) )
-		(pto cur1 (sref (ref left cur2) (ref right X) (data d) ) ) 
-		(index alpha2 (bst cur1 M3) )
-		(index alpha3 (bst X M4) )
+		(index alpha1 (bsthole root cur M0 M1) )
+		(index alpha2 (bst cur M1) )
 	))
-	(= M2 (bagunion (bag d) (bagunion M3 M4)) )
-	(< M3 (bag d) )
-	(< (bag d) M4)
-	(=> (subset (bag key) M1) (subset (bag key) M2) ) 
-	(=> (subset (bag key) M2) (subset (bag key) M1) ) 
-	(> d key)
+	(=> (subset (bag key) M0) (subset (bag key) M1)) 
+	(=> (subset (bag key) M1) (subset (bag key) M0)) 
+	(= cur nil)
+	(= ret 0)
 	)
 )
 
 (assert (not 
 	(and 
 	(tobool 
-		(ssep 
-		(index alpha4 (bsthole root cur2 M1 M3 )) 
-		(index alpha5 (bst cur2 M3))
-		)
+		(index alpha3 (bst root M0))
 	)
-	(=> (subset (bag key) M1) (subset (bag key) M3))
-	(=> (subset (bag key) M3) (subset (bag key) M1))
+	(= (bagminus M0 (bag key)) M0)
+	(= ret 0)
 	)
 ))
 

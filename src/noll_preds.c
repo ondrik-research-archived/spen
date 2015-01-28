@@ -508,7 +508,8 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
                     {
                       /* the field is used in cpid and 
                        * it shall not be reused as backbone (level 0) in caller pids */
-                      if (pfkind == NOLL_PFLD_BCKBONE)
+                      if ((pfkind == NOLL_PFLD_BCKBONE) &&
+                          (noll_option_is_checkTA () == true))
                         {
                           /* error, shared field between predicates : stop ! */
                           fprintf (stderr,
@@ -573,7 +574,7 @@ noll_field_order ()
             noll_field_t *f = noll_vector_at (fields_array, fid);
             if (f->pid == UNDEFINED_ID)
               f->pid = pid;
-            else
+            else if (noll_option_is_checkTA () == true)
               {
 #ifndef NDEBUG
                 fprintf (stdout, "Error: shared backbone field %d!\n", fid);
@@ -848,8 +849,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->m.
-                                                     sep, i));
+                                     noll_vector_at (pred->def->sigma_1->
+                                                     m.sep, i));
               res_size++;
             }
         }

@@ -28,6 +28,7 @@ extern "C"
 {
 #endif
 
+#include "noll_option.h"
 #include "noll_types.h"
 #include "noll_vars.h"
 #include "noll_form.h"
@@ -43,8 +44,8 @@ extern "C"
     noll_var_array *vars;       // nil + formal arguments + existentially quantified variables
     uint_t fargs;               // limit of formal arguments
     noll_pure_t *pure;          // pure part of the rule (including data)
-    noll_space_t *pto;          // points-to part, if any
-    noll_space_t *nst;          // calls to predicates, non-recrusive
+    noll_space_t *pto;          // points-to part, if any, NULL for base rules
+    noll_space_t *nst;          // calls to predicates, non-recursive, NULL for base rule
     noll_space_t *rec;          // recursive calls
   } noll_pred_rule_t;
 

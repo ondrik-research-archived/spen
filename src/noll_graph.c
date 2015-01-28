@@ -100,6 +100,9 @@ noll_graph_alloc (noll_var_array * lvars, noll_var_array * svars,
 {
 
   noll_graph_t *res = (noll_graph_t *) malloc (sizeof (noll_graph_t));
+#ifndef NDEBUG
+  noll_var_array_fprint (stdout, lvars, "Vars of the graph: ");
+#endif
   res->lvars = noll_var_array_new ();
   noll_var_array_copy (res->lvars, lvars);
   res->svars = noll_var_array_new ();
@@ -148,6 +151,7 @@ noll_graph_alloc (noll_var_array * lvars, noll_var_array * svars,
       for (uint_t j = 0; j <= i; j++)
         res->diff[i][j] = false;
     }
+  res->data = NULL;
   /*
    *  allocate the mapping of set variables to edges
    */
@@ -190,6 +194,7 @@ noll_graph_free (noll_graph_t * g)
         free (g->diff[i]);
       }
   free (g->diff);
+  /// g->data freed in formulas
   if (g->sloc2edge != NULL)
     free (g->sloc2edge);
   if (g->share != NULL)
@@ -257,7 +262,7 @@ noll_edge_in_label (noll_edge_t * e, uint_t pid)
   int res = 0;
   if (e->kind == NOLL_EDGE_PTO)
     {
-      if (noll_pred_is_field (pid, e->label, NOLL_PFLD_NESTED))
+      if (noll_pred_is_field (pid, e->label, NOLL_PFLD_DATA))
         res = 1;
     }
   else
@@ -280,6 +285,24 @@ noll_edge_in_label (noll_edge_t * e, uint_t pid)
                     res = 1;
                 }
             }
+          if (res == 1)
+            return res;
+          /// it is a called predicate
+          /* the fields of label are defined in its binding */
+          const noll_pred_t *pred_e = noll_pred_getpred (e->label);
+          noll_pred_typing_t *pdef_e = pred_e->typ;
+          if (pdef_e->ppreds != NULL)
+            {
+              for (uint_t i = 0;
+                   (res == 0) && i < noll_vector_size (pdef_e->ppreds); i++)
+                {
+                  uint_t pi = noll_vector_at (pdef_e->ppreds, i);
+                  if (pi == pid)
+                    res = 1;
+                }
+            }
+          if (res == 1)
+            return res;
           else
             {
 #ifndef NDEBUG
