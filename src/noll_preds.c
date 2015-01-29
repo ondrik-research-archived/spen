@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Predicates for NOLL.
@@ -255,6 +255,17 @@ noll_pred_name (uid_t pid)
   return pred->pname;
 }
 
+const noll_type_t *
+noll_pred_gettype (uid_t pid)
+{
+  const noll_pred_t *pred = noll_pred_getpred (pid);
+  assert (pred != NULL);
+
+  const noll_var_t *fp1 = noll_vector_at (pred->def->vars, 1);
+  assert (fp1 != NULL);
+
+  return fp1->vty;
+}
 
 /** 
  * Total ordering of predicates using their call. 
@@ -849,8 +860,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->
-                                                     m.sep, i));
+                                     noll_vector_at (pred->def->sigma_1->m.
+                                                     sep, i));
               res_size++;
             }
         }

@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Predicates for NOLL.
@@ -153,7 +153,15 @@ extern "C"
   const noll_pred_t *noll_pred_getpred (uid_t pid);
 
   const char *noll_pred_name (uid_t pid);
-  /* Accessors */
+
+  /**
+   * @brief  Returns the 'main' type of the predicate.
+   *
+   * @param[in]  pid   ID of the desired predicate
+   *
+   * @returns  The type of the first argument of the predicate
+   */
+  const noll_type_t *noll_pred_gettype (uid_t pid);
 
   bool noll_pred_order_lt (uid_t lhs, uid_t rhs);
   /* Total ordering of predicates using their call */
@@ -221,4 +229,4 @@ extern "C"
 }
 #endif
 
-#endif                          /* _NOL_PREDS_H_ */
+#endif                          /* _NOLL_PREDS_H_ */

@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Homomorphism definition and computation.
@@ -2144,13 +2144,13 @@ noll_graph_match_pto (noll_graph_t * g2, noll_space_t * fpto,
   return res;
 }
 
-noll_uid_array *noll_graph_check0 (noll_graph_t * g2, uid_t pid,
-                                   noll_uid_array * args2, uid_t eid1);
+noll_uid_array *noll_graph_check_syn (noll_graph_t * g2, uid_t pid,
+                                      noll_uid_array * args2, uid_t eid1);
 
 /**
  * Match the formula @p fpred with edges in @p g2 using the mapping
  * of vars ids @p sigma. It mainly prepares the aguments for 
- * @see noll_graph_check0.
+ * @see noll_graph_check_syn.
  * 
  * @param g2     the graph 
  * @param fpto   the predicate atom 
@@ -2176,8 +2176,8 @@ noll_graph_match_ls (noll_graph_t * g2, noll_space_t * fpred,
   noll_uid_array *args2 =       // TODO: check that the semantics corresponds
     noll_hom_apply_size_array (sigma->data_, noll_vector_size (sigma), args,
                                noll_pred_use_nil (pid));
-  // call check0
-  return noll_graph_check0 (g2, pid, args2, eid1);
+  // call check_syn
+  return noll_graph_check_syn (g2, pid, args2, eid1);
 }
 
 /**
@@ -2225,8 +2225,8 @@ noll_uid_array_compose (noll_uid_array * dst, noll_uid_array * src)
  *               NULL if the matching does not holds
  */
 noll_uid_array *
-noll_graph_check0 (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
-                   uid_t eid1)
+noll_graph_check_syn (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
+                      uid_t eid1)
 {
   assert (g2 != NULL);
   assert (pid < noll_vector_size (preds_array));
@@ -2416,14 +2416,14 @@ noll_graph_check0 (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
     }
   /// Warning: the APLAS'15 syntax does not include the self-recursive call
   /// TODO: include the self recursive call and remove this code
-  {                             // do the check0 but with args2[0] changed to sigma[fargs+1]
+  {                             // do the check_syn but with args2[0] changed to sigma[fargs+1]
     uid_t nnsrc = noll_vector_at (sigma, e1_pred->def->fargs + 1);
 #ifndef NDEBUG
     NOLL_DEBUG ("\nSyntactic matching recursive rule: restart from n%d!\n",
                 nnsrc);
 #endif
     noll_uid_array_set (args2, 0, nnsrc);
-    resr = noll_graph_check0 (g2, pid, args2, eid1);
+    resr = noll_graph_check_syn (g2, pid, args2, eid1);
     if (NULL == resr)
       {
         noll_uid_array_delete (res);
@@ -2462,7 +2462,8 @@ noll_graph_shom_entl_syn (noll_graph_t * g2, noll_edge_t * e1,
   // Call the special function of the predicate and 
   // collect the mapped edges of g2 in order to 
   // check that all edges of g2 has been used.
-  noll_uid_array *usedg2 = noll_graph_check0 (g2, e1->label, args2, e1->id);
+  noll_uid_array *usedg2 =
+    noll_graph_check_syn (g2, e1->label, args2, e1->id);
   int res = 1;
   if (usedg2 != NULL)
     {

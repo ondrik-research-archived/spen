@@ -315,6 +315,9 @@ extern "C"
 /* Printing */
 /* ====================================================================== */
 
+
+  void noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi);
+
   void noll_share_atom_fprint (FILE * f, noll_var_array * lvars,
                                noll_var_array * svars,
                                noll_atom_share_t * phi);

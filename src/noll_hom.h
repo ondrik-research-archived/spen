@@ -1,24 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  NOLL decision procedure                                               */
-/*                                                                        */
-/*  Copyright (C) 2012-2013                                               */
-/*    LIAFA (University of Paris Diderot and CNRS)                        */
-/*                                                                        */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Homomorphism definition and computation.
@@ -52,7 +48,6 @@ typedef struct noll_shom_s
 
   noll_uid_array *pused;        /* edges of pgraph used in this hom 
                                  * of size size(noll_prob->pgraph->edges) */
-
 } noll_shom_t;
 
 NOLL_VECTOR_DECLARE (noll_shom_array, noll_shom_t *);
@@ -91,9 +86,9 @@ void noll_hom_fprint (FILE * f, noll_hom_t * h);
 int noll_graph_homomorphism (void);
 /* Search a homomorphism to prove noll_prob 
  * from prob->ngraph to noll_prob->pgraph. */
-/*TODO
+/*
  * Returns 0 if there is no homomorphism from g1 to g2,
- * otherwise (a homomorphism exists) it updates
+ * otherwise (TODO) it updates
  * sharing constraints in g2 with the substitution given by the
  * edge mapping in the homomorphism.
  */
