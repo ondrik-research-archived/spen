@@ -20,7 +20,6 @@
  * Lemma representation and checking for the syntactic procedure.
  */
 
-
 #ifndef NOLL_LEMMA_H_
 #define NOLL_LEMMA_H_
 
@@ -49,8 +48,8 @@ extern "C"
     /// rule->vars = args o (args1 U args2 \ args3)
     /// rule->pure = pure
     /// rule->pto = NULL
-    /// rule->nst = P1(args1) [* P2(args2)] -- non recursive part
-    /// rule->rec = P1(args1) [* P2(args2)] -- recursive part
+    /// rule->nst = NULL
+    /// rule->rec = P1(args1) [* P2(args2)] 
   } noll_lemma_t;
 
     NOLL_VECTOR_DECLARE (noll_lemma_array, noll_lemma_t *);
@@ -62,8 +61,20 @@ extern "C"
   extern noll_lemma_array **lemma_array;        // lemma set indexed by the predicate entailed P
 
   void noll_lemma_init (void);
-  /* Initialize global arrays of lemmas, after the initialization of predicates */
+  /* Initialize the global arrays of lemmas, after the initialization of predicates */
 
+  noll_lemma_array *noll_lemma_init_pred (uid_t pid);
+  /* Initialize the global arrays of lemmas for entry @p pid */
+
+  /* ====================================================================== */
+  /* Getters/Setters */
+  /* ====================================================================== */
+
+  noll_lemma_array *noll_lemma_getpred (uid_t pid);
+  /* Get the lemma associated with @p pid */
+
+  noll_space_t *noll_lemma_getspace (noll_lemma_t * l, uid_t n);
+  /* Get the @p n-th space formula */
 
   /* ====================================================================== */
   /* Printing */

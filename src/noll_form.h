@@ -113,7 +113,7 @@ extern "C"
  *  Encoded as an upper diagonal matrix of size = nb location variables:
  *  for (v1(id) < v2(id))
  *    m[v1][v2] = NOLL_PURE_EQ if v1=v2,
- *                NOLL_PURE_NEQ if v1 != v2,
+ *                NOLL_PURE_NEQ if v1!=v2,
  *                NOLL_PURE_OTHER (-1) if unknown
  */
   typedef enum noll_pure_op_t
@@ -310,6 +310,19 @@ extern "C"
   int noll_form_array_is_valid (noll_form_array * phi1_phiN);
 /* One formula shall be valid */
 
+/* ====================================================================== */
+/* Solvers */
+/* ====================================================================== */
+
+  int noll_pure_check_entl (bool ** diff, uint_t dsize,
+                            noll_pure_t * f, noll_uid_array * map);
+/* Check that @p diff entails @p ops[@p map] */
+
+  int noll_dform_check_entl (noll_var_array * lvars, uint_t * var2node,
+                             bool ** diff, uint_t nnodes,
+                             noll_dform_array * df,
+                             noll_pure_t * f, noll_uid_array * m);
+/* Check that constraints on data variables from @p df entail @p f[m] */
 
 /* ====================================================================== */
 /* Printing */

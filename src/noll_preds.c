@@ -930,6 +930,68 @@ noll_pred_get_matrix (uid_t pid)
 /* ====================================================================== */
 
 void
+noll_pred_type_fprint (FILE * f, noll_pred_typing_t * typ)
+{
+  if (typ != NULL)
+    {
+      fprintf (f, " %s, ", noll_record_name (typ->ptype0));
+      fprintf (f, "\n\t\tall types [");
+      if (typ->ptypes != NULL)
+        for (uint_t ti = 0; ti < noll_vector_size (typ->ptypes); ti++)
+          if (noll_vector_at (typ->ptypes, ti) == 1)
+            fprintf (f, "%s, ", noll_record_name (ti));
+      fprintf (f, "], ");
+      fprintf (f, "\n\t\trec fields [");
+      if (typ->pfields != NULL)
+        for (uint_t fi = 0; fi < noll_vector_size (typ->pfields); fi++)
+          fprintf (f, "%s(kind-%d), ", noll_field_name (fi),
+                   noll_vector_at (typ->pfields, fi));
+      fprintf (f, "]\n");
+    }
+  else
+    fprintf (f, "NULL\n");
+}
+
+void
+noll_pred_rule_fprint (FILE * f, noll_pred_rule_t * rule)
+{
+  fprintf (f, "\nrule: ");
+  noll_var_array_fprint (f, rule->vars, "exists ");
+  fprintf (f, ". \n\t(pure) ");
+  noll_pure_fprint (f, rule->vars, rule->pure);
+  fprintf (f, "\n\t & (pto) ");
+  noll_space_fprint (f, rule->vars, NULL, rule->pto);
+  fprintf (f, "\n\t  * (nst) ");
+  noll_space_fprint (f, rule->vars, NULL, rule->nst);
+  fprintf (f, "\n\t  * (rec) ");
+  noll_space_fprint (f, rule->vars, NULL, rule->rec);
+}
+
+void
+noll_pred_fprint (FILE * f, uid_t pid)
+{
+  assert (pid < noll_vector_size (preds_array));
+
+  noll_pred_t *pi = noll_vector_at (preds_array, pid);
+  fprintf (f, "pred-%d: %s(%d args) ", pi->pid, pi->pname, pi->def->fargs);
+  fprintf (f, "of type ");
+  noll_pred_type_fprint (f, pi->typ);
+
+  fprintf (f, "of rules ");
+  if (pi->def == NULL)
+    {
+      fprintf (f, "NULL\n");
+      return;
+    }
+  assert (pi->def->base_rules != NULL);
+  for (uint_t ri = 0; ri < noll_vector_size (pi->def->base_rules); ri++)
+    noll_pred_rule_fprint (f, noll_vector_at (pi->def->base_rules, ri));
+  assert (pi->def->rec_rules != NULL);
+  for (uint_t ri = 0; ri < noll_vector_size (pi->def->rec_rules); ri++)
+    noll_pred_rule_fprint (f, noll_vector_at (pi->def->rec_rules, ri));
+}
+
+void
 noll_pred_array_fprint (FILE * f, noll_pred_array * a, const char *msg)
 {
   fprintf (f, "\n%s: ", msg);
@@ -943,29 +1005,8 @@ noll_pred_array_fprint (FILE * f, noll_pred_array * a, const char *msg)
   uint_t length_a = noll_vector_size (a);
   for (uint_t i = 0; i < length_a; i++)
     {
-      noll_pred_t *pi = noll_vector_at (a, i);
-      fprintf (f, "pred-%d: %s(%d args) ", pi->pid, pi->pname,
-               pi->def->fargs);
-      fprintf (f, "of type ");
-      if (pi->typ != NULL)
-        {
-          fprintf (f, " %s, ", noll_record_name (pi->typ->ptype0));
-          fprintf (f, "\n\t\tall types [");
-          if (pi->typ->ptypes != NULL)
-            for (uint_t ti = 0; ti < noll_vector_size (pi->typ->ptypes); ti++)
-              if (noll_vector_at (pi->typ->ptypes, ti) == 1)
-                fprintf (f, "%s, ", noll_record_name (ti));
-          fprintf (f, "], ");
-          fprintf (f, "\n\t\trec fields [");
-          if (pi->typ->pfields != NULL)
-            for (uint_t fi = 0; fi < noll_vector_size (pi->typ->pfields);
-                 fi++)
-              fprintf (f, "%s(kind-%d), ", noll_field_name (fi),
-                       noll_vector_at (pi->typ->pfields, fi));
-          fprintf (f, "]\n");
-        }
-      else
-        fprintf (f, "NULL\n");
+      noll_pred_fprint (f, i);
+      fprintf (f, "\n");
     }
   fprintf (f, " - ]");
   fflush (f);

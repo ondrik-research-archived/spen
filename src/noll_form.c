@@ -608,6 +608,84 @@ noll_form_array_is_valid (noll_form_array * phi1_phiN)
   return 0;
 }
 
+/* ====================================================================== */
+/* Solvers */
+/* ====================================================================== */
+
+/**
+ * @brief Check that @p diff entails @p ops[@p map].
+ * 
+ * @return 0 if some constraint not entailed, 1 otherwise
+ */
+int
+noll_pure_check_entl (bool ** diff, uint_t dsize,
+                      noll_pure_t * f, noll_uid_array * map)
+{
+  /// this procedure could also be called for the pure part
+  /// of a recursive rule, where osize includes also existential vars
+  /// not included in map 
+  assert (f->size >= noll_vector_size (map));
+
+  int res = 1;
+  for (uint_t v2 = 1; (v2 < noll_vector_size (map)) && res; v2++)
+    for (uint_t v1 = 0; (v1 < v2) && res; v1++)
+      {
+        noll_pure_op_t rhs_op = noll_pure_matrix_at (f, v1, v2);
+        if (rhs_op == NOLL_PURE_OTHER)
+          continue;
+        uint_t nv1 = noll_vector_at (map, v1);
+        uint_t nv2 = noll_vector_at (map, v2);
+        assert ((nv1 < dsize) || (nv2 < dsize));        // TODO: remove it
+        if (rhs_op == NOLL_PURE_EQ)
+          {
+            if (nv1 < dsize && nv2 < dsize)
+              res = (nv1 == nv2) ? 1 : 0;
+            else
+              {
+                /// one of variables is not yet bounded to a node, change m
+                if (nv1 < dsize)
+                  noll_uid_array_set (map, v2, nv1);
+                else
+                  noll_uid_array_set (map, v1, nv2);
+              }
+          }
+        else if ((nv1 < dsize) && (nv2 < dsize))
+          {
+            assert (rhs_op == NOLL_PURE_NEQ);
+            bool lhs_isDiff = (nv1 != nv2);
+            if (nv1 < nv2)
+              lhs_isDiff = diff[nv2][nv1];
+            else if (nv2 < nv1)
+              lhs_isDiff = diff[nv1][nv2];
+
+            res = (lhs_isDiff) ? 1 : 0;
+          }
+        else
+          /// cannot be checked
+          assert (0);
+      }
+  return res;
+}
+
+
+/**
+ * @brief Check that @p diff and @p df implies @p f[@p m].
+ */
+int
+noll_dform_check_entl (noll_var_array * lvars, uint_t * var2node,
+                       bool ** diff, uint_t nnodes,
+                       noll_dform_array * df,
+                       noll_pure_t * f, noll_uid_array * m)
+{
+  if ((lvars != lvars) || (var2node != var2node) ||
+      (diff != diff) || (nnodes != nnodes) ||
+      (df != df) || (f != f) || (m != m))
+    return 0;                   // to remove warning on unused params
+
+  // TODO: translate the problem to Z3 
+  return 1;
+}
+
 
 /* ====================================================================== */
 /* Printing */
@@ -786,7 +864,7 @@ void
 noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
                    noll_space_t * phi)
 {
-  if (!phi)
+  if (phi == NULL)
     {
 #ifndef NDEBUG
       fprintf (f, "(null) ");

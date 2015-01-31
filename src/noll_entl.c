@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Defines the problem for the decision procedure.
@@ -290,10 +290,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       fprintf (out_decl, "(not ");
                     fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                     noll_vector_at
-                                                                    (atom->t_right,
-                                                                     0)->svar)->vname,
-                             noll_vector_at (lvars,
-                                             atom->t_left->lvar)->vname);
+                                                                    (atom->
+                                                                     t_right,
+                                                                     0)->
+                                                                    svar)->
+                             vname, noll_vector_at (lvars,
+                                                    atom->t_left->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -308,8 +311,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->
-                                             lvar)->vname);
+                                                             0)->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -328,10 +331,13 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                       {
                         fprintf (out_decl, " (%s %s) ", noll_vector_at (svars,
                                                                         noll_vector_at
-                                                                        (atom->t_right,
-                                                                         i)->svar)->vname,
-                                 noll_vector_at (lvars,
-                                                 atom->t_left->lvar)->vname);
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        svar)->
+                                 vname, noll_vector_at (lvars,
+                                                        atom->t_left->lvar)->
+                                 vname);
                       }
                     else
                       {
@@ -382,8 +388,8 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                                              atom->t_left->lvar)->vname,
                              noll_vector_at (lvars,
                                              noll_vector_at (atom->t_right,
-                                                             0)->
-                                             lvar)->vname);
+                                                             0)->lvar)->
+                             vname);
                     if (!sign)
                       fprintf (out_decl, ")");
                     fprintf (out_decl, ")\n");
@@ -465,13 +471,19 @@ noll_share_check_euf_asserts (noll_var_array * lvars, noll_var_array * svars,
                         == NOLL_STERM_SVAR)
                       fprintf (out_decl, " (%s ?e) ", noll_vector_at (svars,
                                                                       noll_vector_at
-                                                                      (atom->t_right,
-                                                                       i)->svar)->vname);
+                                                                      (atom->
+                                                                       t_right,
+                                                                       i)->
+                                                                      svar)->
+                               vname);
                     else
                       fprintf (out_decl, " (= %s ?e) ", noll_vector_at (lvars,
                                                                         noll_vector_at
-                                                                        (atom->t_right,
-                                                                         i)->lvar)->vname);
+                                                                        (atom->
+                                                                         t_right,
+                                                                         i)->
+                                                                        lvar)->
+                               vname);
                   }
                 fprintf (out_decl, ") ) )");
                 if (!sign)
@@ -712,18 +724,18 @@ noll_entl_to_graph (void)
 }
 
 /**
- *  Build the homomorphism for this entailment problem
- *  @return 1 if homomorphism found, 0 otherwise
+ *  Build the graph homeomorphism for this entailment problem
+ *  @return 1 if map exists, 0 otherwise
  */
 int
-noll_entl_to_homomorphism (void)
+noll_entl_to_hom (void)
 {
 
   int res = 1;
 
-  res = noll_graph_homomorphism ();
+  res = noll_hom_build ();
   if (noll_option_get_verb () > 0)
-    fprintf (stdout, "    homomorphism found\n");
+    fprintf (stdout, "    homeomorphism found\n");
   if (noll_option_is_diag () == true)
     {
       if (noll_option_get_verb () > 0)
@@ -735,7 +747,7 @@ noll_entl_to_homomorphism (void)
     }
 
   /*
-   * Check sharing constraints entailment for the found homomorphism
+   * Check sharing constraints entailment for the found homeomorphism
    */
 #ifndef NDEBUG
   //fprintf (stdout, "*** check-sat: test sharing:\n");
@@ -881,7 +893,7 @@ noll_entl_solve (void)
    * Test the satisfiability of pform /\ not(\/_i nform)
    */
   /*
-   * Special cases, not covered by graph homomorphism
+   * Special cases, not covered by graph homeomorphism
    */
   res = noll_entl_solve_special (false);
   if (res != -1)
@@ -903,18 +915,18 @@ noll_entl_solve (void)
     }
 
   /*
-   * Check graph homomorphism
+   * Check graph homeomorphism
    */
   if (noll_option_get_verb () > 0)
-    fprintf (stdout, "  > check graph homomorphism\n");
-  /* build homomorphism from right to left */
-  res = noll_entl_to_homomorphism ();
+    fprintf (stdout, "  > check graph homeomorphism\n");
+  /* build homeomorphism from right to left */
+  res = noll_entl_to_hom ();
   /* sharing constraints in pos_graph are updated and tested! */
   switch (res)
     {
     case 0:
       {
-        // homomorphism not found, 
+        // homeomorphism not found, 
         // so entailment invalid, 
         // so sat problem
         res = 1;
@@ -922,7 +934,7 @@ noll_entl_solve (void)
       }
     case 1:
       {
-        // homomorphism found
+        // homeomorphism found
         // so entailment valid
         // so unsat problem
         res = 0;

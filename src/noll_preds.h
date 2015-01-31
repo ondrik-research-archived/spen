@@ -220,6 +220,12 @@ extern "C"
   /* Printing */
   /* ====================================================================== */
 
+  void noll_pred_rule_fprint (FILE * f, noll_pred_rule_t * rule);
+  /* Print the rule @p rule. */
+
+  void noll_pred_fprint (FILE * f, uid_t pid);
+  /* Print the predicate @p pid. */
+
   void noll_pred_array_fprint (FILE * f, noll_pred_array * a,
                                const char *msg);
   /* Print the array a. */

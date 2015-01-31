@@ -58,7 +58,7 @@ typedef struct noll_graph_t
   noll_uid_array **mat;         // adjacency matrix, mat[i] is the list of edge identifiers from node i
   noll_uid_array **rmat;        // reverse adjacency matrix, rmat[i] is the list of edge identifiers to node i
   bool **diff;                  // low-diagonal matrix, diff[n1][n2] = true iff n1 != n2 and n1 > n2
-  noll_dform_array *data;       // data constraints
+  noll_dform_array *data;       // data constraints over lvars
   uint_t *sloc2edge;            // mapping set variables to edges in graph
   noll_share_array *share;      // TODO: sharing constraints (on set variables) (related to overlapping)
   bool isComplete;              // if all implicit constraints have been computed
@@ -93,6 +93,17 @@ uint_t noll_graph_get_var (const noll_graph_t * g, uint_t n);
 int noll_edge_in_label (noll_edge_t * e, uint_t label);
 /* Returns 1 if the edge e has its label in the set of labels
  * of the predicate label */
+
+uint_t noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
+                            noll_uid_array * args);
+/* Return edge id with label, kind and arguments given. */
+
+/* ====================================================================== */
+/* Others */
+/* ====================================================================== */
+
+void noll_graph_dll (noll_graph_t * g, uid_t pid);
+/* Add explicit edges for dll */
 
 /* ====================================================================== */
 /* Printing */

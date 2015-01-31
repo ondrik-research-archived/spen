@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Graph representation of NOLL formulas.
@@ -242,6 +242,91 @@ noll_graph_get_var (const noll_graph_t * g, uint_t n)
   return UNDEFINED_ID;
 }
 
+
+/**
+ * Return the edge of @p g2 having label @p label between nodes @p args.
+ * 
+ * @param args [inout] contains the mapping of arguments of the edge 
+ *                     on nodes of @p g or UNDEFINED_ID
+ * @return the identifier of the edge matched or UNDEFINED_ID
+ */
+uint_t
+noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
+                     noll_uid_array * args)
+{
+  // store of edge identifier matching the searched edge 
+  uint_t uid_res = UNDEFINED_ID;
+  // source and destination nodes for edge searched
+  uint_t nsrc = noll_vector_at (args, 0);
+  // a new intermediary node
+  uint_t nend = noll_vector_at (args, 1);
+
+#ifndef NDEBUG
+  fprintf (stdout,
+           "---- Search for edge n%d---(kind=%d, label=%d)-->n%d:\n",
+           nsrc, kind, label, nend);
+#endif
+
+  if (g->mat[nsrc] != NULL)
+    {
+      for (uint_t i = 0;
+           (i < noll_vector_size (g->mat[nsrc])) &&
+           (uid_res == UNDEFINED_ID); i++)
+        {
+          uint_t ei = noll_vector_at (g->mat[nsrc], i);
+          noll_edge_t *edge_i = noll_vector_at (g->edges, ei);
+          if ((edge_i->kind == kind) && (edge_i->label == label)
+              && (noll_vector_size (edge_i->args) == noll_vector_size (args)))
+            {
+#ifndef NDEBUG
+              fprintf (stdout, "\t found e%d, same kind and label\n", ei);
+#endif
+              // edge found with the same kind, label and args size,
+              // check the other arguments than source are equal
+              bool ishom = true;
+              for (uint_t j = 1;
+                   j < noll_vector_size (args) && (ishom == true); j++)
+                {
+                  if (noll_vector_at (args, j) == UNDEFINED_ID)
+                    {
+#ifndef NDEBUG
+                      fprintf (stdout,
+                               "\t\t update arg %d to n%d\n", j,
+                               noll_vector_at (edge_i->args, j));
+#endif
+                      noll_uid_array_set (args, j,
+                                          noll_vector_at (edge_i->args, j));
+                    }
+                  else if (noll_vector_at (args, j)
+                           != noll_vector_at (edge_i->args, j))
+                    {
+#ifndef NDEBUG
+                      fprintf (stdout,
+                               "\t\t but different arg %d (n%d != n%d)\n", j,
+                               noll_vector_at (args, j),
+                               noll_vector_at (edge_i->args, j));
+#endif
+                      ishom = false;
+                    }
+                }
+              if (ishom == true)
+                {
+#ifndef NDEBUG
+                  fprintf (stdout, "\t\t and same args\n");
+#endif
+                  uid_res = ei;
+                }
+            }
+        }
+    }
+
+#ifndef NDEBUG
+  fprintf (stdout, "\t %d edge matches!\n", uid_res);
+#endif
+
+  return uid_res;
+}
+
 /** 
  * Test if the edge @p e has its label in the set of labels 
  * of the predicate @p pid. 
@@ -314,6 +399,107 @@ noll_edge_in_label (noll_edge_t * e, uint_t pid)
         }
     }
   return res;
+}
+
+/* ====================================================================== */
+/* Others */
+/* ====================================================================== */
+
+/**
+ * @brief Add explicit edges for dll rd.
+ * 
+ * For the dll edges (labeled by @p pid) in the graph @p g,
+ * add a next edge between the target of the edge and the forward argument.
+ */
+void
+noll_graph_dll (noll_graph_t * g, uid_t pid)
+{
+  assert (NULL != g);
+
+  // get the fields fid_nxt and fid_prv
+  uid_t fid_next = UNDEFINED_ID;
+  uid_t fid_prev = UNDEFINED_ID;
+  noll_pred_t *pred = noll_vector_at (preds_array, pid);
+  assert (NULL != pred);
+  assert (NULL != pred->typ);
+  assert (NULL != pred->typ->pfields);
+  for (uint_t fi = 0;
+       (fi < noll_vector_size (fields_array)) &&
+       (fid_next == UNDEFINED_ID || fid_prev == UNDEFINED_ID); fi++)
+    {
+      if (noll_vector_at (pred->typ->pfields, fi) == NOLL_PFLD_BCKBONE)
+        fid_next = fi;
+      else if (noll_vector_at (pred->typ->pfields, fi) == NOLL_PFLD_BORDER)
+        fid_prev = fi;
+    }
+
+  // array of added edges
+  noll_edge_array *e1_en = noll_edge_array_new ();
+  // the first valid identifier for the added edges
+  uint_t lst_eid = noll_vector_size (g->edges);
+  for (uint ei = 0; ei < noll_vector_size (g->edges); ei++)
+    {
+      noll_edge_t *e = noll_vector_at (g->edges, ei);
+      if (e->kind != NOLL_EDGE_PRED)
+        continue;
+      uint_t nfst = noll_vector_at (e->args, 0);
+      uint_t nlst = noll_vector_at (e->args, 1);
+      uint_t nprv = noll_vector_at (e->args, 2);
+      uint_t nfwd = noll_vector_at (e->args, 3);
+
+      /* edge nlst --next-->nfwd */
+      noll_edge_t *enext =
+        noll_edge_alloc (NOLL_EDGE_PTO, nlst, nfwd, fid_next);
+      enext->id = lst_eid;
+      lst_eid++;
+      noll_edge_array_push (e1_en, enext);
+
+      // update matrices of g
+      // push the edge enext in the matrix at entry nlst
+      noll_uid_array *lst_edges = g->mat[nlst];
+      if (lst_edges == NULL)
+        {
+          lst_edges = g->mat[nlst] = noll_uid_array_new ();
+        }
+      noll_uid_array_push (lst_edges, enext->id);
+      // push the edge enext in the reverse matrix at entry nfwd
+      noll_uid_array *fwd_edges = g->rmat[nfwd];
+      if (fwd_edges == NULL)
+        {
+          fwd_edges = g->rmat[nfwd] = noll_uid_array_new ();
+        }
+      noll_uid_array_push (fwd_edges, enext->id);
+
+      /* edge nfst --prev-->nprev */
+      noll_edge_t *eprev =
+        noll_edge_alloc (NOLL_EDGE_PTO, nfst, nprv, fid_prev);
+      eprev->id = lst_eid;
+      lst_eid++;
+      noll_edge_array_push (e1_en, eprev);
+
+      // push the edge eprev in the matrix at entry nfst
+      noll_uid_array *fst_edges = g->mat[nfst];
+      if (fst_edges == NULL)
+        {
+          fst_edges = g->mat[nfst] = noll_uid_array_new ();
+        }
+      noll_uid_array_push (fst_edges, eprev->id);
+      // push the edge eprev in the reverse matrix at entry nprv
+      noll_uid_array *prv_edges = g->rmat[nprv];
+      if (prv_edges == NULL)
+        {
+          prv_edges = g->rmat[nprv] = noll_uid_array_new ();
+        }
+      noll_uid_array_push (prv_edges, eprev->id);
+    }
+  // push all the added edges in g
+  for (uint ei = 0; ei < noll_vector_size (e1_en); ei++)
+    {
+      noll_edge_t *e = noll_vector_at (e1_en, ei);
+      noll_edge_array_push (g->edges, e);
+      noll_vector_at (e1_en, ei) = NULL;
+    }
+  noll_edge_array_delete (e1_en);
 }
 
 /* ====================================================================== */

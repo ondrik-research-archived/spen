@@ -375,7 +375,7 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
       {
         if (prule->pto == NULL && prule->nst == NULL && prule->rec == NULL)
           {
-            prule->pto = noll_space_new ();     /// ASSERT: base cas has pto=emp
+            prule->pto = noll_space_new ();     /// ASSERT: base case has pto=emp
           }
         else
           {
@@ -424,6 +424,10 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
     case NOLL_F_PRED:
       {
         noll_space_t *pcall = noll_mk_form_pred (ctx, prule->vars, name, exp);
+#ifndef NDEBUG
+        fprintf (stderr, "\nmk_exp2rule_space: new call: ");
+        noll_space_fprint (stderr, prule->vars, NULL, pcall);
+#endif
         if (pcall == NULL)
           {
             noll_error (1, "Building predicate definition ", name);
@@ -433,16 +437,23 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
         if (pcall->m.ls.pid == pid)
           {
             /// it is a recursive call
-            if (prule->rec == NULL)
+            noll_space_t *nrec = prule->rec;
+            if (nrec == NULL)
               {
-                prule->rec = noll_space_new ();
-                prule->rec->kind = NOLL_SPACE_SSEP;
-                prule->rec->is_precise = true;
-                prule->rec->m.sep = noll_space_array_new ();
+                nrec = noll_space_new ();
+                nrec->kind = NOLL_SPACE_SSEP;
+                nrec->is_precise = true;
+                nrec->m.sep = noll_space_array_new ();
               }
-            assert (prule->rec->kind == NOLL_SPACE_SSEP);
-            noll_space_array_push (prule->rec->m.sep, pcall);
-
+            assert (nrec->kind == NOLL_SPACE_SSEP);
+            assert (nrec->m.sep != NULL);
+            noll_space_array_push (nrec->m.sep, pcall);
+            prule->rec = nrec;
+#ifndef NDEBUG
+            fprintf (stderr,
+                     "\nmk_pred_exp2rule_space: added rec call in rule:");
+            noll_pred_rule_fprint (stderr, prule);
+#endif
           }
         else
           {
@@ -456,6 +467,11 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
               }
             assert (prule->nst->kind == NOLL_SPACE_SSEP);
             noll_space_array_push (prule->nst->m.sep, pcall);
+#ifndef NDEBUG
+            fprintf (stderr,
+                     "\nmk_pred_exp2rule_space: added nst call in rule:");
+            noll_pred_rule_fprint (stderr, prule);
+#endif
           }
         return 1;
       }
@@ -577,6 +593,10 @@ noll_mk_pred_exp2rule (noll_context_t * ctx, const char *name,
       noll_error (1, "Bad formula in rule", "(operator not allowed)");
       return 0;
     }
+#ifndef NDEBUG
+  fprintf (stderr, "\nmk_pred_exp2rule: rule built for %s = ", name);
+  noll_pred_rule_fprint (stderr, prule);
+#endif
   return res;
 }
 
@@ -1048,7 +1068,7 @@ noll_mk_pred_rule_rec (noll_context_t * ctx, const char *name,
   if (res == 0)
     return 0;
 
-  /// check the pure part is compositional (recrusive case)
+  /// check the pure part is compositional (recursive case)
   res = noll_mk_pred_rule_check_pure (name, prule, nrec_p, true);
   if (res == 0)
     return 0;
@@ -1221,6 +1241,10 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
     free (ctx->pname);
   ctx->pname = NULL;
 
+#ifndef NDEBUG
+  fprintf (stderr, "Predicate built: ");
+  noll_pred_fprint (stderr, pid);
+#endif
   return pid;
 }
 
@@ -1877,6 +1901,8 @@ noll_mk_emptybag (noll_context_t * ctx)
 
   noll_exp_t *res = (noll_exp_t *) malloc (sizeof (struct noll_exp_t));
   res->discr = NOLL_F_EMPTYBAG;
+  res->args = NULL;
+  res->size = 0;
   return res;
 }
 
@@ -2232,8 +2258,8 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
           {
             noll_var_t *vi = noll_vector_at (e->p.quant.lvars, i);
             fprintf (f, " (%s %s) ", vi->vname, noll_record_name (noll_var_record       // NEW: could be replaces by type
-                                                                  (e->p.quant.
-                                                                   lvars,
+                                                                  (e->p.
+                                                                   quant.lvars,
                                                                    i)));
           }
         for (uint_t i = e->p.quant.sstart; i < e->p.quant.send; i++)
@@ -2524,8 +2550,7 @@ noll_exp_push_dterm (noll_exp_t * e, noll_var_array * lenv)
   assert (NULL != e);
 
 #ifndef NDEBUG
-  fprintf (stdout, "push_dterm: discr=%d, size=%d\n", (int) e->discr,
-           (int) e->size);
+  fprintf (stdout, "push_dterm: discr=%d, size=%d\n", e->discr, e->size);
 #endif
 
   noll_dterm_t *dt = noll_dterm_new ();

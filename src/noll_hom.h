@@ -60,37 +60,48 @@ typedef struct noll_hom_s
   noll_shom_array *shom;        /* array of size ngraph of simple hom */
 } noll_hom_t;
 
+typedef noll_uid_array noll_uid_map;    /* used to represent maps uid_t -> uid_t */
+
 
 /* ====================================================================== */
 /* Constructors/destructors */
 /* ====================================================================== */
 
 noll_hom_t *noll_hom_alloc (void);
-/* Allocate a homomorphism for the crt problem. */
+/* Allocate a homeomorphism for the crt problem. */
+void noll_hom_delete (noll_hom_t * h);
+/* Free the homeomorphism */
+
+noll_uid_map *noll_uid_map_new (uint_t size);
+/* Alocate a map and initialize elements to UNDEFINED_ID */
+void noll_uid_map_delete (noll_uid_map * m);
+/* Free the map */
 
 /* ====================================================================== */
 /* Getters/Setters */
 /* ====================================================================== */
 
+#define noll_uid_map_set(m,idx,value) noll_uid_array_set(m,idx,value)
 
 /* ====================================================================== */
 /* Printers */
 /* ====================================================================== */
 
 void noll_hom_fprint (FILE * f, noll_hom_t * h);
+void noll_uid_map_fprint (FILE * f, noll_uid_map * h);
 
 /* ====================================================================== */
 /* Solver */
 /* ====================================================================== */
 
-int noll_graph_homomorphism (void);
-/* Search a homomorphism to prove noll_prob 
+int noll_hom_build (void);
+/* Search a homeomorphism to prove noll_prob 
  * from prob->ngraph to noll_prob->pgraph. */
 /*
- * Returns 0 if there is no homomorphism from g1 to g2,
+ * Returns 0 if there is no homeomorphism from g1 to g2,
  * otherwise (TODO) it updates
  * sharing constraints in g2 with the substitution given by the
- * edge mapping in the homomorphism.
+ * edge mapping in the homeomorphism.
  */
 
 
