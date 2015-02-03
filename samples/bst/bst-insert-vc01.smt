@@ -5,7 +5,7 @@
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bag-union, bag-diff, bag-sub
 
-(set-logic QF_S)
+(set-logic QF_SLRDI)
 
 ;; declare sorts
 (declare-sort Bst_t 0)
@@ -37,9 +37,9 @@
 		(bst ?Y ?M2)
 		)
 		)
-		(= ?M (bag-union (singleton ?d) (bag-union ?M1 ?M2) ) )
-		(bag-lt ?M1 (singleton ?d))
-		(bag-lt (singleton ?d) ?M2)
+		(= ?M (bagunion (bag ?d) ?M1 ?M2) )
+		(< ?M1 (bag ?d))
+		(< (bag ?d) ?M2)
 	)
 	)
 	)
@@ -65,9 +65,9 @@
 		(bsthole ?Y ?F ?M4 ?M2)
 		)
 		)
-		(= ?M1  (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
-		(bag-lt ?M3 (singleton ?d) )
-		(bag-lt (singleton ?d) ?M4 )
+		(= ?M1  (bagunion (bag ?d) ?M3 ?M4) )
+		(< ?M3 (bag ?d) )
+		(< (bag ?d) ?M4 )
 	) 
 	)
 
@@ -79,64 +79,59 @@
 		(bst ?Y ?M4)
 		)
 		)
-		(= ?M1 (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
-		(bag-lt ?M3 (singleton ?d) )
-		(bag-lt (singleton ?d) ?M4 )
+		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
+		(< ?M3 (bag ?d) )
+		(< (bag ?d) ?M4 )
 	) 
 	)
 	)
 ))
 
 ;; declare variables
-;; (declare-fun root () Bst_t)
-(declare-fun cur2 () Bst_t)
-(declare-fun X () Bst_t)
-(declare-fun Y () Bst_t)
+(declare-fun root1 () Bst_t)
+(declare-fun root2 () Bst_t)
+(declare-fun cur () Bst_t)
+(declare-fun parent () Bst_t)
+(declare-fun ret () Bst_t)
+(declare-fun x () Bst_t)
+
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
-(declare-fun M2 () BagInt)
-(declare-fun M3 () BagInt)
-(declare-fun M4 () BagInt)
+
 (declare-fun key () Int)
-(declare-fun d () Int)
 
 ;; declare set of locations
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
-(declare-fun alpha3 () SetLoc)
 
-;; VC: cur2 |-> (left,X), (right, Y) * bst(X,M3) * bst(Y, M4) & M0 = {root0.data} cup M3 cup M2 & M3 < root0.data < M2 & 
-;; M2 = {cur2.data} cup M4 & cur2.data < M4 & ! root0 =nil & cur1 = root0 & ! cur2 = nil & key = root0.data & 
-;; M1 = M0 \ {key} |-
-;; bst(cur2, M1) & M1 = M0 \ {key}
+;; VC01: bst(root1, M0) * x |-> ((left,nil), (right,nil), (data, key)) & cur = root1 & parent = nil 
+;; & root1 = nil & root2 = x & ret = root2 |- 
+;; bst(ret, M1) & M0 = emptyset & M1 = {key} & ret = x
 
 (assert 
 	(and
 	(tobool 
 	(ssep 
-		(pto cur2 (sref (ref left X) (ref right Y) (data d) ) ) 
-		(index alpha1 (bst X M3) )
-		(index alpha2 (bst Y M4) )
+		(index alpha1 (bst root1 M0))
+		(pto x (sref (ref left nil) (ref right nil) (ref data key) ) ) 
 	))
-	(= M0 (bag-union (singleton key) (bag-union M3 M2) ) )
-	(bag-lt M3 (singleton key) )
-	(bag-lt (singleton key) M2)
-	(= M2 (bag-union (singleton d) M4) )
-	(bag-lt (singleton d) M4)
-	(= M1 (bag-diff M0 (singleton key)))
+	(= cur root1)
+	(= parent nil)
+	(= root1 nil)
+	(= root2 x)
+	(= ret root2)
 	)
 )
 
-;; bst(cur2, M1) & M1 = M0 \ {key}
-
 (assert (not 
-	(and
+	(and 
 	(tobool 
-	(ssep 
-		(index alpha3 (bst cur2 M1) )
-	))
-	(= M1 (bag-diff M0 (singleton key)) )
+		(index alpha2 (bst ret M1)) 
+	)
+	(= M0 emptybag)
+	(= M1 (bag key))
+	(= ret x)
 	)
 ))
 

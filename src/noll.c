@@ -2258,8 +2258,8 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
           {
             noll_var_t *vi = noll_vector_at (e->p.quant.lvars, i);
             fprintf (f, " (%s %s) ", vi->vname, noll_record_name (noll_var_record       // NEW: could be replaces by type
-                                                                  (e->p.
-                                                                   quant.lvars,
+                                                                  (e->p.quant.
+                                                                   lvars,
                                                                    i)));
           }
         for (uint_t i = e->p.quant.sstart; i < e->p.quant.send; i++)
@@ -2365,6 +2365,11 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
     case NOLL_F_LOOP:
       {
         fprintf (f, " (loop \n\t");
+        break;
+      }
+    case NOLL_F_ITE:
+      {
+        fprintf (f, " (ite ");
         break;
       }
     case NOLL_F_LT:
@@ -2631,7 +2636,21 @@ noll_exp_push_dterm (noll_exp_t * e, noll_var_array * lenv)
       dt->args = noll_dterm_array_new ();
       noll_dterm_array_reserve (dt->args, e->size);
     }
-  for (uint_t i = 0; i < e->size; i++)
+  uint_t i = 0;
+  if (dt->kind == NOLL_DATA_ITE)
+    {
+      noll_dform_t *cond = noll_exp_push_dform (e->args[i], lenv, 1);
+      if (cond == NULL)
+        {
+          noll_error (1, "Building data term ",
+                      "(bad bollean condition in ite)");
+          noll_dterm_free (dt);
+          return NULL;
+        }
+      dt->p.cond = cond;
+      i++;
+    }
+  for (; i < e->size; i++)
     {
       noll_dterm_t *ti = noll_exp_push_dterm (e->args[i], lenv);
       if (ti == NULL)
@@ -2640,13 +2659,13 @@ noll_exp_push_dterm (noll_exp_t * e, noll_var_array * lenv)
           noll_dterm_free (dt);
           return NULL;
         }
+      if ((dt->kind == NOLL_DATA_ITE) && (i == 1))
+        dt->typ = ti->typ;
       if (((dt->kind != NOLL_DATA_BAG) && (dt->kind != NOLL_DATA_FIELD) &&
-           ((dt->kind != NOLL_DATA_ITE) || (i > 0)) &&
+           ((dt->kind != NOLL_DATA_ITE) || (i > 1)) &&
            (ti->typ != dt->typ)) ||
           ((dt->kind == NOLL_DATA_BAG) && (ti->typ != NOLL_TYP_INT)) ||
-          ((dt->kind == NOLL_DATA_FIELD) && (ti->typ != NOLL_TYP_RECORD)) ||
-          ((dt->kind == NOLL_DATA_ITE) && (i == 0)
-           && (ti->typ != NOLL_TYP_BOOL)))
+          ((dt->kind == NOLL_DATA_FIELD) && (ti->typ != NOLL_TYP_RECORD)))
         {
           noll_error (1, "Building data term ", "(bad type)");
           noll_dterm_free (dt);

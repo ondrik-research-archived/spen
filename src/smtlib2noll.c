@@ -500,7 +500,8 @@ smtlib2_noll_parser_define_function (smtlib2_parser_interface * p,
           /* The name shall be bound to NULL. */
           smtlib2_term_parser_define_binding (ap->termparser_, name, params,
                                               NULL);
-          if (smtlib2_term_parser_error (ap->termparser_))
+          if ((params == NULL) ||
+              (smtlib2_term_parser_error (ap->termparser_)))
             {
               ap->response_ = SMTLIB2_RESPONSE_ERROR;
               ap->errmsg_ =
@@ -632,7 +633,7 @@ smtlib2_noll_parser_make_function_sort (smtlib2_parser_interface * p,
   if (ap->response_ != SMTLIB2_RESPONSE_ERROR)
     {
       /* shall be with 0 arguments */
-      if (smtlib2_vector_size (tps) > 1)
+      if ((tps == NULL) || (smtlib2_vector_size (tps) > 1))
         {
           ap->response_ = SMTLIB2_RESPONSE_ERROR;
           ap->errmsg_ =
@@ -673,8 +674,8 @@ smtlib2_noll_parser_make_parametric_sort (smtlib2_parser_interface * p,
         {
           /* check that the sort is exactly Field,
            * since (SetRef sort) can not appear in the formula */
-          if (!strcmp (sortname, "Field") && tps && smtlib2_vector_size (tps)
-              == 2)
+          if ((0 == strcmp (sortname, "Field")) &&
+              (NULL != tps) && (smtlib2_vector_size (tps) == 2))
             {
               noll_type_t *src = (noll_type_t *) smtlib2_vector_at (tps, 0);
               noll_type_t *dst = (noll_type_t *) smtlib2_vector_at (tps, 1);
@@ -814,7 +815,7 @@ smtlib2_noll_parser_mk_function (smtlib2_context ctx,
   if (index)
     // indexed terms or as terms not supported
     return (smtlib2_term) NULL;
-  if (args)
+  if (NULL != args)
     // n-ary functions
     res = noll_mk_app (sctx, symbol,
                        (noll_exp_t **) (smtlib2_vector_array (args)),
@@ -847,6 +848,8 @@ SMTLIB2_NOLL_DECLHANDLER (and)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_and (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
@@ -858,6 +861,8 @@ SMTLIB2_NOLL_DECLHANDLER (or)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_or (noll_ctx (ctx),
                      (noll_exp_t **) (smtlib2_vector_array (args)),
                      smtlib2_vector_size (args));
@@ -869,6 +874,8 @@ SMTLIB2_NOLL_DECLHANDLER (not)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_not (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
@@ -880,6 +887,8 @@ SMTLIB2_NOLL_DECLHANDLER (implies)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_implies (noll_ctx (ctx),
                           (noll_exp_t **) (smtlib2_vector_array (args)),
                           smtlib2_vector_size (args));
@@ -891,6 +900,8 @@ SMTLIB2_NOLL_DECLHANDLER (eq)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_eq (noll_ctx (ctx),
                      (noll_exp_t **) (smtlib2_vector_array (args)),
                      smtlib2_vector_size (args));
@@ -902,6 +913,8 @@ SMTLIB2_NOLL_DECLHANDLER (distinct)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_distinct (noll_ctx (ctx),
                            (noll_exp_t **) (smtlib2_vector_array (args)),
                            smtlib2_vector_size (args));
@@ -913,6 +926,8 @@ SMTLIB2_NOLL_DECLHANDLER (ite)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_ite (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
@@ -924,6 +939,8 @@ SMTLIB2_NOLL_DECLHANDLER (lt)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_lt (noll_ctx (ctx),
                      (noll_exp_t **) (smtlib2_vector_array (args)),
                      smtlib2_vector_size (args));
@@ -935,6 +952,8 @@ SMTLIB2_NOLL_DECLHANDLER (gt)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_gt (noll_ctx (ctx),
                      (noll_exp_t **) (smtlib2_vector_array (args)),
                      smtlib2_vector_size (args));
@@ -946,6 +965,8 @@ SMTLIB2_NOLL_DECLHANDLER (le)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_le (noll_ctx (ctx),
                      (noll_exp_t **) (smtlib2_vector_array (args)),
                      smtlib2_vector_size (args));
@@ -957,6 +978,8 @@ SMTLIB2_NOLL_DECLHANDLER (ge)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_ge (noll_ctx (ctx),
                      (noll_exp_t **) (smtlib2_vector_array (args)),
                      smtlib2_vector_size (args));
@@ -968,6 +991,8 @@ SMTLIB2_NOLL_DECLHANDLER (plus)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_plus (noll_ctx (ctx),
                        (noll_exp_t **) (smtlib2_vector_array (args)),
                        smtlib2_vector_size (args));
@@ -979,6 +1004,8 @@ SMTLIB2_NOLL_DECLHANDLER (minus)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_minus (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -990,6 +1017,8 @@ SMTLIB2_NOLL_DECLHANDLER (bag)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_bag (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
@@ -1001,6 +1030,8 @@ SMTLIB2_NOLL_DECLHANDLER (bagunion)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_bagunion (noll_ctx (ctx),
                            (noll_exp_t **) (smtlib2_vector_array (args)),
                            smtlib2_vector_size (args));
@@ -1012,6 +1043,8 @@ SMTLIB2_NOLL_DECLHANDLER (bagminus)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_bagminus (noll_ctx (ctx),
                            (noll_exp_t **) (smtlib2_vector_array (args)),
                            smtlib2_vector_size (args));
@@ -1023,6 +1056,8 @@ SMTLIB2_NOLL_DECLHANDLER (subset)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_subset (noll_ctx (ctx),
                          (noll_exp_t **) (smtlib2_vector_array (args)),
                          smtlib2_vector_size (args));
@@ -1034,6 +1069,8 @@ SMTLIB2_NOLL_DECLHANDLER (wsep)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_wsep (noll_ctx (ctx),
                        (noll_exp_t **) (smtlib2_vector_array (args)),
                        smtlib2_vector_size (args));
@@ -1045,6 +1082,8 @@ SMTLIB2_NOLL_DECLHANDLER (ssep)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_ssep (noll_ctx (ctx),
                        (noll_exp_t **) (smtlib2_vector_array (args)),
                        smtlib2_vector_size (args));
@@ -1056,6 +1095,8 @@ SMTLIB2_NOLL_DECLHANDLER (pto)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_pto (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
@@ -1067,6 +1108,8 @@ SMTLIB2_NOLL_DECLHANDLER (ref)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_ref (noll_ctx (ctx),
                       (noll_exp_t **) (smtlib2_vector_array (args)),
                       smtlib2_vector_size (args));
@@ -1078,6 +1121,8 @@ SMTLIB2_NOLL_DECLHANDLER (sref)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_sref (noll_ctx (ctx),
                        (noll_exp_t **) (smtlib2_vector_array (args)),
                        smtlib2_vector_size (args));
@@ -1089,6 +1134,8 @@ SMTLIB2_NOLL_DECLHANDLER (index)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_index (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -1100,6 +1147,8 @@ SMTLIB2_NOLL_DECLHANDLER (sloc)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_sloc (noll_ctx (ctx),
                        (noll_exp_t **) (smtlib2_vector_array (args)),
                        smtlib2_vector_size (args));
@@ -1111,6 +1160,8 @@ SMTLIB2_NOLL_DECLHANDLER (unloc)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_unloc (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -1122,6 +1173,8 @@ SMTLIB2_NOLL_DECLHANDLER (inloc)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_inloc (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -1133,6 +1186,8 @@ SMTLIB2_NOLL_DECLHANDLER (eqloc)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_eqloc (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -1144,6 +1199,8 @@ SMTLIB2_NOLL_DECLHANDLER (leloc)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_leloc (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -1155,6 +1212,8 @@ SMTLIB2_NOLL_DECLHANDLER (seloc)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_seloc (noll_ctx (ctx),
                         (noll_exp_t **) (smtlib2_vector_array (args)),
                         smtlib2_vector_size (args));
@@ -1166,6 +1225,8 @@ SMTLIB2_NOLL_DECLHANDLER (tobool)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_tobool (noll_ctx (ctx),
                          (noll_exp_t **) (smtlib2_vector_array (args)),
                          smtlib2_vector_size (args));
@@ -1177,6 +1238,8 @@ SMTLIB2_NOLL_DECLHANDLER (tospace)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_tospace (noll_ctx (ctx),
                           (noll_exp_t **) (smtlib2_vector_array (args)),
                           smtlib2_vector_size (args));
@@ -1188,6 +1251,8 @@ SMTLIB2_NOLL_DECLHANDLER (loop)
     {
       assert (0);               // to remove warnings in unsed parameters
     }
+  if (args == NULL)
+    return (smtlib2_term) NULL;
   return noll_mk_loop (noll_ctx (ctx),
                        (noll_exp_t **) (smtlib2_vector_array (args)),
                        smtlib2_vector_size (args));

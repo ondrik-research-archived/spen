@@ -79,6 +79,9 @@ extern "C"
   typedef struct noll_dterm_s noll_dterm_t;     /* forward definition */
     NOLL_VECTOR_DECLARE (noll_dterm_array, noll_dterm_t *);
 
+  typedef struct noll_dform_s noll_dform_t;     /* forward definition */
+    NOLL_VECTOR_DECLARE (noll_dform_array, noll_dform_t *);
+
   struct noll_dterm_s
   {
     noll_data_op_t kind;        // only data terms
@@ -88,13 +91,12 @@ extern "C"
     {
       long value;               // integer constant
       uid_t sid;                // symbol (variable or field) identifier
+      noll_dform_t *cond;       // simple condition for ite
     } p;
 
     noll_dterm_array *args;     // NULL for 0-arity terms
   };
 
-  typedef struct noll_dform_s noll_dform_t;     /* forward definition */
-    NOLL_VECTOR_DECLARE (noll_dform_array, noll_dform_t *);
 
   struct noll_dform_s
   {
@@ -260,13 +262,17 @@ extern "C"
 /* ====================================================================== */
 
   noll_form_t *noll_form_new (void);
-  noll_dterm_t *noll_dterm_new (void);
-  noll_dform_t *noll_dform_new (void);
   noll_pure_t *noll_pure_new (uint_t size);
   noll_space_t *noll_space_new (void);
   noll_share_array *noll_share_new (void);
   noll_sterm_t *noll_sterm_new_var (uid_t v, noll_sterm_kind_t kind);
   noll_sterm_t *noll_sterm_new_prj (uid_t s, uid_t v);
+
+  noll_dterm_t *noll_dterm_new (void);
+  noll_dterm_t *noll_dterm_new_var (uint_t vid, noll_typ_t ty);
+  noll_dform_t *noll_dform_new (void);
+  noll_dform_t *noll_dform_new_eq (noll_dterm_t * t1, noll_dterm_t * t2);
+
 /* Allocation */
 
   void noll_form_free (noll_form_t * f);
@@ -331,6 +337,11 @@ extern "C"
 
   void noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi);
 
+  void noll_dform_fprint (FILE * f, noll_var_array * lvars,
+                          noll_dform_t * phi);
+  void noll_dform_array_fprint (FILE * f, noll_var_array * lvars,
+                                noll_dform_array * phi);
+
   void noll_share_atom_fprint (FILE * f, noll_var_array * lvars,
                                noll_var_array * svars,
                                noll_atom_share_t * phi);
@@ -344,4 +355,4 @@ extern "C"
 }
 #endif
 
-#endif                          /* _NOL_FORMULA_H_ */
+#endif                          /* _NOLL_FORMULA_H_ */

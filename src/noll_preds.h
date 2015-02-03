@@ -79,6 +79,7 @@ extern "C"
      * with values of @type noll_field_e for each field used in pred
      */
     noll_uint_array *pfields;
+    bool isUnaryLoc;            /* the predicate has only source */
     bool useNil;                /* the predicate use fields to nil */
     bool isTwoDir;              /* the predicate is a two direction */
     /* array of size @global preds_array
@@ -167,7 +168,10 @@ extern "C"
   /* Total ordering of predicates using their call */
 
   bool noll_pred_use_nil (uid_t pid);
-  /* Retrun true if pid uses nil internally */
+  /* Return true if pid uses nil internally */
+
+  bool noll_pred_isUnaryLoc (uid_t pid);
+  /* Return true if pid has only source in arguments */
 
   bool noll_pred_is_one_dir (uid_t pid);
   /* Retrun true if pid is a one direction predicate */

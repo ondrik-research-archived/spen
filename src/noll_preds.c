@@ -280,7 +280,7 @@ noll_pred_order_lt (uid_t lhs, uid_t rhs)
 }
 
 /**
- * Retrun true if pid uses nil internally.
+ * Return true if pid uses nil internally and for the base case.
  * Information computed by the typing.
  */
 bool
@@ -293,8 +293,18 @@ noll_pred_use_nil (uid_t pid)
   return (NULL != pred->typ) ? pred->typ->useNil : false;
 }
 
+bool
+noll_pred_isUnaryLoc (uid_t pid)
+{
+  assert (pid < noll_vector_size (preds_array));
+
+  noll_pred_t *pred = noll_vector_at (preds_array, pid);
+
+  return (NULL != pred->typ) ? pred->typ->isUnaryLoc : false;
+}
+
 /**
- * Retrun true if pid is a one direction predicate.
+ * Return true if pid is a one direction predicate.
  * Information computed by the typing.
  */
 bool
@@ -367,7 +377,8 @@ noll_pred_is_main_backbone_field (uid_t fid)
   return noll_pred_is_field (f->pid, fid, NOLL_PFLD_BCKBONE);
 }
 
-int noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form);
+int noll_pred_fill_type (noll_pred_t * p, uint_t level,
+                         noll_pred_rule_t * rule);
 
 /**
  * Type the predicate definitions.
@@ -406,6 +417,12 @@ noll_pred_type ()
       noll_uint_array_resize (p->typ->pfields,
                               noll_vector_size (fields_array));
 
+      /* only source = unary predicate */
+      p->typ->isUnaryLoc = (p->def->fargs == 1) ? true : false;
+      if ((p->def->fargs > 1)
+          && (noll_var_record (p->def->vars, 2) == UNDEFINED_ID))
+        p->typ->isUnaryLoc = true;
+
       /* used 'nil' */
       p->typ->useNil = false;
 
@@ -418,12 +435,30 @@ noll_pred_type ()
       /* resize the array to cover all the predicates called */
       noll_uint_array_resize (p->typ->ppreds, noll_vector_size (preds_array));
 
-      /* go through the formulas to fill the infos */
-      res = noll_pred_fill_type (p, 0, p->def->sigma_0);
-      if (res == 0)
-        break;
+      /* go through the rules to fill the infos */
+      uint_t size =
+        (p->def->base_rules ==
+         NULL) ? 0 : noll_vector_size (p->def->base_rules);
+      for (uint_t ri = 0; ri < size; ri++)
+        {
+          res =
+            noll_pred_fill_type (p, 0,
+                                 noll_vector_at (p->def->base_rules, ri));
+          if (res == 0)
+            return 0;
+        }
       /* TODO: no need to for level 1 formulas? */
-      res = noll_pred_fill_type (p, 1, p->def->sigma_1);
+      size =
+        (p->def->rec_rules ==
+         NULL) ? 0 : noll_vector_size (p->def->rec_rules);
+      for (uint_t ri = 0; ri < size; ri++)
+        {
+          res =
+            noll_pred_fill_type (p, 1,
+                                 noll_vector_at (p->def->rec_rules, ri));
+          if (res == 0)
+            return 0;
+        }
     }
   return res;
 }
@@ -432,20 +467,23 @@ noll_pred_type ()
  * Fill the arguments flds and typs, if not null, with the
  * fields resp. record ids, obtained from formula form.
  * @param p      predicate 
- * @param level  level (0 or 1) of the analyzed formulas 
+ * @param level  level (0 -- base or 1 -- rec) of the analyzed formulas 
  * @param form   analyzed formula
  */
 int
-noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
+noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
+                          noll_var_array * lvars, uint_t fargs,
+                          noll_space_t * form)
 {
-  if (!form || form->kind == NOLL_SPACE_EMP)
+  if ((form == NULL) || (form->kind == NOLL_SPACE_EMP))
     return 1;
+
   switch (form->kind)
     {
     case NOLL_SPACE_PTO:
       {
-        if (level == 1)
-          return 0;             /* no pto in inner formulas! */
+        //if (level == 1)  // TODO: check done at parsing?!
+        //  return 0;             /* no pto in inner formulas! */
         if (form->m.pto.sid != 1)
           /* only pto from first argument */
           return 0;             /* TODO: already checked? */
@@ -455,7 +493,7 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
             uid_t dst = noll_vector_at (form->m.pto.dest, i);
 
             /* fill type infos with type of dst */
-            uid_t dst_r = noll_var_record (p->def->vars, dst);
+            uid_t dst_r = noll_var_record (lvars, dst);
             if (dst_r != UNDEFINED_ID)
               noll_vector_at (p->typ->ptypes, dst_r) = 1;
 
@@ -472,7 +510,7 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
                 /* to the arguments */
                 noll_vector_at (p->typ->pfields, fid) = NOLL_PFLD_BORDER;
               }
-            else if (dst == (p->def->fargs + 1))
+            else if (dst == (fargs + 1))
               {
                 /* dst == first existential var, then level 0 */
                 noll_vector_at (p->typ->pfields, fid) = NOLL_PFLD_BCKBONE;
@@ -485,8 +523,8 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
             else
               {
                 /* dst == other existentials */
-                for (uint_t ex = p->def->fargs + 2;
-                     ex < noll_vector_size (p->def->vars); ex++)
+                for (uint_t ex = fargs + 2;
+                     ex < noll_vector_size (lvars); ex++)
                   if (dst == ex)
                     {
                       noll_vector_at (p->typ->pfields, fid) = NOLL_PFLD_INNER;
@@ -502,9 +540,11 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
       {
         uint_t cpid = form->m.ls.pid;
         const noll_pred_t *cp = noll_pred_getpred (cpid);
+        /* if a recursive call, nothing to do */
+        if (cpid == p->pid)
+          return 1;
         /* fill pred info */
-        if (cpid != p->pid)
-          noll_vector_at (p->typ->ppreds, cpid) = 1;
+        noll_vector_at (p->typ->ppreds, cpid) = 1;
         if (cp && cp->typ)
           {
             // copy called pred information in the arrays
@@ -556,12 +596,39 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_space_t * form)
         // separation formula
         for (uid_t i = 0; i < noll_vector_size (form->m.sep); i++)
           if (0 ==
-              noll_pred_fill_type (p, level, noll_vector_at (form->m.sep, i)))
+              noll_pred_fill_type_form (p, level, lvars, fargs,
+                                        noll_vector_at (form->m.sep, i)))
             return 0;
         break;
       }
     }
   return 1;
+}
+
+/**
+ * Fill the arguments flds and typs, if not null, with the
+ * fields resp. record ids, obtained from the rule.
+ * @param p      predicate 
+ * @param level  level (0 -- base or 1 -- rec) of the analyzed rule 
+ * @param rule   analyzed rule
+ */
+int
+noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_pred_rule_t * rule)
+{
+  if (rule == NULL)
+    return 1;
+
+  int res =
+    noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->pto);
+  if (res == 0)
+    return 0;
+  res =
+    noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->nst);
+  if (res == 0)
+    return 0;
+  res =
+    noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->rec);
+  return res;
 }
 
 /**
@@ -860,8 +927,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->m.
-                                                     sep, i));
+                                     noll_vector_at (pred->def->sigma_1->
+                                                     m.sep, i));
               res_size++;
             }
         }

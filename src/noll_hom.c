@@ -722,13 +722,13 @@ return_select_ls:
 }
 
 /**
- * Check well-formedness condition 0 
+ * @brief Check well-formedness condition 0 
  * for the graph selected @param sg2 wrt @param g2, i.e.,
  * if sg2 contains a pto, 
  * then g2 ==> args2[0] != args2[1+isdll] [+ dll]
  * 
- * @param g2    the selection
- * @param sg2   the selection
+ * @param g2    the graph origin of the selection
+ * @param sg2   the selected graph
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
  * @param isdll 1 if is a dll pred
  * @return      1 if well-formed, 0 otherwise
@@ -755,25 +755,35 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
     }
   if (found == false)
     return res;                 /* 1 */
+#ifndef NDEBUG
+  NOLL_DEBUG ("\n++++ select_wf_0 with isdll=%d, args2 = ", isdll);
+  noll_uid_map_fprint (stdout, args2);
+  NOLL_DEBUG ("\n");
+#endif
 
   /* if found, then check that the non-empty case of the predicate
    * is satisfied, i.e.,
-   * - for one direction lists : g2 ==> args2[0] != args2[>=1]
+   * - for one direction lists : g2 ==> args2[0] != args2[>=1] (only location)
    * - for dll lists : g2 ==> (args2[0] != args2[>=1+isdll] && args[1] != args[2])
    */
   /* go through the arguments in args2
    * to check the boolean constraint */
-  uid_t fst = noll_vector_at (args2, 0);
+  uid_t nfst = noll_vector_at (args2, 0);       // is always location
+  uint_t vfst = noll_graph_get_var (g2, nfst);
   for (uint_t i = 1 + isdll; i < noll_vector_size (args2) && (res == 1); i++)
     {
       uid_t nv = noll_vector_at (args2, i);
+      uint_t vv = noll_graph_get_var (g2, nv);
+      uint_t recv = noll_var_record (g2->lvars, vv);
+      if (recv == UNDEFINED_ID)
+        continue;               // ignore non-location vars
       // check the query Bool(g2) => ![fst=nv], i.e.,
-      uid_t ni = (nv > fst) ? nv : fst;
-      uid_t nj = (nv > fst) ? fst : nv;
+      uid_t ni = (nv > nfst) ? nv : nfst;
+      uid_t nj = (nv > nfst) ? nfst : nv;
       res = (g2->diff[ni][nj]) ? 1 : 0;
 #ifndef NDEBUG
       NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", nv,
-                  fst, res);
+                  nfst, res);
 #endif
       if (res != 1)
         {
@@ -782,7 +792,7 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
               fprintf (stdout, "\nDiagnosis of failure: ");
               fprintf (stdout, "\n\tMissing constraint: %s != %s\n",
                        noll_var_name (g2->lvars,
-                                      noll_graph_get_var (g2, fst),
+                                      noll_graph_get_var (g2, nfst),
                                       NOLL_TYP_RECORD),
                        noll_var_name (g2->lvars, noll_graph_get_var (g2, nv),
                                       NOLL_TYP_RECORD));
@@ -793,13 +803,14 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
     }
   if (isdll >= 1)
     {
+      /// check constraint bk != pr for non empty list segment
       uid_t bk = noll_vector_at (args2, 1);
       uid_t pr = noll_vector_at (args2, 2);
       uid_t ni = (bk > pr) ? bk : pr;
       uid_t nj = (bk > pr) ? pr : bk;
       res = (g2->diff[ni][nj]) ? 1 : 0;
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", bk,
+      NOLL_DEBUG ("\n++++ select_wf_0 for dll [n%d != n%d] returns %d\n", bk,
                   pr, res);
 #endif
       if (res != 1)
@@ -961,6 +972,10 @@ noll_shom_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
   for (uint_t i = 1 + isdll; i < noll_vector_size (args2) && (res == 1); i++)
     {
       uid_t nv = noll_vector_at (args2, i);
+      uint_t vv = noll_graph_get_var (g2, nv);
+      uint_t recv = noll_var_record (g2->lvars, vv);
+      if (recv == UNDEFINED_ID)
+        continue;               // consider only location vars
       for (uint_t j = 0; j < noll_vector_size (src_pto) && (res == 1); j++)
         {
           uid_t nvp = noll_vector_at (src_pto, j);
@@ -1164,7 +1179,8 @@ noll_shom_match_form_pure (noll_graph_t * g2,
  */
 noll_uid_array *
 noll_shom_match_form_pto (noll_graph_t * g2, noll_space_t * fpto,
-                          noll_uid_array * sigma, uid_t eid1)
+                          noll_uid_array * sigma, uid_t eid1,
+                          noll_dform_array * df)
 {
   assert (g2 != NULL);
   assert (fpto != NULL);
@@ -1239,6 +1255,7 @@ noll_shom_match_form_pto (noll_graph_t * g2, noll_space_t * fpto,
   // matching succeeded, update sigma and return res
   for (uint i = 0; i < noll_vector_size (sigmap); i++)
     if (noll_vector_at (sigma, i) == UNDEFINED_ID)
+      // TODO: use df
       noll_vector_at (sigma, i) = noll_vector_at (sigmap, i);
 
   noll_uid_array_delete (sigmap);
@@ -1252,7 +1269,8 @@ noll_shom_match_form_pto (noll_graph_t * g2, noll_space_t * fpto,
 }
 
 noll_uid_array *noll_shom_match_rd (noll_graph_t * g2, uid_t pid,
-                                    noll_uid_array * args2, uid_t eid1);
+                                    noll_uid_array * args2, uid_t eid1,
+                                    noll_dform_array * df);
 
 /**
  * Match the formula @p fpred with edges in @p g2 using the mapping
@@ -1267,7 +1285,8 @@ noll_uid_array *noll_shom_match_rd (noll_graph_t * g2, uid_t pid,
  */
 noll_uid_array *
 noll_shom_match_form_rd (noll_graph_t * g2, noll_space_t * fpred,
-                         noll_uid_array * map, uid_t eid1)
+                         noll_uid_array * map, uid_t eid1,
+                         noll_dform_array * df)
 {
   assert (g2 != NULL);
   assert (fpred != NULL);
@@ -1280,11 +1299,12 @@ noll_shom_match_form_rd (noll_graph_t * g2, noll_space_t * fpred,
   // get the arguments of the predicate
   noll_uid_array *args = fpred->m.ls.args;
   // prepare the args2
+  // add 'nil' at end
   noll_uid_array *args2 =       // TODO: check that the semantics corresponds
     noll_uid_map_apply (map, args,
                         noll_pred_use_nil (pid));
   // call match_rd
-  noll_uid_array *res = noll_shom_match_rd (g2, pid, args2, eid1);
+  noll_uid_array *res = noll_shom_match_rd (g2, pid, args2, eid1, df);
   // if success, update sigma
   if (res != NULL)
     {
@@ -1338,20 +1358,25 @@ noll_uid_array_compose (noll_uid_array * dst, noll_uid_array * src)
 
 /**
  * @brief Try to match the base rule @p rule.
+ * 
+ * Notice that @p args2 is exactly the mapping of arguments, 
+ * the 'nil' as destination for unary predicates has been eliminated.
  */
 int
-noll_shom_match_rule_base (noll_graph_t * g2, noll_pred_rule_t * rule,
-                           noll_uid_array * args2)
+noll_shom_match_rule_base (noll_graph_t * g2,
+                           noll_pred_rule_t * rule, noll_uid_array * args2)
 {
   assert (rule != NULL);
 
-/// check that it is indeed a basic rule
+  /// check that it is indeed a basic rule
   assert (rule->nst == NULL);   // TODO: or empty?
   assert (rule->rec == NULL);
+
+  /// prepare the mapping if variables 
   noll_uid_array *lmap = noll_uid_array_new ();
   noll_uid_array_reserve (lmap, noll_vector_size (rule->vars));
   noll_uid_array_push (lmap, g2->var2node[0]);  /// push nil
-  for (uint i = 0; i < rule->fargs; i++)
+  for (uint_t i = 0; i < rule->fargs; i++)
     /// push formal args given by args2
     noll_uid_array_push (lmap, noll_vector_at (args2, i));
   int res = noll_shom_match_form_pure (g2, rule->pure, lmap);
@@ -1362,12 +1387,15 @@ noll_shom_match_rule_base (noll_graph_t * g2, noll_pred_rule_t * rule,
 /**
  * @brief Try to match the recursive rule @p rule.
  * 
+ * Notice that @p args2 contains 'nil' as destination (position 1), 
+ * and it is not in the mapping of vars.
+ * 
  * @return the mapping of edges in @p g2 matching eid1, NULL otherwise
  */
 noll_uid_array *
 noll_shom_match_rule_rec (noll_graph_t * g2, uid_t pid,
                           noll_pred_rule_t * rule, noll_uid_array * args2,
-                          uid_t eid1)
+                          uid_t eid1, noll_dform_array * df)
 {
   assert (rule != NULL);
 
@@ -1398,7 +1426,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t pid,
     noll_uid_array_push (lmap, UNDEFINED_ID);
 
   /// updates lmap
-  noll_uid_array *res = noll_shom_match_form_pto (g2, e1_pto, lmap, eid1);
+  noll_uid_array *res = noll_shom_match_form_pto (g2, e1_pto, lmap, eid1, df);
   if (NULL == res)
     {                           /// unsuccessfull matching 
 #ifndef NDEBUG
@@ -1428,7 +1456,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t pid,
         {
           if (e1_space->kind == NOLL_SPACE_LS)
             {
-              resr = noll_shom_match_form_rd (g2, e1_space, lmap, eid1);
+              resr = noll_shom_match_form_rd (g2, e1_space, lmap, eid1, df);
               if (resr == NULL)
                 {
 #ifndef NDEBUG
@@ -1468,7 +1496,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t pid,
                 {
                   noll_space_t *si = noll_vector_at (e1_space->m.sep, i);
                   assert (si->kind == NOLL_SPACE_LS);
-                  resr = noll_shom_match_form_rd (g2, si, lmap, eid1);
+                  resr = noll_shom_match_form_rd (g2, si, lmap, eid1, df);
                   if (resr == NULL)
                     {
 #ifndef NDEBUG
@@ -1505,6 +1533,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t pid,
     }
 
   /// check the pure part
+  // TODO: use df
   int pure_ok = noll_shom_match_form_pure (g2, rule->pure, lmap);
   if (pure_ok == 0)
     {
@@ -1521,9 +1550,17 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t pid,
   return res;
 }
 
+/**
+ * @brief Try to match the @p lemma of @p pid.
+ * 
+ * Notice that @p args2 is using 'nil' as 2nd parameters for unary predicates.
+ * 
+ * @return the set of edges of @p g2 matched
+ */
 noll_uid_map *
 noll_shom_match_lemma (noll_graph_t * g2, uid_t pid, noll_lemma_t * lemma,
-                       noll_uid_array * args2, uid_t eid1)
+                       noll_uid_array * args2, uid_t eid1,
+                       noll_dform_array * df)
 {
   assert (lemma != NULL);
   assert (lemma->pid == pid);
@@ -1567,7 +1604,7 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t pid, noll_lemma_t * lemma,
   /// push undefined node for local vars
   for (uint i = lemma->rule.fargs + 1;
        i < noll_vector_size (lemma->rule.vars); i++)
-    /// push undefined values for X
+    /// push undefined values for existentials, if any
     noll_uid_array_push (lmap, UNDEFINED_ID);
 
   /// prepare the result
@@ -1589,42 +1626,108 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t pid, noll_lemma_t * lemma,
     {
 #ifndef NDEBUG
       NOLL_DEBUG
-        ("\nshom_match_lemma:  bad edge for the first pred in lemma!\n");
+        ("\nshom_match_lemma: bad edge for the first pred in lemma!\n");
 #endif
       isErr = 1;
       goto shom_match_lemma;
     }
-  /// match arguments of predE with arguments of edgeE and update lmap
+  /// match arguments of predE with arguments of edgeE and 
+  /// - update lmap
+  /// - generate data constraints for data parameters
+  noll_dform_array *lmap_df = noll_dform_array_new ();
   for (uint_t i = 0; i < noll_vector_size (predE->m.ls.args); i++)
     {
       uid_t vi = noll_vector_at (predE->m.ls.args, i);
       assert (vi < noll_vector_size (lmap));
       uid_t ni = noll_vector_at (edgeE->args, i);
       uid_t lni = noll_vector_at (lmap, vi);
+      noll_type_t *typ_ni = noll_var_type (g2->lvars, vi);
       if (lni == UNDEFINED_ID)
-        noll_uid_array_set (lmap, vi, ni);
+        {
+          noll_uid_array_set (lmap, vi, ni);
+        }
       else if (ni != lni)
         {
+          uint_t vli = noll_graph_get_var (g2, lni);
+          noll_type_t *typ_lni = noll_var_type (g2->lvars, vli);
+
+          if ((typ_ni != NULL) && (typ_lni != NULL) &&
+              (typ_ni->kind == typ_lni->kind) &&
+              (typ_ni->kind != NOLL_TYP_RECORD))
+            {
+              /// psuh the data constraints in terms of variables
+              noll_dterm_t *t1 = noll_dterm_new_var (vi, typ_ni->kind);
+              noll_dterm_t *t2 = noll_dterm_new_var (vli, typ_lni->kind);
+              noll_dform_t *new_eq = noll_dform_new_eq (t1, t2);
+              noll_dform_array_push (lmap_df, new_eq);
+            }
+          else
+            {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nshom_match_lemma:  bad matching for first pred in lemma!\n");
+              NOLL_DEBUG
+                ("\nshom_match_lemma:  bad matching for first pred in lemma!\n");
 #endif
-          isErr = 1;
-          goto shom_match_lemma;
+              isErr = 1;
+              goto shom_match_lemma;
+            }
         }
       /// else, continue
     }
-#ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_match_lemma: vars mapping found:\n");
-  noll_uid_map_fprint (stdout, lmap);
-#endif
   /// edge matched, set res
   noll_uid_array_set (res, eidE, eid1);
   /// now, all the local variables shall be matched to nodes
 
+#ifndef NDEBUG
+  NOLL_DEBUG ("\nshom_match_lemma: vars mapping found:\n");
+  noll_uid_map_fprint (stdout, lmap);
+  NOLL_DEBUG ("\nshom_match_lemma: edges mapping found:\n");
+  noll_uid_map_fprint (stdout, res);
+  NOLL_DEBUG ("\nshom_match_lemma: data constraint generated:\n");
+  noll_dform_array_fprint (stdout, g2->lvars, lmap_df);
+#endif
+
+  /// check the second predicate, if any
+  predE = noll_lemma_getspace (lemma, 1);
+  if (predE != NULL)
+    {
+      if (predE->kind != NOLL_SPACE_LS)
+        {
+#ifndef NDEBUG
+          NOLL_DEBUG ("\nshom_match_lemma: bad second part in lemma!\n");
+#endif
+          isErr = 1;
+          goto shom_match_lemma;
+        }
+      noll_uid_array *resr =
+        noll_shom_match_form_rd (g2, predE, lmap, eid1, df);
+      /// check that the resr is not using eidE
+      if (resr == NULL)
+        {
+#ifndef NDEBUG
+          NOLL_DEBUG
+            ("\nshom_match_lemma: no matching for second part in lemma!\n");
+#endif
+          isErr = 1;
+          goto shom_match_lemma;
+        }
+      if (noll_vector_at (resr, eidE) != UNDEFINED_ID)
+        {
+#ifndef NDEBUG
+          NOLL_DEBUG
+            ("\nshom_match_lemma: matching of second part uses un already used edge!\n");
+#endif
+          isErr = 1;
+          goto shom_match_lemma;
+        }
+      /// compose results
+      noll_uid_array_compose (res, resr);
+      noll_uid_array_delete (resr);
+    }
+
   /// check pure part, if any
   if (lemma->rule.pure != NULL)
     {
+      // TODO: use df
       int r = noll_shom_match_form_pure (g2, lemma->rule.pure, lmap);
       if (r == 0)
         {
@@ -1636,42 +1739,6 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t pid, noll_lemma_t * lemma,
           goto shom_match_lemma;
         }
     }
-
-  /// check remainder part, if any
-  predE = noll_lemma_getspace (lemma, 1);
-  if (predE == NULL)
-    goto shom_match_lemma;
-  if (predE->kind != NOLL_SPACE_LS)
-    {
-#ifndef NDEBUG
-      NOLL_DEBUG ("\nshom_match_lemma: bad second part in lemma!\n");
-#endif
-      isErr = 1;
-      goto shom_match_lemma;
-    }
-  noll_uid_array *resr = noll_shom_match_form_rd (g2, predE, lmap, eid1);
-  /// check that the resr is not using eidE
-  if (resr == NULL)
-    {
-#ifndef NDEBUG
-      NOLL_DEBUG
-        ("\nshom_match_lemma: no matching for second part in lemma!\n");
-#endif
-      isErr = 1;
-      goto shom_match_lemma;
-    }
-  if (noll_vector_at (resr, eidE) != UNDEFINED_ID)
-    {
-#ifndef NDEBUG
-      NOLL_DEBUG
-        ("\nshom_match_lemma: matching of second part uses un already used edge!\n");
-#endif
-      isErr = 1;
-      goto shom_match_lemma;
-    }
-  /// compose results
-  noll_uid_array_compose (res, resr);
-  noll_uid_array_delete (resr);
 
 shom_match_lemma:
   if (isErr == 1)
@@ -1689,7 +1756,7 @@ shom_match_lemma:
  * @brief Check that the graph @p g2 **includes** an unfolding of the 
  * predicate @p pid.
  * 
- * The predicate @p pid has as arguments the list of nodes by @p args2.
+ * The predicate @p pid has as arguments @p args2.
  * If the matching holds, the procedure computes a set of edges of
  * @p g2 used, in the form of an array of size @p g2->edges,
  * mapping each edge to UNDEFINED_ID or the @p eid1, the identifier 
@@ -1699,12 +1766,13 @@ shom_match_lemma:
  * @param pid    the edge to be matched labeled by predicate @p e1->label
  * @param args2  [inout] the maping of variables used in @p e1 to nodes of @p g2 
  * @param eid1   the identifier of the unfolded edge 
+ * @param df     the data formula collected from the matching
  * @return       the set of edges used by the predicate unfolding,
  *               NULL if the matching does not hold
  */
 noll_uid_array *
 noll_shom_match_rd (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
-                    uid_t eid1)
+                    uid_t eid1, noll_dform_array * df)
 {
   assert (g2 != NULL);
   assert (pid < noll_vector_size (preds_array));
@@ -1715,7 +1783,7 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
 
   /** 
    * Step 1: search the edge labeled by @p pid in g2
-   *         at g2->mat[args2[0]] (or 1 if nil)
+   *         at g2->mat[args2[0]] 
    */
 #ifndef NDEBUG
   NOLL_DEBUG ("\nSyntactic matching: exact edge starts\n");
@@ -1724,9 +1792,10 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
   if (eid2 != UNDEFINED_ID)
     {
       noll_uid_map_set (res, eid2, eid1);
+      NOLL_DEBUG ("\nspen: match a %s-edge...\n", noll_pred_name (pid));
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nSyntactic matching 1 predicate edge!\nmap found: ");
-      noll_uid_map_fprint (stderr, res);
+      NOLL_DEBUG ("\n\t\tmap found: ");
+      noll_uid_map_fprint (stdout, res);
 #endif
       return res;
     }
@@ -1751,10 +1820,11 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
     }
   if (found)
     {
+      NOLL_DEBUG ("\nspen: match the base case of %s...",
+                  noll_pred_name (pid));
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nSyntactic matching base case of pred-%d!\nmap found: ",
-                  pid);
-      noll_uid_map_fprint (stderr, res);
+      NOLL_DEBUG ("\n\t\tmap found: ");
+      noll_uid_map_fprint (stdout, res);
 #endif
       return res;
     }
@@ -1775,20 +1845,21 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
        (res == NULL); ri++)
     {
       noll_pred_rule_t *rule_i = noll_vector_at (pred->def->rec_rules, ri);
-      res = noll_shom_match_rule_rec (g2, pid, rule_i, args2, eid1);
+      res = noll_shom_match_rule_rec (g2, pid, rule_i, args2, eid1, df);
     }
   if (res != NULL)
     {
+      NOLL_DEBUG ("\nspen: match the recursive rule of %s...",
+                  noll_pred_name (pid));
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nSyntactic matching rec case of pred-%d!\nmap found: ",
-                  pid);
-      noll_uid_map_fprint (stderr, res);
+      NOLL_DEBUG ("\n\t\tmap found: ");
+      noll_uid_map_fprint (stdout, res);
 #endif
       return res;
     }
 
   /**
-   * Step 4: test the lemma of P.
+   * Step 4: test the lemmas of P.
    * The matching res is computed.
    */
 #ifndef NDEBUG
@@ -1805,12 +1876,14 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t pid, noll_uid_array * args2,
   for (uint_t li = 0; li < noll_vector_size (lemmas); li++)
     {
       noll_lemma_t *lemma_i = noll_vector_at (lemmas, li);
-      res = noll_shom_match_lemma (g2, pid, lemma_i, args2, eid1);
+      res = noll_shom_match_lemma (g2, pid, lemma_i, args2, eid1, df);
       if (res != NULL)
         {
+          NOLL_DEBUG ("\nspen: match the lemma %d of %s...", li,
+                      noll_pred_name (pid));
 #ifndef NDEBUG
-          NOLL_DEBUG ("\nSyntactic matching lemma %d!\nmap found: ", li);
-          noll_uid_map_fprint (stderr, res);
+          NOLL_DEBUG ("\n\t\tmap found: ");
+          noll_uid_map_fprint (stdout, res);
 #endif
           break;
         }
@@ -1837,12 +1910,18 @@ noll_shom_check_syn (noll_graph_t * g2, noll_edge_t * e1,
   /// initialise lemma, if not already done
   noll_lemma_init_pred (e1->label);
 
+
   /// Call the special function of the predicate and 
-  /// collect the mapped edges of g2 in order to 
-  /// check that all edges of g2 has been used.
-  noll_uid_array *usedg2 = noll_shom_match_rd (g2, e1->label, args2, e1->id);
+  ///  - collect the mapped edges of g2 in order to 
+  ///  - collect the constraints to be satisfied by the data part
+  ///  - check that all edges of g2 has been used
+  noll_dform_array *df = noll_dform_array_new ();
+  noll_uid_array *usedg2 =
+    noll_shom_match_rd (g2, e1->label, args2, e1->id, df);
   int res = 1;
-  if (usedg2 != NULL)
+  if (usedg2 == NULL)
+    res = -1;                   /// i.e., UNKNOWN
+  else
     {
       // check that all edges of g2 are used
       for (uint_t ei2 = 0;
@@ -1856,12 +1935,15 @@ noll_shom_check_syn (noll_graph_t * g2, noll_edge_t * e1,
               res = 0;
             }
         }
-      noll_uid_array_delete (usedg2);
+      // if (res == 0) goto shom_check_rd_return;
+      // TODO: should we check the data constraints? 
+      //       or it is done inside noll_shom_match_rd
     }
-  else
-    {
-      res = -1;                 // UNKNOWN
-    }
+shom_check_rd_return:
+  if (usedg2 != NULL)
+    noll_uid_array_delete (usedg2);
+  if (df != NULL)
+    noll_dform_array_delete (df);
   return res;
 }
 
@@ -1930,7 +2012,7 @@ noll_shom_build_rd (noll_graph_t * g1, noll_graph_t * g2,
       if (e1->kind == NOLL_EDGE_PTO)
         break;                  /* because all PTO edges are at the end */
       /* translate the arguments of e1 using the node morphism */
-      /* if predicate uses 'nil' then add nil as last (border) argument */
+      /* if predicate uses 'nil' then add 'nil' as last (border) argument */
       noll_uid_array *args2 = noll_uid_map_apply (n_hom, e1->args,
                                                   noll_pred_use_nil
                                                   (e1->label));
@@ -1998,8 +2080,23 @@ noll_shom_build_rd (noll_graph_t * g1, noll_graph_t * g2,
           // Warning: usedg2 is deselected also
           goto return_shom_ls;
         }
+
       /* check entailment */
-      *res = noll_shom_check (sg2, e1, args2);
+      /// prepare a new list of parameters if e1->label is unary
+      noll_uid_array *lmap = NULL;
+      if (noll_pred_isUnaryLoc (e1->label))
+        {
+          lmap = noll_uid_array_new ();
+          noll_uid_array_reserve (lmap, noll_vector_size (args2));
+          noll_uid_array_push (lmap, noll_vector_at (args2, 0));
+          for (uint_t i = 2; i < noll_vector_size (args2); i++)
+            noll_uid_array_push (lmap, noll_vector_at (args2, i));
+          noll_uid_array_delete (args2);
+        }
+      else
+        lmap = args2;
+      *res = noll_shom_check (sg2, e1, lmap);
+      noll_uid_array_delete (lmap);
       if (1 != *res)
         {                       /* free the allocated memory */
           noll_graph_array_delete (ls_hom);

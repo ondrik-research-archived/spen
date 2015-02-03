@@ -199,8 +199,9 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
         /// source node
         uint_t nsrc = g->var2node[noll_vector_at (phi->m.ls.args, 0)];
         assert (nsrc < g->nodes_size);
-        /// destination node
-        uint_t ndst = g->var2node[noll_vector_at (phi->m.ls.args, 1)];
+        /// destination node, if any otherwise 'nil'
+        uint_t ndst = (noll_pred_isUnaryLoc (phi->m.ls.pid) == true) ?
+          g->var2node[0] : g->var2node[noll_vector_at (phi->m.ls.args, 1)];
         assert (ndst < g->nodes_size);
         bool isDLL =
           (strncmp (noll_pred_name (phi->m.ls.pid), "dll", 3) ==
@@ -235,7 +236,8 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
         /// build the edge
         noll_edge_t *e =
           noll_edge_alloc (NOLL_EDGE_PRED, nsrc, ndst, phi->m.ls.pid);
-        for (uint_t i = 2; i < noll_vector_size (phi->m.ls.args); i++)
+        uint_t i = (noll_pred_isUnaryLoc (phi->m.ls.pid) == true) ? 1 : 2;
+        for (; i < noll_vector_size (phi->m.ls.args); i++)
           noll_uid_array_push (e->args,
                                g->var2node[noll_vector_at
                                            (phi->m.ls.args, i)]);

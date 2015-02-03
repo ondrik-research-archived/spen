@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /*
  * Normalization of formulas
@@ -76,7 +76,10 @@ noll_normalize_incr (noll_sat_t * fsat)
                   // check first their types
                   uint_t type_i = noll_var_record (fsat->form->lvars, i);
                   uint_t type_j = noll_var_record (fsat->form->lvars, j);
-                  if (type_i != type_j)
+                  assert (type_i != UNDEFINED_ID);
+                  assert (type_j != UNDEFINED_ID);
+                  if ((type_i != NOLL_TYP_VOID) &&
+                      (type_j != NOLL_TYP_VOID) && (type_i != type_j))
                     {
                       //variables of different types
                       noll_pure_matrix_at (fsat->form->pure, i, j) =
@@ -84,7 +87,7 @@ noll_normalize_incr (noll_sat_t * fsat)
                     }
                   else
                     {
-                      //variables of the same type
+                      //variables of the same type or void
 #ifndef NDEBUG
                       fprintf (stdout, "**************TESTING %s and %s\n",
                                noll_vector_at (fsat->form->lvars, i)->vname,
@@ -271,7 +274,10 @@ noll_normalize_iter (noll_sat_t * fsat)
                   // check first their types
                   uint_t type_i = noll_var_record (fsat->form->lvars, i);
                   uint_t type_j = noll_var_record (fsat->form->lvars, j);
-                  if (type_i != type_j)
+                  assert (type_i != UNDEFINED_ID);
+                  assert (type_j != UNDEFINED_ID);
+                  if ((type_i != NOLL_TYP_VOID) &&
+                      (type_j != NOLL_TYP_VOID) && (type_i != type_j))
                     {
                       //variables of different types
                       noll_pure_matrix_at (fsat->form->pure, i, j) =

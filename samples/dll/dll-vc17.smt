@@ -45,7 +45,7 @@
 (declare-fun alpha1 () SetLoc)
 
 (assert 
-	(and (distinct x_emp w_emp) (distinct x_emp nil) 
+	(and (distinct x_emp w_emp) (distinct y_emp nil)
 	(tobool 
 	(ssep 
 		(pto x_emp (sref (ref next w_emp) (ref prev nil) ) ) 

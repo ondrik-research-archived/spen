@@ -5,7 +5,7 @@
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bag-union, bag-diff, bag-sub
 
-(set-logic QF_S)
+(set-logic QF_SLRDI)
 
 ;; declare sorts
 (declare-sort Bst_t 0)
@@ -37,9 +37,9 @@
 		(bst ?Y ?M2)
 		)
 		)
-		(= ?M (bag-union (singleton ?d) (bag-union ?M1 ?M2) ) )
-		(bag-lt ?M1 (singleton ?d))
-		(bag-lt (singleton ?d) ?M2)
+		(= ?M (bagunion (bag ?d) ?M1 ?M2) )
+		(< ?M1 (bag ?d))
+		(< (bag ?d) ?M2)
 	)
 	)
 	)
@@ -65,9 +65,9 @@
 		(bsthole ?Y ?F ?M4 ?M2)
 		)
 		)
-		(= ?M1  (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
-		(bag-lt ?M3 (singleton ?d) )
-		(bag-lt (singleton ?d) ?M4 )
+		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
+		(< ?M3 (bag ?d) )
+		(< (bag ?d) ?M4 )
 	) 
 	)
 
@@ -79,9 +79,9 @@
 		(bst ?Y ?M4)
 		)
 		)
-		(= ?M1 (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
-		(bag-lt ?M3 (singleton ?d) )
-		(bag-lt (singleton ?d) ?M4 )
+		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
+		(< ?M3 (bag ?d) )
+		(< (bag ?d) ?M4 )
 	) 
 	)
 	)
@@ -93,6 +93,7 @@
 (declare-fun cur2 () Bst_t)
 (declare-fun parent1 () Bst_t)
 (declare-fun parent2 () Bst_t)
+(declare-fun X () Bst_t)
 (declare-fun Y () Bst_t)
 (declare-fun Z () Bst_t)
 (declare-fun M0 () BagInt)
@@ -102,7 +103,7 @@
 (declare-fun M4 () BagInt)
 (declare-fun M5 () BagInt)
 (declare-fun M6 () BagInt)
-(declare-fun M22 () BagInt)
+(declare-fun M7 () BagInt)
 (declare-fun key () Int)
 (declare-fun d1 () Int)
 (declare-fun d2 () Int)
@@ -117,59 +118,67 @@
 (declare-fun alpha6 () SetLoc)
 (declare-fun alpha7 () SetLoc)
 
-;; VC2: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,X), (right,cur1)) * bst(X,M3) * cur1 |-> ((left,Z), (right,cur2)) * 
-;; bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & 
-;; M4 = {cur1.data} cup M5 cup M6 & M5 < cur1.data < M6 & parent1.data < key & cur1.data < key & parent2 = cur1 & 
-;; (key in M0 <=> key in M4) & M22 = M4 \ {key} |-
-;; bsthole(root,parent2, M1, M22) * parent2 |-> ((left,Z), (right,cur2)) * bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & 
-;; M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M6 & parent2.data < key
+;; VC08: bsthole(root,parent1, M1, M2) * parent1|->((left,X), (right, cur1), (data, d1)) * bst(X,M3) * cur1 |-> ((left,Y), (right,Z), (data, d2)) *
+;; bst(Y, M6) * bst(Z, M7) & M4 = {d2} cup M6 cup M7 & M6 < d2 < M7 & d2 < key & M3 < d1 < M4 & ite(key in M0, M1 = M0, M1 = M0 cup {key}) & 
+;; ite(key in M4, M2 = {d1} cup M3 cup M4, M2 = {d1} cup M3 cup M4 cup {key}) & key in M0 <=> key in M4 & d1 < key & ! parent1 = nil & 
+;; !cur1 = nil & parent2 = cur1 & cur2 = Z |-
+;; bsthole(root,parent2, M1, M5) * parent2|->((left,Y), (right, cur2), (data, d2)) * bst(Y, M6) * bst(cur2, M7) & M6 < d2 < M7 & 
+;; ite(key in M0, M1 = M0, M1 = M0 cup {key}) & M4 = {d2} cup M6 cup M7 & ite(key in M7, M5 = M4, M5 = M4 cup {key}) & 
+;; key in M0 <=> key in M6 & d2 < key & ! parent2 = nil
 
 (assert 
 	(and
 	(tobool 
 	(ssep 
 		(index alpha1 (bsthole root parent1 M1 M2) )
-		(pto parent1 (sref (ref left X) (ref right cur1) (data d1) ) )
-		(index alpha2 (bst X M3)) 
-		(pto cur1 (sref (ref left Z) (ref right cur2) (data d2) ) ) 
-		(index alpha3 (bst Z M5) )
-		(index alpha4 (bst cur M6) )
+		(pto parent1 (sref (ref left X) (ref right cur1) (ref data d1) ) ) 
+		(index alpha2 (bst X M3) )
+		(pto cur1 (sref (ref left Y) (ref right Z) (ref data d2) ) ) 
+		(index alpha3 (bst Y M6) )
+		(index alpha4 (bst Z M7) )
 	))
-	(= M1 (bag-diff M0 (singleton key)) )
-	(= M2 (bag-diff (bag-union (singleton d1) (bag-union M3 M4)) (singleton key)) )
-	(bag-lt M3 (singleton d1) )
-	(bag-lt (singleton d1) M4)
-	(= M4 (bag-union (singleton d2) (bag-union M5 M6)) )
-	(bag-lt M5 (singleton d2) )
-	(bag-lt (singleton d2) M6)
-	(< d1 key)
+	(= M4 (bagunion (bag d2) M6 M7) )
+	(< M6 (bag d2))
+	(< (bag d2) M7)
 	(< d2 key)
+	(< M3 (bag d1))
+	(< (bag d1) M4)
+	(= M1 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ) ) 
+	(= M2 (ite (subset (bag key) M4) (bagunion (bag d1) M3 M4) 
+		(bagunion (bag d1) M3 M4 (bag key)) ) )
+	(=> (subset (bag key) M0) (subset (bag key) M4) )
+	(=> (subset (bag key) M4) (subset (bag key) M0) )
+	(< d1 key)
+	(distinct parent1 nil)
+	(distinct cur1 nil)
 	(= parent2 cur1)
-	(or (not (bag-sub (singleton key) M0)) (bag-sub (singleton key) M4))
-	(or (not (bag-sub (singleton key) M4)) (bag-sub (singleton key) M0))
-	(= M22 (bag-diff M4 (singleton key)))
+	(= cur2 Z)
 	)
 )
 
-;; bsthole(root,parent2, M1, M22) * parent2 |-> ((left,Z), (right,cur2)) * bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & 
-;; M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M6 & parent2.data < key
+
+;; bsthole(root,parent2, M1, M5) * parent2|->((left,Y), (right, cur2), (data, d2)) * bst(Y, M6) * bst(cur2, M7) & M6 < d2 < M7 & 
+;; ite(key in M0, M1 = M0, M1 = M0 cup {key}) & M4 = {d2} cup M6 cup M7 & ite(key in M7, M5 = M4, M5 = M4 cup {key}) & 
+;; key in M0 <=> key in M6 & d2 < key & ! parent2 = nil
 
 (assert (not 
-	(and
+	(and 
 	(tobool 
 	(ssep 
-		(index alpha5 (bsthole root parent2 M1 M22) )
-		(pto parent2 (sref (ref left Z) (ref right cur2) (data d2) ) ) 
-		(index alpha6 (bst Z M5) )
-		(index alpha7 (bst cur2 M6) )
+		(index alpha5 (bsthole root parent2 M1 M5) )
+		(pto parent2 (sref (ref left Y) (ref right cur2) (ref data d2) ) ) 
+		(index alpha6 (bst Y M6) )
+		(index alpha7 (bst cur2 M7) )
 	))
-	(= M1 (bag-diff M0 (singleton key)) )
-	(= M22 (bag-diff (bag-union (singleton d2) (bag-union M5 M6)) (singleton key)) )
-	(bag-lt M5 (singleton d2) )
-	(bag-lt (singleton d) M6)
-	(or (not (bag-sub (singleton key) M0)) (bag-sub (singleton key) M6))
-	(or (not (bag-sub (singleton key) M6)) (bag-sub (singleton key) M0))
+	(< M6 (bag d2))
+	(< (bag d2) M7)
+	(= M1 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ) ) 
+	(= M4 (bagunion (bag d2) M6 M7))
+	(= M5 (ite (subset (bag key) M7) M4 (bagunion M4 (bag key)) ) ) 
+	(=> (subset (bag key) M0) (subset (bag key) M6) )
+	(=> (subset (bag key) M6) (subset (bag key) M0) )
 	(< d2 key)
+	(distinct parent2 nil)
 	)
 ))
 

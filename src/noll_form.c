@@ -129,6 +129,16 @@ noll_dterm_new (void)
   return ret;
 }
 
+noll_dterm_t *
+noll_dterm_new_var (uint_t vid, noll_typ_t ty)
+{
+  noll_dterm_t *ret = (noll_dterm_t *) malloc (sizeof (struct noll_dterm_s));
+  ret->kind = NOLL_DATA_VAR;
+  ret->typ = ty;
+  ret->p.sid = vid;
+  return ret;
+}
+
 void
 noll_dterm_free (noll_dterm_t * d)
 {
@@ -146,6 +156,21 @@ noll_dform_new (void)
   ret->kind = NOLL_DATA_EMPTYBAG;
   ret->typ = NOLL_TYP_BAGINT;
   ret->p.targs = NULL;
+  return ret;
+}
+
+noll_dform_t *
+noll_dform_new_eq (noll_dterm_t * t1, noll_dterm_t * t2)
+{
+  assert (t1 != NULL);
+  assert (t2 != NULL);
+  assert (t1->typ == t2->typ);
+  noll_dform_t *ret = (noll_dform_t *) malloc (sizeof (struct noll_dform_s));
+  ret->kind = NOLL_DATA_EQ;
+  ret->typ = t1->typ;
+  ret->p.targs = noll_dterm_array_new ();
+  noll_dterm_array_push (ret->p.targs, t1);
+  noll_dterm_array_push (ret->p.targs, t2);
   return ret;
 }
 
@@ -751,6 +776,15 @@ noll_dterm_fprint (FILE * f, noll_var_array * lvars, noll_dterm_t * dt)
       noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
       fprintf (f, ")");
       break;
+    case NOLL_DATA_ITE:
+      fprintf (f, "(ite ");
+      noll_dform_fprint (f, lvars, dt->p.cond);
+      fprintf (f, " ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
+      fprintf (f, " ");
+      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
+      fprintf (f, ")");
+      break;
     default:
       fprintf (f, "(error)");
       break;
@@ -780,9 +814,6 @@ noll_dform_fprint (FILE * f, noll_var_array * lvars, noll_dform_t * df)
       break;
     case NOLL_DATA_NEQ:
       fprintf (f, "(<> ");
-      break;
-    case NOLL_DATA_ITE:
-      fprintf (f, "(ite ");
       break;
     case NOLL_DATA_LT:
       fprintf (f, "(< ");

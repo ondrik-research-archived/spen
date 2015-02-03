@@ -1,20 +1,20 @@
-/**************************************************************************/
-/*                                                                        */
-/*  SPEN decision procedure                                               */
-/*                                                                        */
-/*  you can redistribute it and/or modify it under the terms of the GNU   */
-/*  Lesser General Public License as published by the Free Software       */
-/*  Foundation, version 3.                                                */
-/*                                                                        */
-/*  It is distributed in the hope that it will be useful,                 */
-/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
-/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
-/*  GNU Lesser General Public License for more details.                   */
-/*                                                                        */
-/*  See the GNU Lesser General Public License version 3.                  */
-/*  for more details (enclosed in the file LICENSE).                      */
-/*                                                                        */
-/**************************************************************************/
+/**************************************************************************
+ *
+ *  SPEN decision procedure
+ *
+ *  you can redistribute it and/or modify it under the terms of the GNU
+ *  Lesser General Public License as published by the Free Software
+ *  Foundation, version 3.
+ *
+ *  It is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  See the GNU Lesser General Public License version 3.
+ *  for more details (enclosed in the file LICENSE).
+ *
+ **************************************************************************/
 
 /**
  * Building the boolean abstraction of NOLL formula.
@@ -433,13 +433,25 @@ noll2sat_info_pure (noll_pure_t * f, noll_sat_t * res)
     return;
   assert (res != NULL);
 
+  /// only location vars are considered
+  uint_t rec = UNDEFINED_ID;
   for (uint_t i = 0; i < f->size; i++)
-    for (uint_t j = i + 1; j < f->size; j++)
-      if (noll_pure_matrix_at (f, i, j) != NOLL_PURE_OTHER)
+    {
+      rec = noll_var_record (res->form->lvars, i);
+      if (rec == UNDEFINED_ID)
+        continue;
+      for (uint_t j = i + 1; j < f->size; j++)
         {
-          res->finfo->used_lvar[i] = true;
-          res->finfo->used_lvar[j] = true;
+          rec = noll_var_record (res->form->lvars, j);
+          if (rec == UNDEFINED_ID)
+            continue;
+          if (noll_pure_matrix_at (f, i, j) != NOLL_PURE_OTHER)
+            {
+              res->finfo->used_lvar[i] = true;
+              res->finfo->used_lvar[j] = true;
+            }
         }
+    }
 }
 
 void
@@ -452,20 +464,23 @@ noll2sat_info_space (noll_space_t * f, noll_sat_t * res)
   switch (f->kind)
     {
     case NOLL_SPACE_PTO:
-      res->finfo->used_lvar[f->m.pto.sid] = true;
+      res->finfo->used_lvar[f->m.pto.sid] = true;       /// it is a location var
+      uint_t size = 0;
       for (uint_t i = 0; i < noll_vector_size (f->m.pto.fields); i++)
         {
-          if (res->finfo->used_lvar[noll_vector_at (f->m.pto.dest, i)] ==
-              false)
+          uint_t fi = noll_vector_at (f->m.pto.fields, i);
+          uint_t vi = noll_vector_at (f->m.pto.dest, i);
+          uint_t ri = noll_var_record (res->form->lvars, vi);
+          if (ri == UNDEFINED_ID)
+            continue;
+          if (res->finfo->used_lvar[vi] == false)
             {
-              res->finfo->used_lvar[noll_vector_at (f->m.pto.dest, i)] = true;
+              res->finfo->used_lvar[vi] = true;
               res->finfo->lvar_size++;
             }
-          if (res->finfo->used_flds[noll_vector_at (f->m.pto.fields, i)]
-              == false)
+          if (res->finfo->used_flds[fi] == false)
             {
-              res->finfo->used_flds[noll_vector_at (f->m.pto.fields, i)] =
-                true;
+              res->finfo->used_flds[fi] = true;
               res->finfo->fld_size++;
             }
           noll_sat_space_t *pto_i =
@@ -473,8 +488,9 @@ noll2sat_info_space (noll_space_t * f, noll_sat_t * res)
           pto_i->forig = f;
           pto_i->m.idx = i;
           noll_sat_space_array_push (res->var_pto, pto_i);
+          size++;
         }
-      res->finfo->pto_size += noll_vector_size (f->m.pto.fields);
+      res->finfo->pto_size += size;     //noll_vector_size (f->m.pto.fields);
       break;
 
     case NOLL_SPACE_LS:
@@ -485,12 +501,17 @@ noll2sat_info_space (noll_space_t * f, noll_sat_t * res)
           res->finfo->svar_size++;
         }
       for (uint_t i = 0; i < noll_vector_size (f->m.ls.args); i++)
-        if (res->finfo->used_lvar[noll_vector_at (f->m.ls.args, i)] == false)
-          {
-            res->finfo->used_lvar[noll_vector_at (f->m.ls.args, i)] = true;
-            res->finfo->lvar_size++;
-          }
-
+        {
+          uint_t ai = noll_vector_at (f->m.ls.args, i);
+          uint_t ri = noll_var_record (res->form->lvars, ai);
+          if (ri == UNDEFINED_ID)
+            continue;           // consider only location args
+          if (res->finfo->used_lvar[ai] == false)
+            {
+              res->finfo->used_lvar[ai] = true;
+              res->finfo->lvar_size++;
+            }
+        }
       noll_sat_space_t *pred =
         (noll_sat_space_t *) malloc (sizeof (noll_sat_space_t));
       pred->forig = f;
@@ -518,6 +539,7 @@ noll2sat_info_share (noll_atom_share_t * f, noll_sat_t * res)
   if (f == NULL || res == NULL)
     return;
 
+  /// all built over location vars, no test needed
   if (f->t_left->kind == NOLL_STERM_LVAR)
     {
       if (res->finfo->used_lvar[f->t_left->lvar] == false)
@@ -569,13 +591,16 @@ noll2sat_info (noll_form_t * form, noll_sat_t * res)
   if (form->share != NULL)
     for (uint_t i = 0; i < noll_vector_size (form->share); i++)
       noll2sat_info_share (noll_vector_at (form->share, i), res);
+  // 'nil' shall always be used
+  if (res->finfo->used_lvar[0] == false)
+    res->finfo->used_lvar[0] = true;
 
 #ifndef NDEBUG1
   fprintf (stdout, "\n=== Collected info for formula: ");
   fprintf (stdout, "\n\t\t used vars: [");
   for (uint_t i = 0; i < noll_vector_size (form->lvars); i++)
     if (res->finfo->used_lvar[i] == true)
-      fprintf (stdout, "%s, ",
+      fprintf (stdout, "%d: %s, ", i,
                ((noll_var_t *) noll_vector_at (form->lvars, i))->vname);
   fprintf (stdout, "]\n\t\t used svars: [");
   for (uint_t i = 0; i < noll_vector_size (form->svars); i++)
@@ -668,11 +693,14 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
   res->start_apto = res->start_pred + res->size_pred;
   res->size_apto = 0;           /* computed below */
   res->var_apto = noll_sat_space_array_new ();
-  for (uint_t xi = 0; xi < noll_vector_size (form->lvars); xi++)
+  // ignore 'nil'
+  for (uint_t xi = 1; xi < noll_vector_size (form->lvars); xi++)
     if (res->finfo->used_lvar[xi] == true)
       {
         noll_var_t *x = noll_vector_at (form->lvars, xi);
         uint_t tid_x = noll_var_record (form->lvars, xi);
+        if (tid_x == UNDEFINED_ID)
+          continue;             // ignore non location vars
         for (uint_t lsi = 0; lsi < noll_vector_size (res->var_pred); lsi++)
           {
             noll_space_t *ls =
@@ -710,7 +738,8 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
   res->size_inset = 0;          // computed below
   res->var_inset = noll_sat_in_array_new ();
   /* the array is generated lexically sorted (x, alpha) */
-  for (uint_t xi = 0; xi < noll_vector_size (form->lvars); xi++)
+  // ignore 'nil'
+  for (uint_t xi = 1; xi < noll_vector_size (form->lvars); xi++)
     {
       if (res->finfo->used_lvar[xi] == true)
         {
@@ -957,7 +986,7 @@ noll2sat_get_bvar_apto (noll_sat_t * fsat, uint_t x, uint_t f,
 /* ====================================================================== */
 
 /**
- * Build a boolean abstraction form form in file fname.
+ * @brief Build a boolean abstraction from @p form in file fname.
  * If form is unsat, return NULL;
  */
 noll_sat_t *
@@ -1032,9 +1061,12 @@ noll2sat_pure (noll_sat_t * fsat)
   if (fsat->form->pure == NULL)
     fsat->form->pure = noll_pure_new (size);
 
-  // only used variables are considered
+  // only used, location variables are considered
   for (uint_t i = 0; i < fsat->form->pure->size; i++)
     {
+      uint_t typ_i = noll_var_record (fsat->form->lvars, i);
+      if (typ_i == UNDEFINED_ID)
+        continue;
       if (fsat->finfo->used_lvar[i] == true)
         {
           // write reflexivity
@@ -1045,6 +1077,9 @@ noll2sat_pure (noll_sat_t * fsat)
           // write pure formula and transitivity
           for (uint_t j = i + 1; j < fsat->form->pure->size; j++)
             {
+              uint_t typ_j = noll_var_record (fsat->form->lvars, j);
+              if (typ_j == UNDEFINED_ID)
+                continue;
               if (fsat->finfo->used_lvar[j] == true)
                 {
 
@@ -1070,9 +1105,9 @@ noll2sat_pure (noll_sat_t * fsat)
                     }
 
                   // write pure induced by typing
-                  uint_t typ_i = noll_var_record (fsat->form->lvars, i);
-                  uint_t typ_j = noll_var_record (fsat->form->lvars, j);
-                  if (typ_i != typ_j)
+                  // take into account 'nil' of type NOLL_TYP_VOID
+                  if ((typ_i != NOLL_TYP_VOID) &&
+                      (typ_j != NOLL_TYP_VOID) && (typ_i != typ_j))
                     {
                       fprintf (fsat->file, "-%d 0\n", eq_i_j);
                       nb_clauses++;
@@ -1156,7 +1191,9 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
 #endif
                   uint_t src_i = atomi->forig->m.pto.sid;
                   uint_t in_j = noll_vector_at (atomj->forig->m.ls.args, 0);
-                  uint_t out_j = noll_vector_at (atomj->forig->m.ls.args, 1);
+                  uint_t out_j =
+                    (noll_pred_isUnaryLoc (atomj->forig->m.ls.pid)) ? 0 :
+                    noll_vector_at (atomj->forig->m.ls.args, 1);
                   uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, src_i,
                                                              in_j);
                   uint_t bvar_eq_j_j = noll2sat_get_bvar_eq (fsat, in_j,
@@ -1168,8 +1205,8 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                   if (noll_pred_is_one_dir (atomj->forig->m.ls.pid) == false)
                     {
                       // Warning: this works only for DLL
-                      // F_*(pto(src_i,dst_i) bvari, ls(in_j,out_j) bvarj)
-                      // = [src_i = out_j] ==> - [ls(in_j,out_j)]
+                      // F_*(pto(src_i,dst_i) bvari, dll(in_j,out_j) bvarj)
+                      // = [src_i = out_j] ==> ![dll(in_j,out_j)]
 #ifndef NDEBUG
                       fprintf (stdout, "---- F_*(pto %d, ls %d)\n", bvari,
                                bvarj);
@@ -1193,7 +1230,9 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
 #endif
                   uint_t src_j = atomj->forig->m.pto.sid;
                   uint_t in_i = noll_vector_at (atomi->forig->m.ls.args, 0);
-                  uint_t out_i = noll_vector_at (atomi->forig->m.ls.args, 1);
+                  uint_t out_i =
+                    (noll_pred_isUnaryLoc (atomi->forig->m.ls.pid)) ? 0 :
+                    noll_vector_at (atomi->forig->m.ls.args, 1);
                   uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, src_j,
                                                              in_i);
                   uint_t bvar_eq_i_i = noll2sat_get_bvar_eq (fsat, in_i,
@@ -1205,8 +1244,8 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                   if (noll_pred_is_one_dir (atomi->forig->m.ls.pid) == false)
                     {
                       // Warning: this works only for DLL
-                      // F_*(ls(in_i,out_i) bvari, pto(src_j,dst_j) bvarj)
-                      // = [src_j = out_i] ==> - [ls(in_i,out_i)]
+                      // F_*(dll(in_i,out_i) bvari, pto(src_j,dst_j) bvarj)
+                      // = [src_j = out_i] ==> ![dll(in_i,out_i)]
 #ifndef NDEBUG
                       fprintf (stdout, "---- F_*(dls %d (P%d), pto %d)\n",
                                bvari, atomi->forig->m.ls.pid, bvarj);
@@ -1224,35 +1263,44 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                   fprintf (stdout, "---- F_*(ls %d, ls %d)\n", bvari, bvarj);
 #endif
 
-                  // = for all used x, [x in sid_i] ==> ![x in sid_j]  and
+                  // = for all used locations x, [x in sid_i] ==> ![x in sid_j]  and
                   // for two strongly separated predicates there is
                   // no location which belongs to both of them
                   // (could be improved by checking the type of the locvar
                   // vs the type of the set of loc variable)
                   uint_t sid_i = atomi->forig->m.ls.sid;
                   uint_t sid_j = atomj->forig->m.ls.sid;
-                  for (uint_t xk = 0;
+                  for (uint_t xk = 1;   // ignore 'nil'
                        xk < noll_vector_size (fsat->form->lvars); xk++)
-                    if (fsat->finfo->used_lvar[xk] == true)
-                      {
-                        uint_t bvar_k_in_i = noll2sat_get_bvar_in (fsat, xk,
-                                                                   sid_i);
-                        assert (bvar_k_in_i != 0);
-                        uint_t bvar_k_in_j = noll2sat_get_bvar_in (fsat, xk,
-                                                                   sid_j);
-                        assert (bvar_k_in_j != 0);
-                        fprintf (fsat->file, "-%d -%d 0\n", bvar_k_in_i,
-                                 bvar_k_in_j);
-                        fprintf (fsat->file, "-%d -%d 0\n", bvar_k_in_j,
-                                 bvar_k_in_i);
-                        nb_clauses += 2;
-                      }
+                    {
+                      uint_t rk = noll_var_record (fsat->form->lvars, xk);
+                      if (rk == UNDEFINED_ID)
+                        continue;       // only location vars
+                      if (fsat->finfo->used_lvar[xk] == true)
+                        {
+                          uint_t bvar_k_in_i = noll2sat_get_bvar_in (fsat, xk,
+                                                                     sid_i);
+                          assert (bvar_k_in_i != 0);
+                          uint_t bvar_k_in_j = noll2sat_get_bvar_in (fsat, xk,
+                                                                     sid_j);
+                          assert (bvar_k_in_j != 0);
+                          fprintf (fsat->file, "-%d -%d 0\n", bvar_k_in_i,
+                                   bvar_k_in_j);
+                          fprintf (fsat->file, "-%d -%d 0\n", bvar_k_in_j,
+                                   bvar_k_in_i);
+                          nb_clauses += 2;
+                        }
+                    }
 
                   // = [in_i = in_j] ==> [in_i = out_i] \/ [in_j = out_j]
                   uint_t in_i = noll_vector_at (atomi->forig->m.ls.args, 0);
-                  uint_t out_i = noll_vector_at (atomi->forig->m.ls.args, 1);
+                  uint_t out_i =
+                    (noll_pred_isUnaryLoc (atomi->forig->m.ls.pid)) ? 0 :
+                    noll_vector_at (atomi->forig->m.ls.args, 1);
                   uint_t in_j = noll_vector_at (atomj->forig->m.ls.args, 0);
-                  uint_t out_j = noll_vector_at (atomj->forig->m.ls.args, 1);
+                  uint_t out_j =
+                    (noll_pred_isUnaryLoc (atomj->forig->m.ls.pid)) ? 0 :
+                    noll_vector_at (atomj->forig->m.ls.args, 1);
                   uint_t bvar_eq_i_j =
                     noll2sat_get_bvar_eq (fsat, in_i, in_j);
                   uint_t bvar_eq_i_i = noll2sat_get_bvar_eq (fsat, in_i,
@@ -1303,6 +1351,9 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
           {
             uint_t fi = noll_vector_at (flds, i);
             uint_t vdsti = noll_vector_at (dests, i);
+            uint_t ri = noll_var_record (fsat->form->lvars, vdsti);
+            if (ri == UNDEFINED_ID)
+              continue;         // only location vars 
             uint_t bvar_pto = noll2sat_get_bvar_pto (fsat, subform, i);
 #ifndef NDEBUG
             fprintf (stdout,
@@ -1338,7 +1389,10 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
         uint_t pid = subform->m.ls.pid;
         uint_t sid = subform->m.ls.sid;
         uint_t vin = noll_vector_at (subform->m.ls.args, 0);
-        uint_t vout = noll_vector_at (subform->m.ls.args, 1);
+        // TODO: refine the computation below depending on the base case
+        uint_t vout = (noll_pred_isUnaryLoc (pid) == true) ?
+          // get the index of 'nil' in formula 
+          0 : noll_vector_at (subform->m.ls.args, 1);
         uint_t bvar_ls =
           noll2sat_get_bvar_pred (fsat, subform, vin, pid, sid);
 #ifndef NDEBUG
@@ -1375,9 +1429,9 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
 
             fprintf (fsat->file, "%d %d 0\n", bvar_ls, bvar_eq_in_fw);
             fprintf (fsat->file, "%d %d 0\n", bvar_ls, bvar_eq_out_pv);
-            fprintf (fsat->file, "-%d -%d -%d 0\n",
-                     bvar_ls, bvar_eq_in_fw, bvar_eq_out_pv);
-            nb_clauses += 3;
+            fprintf (fsat->file, "-%d -%d 0\n", bvar_ls, bvar_eq_in_fw);
+            fprintf (fsat->file, "-%d -%d 0\n", bvar_ls, bvar_eq_out_pv);
+            nb_clauses += 4;
           }
         // push atom in the list
         noll_uint_array_push (bvars_used, bvar_ls);
@@ -1470,23 +1524,26 @@ noll2sat_membership (noll_sat_t * fsat)
   /* variables [x in alpha] such that
    * the type of x is not included in the type of alpha are false
    */
-  for (uint_t xi = 0; xi < noll_vector_size (fsat->form->lvars); xi++)
+  for (uint_t xi = 1; xi < noll_vector_size (fsat->form->lvars); xi++)
     {
       if (fsat->finfo->used_lvar[xi] == true)
         {
+          noll_type_t *typ_xi = noll_var_type (fsat->form->lvars, xi);
+          assert (typ_xi != NULL);
+          if (typ_xi->kind != NOLL_TYP_RECORD)
+            continue;
+          uid_t rec_xi = noll_var_record (fsat->form->lvars, xi);
           for (uint_t alphaj = 0;
                alphaj < noll_vector_size (fsat->form->svars); alphaj++)
             {
               if (fsat->finfo->used_svar[alphaj] == true)
                 {
-                  uint_t typ_xi = noll_var_record (fsat->form->lvars, xi);
                   noll_var_t *alpha =
                     noll_vector_at (fsat->form->svars, alphaj);
                   noll_type_t *types_alpha = alpha->vty;
-                  uint_t typ_alpha = 0;
                   if (((noll_vector_size (types_alpha->args) > 0)
-                       && (typ_xi != noll_vector_at (types_alpha->args, 0)))
-                      || (type_in_pred_of_svar (fsat, typ_xi, alphaj) == 0))
+                       && (rec_xi != noll_vector_at (types_alpha->args, 0)))
+                      || (type_in_pred_of_svar (fsat, rec_xi, alphaj) == 0))
                     {
 #ifndef NDEBUG
                       fprintf (stdout, "---- var x%d is not in %s\n", xi,
@@ -1504,7 +1561,7 @@ noll2sat_membership (noll_sat_t * fsat)
     }
 
   /*
-   * x in alpha implies P_alpha(...), for any x and alpha
+   * x in alpha implies P_alpha(...), for any x != nil and alpha
    */
   for (uint_t lsi = 0; lsi < noll_vector_size (fsat->var_pred); lsi++)
     {
@@ -1515,11 +1572,15 @@ noll2sat_membership (noll_sat_t * fsat)
         // no svar bound to this predicate
         continue;
       // alpha_i is used
-      for (uint_t xj = 0; xj < noll_vector_size (fsat->form->lvars); xj++)
+      // get all vars except nil
+      for (uint_t xj = 1; xj < noll_vector_size (fsat->form->lvars); xj++)
         {
           if (fsat->finfo->used_lvar[xj] == true)
             {
-              uint_t typ_xj = noll_var_record (fsat->form->lvars, xj);  //the type of the location variable j
+              noll_type_t *typ_xj = noll_var_type (fsat->form->lvars, xj);
+              assert (typ_xj != NULL);
+              if (typ_xj->kind != NOLL_TYP_RECORD)
+                continue;
               // if (type_in_pred_of_svar(fsat, typ_xj, alpha_i))  { // TODO: check that not needed!
               uint_t bvar_j_in_i = noll2sat_get_bvar_in (fsat, xj, alpha_i);
               assert (bvar_j_in_i != 0);
@@ -1547,24 +1608,32 @@ noll2sat_membership (noll_sat_t * fsat)
     {
       uint_t bvar_in_i = fsat->start_inset + i;
       uint_t x_i = noll_vector_at (fsat->var_inset, i)->x;
-      uint_t typ_i = noll_var_record (fsat->form->lvars, x_i);
+      noll_type_t *typ_xi = noll_var_type (fsat->form->lvars, x_i);
+      assert (typ_xi != NULL);
+      if ((x_i == 0) || typ_xi->kind != NOLL_TYP_RECORD)
+        continue;
+      uid_t rec_i = noll_var_record (fsat->form->lvars, x_i);
       uint_t alpha_i = noll_vector_at (fsat->var_inset, i)->alpha;
       noll_type_t *types_alpha_i =
         noll_vector_at (fsat->form->svars, alpha_i)->vty;
-      for (uint_t x_j = 0; x_j <= x_i; x_j++)
+      for (uint_t x_j = 1; x_j < x_i; x_j++)
         {
           if (fsat->finfo->used_lvar[x_j] == true)
             {
-              uint_t typ_j = noll_var_record (fsat->form->lvars, x_j);
+              noll_type_t *typ_xj = noll_var_type (fsat->form->lvars, x_j);
+              assert (typ_xj != NULL);
+              if (typ_xj->kind != NOLL_TYP_RECORD)
+                continue;
+              uid_t rec_j = noll_var_record (fsat->form->lvars, x_j);
 
               uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_j);
               uint_t bvar_in_j_i = noll2sat_get_bvar_in (fsat, x_j, alpha_i);
 
               if (((noll_vector_size (types_alpha_i->args) > 0)
-                   && (typ_i == typ_j)
-                   && (typ_i == noll_vector_at (types_alpha_i->args, 0)))
-                  || ((typ_i == typ_j)
-                      && type_in_pred_of_svar (fsat, typ_i, alpha_i)))
+                   && (rec_i == rec_j)
+                   && (rec_i == noll_vector_at (types_alpha_i->args, 0)))
+                  || ((rec_i == rec_j)
+                      && type_in_pred_of_svar (fsat, rec_i, alpha_i)))
                 {
 #ifndef NDEBUG
                   fprintf (stdout, "---- var %s, %s, %s\n",
@@ -1572,7 +1641,7 @@ noll2sat_membership (noll_sat_t * fsat)
                                           NOLL_TYP_RECORD),
                            noll_var_name (fsat->form->lvars, x_j,
                                           NOLL_TYP_RECORD),
-                           noll_var_name (fsat->form->lvars, alpha_i,
+                           noll_var_name (fsat->form->svars, alpha_i,
                                           NOLL_TYP_SETLOC));
 #endif
                   fprintf (fsat->file, "-%d -%d %d 0\n", bvar_eq_i_j,
@@ -1621,8 +1690,8 @@ noll2sat_membership (noll_sat_t * fsat)
       noll_type_t *types_alpha_i =
         noll_vector_at (fsat->form->svars, alpha_i)->vty;
 
-      // try all x variables
-      for (uint_t x_j = 0; x_j < noll_vector_size (fsat->form->lvars); x_j++)
+      // try all location variables x except 'nil'
+      for (uint_t x_j = 1; x_j < noll_vector_size (fsat->form->lvars); x_j++)
         if (fsat->finfo->used_lvar[x_j])
           {
             uint_t typ_j = noll_var_record (fsat->form->lvars, x_j);
@@ -1652,7 +1721,8 @@ noll2sat_membership (noll_sat_t * fsat)
                         uint_t bvar_apto_j_k = noll2sat_get_bvar_apto (fsat,
                                                                        x_j,
                                                                        f_k,
-                                                                       ls_i->forig);
+                                                                       ls_i->
+                                                                       forig);
                         if (!flag)
                           {
                             fprintf (fsat->file, "-%d ", bvar_j_in_i);
@@ -1756,7 +1826,7 @@ noll2sat_det_apto_apto (noll_sat_t * fsat)
         uint_t x_j = sat_j->m.p.var;
         uint_t f_i = sat_i->m.p.fld;
         uint_t f_j = sat_j->m.p.fld;
-        if ((f_i == f_j) && (sat_i->forig != sat_j->forig))
+        if ((f_i == f_j) && (sat_i->forig != sat_j->forig) && (x_i != x_j))
           {
 #ifndef NDEBUG
             fprintf (stdout,
@@ -1774,6 +1844,35 @@ noll2sat_det_apto_apto (noll_sat_t * fsat)
             nb_clauses++;
           }
       }
+  return nb_clauses;
+}
+
+/*
+ * write F_det ([x_i,f,_], nil) = [x_i = nil] ==> ![x_i,f,_]
+ */
+int
+noll2sat_det_apto_nil (noll_sat_t * fsat)
+{
+  int nb_clauses = 0;
+
+  for (uint_t i = 0; i < fsat->size_apto; i++)
+    {
+      noll_sat_space_t *sat_i = noll_vector_at (fsat->var_apto, i);
+      uint_t x_i = sat_i->m.p.var;
+      uint_t f_i = sat_i->m.p.fld;
+      uint_t x_nil = 0;
+#ifndef NDEBUG
+      fprintf (stdout,
+               "---- [%s = %s] ==> ![%s->%s,_]\n",
+               noll_vector_at (fsat->form->lvars, x_i)->vname,
+               noll_vector_at (fsat->form->lvars, x_nil)->vname,
+               noll_vector_at (fsat->form->lvars, x_i)->vname,
+               noll_vector_at (fields_array, f_i)->name);
+#endif
+      uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_nil);
+      fprintf (fsat->file, "-%d -%d 0\n", bvar_eq_i_j, fsat->start_apto + i);
+      nb_clauses++;
+    }
   return nb_clauses;
 }
 
@@ -1820,6 +1919,38 @@ noll2sat_det_pto_apto (noll_sat_t * fsat)
           }
       }
 
+  return nb_clauses;
+}
+
+/*
+ * write F_det ([x_i,f,y_i]) = [x_i,f,y_i] ==> ![x_j = nil]
+ */
+int
+noll2sat_det_pto_nil (noll_sat_t * fsat)
+{
+  int nb_clauses = 0;
+
+  for (uint_t i = 0; i < fsat->size_pto; i++)
+    {
+      noll_sat_space_t *sat_i = noll_vector_at (fsat->var_pto, i);
+      uint_t x_i = sat_i->forig->m.pto.sid;
+      uint_t f_i = noll_vector_at (sat_i->forig->m.pto.fields, sat_i->m.idx);
+      uint_t x_nil = 0;
+#ifndef NDEBUG
+      fprintf (stdout,
+               "---- [%s,%s,%s] ==> ![%s = %s] & \n",
+               noll_vector_at (fsat->form->lvars, x_i)->vname,
+               noll_vector_at (fields_array, f_i)->name,
+               noll_vector_at (fsat->form->lvars,
+                               noll_vector_at (sat_i->forig->m.pto.dest,
+                                               sat_i->m.idx))->vname,
+               noll_vector_at (fsat->form->lvars, x_i)->vname,
+               noll_vector_at (fsat->form->lvars, x_nil)->vname);
+#endif
+      uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_nil);
+      fprintf (fsat->file, "-%d -%d 0\n", fsat->start_pto + i, bvar_eq_i_j);
+      nb_clauses++;
+    }
   return nb_clauses;
 }
 
@@ -1885,11 +2016,11 @@ noll2sat_det_pto_pred (noll_sat_t * fsat)
 }
 
 /*
- * write F_det ([P,alpha(x_i,y_i,_)], [Q,beta(x_j,y_j,_)]) =
+ * write F_det ([P,alpha(x_i,_)], [Q,beta(x_j,_)]) =
  *          if Fields0(P) /\ Fields0(Q) != 0 then
  *            for all x1, x2 in usedvar(phi) s.t. type(x1)=type(x2)=type0(P)
  *              [x1 = x2] & [x1 in alpha] & [x2 in beta] ==>
- *                      [P,alpha(x_i,y_i,_)] xor [Q,beta(x_j,y_j,_)]
+ *                      [P,alpha(x_i,_)] xor [Q,beta(x_j,_)]
  */
 int
 noll2sat_det_pred_pred (noll_sat_t * fsat)
@@ -1931,11 +2062,11 @@ noll2sat_det_pred_pred (noll_sat_t * fsat)
           continue;
 
         // pred_i and pred_j have a common field
-        // iterate over variables used in phi
-        for (uint_t x1 = 0; x1 < noll_vector_size (fsat->form->lvars); x1++)
+        // iterate over variables used in phi, ignore nil
+        for (uint_t x1 = 1; x1 < noll_vector_size (fsat->form->lvars); x1++)
           if (fsat->finfo->used_lvar[x1] == true)
             {
-              for (uint_t x2 = 0; x2 <= x1; x2++)
+              for (uint_t x2 = 1; x2 <= x1; x2++)
                 if ((fsat->finfo->used_lvar[x2] == true)
                     && (noll_var_record (fsat->form->lvars, x1)
                         == noll_var_record (fsat->form->lvars,
@@ -1978,6 +2109,14 @@ noll2sat_det (noll_sat_t * fsat)
   assert (fsat->file != NULL);
 
   int nb_clauses = 0;
+
+#ifndef NDEBUG
+  fprintf (stdout,
+           "*******************0th step of Det: (a)pto with nil (last %d)*******************\n",
+           nb_clauses);
+#endif
+  nb_clauses += noll2sat_det_apto_nil (fsat);
+  nb_clauses += noll2sat_det_pto_nil (fsat);
 
 #ifndef NDEBUG
   fprintf (stdout,

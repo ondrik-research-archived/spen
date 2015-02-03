@@ -260,7 +260,14 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
   uint_t nsrc = noll_vector_at (args, 0);
   // a new intermediary node
   uint_t nend = noll_vector_at (args, 1);
-
+  uint_t fargs = noll_vector_size (args);
+  uint_t shift_j = 0;
+  if (noll_pred_isUnaryLoc (label) == true)
+    {
+      nend = 0;
+      fargs++;
+      shift_j++;
+    }
 #ifndef NDEBUG
   fprintf (stdout,
            "---- Search for edge n%d---(kind=%d, label=%d)-->n%d:\n",
@@ -276,7 +283,7 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
           uint_t ei = noll_vector_at (g->mat[nsrc], i);
           noll_edge_t *edge_i = noll_vector_at (g->edges, ei);
           if ((edge_i->kind == kind) && (edge_i->label == label)
-              && (noll_vector_size (edge_i->args) == noll_vector_size (args)))
+              && (noll_vector_size (edge_i->args) == fargs))
             {
 #ifndef NDEBUG
               fprintf (stdout, "\t found e%d, same kind and label\n", ei);
@@ -287,24 +294,21 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
               for (uint_t j = 1;
                    j < noll_vector_size (args) && (ishom == true); j++)
                 {
-                  if (noll_vector_at (args, j) == UNDEFINED_ID)
+                  uint_t naj = noll_vector_at (args, j);
+                  uint_t nej = noll_vector_at (edge_i->args, j + shift_j);
+                  if (naj == UNDEFINED_ID)
                     {
 #ifndef NDEBUG
-                      fprintf (stdout,
-                               "\t\t update arg %d to n%d\n", j,
-                               noll_vector_at (edge_i->args, j));
+                      fprintf (stdout, "\t\t update arg %d to n%d\n", j, nej);
 #endif
-                      noll_uid_array_set (args, j,
-                                          noll_vector_at (edge_i->args, j));
+                      noll_uid_array_set (args, j, nej);
                     }
-                  else if (noll_vector_at (args, j)
-                           != noll_vector_at (edge_i->args, j))
+                  else if (naj != nej)
                     {
 #ifndef NDEBUG
                       fprintf (stdout,
                                "\t\t but different arg %d (n%d != n%d)\n", j,
-                               noll_vector_at (args, j),
-                               noll_vector_at (edge_i->args, j));
+                               naj, nej);
 #endif
                       ishom = false;
                     }
