@@ -5,7 +5,7 @@
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bag-union, bag-diff, bag-sub
 
-(set-logic QF_SLRDI)
+(set-logic QF_S)
 
 ;; declare sorts
 (declare-sort Bst_t 0)
@@ -37,9 +37,9 @@
 		(bst ?Y ?M2)
 		)
 		)
-		(= ?M (bagunion (bag ?d) (bagunion ?M1 ?M2) ) )
-		(< ?M1 (bag ?d))
-		(< (bag ?d) ?M2)
+		(= ?M (bag-union (singleton ?d) (bag-union ?M1 ?M2) ) )
+		(bag-lt ?M1 (singleton ?d))
+		(bag-lt (singleton ?d) ?M2)
 	)
 	)
 	)
@@ -65,9 +65,9 @@
 		(bsthole ?Y ?F ?M4 ?M2)
 		)
 		)
-		(= ?M1  (bagunion (bag ?d) (bagunion ?M3 ?M4) ) )
-		(< ?M3 (bag ?d) )
-		(< (bag ?d) ?M4 )
+		(= ?M1  (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
+		(bag-lt ?M3 (singleton ?d) )
+		(bag-lt (singleton ?d) ?M4 )
 	) 
 	)
 
@@ -79,9 +79,9 @@
 		(bst ?Y ?M4)
 		)
 		)
-		(= ?M1 (bagunion (bag ?d) (bagunion ?M3 ?M4) ) )
-		(< ?M3 (bag ?d) )
-		(< (bag ?d) ?M4 )
+		(= ?M1 (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
+		(bag-lt ?M3 (singleton ?d) )
+		(bag-lt (singleton ?d) ?M4 )
 	) 
 	)
 	)
@@ -89,41 +89,68 @@
 
 ;; declare variables
 (declare-fun root0 () Bst_t)
-(declare-fun cur () Bst_t)
-(declare-fun parent () Bst_t)
-(declare-fun ret () Bst_t)
+(declare-fun X () Bst_t)
 (declare-fun Y () Bst_t)
+(declare-fun cur1 () Bst_t)
+(declare-fun cur2 () Bst_t)
+(declare-fun parent1 () Bst_t)
+(declare-fun parent2 () Bst_t)
 (declare-fun M0 () BagInt)
+(declare-fun M1 () BagInt)
+(declare-fun M2 () BagInt)
+(declare-fun key () Int)
+(declare-fun d () Int)
 
 ;; declare set of locations
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
+(declare-fun alpha3 () SetLoc)
+(declare-fun alpha4 () SetLoc)
 
-;; VC01: bst(root0, M0) & cur = root0 & parent = nil & root0 = nil & ret = root0 |-
-;; bst(root0, M0) & root0 = nil & M0 = emptyset & ret = root0
+;; VC03: root0|->((left,X), (right,Y), (data, d)) * bst(X, M1) * bst(Y, M2) & M0 = {d} cup M1 cup M2 & M1 < d < M2 & d < key & cur1 = root0 & 
+;; parent1 = nil & ! root0 = nil & parent2 = cur1 & cur2 = Y |-
+;; root0|->((left,X), (right,cur2), (data, d)) * bst(X, M1) * bst(cur2, M2) & M0 = {d} cup M1 cup M2 & M1 < d < M2 & cur1 = root0 & parent2 = cur1 & 
+;; key in M0 <=> key in M2  & ! parent2 = nil
 
 (assert 
 	(and
 	(tobool 
-		(index alpha1 (bst root0 M0) )
-	)
-	(= cur root0)
-	(= parent nil)
-	(= root0 nil)
-	(= ret root0)
+	(ssep 
+		(pto root0 (sref (ref left X) (ref right Y) (data d) ) ) 
+		(index alpha1 (bst X M1) )
+		(index alpha2 (bst Y M2) )
+	))
+	(= M0 (bag-union (singleton d) (bag-union M1 M2)) )
+	(< M1 (singleton d) )
+	(< (singleton d) M2)
+	(< d key)
+	(= cur1 root0)
+	(= parent1 nil)
+	(distinct root0 nil)
+	(= parent2 cur1)
+	(= cur2 Y)
 	)
 )
+
+;; root0|->((left,X), (right,cur2), (data, d)) * bst(X, M1) * bst(cur2, M2) & M0 = {d} cup M1 cup M2 & M1 < d < M2 & cur1 = root0 & parent2 = cur1 & 
+;; key in M0 <=> key in M2  & ! parent2 = nil
 
 (assert (not 
 	(and
 	(tobool 
-		(index alpha2 (bst root0 M0) )
-	)
-	(= cur root0)
-	(= root0 nil)
-	(= M0 emptybag)
-	(= ret root0)
+	(ssep 
+		(pto root0 (sref (ref left X) (ref right cur2) (data d) ) ) 
+		(index alpha3 (bst X M1) )
+		(index alpha4 (bst cur2 M2) )
+	))
+	(= M0 (bag-union (singleton d) (bag-union M1 M2)) )
+	(< M1 (singleton d) )
+	(< (singleton d) M2)
+	(= cur1 root0)
+	(= parent2 cur1)
+	(iff (bag-sub (singleton key) M0) (bag-sub (singleton key) M2) )
+	(distinct parent2 nil)
 	)
 ))
 

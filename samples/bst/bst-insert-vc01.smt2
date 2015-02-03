@@ -5,7 +5,7 @@
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bag-union, bag-diff, bag-sub
 
-(set-logic QF_SLRDI)
+(set-logic QF_S)
 
 ;; declare sorts
 (declare-sort Bst_t 0)
@@ -37,9 +37,9 @@
 		(bst ?Y ?M2)
 		)
 		)
-		(= ?M (bagunion (bag ?d) (bagunion ?M1 ?M2) ) )
-		(< ?M1 (bag ?d))
-		(< (bag ?d) ?M2)
+		(= ?M (bag-union (singleton ?d) (bag-union ?M1 ?M2) ) )
+		(bag-lt ?M1 (singleton ?d))
+		(bag-lt (singleton ?d) ?M2)
 	)
 	)
 	)
@@ -65,9 +65,9 @@
 		(bsthole ?Y ?F ?M4 ?M2)
 		)
 		)
-		(= ?M1  (bagunion (bag ?d) (bagunion ?M3 ?M4) ) )
-		(< ?M3 (bag ?d) )
-		(< (bag ?d) ?M4 )
+		(= ?M1  (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
+		(bag-lt ?M3 (singleton ?d) )
+		(bag-lt (singleton ?d) ?M4 )
 	) 
 	)
 
@@ -79,51 +79,61 @@
 		(bst ?Y ?M4)
 		)
 		)
-		(= ?M1 (bagunion (bag ?d) (bagunion ?M3 ?M4) ) )
-		(< ?M3 (bag ?d) )
-		(< (bag ?d) ?M4 )
+		(= ?M1 (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
+		(bag-lt ?M3 (singleton ?d) )
+		(bag-lt (singleton ?d) ?M4 )
 	) 
 	)
 	)
 ))
 
 ;; declare variables
-(declare-fun root0 () Bst_t)
+(declare-fun root1 () Bst_t)
+(declare-fun root2 () Bst_t)
 (declare-fun cur () Bst_t)
 (declare-fun parent () Bst_t)
 (declare-fun ret () Bst_t)
-(declare-fun Y () Bst_t)
+(declare-fun x () Bst_t)
+
 (declare-fun M0 () BagInt)
+(declare-fun M1 () BagInt)
+
+(declare-fun key () Int)
 
 ;; declare set of locations
 
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 
-;; VC01: bst(root0, M0) & cur = root0 & parent = nil & root0 = nil & ret = root0 |-
-;; bst(root0, M0) & root0 = nil & M0 = emptyset & ret = root0
+;; VC01: bst(root1, M0) * x |-> ((left,nil), (right,nil), (data, key)) & cur = root1 & parent = nil 
+;; & root1 = nil & root2 = x & ret = root2 |- 
+;; bst(ret, M1) & M0 = emptyset & M1 = {key} & ret = x
 
 (assert 
 	(and
 	(tobool 
-		(index alpha1 (bst root0 M0) )
-	)
-	(= cur root0)
+	(ssep 
+		(index alpha1 (bst root1 M0))
+		(pto x (sref (ref left nil) (ref right nil) (data key) ) ) 
+	))
+	(= cur root1)
 	(= parent nil)
-	(= root0 nil)
-	(= ret root0)
+	(= root1 nil)
+	(= root2 x)
+	(= ret root2)
 	)
 )
 
 (assert (not 
-	(and
+	(and 
 	(tobool 
-		(index alpha2 (bst root0 M0) )
+		(ssep 
+		(index alpha2 (bst ret M1)) 
+		)
 	)
-	(= cur root0)
-	(= root0 nil)
 	(= M0 emptybag)
-	(= ret root0)
+	(= M1 (singleton key))
+	(= ret x)
 	)
 ))
 

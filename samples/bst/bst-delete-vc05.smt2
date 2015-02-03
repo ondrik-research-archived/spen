@@ -5,7 +5,7 @@
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bag-union, bag-diff, bag-sub
 
-(set-logic QF_SLRDI)
+(set-logic QF_S)
 
 ;; declare sorts
 (declare-sort Bst_t 0)
@@ -37,9 +37,9 @@
 		(bst ?Y ?M2)
 		)
 		)
-		(= ?M (bagunion (bag ?d) ?M1 ?M2) )
-		(< ?M1 (bag ?d))
-		(< (bag ?d) ?M2)
+		(= ?M (bag-union (singleton ?d) (bag-union ?M1 ?M2) ) )
+		(bag-lt ?M1 (singleton ?d))
+		(bag-lt (singleton ?d) ?M2)
 	)
 	)
 	)
@@ -65,9 +65,9 @@
 		(bsthole ?Y ?F ?M4 ?M2)
 		)
 		)
-		(= ?M1  (bagunion (bag ?d) ?M3 ?M4))
-		(< ?M3 (bag ?d) )
-		(< (bag ?d) ?M4 )
+		(= ?M1  (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
+		(bag-lt ?M3 (singleton ?d) )
+		(bag-lt (singleton ?d) ?M4 )
 	) 
 	)
 
@@ -79,16 +79,16 @@
 		(bst ?Y ?M4)
 		)
 		)
-		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
-		(< ?M3 (bag ?d) )
-		(< (bag ?d) ?M4 )
+		(= ?M1 (bag-union (singleton ?d) (bag-union ?M3 ?M4) ) )
+		(bag-lt ?M3 (singleton ?d) )
+		(bag-lt (singleton ?d) ?M4 )
 	) 
 	)
 	)
 ))
 
 ;; declare variables
-(declare-fun root () Bst_t)
+(declare-fun root0 () Bst_t)
 (declare-fun cur1 () Bst_t)
 (declare-fun cur2 () Bst_t)
 (declare-fun parent1 () Bst_t)
@@ -118,67 +118,61 @@
 (declare-fun alpha6 () SetLoc)
 (declare-fun alpha7 () SetLoc)
 
-
-;; VC06: bsthole(root,parent1, M1, M2) * parent1|->((left,X), (right, cur1), (data, d1)) * bst(X,M3) * cur1 |-> ((left,Y), (right,Z), (data, d2)) * 
-;; bst(Y, M6) * bst(Z, M7) & M4 = {d2} cup M6 cup M7 & M6 < d2 < M7 & d2 > key & M3 < d1 < M4 & ite(key in M0, M1 = M0, M1 = M0 cup {key}) & 
-;; ite(key in M3, M2 = {d1} cup M3 cup M4, M2 = {d1} cup M3 cup M4 cup {key}) & key in M0 <=> key in M4 & d1 < key & ! parent1 = nil & 
-;; !cur1 = nil & parent2 = cur1 & cur2 = Y |-
-;; bsthole(root,parent2, M1, M5) * parent2|->((left,cur2), (right, Z), (data, d2)) * bst(cur2, M6) * bst(Z, M7) & M6 < d2 < M7 & 
-;; ite(key in M0, M1 = M0, M1 = M0 cup {key}) & M4 = {d2} cup M6 cup M7 & ite(key in M6, M5 = M4, M5 = M4 cup {key}) & key in M0 <=> key in M6 & 
-;; d2 > key & ! parent2 = nil
+;; VC05: bsthole(root0, parent1, M1, M2) * parent1 |-> ((left,X), (right,cur1), (data, d1)) * bst(X,M3) * 
+;; cur1 |-> ((left,Y), (right,Z), (data, d2)) * bst(Y, M6) * bst(Z, M7) & M1 = M0 \ {key} & M2 = ({d1} cup M3 cup M4) \ {key} & 
+;; M3 < d1 < M4 & M3 = {d2} cup M6 cup M7 & M6 < d2 < M7 & & ! parent1 =nil & d1 < key & (key in M0 <=> key in M4) & ! cur1 = nil & 
+;; d2 > key & parent2 = cur1 & cur2 = Y & M5 = M3 \ {key} |-
+;; bsthole(root0,parent2, M1, M5) * parent2 |-> ((left,cur2), (right,Z), (data, d2)) * bst(cur2, M6) * bst(Z, M7) & M1 = M0 \ {key} &
+;; M5 = ({d2} cup M6 cup M7) \ {key}  & M6 < d2 < M7 & !(parent2 = nil) & d2 > key & key in M0 <=> key in M6
 
 (assert 
 	(and
 	(tobool 
 	(ssep 
-		(index alpha1 (bsthole root parent1 M1 M2) )
-		(pto parent1 (sref (ref left X) (ref right cur1) (ref data d1) ) ) 
-		(index alpha2 (bst X M3))
-		(pto cur1 (sref (ref left Y) (ref right Z) (ref data d2) ) ) 
+		(index alpha1 (bsthole root0 parent1 M1 M2) )
+		(pto parent1 (sref (ref left X) (ref right cur1) (data d1) ) )
+		(index alpha2 (bst X M3)) 
+		(pto cur1 (sref (ref left Y) (ref right Z) (data d2) ) ) 
 		(index alpha3 (bst Y M6) )
 		(index alpha4 (bst Z M7) )
 	))
-	(= M4 (bagunion (bag d2) M6 M7) )
-	(< M6 (bag d2))
-	(< (bag d2) M7)
-	(> d2 key)
-	(< M3 (bag d1))
-	(< (bag d1) M4)
-	(= M1 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ) ) 
-	(= M2 (ite (subset (bag key) M3) (bagunion (bag d1) M3 M4)  
-		                         (bagunion (bag d1) M3 M4 (bag key) ))) 
-	(=> (subset (bag key) M0) (subset (bag key) M4) )
-	(=> (subset (bag key) M4) (subset (bag key) M0) )
-	(< d1 key)
+	(= M1 (bag-diff M0 (singleton key)) )
+	(= M2 (bag-diff (bag-union (singleton d1) (bag-union M3 M4)) (singleton key)) )
+	(< M3 (singleton d1) )
+	(< (singleton d1) M4)
+	(= M3 (bag-union (singleton d2) (bag-union M6 M7)) )
+	(< M6 (singleton d2) )
+	(< (singleton d2) M7)
 	(distinct parent1 nil)
+	(< d1 key)
+	(iff (bag-sub (singleton key) M0) (bag-sub (singleton key) M4))
 	(distinct cur1 nil)
+	(> d2 key)
 	(= parent2 cur1)
 	(= cur2 Y)
+	(= M5 (bag-diff M3 (singleton key)))
 	)
 )
 
-;; bsthole(root,parent2, M1, M5) * parent2|->((left,cur2), (right, Z), (data, d2)) * bst(cur2, M6) * bst(Z, M7) & M6 < d2 < M7 & 
-;; ite(key in M0, M1 = M0, M1 = M0 cup {key}) & M4 = {d2} cup M6 cup M7 & ite(key in M6, M5 = M4, M5 = M4 cup {key}) & key in M0 <=> key in M6 & 
-;; d2 > key & ! parent2 = nil
+;; bsthole(root0,parent2, M1, M5) * parent2 |-> ((left,cur2), (right,Z), (data, d2)) * bst(cur2, M6) * bst(Z, M7) & M1 = M0 \ {key} &
+;; M5 = ({d2} cup M6 cup M7) \ {key}  & M6 < d2 < M7 & !(parent2 = nil) & d2 > key & key in M0 <=> key in M6
 
 (assert (not 
-	(and 
+	(and
 	(tobool 
 	(ssep 
-		(index alpha5 (bsthole root parent2 M1 M5) )
-		(pto parent2 (sref (ref left cur2) (ref right Z) (ref data d2) ) ) 
-		(index alpha6 (bst cur2 M6))
+		(index alpha5 (bsthole root0 parent2 M1 M5) )
+		(pto parent2 (sref (ref left cur2) (ref right Z) (data d2) ) ) 
+		(index alpha6 (bst cur2 M6) )
 		(index alpha7 (bst Z M7) )
 	))
-	(< M6 (bag d2))
-	(< (bag d2) M7)
-	(= M1 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ) ) 
-	(= M4 (bagunion (bag d2) M6 M7) )
-	(= M5 (ite (subset (bag key) M6) M4 (bagunion M4 (bag key) ) ) ) 
-	(=> (subset (bag key) M0) (subset (bag key) M6) )
-	(=> (subset (bag key) M6) (subset (bag key) M0) )
-	(> d2 key)
+	(= M1 (bag-diff M0 (singleton key)) )
+	(= M5 (bag-diff (bag-union (singleton d2) (bag-union M6 M7)) (singleton key)) )
+	(bag-lt M6 (singleton d2) )
+	(bag-lt (singleton d2) M7)
 	(distinct parent2 nil)
+	(> d2 key)
+	(iff (bag-sub (singleton key) M0) (bag-sub (singleton key) M6) )
 	)
 ))
 

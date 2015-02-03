@@ -1,0 +1,297 @@
+//Inductive definitions
+
+bst(E,M)::= E = nil & emp & M = emptyset | 
+exists X,Y,M1,M2. E |-> ((left,X), (right,Y)) * bst(X,M1) * bst(Y,M2) & M1 < E.data < M2
+
+bsthole(E,F,M1,M2)::= E = F & emp & M1 = M2 | 
+exists X,Y,M3,M4. E |-> ((left,X), (right,Y)) * bst(X,M3) * bsthole(Y,F,M4,M2) & M3 < E.data < M4 |
+exists X,Y,M3,M4. E |-> ((left,X), (right,Y)) * bsthole(X,F,M3,M2) * bst(Y,M4) & M3 < E.data < M4
+
+//C source code
+
+/************************************************************************
+Name: delete
+Description: Delete a cur from a binary search tree.
+Input: A root pointer ’root’ of the tree and value key of the cur we need
+to delete
+Output: New binary search tree
+*************************************************************************/
+struct Node* delete(struct Node* root, int key){
+	struct Node* tmp = NULL;
+	struct Node* cur = root;
+	struct Node* parent = NULL;
+	// search for the node with value key
+	if (cur->data == key)
+	{
+		return deleteroot(root);
+	}
+	else if (cur->data > key){
+		parent = cur; cur = cur->left;
+	}
+	else {
+		parent = cur; cur = cur->right;
+	}
+
+	while(cur != NULL && cur->data != key) {
+		if (cur->data > key){
+			parent = cur; cur = cur->left;
+		}
+		else {
+			parent = cur; cur = cur->right;
+		}
+	}
+
+	// only delete when the key occurs in the bst
+	if(cur != NULL)
+	{
+		//cur is not the root
+	// only delete when the key occurs in the bst
+	if(cur != NULL)
+	{
+		//cur is not the root
+		if(parent->data > key)
+		{
+			tmp = deleteroot(cur); parent->left = tmp;
+		}
+		else
+		{
+			tmp = deleteroot(cur); parent->right = tmp;
+		}
+	}
+	return root;
+}
+
+// ghost variable root0
+
+Pre: root0 ! = nil & bst(root0, M0)
+
+Post: bst(ret,M1) & M0 = M1 cup {root0.data}
+
+struct Node* deleteroot(struct Node* root){
+	struct Node* rt = NULL;
+	struct Node* cur = root;
+	struct Node* parent = NULL;
+	// if the root does not have right subtree
+	if(root->right == NULL){
+		cur = cur->left;
+		free(root);
+	}
+	else{
+		/* if the right subtree of the removed cur does not have left subtree*/
+		if (root->right->left == NULL){
+			cur = cur->right; cur->left = root->left; free(root);
+		}
+		/* if the right subtree of the removed cur has left subtree*/
+		else{
+			rt = root->right;
+			cur = root->right->left;
+			parent = rt;
+			/* search for the smallest node cur of the minimum value in the right subtree*/
+			while(cur->left != NULL){
+				parent = cur;
+				cur = cur->left;
+			}
+			// exchange the removed root with cur
+			parent->left = cur->right;
+			cur->left = root->left;
+			cur->right = rt;
+			free(root);
+		}
+	}
+	return cur;
+}
+
+
+//Pre-post conditions and the corresponding verification conditions.
+
+// Let M0 be a ghost variable for the multiset of data values occurring in the bst tree.
+
+// Three blocks before the while loop of delete
+
+Pre: bst(root, M0) & ! (root = nil) & cur = root
+
+Post: bst(ret,M1) & M0 = M1 cup {key}
+
+VC: Post |- Post
+
+{
+assume(cur->data == key);
+ret = deleteroot(root);
+}
+
+
+Pre: bst(root, M0) & ! (root = nil) & cur1 = root
+
+Post: root |-> ((left, cur2), (right,Y)) * bst(cur2,M1) * bst(Y,M2) & parent.data != key & parent = root & M0 = {root.data} cup M1 cup M2 & M1 < root.data < M2
+
+VC: root |-> ((left, cur2), (right,Y)) * bst(cur2,M1) * bst(Y,M2) & M0 = {root.data} cup M1 cup M2 & M1 < root.data < M2 & cur1 = root & cur1.data > key & parent = cur1 & M3 = M0 \ {key} & M4 = ({parent.data} cup M1 cup M2) \ {key} |- 
+bsthole(root, parent, M3, M4) * parent |-> ((left,cur2), (right,Y)) * bst(cur2, M1) * bst(Y,M2) & M3 = M0 \ {key} & M4 = ({parent.data} cup M1 cup M2) \ {key} & M1 < parent.data < M2 & parent.data > key & (key in M0 <=> key in M1)
+{
+assume(cur1->data > key);
+parent = cur1;
+cur2 = cur1->left;
+}
+
+Pre: bst(root, M0) & ! (root = nil) & cur1 = root
+
+Post: root |-> ((left, X), (right,cur2)) * bst(X,M1) * bst(cur2,M2) & parent.data != key & parent = root & M0 = {root.data} cup M1 cup M2 & M1 < root.data < M2
+
+VC: root |-> ((left, X), (right,cur2)) * bst(X,M1) * bst(cur2,M2) & M0 = {root.data} cup M1 cup M2 & M1 < root.data < M2 &  cur1 = root & cur1.data < key & parent = cur1 & M3 = M0 \ {key} & M4 = ({parent.data} cup M1 cup M2) \ {key} |- 
+bsthole(root, parent, M3, M4) * parent |-> ((left,X), (right,cur2)) * bst(X, M1) * bst(cur2,M2) & M3 = M0 \ {key} & M4 = ({parent.data} cup M1 cup M2) \ {key} & M1 < parent.data < M2 & parent.data < key & (key in M0 <=> key in M2)
+{
+assume(cur1->data < key);
+parent = cur1;
+cur2 = cur1->right;
+}
+
+
+// The two blocks for the while loop in the procedure delete.
+
+Pre1: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,cur1), (right,Y)) * bst(cur1, M3) * bst(Y,M4) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & !(parent1 = nil) & parent1.data > key & (key in M0 <=> key in M3)
+
+Pre2: bsthole(root, parent1, M1, M2) * parent |-> ((left,X), (right,cur1)) * bst(X, M3) * bst(cur1,M4) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & !(parent1 = nil) & parent1.data < key & (key in M0 <=> key in M4)
+
+Post: bsthole(root,parent2, M1, M22) * parent2 |-> ((left,cur2), (right,Z)) * bst(cur2, M5) * bst(Z, M6) & M1 = M0 \ {key} & M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M5 & parent2.data > key
+
+VC1: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,cur1), (right,Y)) * cur1 |-> ((left,cur2), (right,Z)) * bst(cur2, M5) * bst(Z, M6) * bst(Y,M4) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & M3 = {cur1.data} cup M5 cup M6 & M5 < cur1.data < M6 &   parent1.data > key & cur1.data > key & parent2 = cur1 & (key in M0 <=> key in M3) & M22 = M3 \ {key} |-
+bsthole(root,parent2, M1, M22) * parent2 |-> ((left,cur2), (right,Z)) * bst(cur2, M5) * bst(Z, M6) & M1 = M0 \ {key} & M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M5 & parent2.data > key
+
+VC2: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,X), (right,cur1)) * bst(X,M3) * cur1 |-> ((left,cur2), (right,Z)) * bst(cur2, M5) * bst(Z, M6) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & M4 = {cur1.data} cup M5 cup M6 & M5 < cur1.data < M6 &  parent1.data < key & cur1.data > key & parent2 = cur1 & (key in M0 <=> key in M4) & M22 = M4 \ {key} |-
+bsthole(root,parent2, M1, M22) * parent2 |-> ((left,cur2), (right,Z)) * bst(cur2, M5) * bst(Z, M6) & M1 = M0 \ {key} & M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M5 & parent2.data > key
+{
+assume(cur1 != NULL && cur1->data != key);
+assume(cur1->data > key);
+parent2 = cur1; 
+cur2 = cur1->left;
+}
+
+Pre1: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,cur1), (right,Y)) * bst(cur1, M3) * bst(Y,M4) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & !(parent1 = nil) & parent1.data > key & (key in M0 <=> key in M3)
+
+Pre2: bsthole(root, parent1, M1, M2) * parent |-> ((left,X), (right,cur1)) * bst(X, M3) * bst(cur1,M4) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & parent1.data < key & (key in M0 <=> key in M4)
+
+Post: bsthole(root,parent2, M1, M22) * parent2 |-> ((left,Z), (right,cur2)) * bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M6 & parent2.data < key
+
+VC1: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,cur1), (right,Y)) * cur1 |-> ((left,Z), (right,cur2)) * bst(Z,M5) * bst(cur2, M6) * bst(Y,M4) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & M3 = {cur1.data} cup M5 cup M6 & M5 < cur1.data < M6 & parent1.data > key & cur1.data < key & parent2 = cur1 & (key in M0 <=> key in M3) & M22 = M3 \ {key} |-
+bsthole(root,parent2, M1, M22) * parent2 |-> ((left,Z), (right,cur2)) * bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M6 & parent2.data < key
+
+VC2: bsthole(root, parent1, M1, M2) * parent1 |-> ((left,X), (right,cur1)) * bst(X,M3) * cur1 |-> ((left,Z), (right,cur2)) * bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & M2 = ({parent1.data} cup M3 cup M4) \ {key} & M3 < parent1.data < M4 & M4 = {cur1.data} cup M5 cup M6 & M5 < cur1.data < M6 & parent1.data < key & cur1.data < key & parent2 = cur1 & (key in M0 <=> key in M4) & M22 = M4 \ {key} |-
+bsthole(root,parent2, M1, M22) * parent2 |-> ((left,Z), (right,cur2)) * bst(Z, M5) * bst(cur2, M6) & M1 = M0 \ {key} & M22 = ({parent2.data} cup M5 cup M6) \ {key}  & M5 < parent2.data < M6  & key in M0 <=> key in M6 & parent2.data < key
+{
+assume(cur1 != NULL && cur1->data != key);
+assume(cur1->data < key);
+parent2 = cur1; 
+cur2 = cur1->right;
+}
+
+// The blocks after the while loop of delete
+
+Pre: bsthole(root,parent, M1, M2) * parent |-> ((left,cur), (right,Z)) * bst(cur, M3) * bst(Z, M4) & M1 = M0 \ {key} & M2 = ({parent.data} cup M3 cup M4) \ {key}  & M3 < parent.data < M4  & (key in M0 <=> key in M3) & parent.data > key
+
+Post: bst(root, M1) & M1 = M0 \ {key}
+
+VC: bsthole(root, parent, M1, M2) * parent |-> ((left,tmp), (right,Z)) * bst(tmp, M5) * bst(Z, M4) & & M1 = M0 \ {key} & M2 = ({parent.data} cup M3 cup M4) \ {key} & M3 < parent.data < M4 & M5 = M3 \ {key} & parent.data > key |- 
+bst(root, M1) & M1 = M0 \ {key}
+{
+assume(cur == NULL || cur-> data == key);
+assume(cur != NULL);
+assume(parent->data > key);
+tmp = deleteroot(cur);
+parent->left = tmp;
+}
+
+Pre: bsthole(root,parent, M1, M2) * parent |-> ((left,Z), (right,cur)) * bst(Z, M3) * bst(cur, M4) & M1 = M0 \ {key} & M2 = ({parent.data} cup M3 cup M4) \ {key}  & M3 < parent.data < M4  & (key in M0 <=> key in M4) & parent.data > key
+
+Post: bst(root, M1) & M1 = M0 \ {key}
+
+VC: bsthole(root,parent, M1, M2) * parent |-> ((left,Z), (right,tmp)) * bst(Z, M3) * bst(tmp, M5) & M1 = M0 \ {key} & M2 = ({parent.data} cup M3 cup M4) \ {key}  & M3 < parent.data < M4  & M5 = M4 \ {key} & parent.data < key |- 
+bst(root, M1) & M1 = M0 \ {key}
+{
+assume(cur == NULL || cur-> data == key);
+assume(cur != NULL);
+assume(parent->data < key));
+tmp = deleteroot(cur);
+parent->right = tmp;
+}
+
+
+// The pre, post for the procedure deleteroot
+// Let root0, M0, key be the ghost variables: root0 is the root, M0 is the multiset of integers occurring in the bst, and key = root.data.
+
+Pre: bst(root, M0) & ! root = nil & key = root.data
+
+Post: bst(cur, M1) & M1 = M0 \ {key}
+
+
+// Blocks before the while loop of deleteroot
+
+Pre: bst(root, M0) & ! root = nil & cur1 = root & key = root.data
+
+Post: bst(cur2, M1) & M1 = M0 \ {key}
+
+VC: bst(cur2, M1) & M0 = {root0.data} cup M1 & M1 < root0.data & ! root0 =nil & cur1 = root0 & key = root0.data |-
+bst(cur2, M1) & M1 = M0 \ {key}
+
+{
+assume(root->right == NULL);
+cur2 = cur1->left;
+free(root);
+}
+
+Pre: bst(root, M0) & ! root = nil & cur1 = root & key = root.data
+
+Post: bst(cur2, M1) & M1 = M0 \ {key}
+
+VC: cur2 |-> (left,X), (right, Y) * bst(X,M3) * bst(Y, M4) & M0 = {root0.data} cup M3 cup M2 & M3 < root0.data < M2 & M2 = {cur2.data} cup M4 & cur2.data < M4 & ! root0 =nil & cur1 = root0 & ! cur2 = nil & key = root0.data & M1 = M0 \ {key} |-
+bst(cur2, M1) & M1 = M0 \ {key}
+{
+assume(root->right != NULL);
+assume(root->right->left == NULL);
+cur2 = cur1->right; 
+cur2->left = root->left; 
+free(root);
+}
+
+Pre: bst(root, M0) & ! root = nil & cur = root & key = root.data
+// another ghost variable keymin is used
+
+Post: root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent, M2, M3) * parent |-> ((left, cur), (right, Y)) * bst(cur, M4) * bst(Y, M5) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 cup {keymin} & M3 = ({parent.data} cup M4 cup M5) \ {keymin} & M4 < parent.data < M5 & keymin in M4 & keymin <= M4 & keymin < = M2 & ! parent  = nil & ! cur = nil & key = root.data
+
+VC: root |-> ((left, X), (right, rt)) * bst(X, M1) * rt |-> ((left, cur), (right, Y)) * bst(cur, M4) * bst(Y, M5) & M0 = {key} cup M1 cup {rt.data} cup M4 cup M5 & M1 < root.data < {rt.data} cup M4 cup M5 & M4 < rt.data < M5 & M2 = M0 \ ({key} cup M1 cup {keymin}) & M3 = ({rt.data} cup M4 cup M5) \ {keymin} & keymin in M4 & keymin <= M4 & ! rt  = nil & ! cur = nil & parent =rt & key = root.data |-
+root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent, M2, M3) * parent |-> ((left, cur), (right, Y)) * bst(cur, M4) * bst(Y, M5) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 & M3 = ({parent.data} cup M4 cup M5) \ {keymin} & M4 < parent.data < M5 & keymin in M4 & keymin <= M4 & keymin <= M2 & ! parent  = nil & ! cur = nil & key = root.data
+{
+assume(root->right != NULL);
+assume(root->right->left != NULL);
+rt = root->right;
+cur = root->right->left;
+parent = rt;
+}
+
+//while loop of deleteroot
+
+Pre: root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent1, M2, M3) * parent1 |-> ((left, cur1), (right, Y)) * bst(cur1, M4) * bst(Y, M5) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 cup {keymin} & M3 = ({parent1.data} cup M4 cup M5) \ {keymin} & M4 < parent1.data < M5 & keymin in M4 & keymin <= M4 & keymin <= M2 & ! parent1  = nil & ! cur1 = nil & key = root.data
+
+Post: root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent2, M2, M33) * parent2 |-> ((left, cur2), (right, Z)) * bst(cur2, M6) * bst(Z, M7) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 cup {keymin} & M33 = ({parent2.data} cup M6 cup M7) \ {keymin} & M6 < parent2.data < M7 & keymin in M6 & keymin <= M6 & keymin <= M2 &  ! parent2  = nil & ! cur2 = nil & key = root.data
+
+VC: root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent1, M2, M3) * parent1 |-> ((left, cur1), (right, Y)) * cur1 |-> ((left, cur2), (right, Z)) * bst(cur2, M6) * bst(Z,M7) * bst(Y, M5) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 cup {keymin} & M3 = ({parent1.data} cup M4 cup M5) \ {keymin} & M4 = {cur1.data} cup M6 cup M7 & M4 < parent1.data < M5 & M33 = ({cur1.data} cup M6 cup M7) \ {keymin} & M6 < cur1.data < M7 & keymin in M4 & keymin <= M4 & keymin <= M2 & ! parent1  = nil & ! cur1 = nil & parent2 = cur1 & ! cur2 =nil & key = root.data |- 
+root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent2, M2, M33) * parent2 |-> ((left, cur2), (right, Z)) * bst(cur2, M6) * bst(Z, M7) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 cup {keymin} & M33 = ({parent2.data} cup M6 cup M7) \ {keymin} & M6 < parent2.data < M7 & keymin in M6 & keymin <= M6 & keymin <= M2 & ! parent2  = nil & ! cur2 = nil & key = root.data
+{
+assume(cur1->left != NULL);
+parent2 = cur1;
+cur2 = cur1->left;
+}
+
+// block after the while loop of deleteroot
+
+Pre: root |-> ((left, X), (right, rt)) * bst(X, M1) * bsthole(rt, parent, M2, M3) * parent |-> ((left, cur), (right, Y)) * bst(cur, M4) * bst(Y, M5) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M1 < root.data <  M2 cup {keymin} & M3 = ({parent.data} cup M4 cup M5) \ {keymin} & M4 < parent.data < M5 & keymin in M4 & keymin <= M4 & keymin <= M2 & ! parent  = nil & ! cur = nil & key = root.data
+
+Post: bst(cur, M1) & M1 = M0 \ {key}
+
+VC: bst(X, M1) * bsthole(rt, parent, M2, M3) * parent |-> ((left, Z), (right, Y)) * cur |-> ((left,X), (right,rt)) * bst(Z, M6) * bst(Y, M5) & M2 = M0 \ ({key} cup M1 cup {keymin}) & M4 = {cur.data} cup M6 & M1 < root.data <  M2 cup {keymin} & M3 = ({parent.data} cup M4 cup M5) \ {keymin} & M4 < parent.data < M5 & cur.data < M6 & keymin in M4 & keymin <= M4 & keymin <= M2 & ! parent  = nil & ! cur = nil & key = root.data |-
+bst(cur, M1) & M1 = M0 \ {key}
+{
+assume(cur->left == NULL);
+parent->left = cur->right;
+cur->left = root->left;
+cur->right = rt;
+free(root);
+}
