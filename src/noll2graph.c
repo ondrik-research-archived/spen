@@ -211,7 +211,64 @@ noll_graph_of_space (noll_space_t * phi, bool isMatrix,
           {
             /// simple case, no loop
             if (phi->m.ls.is_loop == false)
-              return res;       /// no edge is built
+              {
+                /// empty list segment, 
+                /// see the base rules of this predicate 
+                /// to push the data constraint
+                const noll_pred_t *pred = noll_pred_getpred (phi->m.ls.pid);
+                assert (noll_vector_size (phi->m.ls.args) ==
+                        pred->def->fargs);
+                noll_pred_rule_array *base_rules = pred->def->base_rules;
+                assert (base_rules != NULL);
+                if (noll_vector_size (base_rules) != 1)
+                  {
+                    fprintf (stdout,
+                             "\nEmpty predicate segment with several base rules: Not yet implemented!\nquit.\n");
+                    assert (0);
+                  }
+#ifndef NDEBUG
+                fprintf (stdout,
+                         "\nnoll_graph_of_space: empty pred edge, add basic rule constraints\n");
+#endif
+                noll_pred_rule_t *rule = noll_vector_at (base_rules, 0);
+                if ((rule->pure != NULL) &&
+                    (rule->pure->data != NULL) &&
+                    (noll_vector_size (rule->pure->data) > 0))
+                  {
+                    /// build the mapping of args to g nodes
+                    noll_uid_array *args2 = noll_uid_array_new ();
+                    noll_uid_array_reserve (args2, pred->def->fargs);
+                    noll_uid_array_push (args2, 0);
+                    for (uint i = 0; i < pred->def->fargs; i++)
+                      {
+                        uint_t avi = noll_vector_at (phi->m.ls.args, i);
+                        assert (avi < noll_vector_size (g->lvars));
+                        noll_uid_array_push (args2, avi);
+#ifndef NDEBUG
+                        fprintf (stdout,
+                                 "\nnoll_graph_of_space: args[%d] = %d\n",
+                                 i + 1, avi);
+#endif
+                      }
+                    /// compute the data constraints from the rule
+                    noll_dform_array *df =
+                      noll_dform_array_apply (rule->pure->data, args2);
+                    /// push the data constraints in g
+                    if (g->data == NULL)
+                      g->data = df;
+                    else
+                      {
+                        noll_dform_array_cup_all (g->data, df);
+                        noll_dform_array_delete (df);
+                      }
+#ifndef NDEBUG
+                    fprintf (stdout,
+                             "\nnoll_graph_of_space: added constraint\n");
+                    noll_dform_array_fprint (stdout, g->lvars, g->data);
+#endif
+                  }
+                return res;     /// no edge is built
+              }
             else if (isMatrix == false)
               {
                 /// shall copy the matrix of the called predicate 
@@ -342,7 +399,10 @@ noll_graph_of_pure (noll_pure_t * phi, noll_graph_t * g)
 
         }
     }
-  g->data = phi->data;
+  if (g->data == NULL)
+    g->data = phi->data;
+  else
+    noll_dform_array_cup_all (g->data, phi->data);
 }
 
 noll_graph_t *

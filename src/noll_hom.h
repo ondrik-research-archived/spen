@@ -48,6 +48,7 @@ typedef struct noll_shom_s
 
   noll_uid_array *pused;        /* edges of pgraph used in this hom 
                                  * of size size(noll_prob->pgraph->edges) */
+  noll_dform_array *data;       /* data constraints generated */
 } noll_shom_t;
 
 NOLL_VECTOR_DECLARE (noll_shom_array, noll_shom_t *);

@@ -126,7 +126,7 @@
 	(ssep 
 		(index alpha1 (bsthole root parent M1 M2) )
 		(pto parent (sref (ref left cur) (ref right Y) (ref data d1) ) ) 
-		(pto cur (sref (ref left X) (ref right Y) (ref data d2) ) ) 
+		(pto cur (sref (ref left X) (ref right Z) (ref data d2) ) ) 
 		(index alpha2 (bst X M5) )
 		(index alpha3 (bst Z M6) )
 		(index alpha4 (bst Y M4) )

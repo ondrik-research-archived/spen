@@ -317,18 +317,37 @@ extern "C"
 /* One formula shall be valid */
 
 /* ====================================================================== */
+/* Composition/Reduction */
+/* ====================================================================== */
+
+  void noll_dform_array_cup_all (noll_dform_array * dst,
+                                 noll_dform_array * src);
+  /* Do the union between @p dst and @p src in @p dst */
+
+  noll_dterm_t *noll_dterm_apply (noll_dterm_t * dt, noll_uid_array * m);
+  noll_dform_t *noll_dform_apply (noll_dform_t * df, noll_uid_array * m);
+  noll_dform_array *noll_dform_array_apply (noll_dform_array * df,
+                                            noll_uid_array * m);
+  /* Apply the substitution @p m on @p df and generate new formulas */
+  noll_dform_array *noll_dform_array_compose (noll_uid_array * mg2,
+                                              noll_dform_array * f1,
+                                              noll_dform_array * df2);
+
+/* ====================================================================== */
 /* Solvers */
 /* ====================================================================== */
 
-  int noll_pure_check_entl (bool ** diff, uint_t dsize,
-                            noll_pure_t * f, noll_uid_array * map);
+  int noll_pure_check_entl (bool ** diff, uint_t dsize, noll_pure_t * f,
+                            noll_uid_array * args,
+                            noll_var_array * lv, noll_uid_array * map,
+                            noll_dform_array * df);
 /* Check that @p diff entails @p ops[@p map] */
 
-  int noll_dform_check_entl (noll_var_array * lvars, uint_t * var2node,
-                             bool ** diff, uint_t nnodes,
-                             noll_dform_array * df,
-                             noll_pure_t * f, noll_uid_array * m);
-/* Check that constraints on data variables from @p df entail @p f[m] */
+  int noll_dform_array_check_entl (noll_var_array * lv1,
+                                   noll_dform_array * df1,
+                                   noll_var_array * lv2, noll_uid_array * m,
+                                   noll_dform_array * df2);
+/* Check that constraints on data variables from @p df1 entail @p df2 */
 
 /* ====================================================================== */
 /* Printing */

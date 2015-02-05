@@ -59,6 +59,7 @@ typedef struct noll_graph_t
   noll_uid_array **rmat;        // reverse adjacency matrix, rmat[i] is the list of edge identifiers to node i
   bool **diff;                  // low-diagonal matrix, diff[n1][n2] = true iff n1 != n2 and n1 > n2
   noll_dform_array *data;       // data constraints over lvars
+  bool isDataComplete;          // all diff and quality constraints are pushed in data ?
   uint_t *sloc2edge;            // mapping set variables to edges in graph
   noll_share_array *share;      // TODO: sharing constraints (on set variables) (related to overlapping)
   bool isComplete;              // if all implicit constraints have been computed
@@ -95,8 +96,20 @@ int noll_edge_in_label (noll_edge_t * e, uint_t label);
  * of the predicate label */
 
 uint_t noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
-                            noll_uid_array * args);
+                            noll_uid_array * args, noll_dform_array * df);
 /* Return edge id with label, kind and arguments given. */
+
+noll_typ_t noll_graph_get_node_type (noll_graph_t * g, uint_t n);
+/* Return the type of node @p n */
+
+void noll_graph_sat_dform (noll_graph_t * g);
+/* Update the data constraints in @g with eq constraints */
+
+bool noll_graph_is_diff (noll_graph_t * g, uint_t n1, uint_t n2);
+/* Return true if difference edge between nodes */
+
+bool noll_graph_is_node_data (noll_graph_t * g, uint_t n);
+/* Return true if @p is a node represeting some data var */
 
 /* ====================================================================== */
 /* Others */

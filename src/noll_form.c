@@ -126,6 +126,7 @@ noll_dterm_new (void)
   ret->kind = NOLL_DATA_INT;
   ret->typ = NOLL_TYP_INT;
   ret->p.value = 0;
+  ret->args = NULL;
   return ret;
 }
 
@@ -136,6 +137,7 @@ noll_dterm_new_var (uint_t vid, noll_typ_t ty)
   ret->kind = NOLL_DATA_VAR;
   ret->typ = ty;
   ret->p.sid = vid;
+  ret->args = NULL;
   return ret;
 }
 
@@ -634,83 +636,315 @@ noll_form_array_is_valid (noll_form_array * phi1_phiN)
 }
 
 /* ====================================================================== */
-/* Solvers */
+/* Composition/Reduction */
 /* ====================================================================== */
 
 /**
- * @brief Check that @p diff entails @p ops[@p map].
- * 
- * @return 0 if some constraint not entailed, 1 otherwise
+ * @brief Do the union between @p dst and @p src in @p dst 
  */
-int
-noll_pure_check_entl (bool ** diff, uint_t dsize,
-                      noll_pure_t * f, noll_uid_array * map)
+void
+noll_dform_array_cup_all (noll_dform_array * dst, noll_dform_array * src)
 {
-  /// this procedure could also be called for the pure part
-  /// of a recursive rule, where osize includes also existential vars
-  /// not included in map 
-  assert (f->size >= noll_vector_size (map));
+  assert (dst != NULL);
+  if (src == NULL)
+    return;
+  for (uint_t i = 0; i < noll_vector_size (src); i++)
+    noll_dform_array_push (dst, noll_vector_at (src, i));       // TODO: do a cup
+}
 
-  int res = 1;
-  for (uint_t v2 = 1; (v2 < noll_vector_size (map)) && res; v2++)
-    for (uint_t v1 = 0; (v1 < v2) && res; v1++)
+noll_dterm_t *
+noll_dterm_apply (noll_dterm_t * dt, noll_uid_array * m)
+{
+  if (dt == NULL)
+    return NULL;
+  /// if m == NULL, then copy
+
+  noll_dterm_t *res = noll_dterm_new ();
+  res->kind = dt->kind;
+  res->typ = dt->typ;
+  switch (dt->kind)
+    {
+    case NOLL_DATA_INT:
+      res->p.value = dt->p.value;
+      break;
+    case NOLL_DATA_VAR:
+      if (m == NULL)
+        res->p.sid = dt->p.sid;
+      else if (dt->p.sid < noll_vector_size (m))
+        {
+          uid_t vm = noll_vector_at (m, dt->p.sid);
+          if (vm != UNDEFINED_ID)
+            res->p.sid = vm;
+          else
+            {
+#ifndef NDEBUG
+              fprintf (stdout,
+                       "\ndterm_apply: undefined mapping for var %d!\n",
+                       dt->p.sid);
+#endif
+              /// copy the old value
+              res->p.sid = dt->p.sid;
+            }
+        }
+      else
+        {
+#ifndef NDEBUG
+          fprintf (stdout,
+                   "\ndterm_apply: undefined mapping for var %d!\n",
+                   dt->p.sid);
+#endif
+          res->p.sid = dt->p.sid;
+        }
+      break;
+    case NOLL_DATA_ITE:
       {
-        noll_pure_op_t rhs_op = noll_pure_matrix_at (f, v1, v2);
-        if (rhs_op == NOLL_PURE_OTHER)
-          continue;
-        uint_t nv1 = noll_vector_at (map, v1);
-        uint_t nv2 = noll_vector_at (map, v2);
-        assert ((nv1 < dsize) || (nv2 < dsize));        // TODO: remove it
-        if (rhs_op == NOLL_PURE_EQ)
+        noll_dform_t *cond_m = noll_dform_apply (dt->p.cond, m);
+        if (cond_m == NULL)
           {
-            if (nv1 < dsize && nv2 < dsize)
-              res = (nv1 == nv2) ? 1 : 0;
-            else
-              {
-                /// one of variables is not yet bounded to a node, change m
-                if (nv1 < dsize)
-                  noll_uid_array_set (map, v2, nv1);
-                else
-                  noll_uid_array_set (map, v1, nv2);
-              }
+            noll_dterm_free (res);
+            return NULL;
           }
-        else if ((nv1 < dsize) && (nv2 < dsize))
-          {
-            assert (rhs_op == NOLL_PURE_NEQ);
-            bool lhs_isDiff = (nv1 != nv2);
-            if (nv1 < nv2)
-              lhs_isDiff = diff[nv2][nv1];
-            else if (nv2 < nv1)
-              lhs_isDiff = diff[nv1][nv2];
-
-            res = (lhs_isDiff) ? 1 : 0;
-          }
-        else
-          /// cannot be checked
-          assert (0);
+        res->p.cond = cond_m;
+        break;
       }
+    default:
+      break;
+    }
+  /// only dterm arguments
+  if (dt->args != NULL)
+    {
+      uint_t size = noll_vector_size (dt->args);
+      res->args = noll_dterm_array_new ();
+      noll_dterm_array_reserve (res->args, size);
+      for (uint_t i = 0; i < size; i++)
+        {
+          noll_dterm_t *a = noll_dterm_apply (noll_vector_at (dt->args, i),
+                                              m);
+          if (a == NULL)
+            {
+              noll_dterm_free (res);
+              return NULL;
+            }
+          noll_dterm_array_push (res->args, a);
+        }
+    }
+  return res;
+}
+
+noll_dform_t *
+noll_dform_apply (noll_dform_t * df, noll_uid_array * m)
+{
+  if (df == NULL)
+    return NULL;
+  /// if m == NULL, copy only
+  noll_dform_t *res = noll_dform_new ();
+  res->kind = df->kind;
+  res->typ = df->typ;
+  if (df->kind == NOLL_DATA_IMPLIES)
+    {
+      res->p.bargs = noll_dform_array_new ();
+      noll_dform_array_reserve (res->p.bargs, 2);
+      for (uint_t i = 0; i < 2; i++)
+        {
+          noll_dform_t *a =
+            noll_dform_apply (noll_vector_at (df->p.bargs, i), m);
+          if (a == NULL)
+            {
+              noll_dform_free (res);
+              return NULL;
+            }
+          noll_dform_array_push (res->p.bargs, a);
+        }
+      return res;
+    }
+  /// only dterm arguments
+  if (df->p.targs != NULL)
+    {
+      uint_t size = noll_vector_size (df->p.targs);
+      res->p.targs = noll_dterm_array_new ();
+      noll_dterm_array_reserve (res->p.targs, size);
+      for (uint_t i = 0; i < size; i++)
+        {
+          noll_dterm_t *a =
+            noll_dterm_apply (noll_vector_at (df->p.targs, i), m);
+          if (a == NULL)
+            {
+              noll_dform_free (res);
+              return NULL;
+            }
+          noll_dterm_array_push (res->p.targs, a);
+        }
+    }
   return res;
 }
 
 
 /**
- * @brief Check that @p diff and @p df implies @p f[@p m].
+ * @brief Apply the substitution @p m on @p df and generate new formulas 
  */
-int
-noll_dform_check_entl (noll_var_array * lvars, uint_t * var2node,
-                       bool ** diff, uint_t nnodes,
-                       noll_dform_array * df,
-                       noll_pure_t * f, noll_uid_array * m)
+noll_dform_array *
+noll_dform_array_apply (noll_dform_array * df, noll_uid_array * m)
 {
-  if ((lvars != lvars) || (var2node != var2node) ||
-      (diff != diff) || (nnodes != nnodes) ||
-      (df != df) || (f != f) || (m != m))
-    return 0;                   // to remove warning on unused params
-
-  // TODO: translate the problem to Z3 
-  return 1;
+  if (df == NULL || m == NULL)
+    return NULL;
+  noll_dform_array *res = noll_dform_array_new ();
+  for (uint_t i = 0; i < noll_vector_size (df); i++)
+    {
+      noll_dform_t *dfi = noll_vector_at (df, i);
+      noll_dform_t *dfi_m = noll_dform_apply (dfi, m);
+      if (dfi_m == NULL)
+        {
+          noll_dform_array_delete (res);
+          return NULL;
+        }
+      noll_dform_array_push (res, dfi_m);
+    }
+  return res;
 }
 
+/**
+ * @brief Compute conjunct @p f1 & @p f2 and apply substitution @p mg2 
+ */
+noll_dform_array *
+noll_dform_array_compose (noll_uid_array * mg2, noll_dform_array * f1,
+                          noll_dform_array * f2)
+{
+  noll_dform_array *df1 = noll_dform_array_apply (f1, mg2);
+  noll_dform_array *df2 = noll_dform_array_apply (f2, mg2);
+  noll_dform_array_cup_all (df1, df2);  // copy pointers
+  noll_dform_array_delete (df2);
+  return df1;
+}
+
+/* ====================================================================== */
+/* Solvers */
+/* ====================================================================== */
+
+/**
+ * @brief Check that @p diff entails @p f->m[@p m].
+ * 
+ * @return 0 if some constraint not entailed, 1 otherwise
+ */
+int
+noll_pure_check_entl (bool ** diff, uint_t dsize, noll_pure_t * f,
+                      noll_uid_array * lmap,
+                      noll_var_array * exvars, noll_uid_array * map,
+                      noll_dform_array * df)
+{
+  /// this procedure could also be called for the pure part
+  /// of a recursive rule, where @p f->m includes also existential vars,
+  /// all shall be included in @p m 
+  assert (noll_vector_size (exvars) == noll_vector_size (map));
+  assert (f->size == noll_vector_size (lmap));
+  noll_dform_array *dfn = noll_dform_array_new ();
+  int res = 1;
+  for (uint_t lv2 = 1; (lv2 < noll_vector_size (lmap)) && res; lv2++)
+    {
+      uint_t v2 = noll_vector_at (lmap, lv2);
+      noll_type_t *ty2 = noll_var_type (exvars, v2);
+      for (uint_t lv1 = 0; (lv1 < lv2) && res; lv1++)
+        {
+          uint_t v1 = noll_vector_at (lmap, lv1);
+          noll_type_t *ty1 = noll_var_type (exvars, v1);
+          noll_pure_op_t rhs_op = noll_pure_matrix_at (f, lv1, lv2);
+          if (rhs_op == NOLL_PURE_OTHER)
+            continue;
+          uint_t nv1 = noll_vector_at (map, v1);
+          uint_t nv2 = noll_vector_at (map, v2);
+          if (rhs_op == NOLL_PURE_EQ)
+            {
+              if (nv1 < dsize && nv2 < dsize)
+                res = (nv1 == nv2) ? 1 : 0;
+              else
+                {
+                  /// one or both of variables is not yet bounded to a node, 
+                  /// update m if the other is bounded
+                  if (nv1 < dsize)
+                    noll_uid_array_set (map, v2, nv1);
+                  else if (nv2 < dsize)
+                    noll_uid_array_set (map, v1, nv2);
+                  else
+                    if ((ty1->kind == ty2->kind) &&
+                        (ty1->kind != NOLL_TYP_RECORD))
+                    /// generate an equality constraint for data vars
+                    {
+                      noll_dform_t *df_eq =
+                        noll_dform_new_eq (noll_dterm_new_var (v1, ty1->kind),
+                                           noll_dterm_new_var (v2,
+                                                               ty2->kind));
+                      noll_dform_array_push (dfn, df_eq);
+                    }
+                  else
+                    res = 0;
+                }
+            }
+          else if ((nv1 < dsize) && (nv2 < dsize))
+            {
+              assert (rhs_op == NOLL_PURE_NEQ);
+              bool lhs_isDiff = (nv1 != nv2);
+              if (nv1 < nv2)
+                lhs_isDiff = diff[nv2][nv1];
+              else if (nv2 < nv1)
+                lhs_isDiff = diff[nv1][nv2];
+              res = (lhs_isDiff) ? 1 : 0;
+            }
+          else
+            {
+              /// inequality between unmapped vars
+              /// push the constraint if vars are integer vars
+              if ((ty1->kind == ty2->kind) && (ty1->kind == NOLL_TYP_INT))
+                /// generate an inequality constraint for data vars
+                {
+                  noll_dform_t *df_eq =
+                    noll_dform_new_eq (noll_dterm_new_var (v1, ty1->kind),
+                                       noll_dterm_new_var (v2,
+                                                           ty2->kind));
+                  df_eq->kind = NOLL_DATA_NEQ;
+                  noll_dform_array_push (dfn, df_eq);
+                }
+              else
+                /// cannot be checked
+                assert (0);
+            }
+        }
+    }
+  if (res == 1)
+    noll_dform_array_cup_all (df, dfn);
+  noll_dform_array_clear (dfn);
+  return res;
+}
+
+/**
+ * @brief Check that constraints on data variables from @p df1 entail @p df2 .
+ */
+uint ndform = 0;
+int
+noll_dform_array_check_entl (noll_var_array * lv1, noll_dform_array * df1,
+                             noll_var_array * lv2, noll_uid_array * m,
+                             noll_dform_array * df2)
+{
+  // TODO: for the moment prited out into a file
+  char *fname = (char *) malloc (20 * sizeof (char));
+  fname[0] = '\0';
+  snprintf (fname, 20, "df-%d.txt", ndform);
+  ndform++;
+  FILE *f = fopen (fname, "w");
+  fprintf (f, "lhs = (");
+  noll_var_array_fprint (f, lv1, "[");
+  fprintf (f, "] ");
+  noll_dform_array_fprint (f, lv1, df1);
+  fprintf (f, ") \n==>\nrhs = (");
+  noll_var_array_fprint (f, lv2, "[");
+  fprintf (f, "] x  [");
+  for (uint_t i = 0; i < noll_vector_size (m); i++)
+    fprintf (f, "%d -> %d,", i, noll_vector_at (m, i));
+  fprintf (f, "] ");
+  noll_dform_array_fprint (f, lv2, df2);
+  fprintf (f, ") \n");
+  fclose (f);
+  free (fname);
+  return 1;
+}
 
 /* ====================================================================== */
 /* Printing */
@@ -740,54 +974,40 @@ noll_dterm_fprint (FILE * f, noll_var_array * lvars, noll_dterm_t * dt)
       break;
     case NOLL_DATA_FIELD:
       fprintf (f, "(%s ", noll_field_name (dt->p.sid));
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, ")");
       break;
     case NOLL_DATA_PLUS:
       fprintf (f, "(+ ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, " ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
-      fprintf (f, ")");
       break;
     case NOLL_DATA_MINUS:
       fprintf (f, "(- ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, " ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
-      fprintf (f, ")");
       break;
     case NOLL_DATA_BAG:
       fprintf (f, "(bag ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, ")");
       break;
     case NOLL_DATA_BAGUNION:
       fprintf (f, "(bagunion ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, " ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
-      fprintf (f, ")");
       break;
     case NOLL_DATA_BAGMINUS:
       fprintf (f, "(bagminus ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, " ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
-      fprintf (f, ")");
       break;
     case NOLL_DATA_ITE:
       fprintf (f, "(ite ");
       noll_dform_fprint (f, lvars, dt->p.cond);
       fprintf (f, " ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 0));
-      fprintf (f, " ");
-      noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, 1));
-      fprintf (f, ")");
       break;
     default:
       fprintf (f, "(error)");
       break;
+    }
+
+  if (dt->args != NULL)
+    {
+      for (uint_t i = 0; i < noll_vector_size (dt->args); i++)
+        {
+          noll_dterm_fprint (f, lvars, noll_vector_at (dt->args, i));
+          fprintf (f, " ");
+        }
+      fprintf (f, ")");
     }
 }
 
@@ -843,8 +1063,8 @@ noll_dform_fprint (FILE * f, noll_var_array * lvars, noll_dform_t * df)
 }
 
 void
-noll_dform_array_fprint (FILE * f, noll_var_array * lvars,
-                         noll_dform_array * df)
+noll_dform_array_fprint (FILE * f,
+                         noll_var_array * lvars, noll_dform_array * df)
 {
   if (df == NULL)
     {
@@ -892,8 +1112,9 @@ noll_pure_fprint (FILE * f, noll_var_array * lvars, noll_pure_t * phi)
 }
 
 void
-noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
-                   noll_space_t * phi)
+noll_space_fprint (FILE * f,
+                   noll_var_array * lvars,
+                   noll_var_array * svars, noll_space_t * phi)
 {
   if (phi == NULL)
     {
@@ -910,7 +1131,6 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
   else
     fprintf (f, "[junk] ");
 #endif
-
   switch (phi->kind)
     {
     case NOLL_SPACE_EMP:
@@ -930,10 +1150,12 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
         for (size_t i = 0; i < noll_vector_size (phi->m.pto.fields); i++)
           {
             fprintf (f, "(%s %s) ",
-                     noll_field_name (noll_vector_at (phi->m.pto.fields, i)),
+                     noll_field_name (noll_vector_at
+                                      (phi->m.pto.fields,
+                                       i)),
                      noll_var_name (lvars,
-                                    noll_vector_at (phi->m.pto.dest, i),
-                                    NOLL_TYP_RECORD));
+                                    noll_vector_at (phi->m.pto.dest,
+                                                    i), NOLL_TYP_RECORD));
           }
         /* end pto */
         fprintf (f, ")");
@@ -950,7 +1172,6 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
           }
         else
           fprintf (f, "*%d", phi->m.ls.sid);
-
         for (uid_t i = 0; i < noll_vector_size (phi->m.ls.args); i++)
           {
             uint_t vi = noll_vector_at (phi->m.ls.args, i);
@@ -988,7 +1209,8 @@ noll_space_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
 }
 
 void
-noll_share_sterm_fprint (FILE * f, noll_var_array * lvars,
+noll_share_sterm_fprint (FILE * f,
+                         noll_var_array * lvars,
                          noll_var_array * svars, noll_sterm_t * t)
 {
   assert (t);
@@ -1001,8 +1223,8 @@ noll_share_sterm_fprint (FILE * f, noll_var_array * lvars,
       fprintf (f, " %s ", noll_var_name (svars, t->svar, NOLL_TYP_SETLOC));
       break;
     case NOLL_STERM_PRJ:
-      fprintf (f, " (prj %s %s) ", noll_var_name (svars, t->svar,
-                                                  NOLL_TYP_SETLOC),
+      fprintf (f, " (prj %s %s) ",
+               noll_var_name (svars, t->svar, NOLL_TYP_SETLOC),
                noll_var_name (lvars, t->lvar, NOLL_TYP_RECORD));
       break;
     default:
@@ -1012,13 +1234,14 @@ noll_share_sterm_fprint (FILE * f, noll_var_array * lvars,
 }
 
 void
-noll_share_sterm_array_fprint (FILE * f, noll_var_array * lvars,
+noll_share_sterm_array_fprint (FILE * f,
+                               noll_var_array *
+                               lvars,
                                noll_var_array * svars, noll_sterm_array * t)
 {
   assert (t);
   if (noll_vector_size (t) > 1)
     fprintf (f, "(unloc ");
-
   for (uid_t i = 0; i < noll_vector_size (t); i++)
     {
       noll_share_sterm_fprint (f, lvars, svars, noll_vector_at (t, i));
@@ -1030,7 +1253,8 @@ noll_share_sterm_array_fprint (FILE * f, noll_var_array * lvars,
 }
 
 void
-noll_share_atom_fprint (FILE * f, noll_var_array * lvars,
+noll_share_atom_fprint (FILE * f,
+                        noll_var_array * lvars,
                         noll_var_array * svars, noll_atom_share_t * phi)
 {
   assert (phi);
@@ -1058,8 +1282,9 @@ noll_share_atom_fprint (FILE * f, noll_var_array * lvars,
 }
 
 void
-noll_share_fprint (FILE * f, noll_var_array * lvars, noll_var_array * svars,
-                   noll_share_array * phi)
+noll_share_fprint (FILE * f,
+                   noll_var_array * lvars,
+                   noll_var_array * svars, noll_share_array * phi)
 {
   if (!phi)
     {
@@ -1078,7 +1303,6 @@ void
 noll_form_fprint (FILE * f, noll_form_t * phi)
 {
   assert (f != NULL);
-
   if (!phi)
     {
       fprintf (stdout, "null\n");
@@ -1110,5 +1334,4 @@ noll_form_fprint (FILE * f, noll_form_t * phi)
   noll_space_fprint (f, phi->lvars, phi->svars, phi->space);
   fprintf (f, "\n\t share part: ");
   noll_share_fprint (f, phi->lvars, phi->svars, phi->share);
-
 }
