@@ -56,13 +56,27 @@ extern "C"
   typedef struct noll_pred_binding_t
   {
     size_t pargs;               // type of list = number of arguments of this record type 2 or 4
-    noll_var_array *vars;       // nil + formal arguments + old: local variables for sigma_0, sigma_1
+    noll_var_array *vars;       // nil + formal arguments (+ old: local variables for sigma_0, sigma_1)
     uint_t fargs;               // number of formal arguments in the array above
     noll_space_t *sigma_0;      // old: points-to part
     noll_space_t *sigma_1;      // old: nested part
     noll_pred_rule_array *base_rules;   // set of base rules
     noll_pred_rule_array *rec_rules;    // set of base rules
   } noll_pred_binding_t;
+
+  /** Arguments typing infos
+   */
+  typedef enum
+  {
+    NOLL_ATYP_LROOT = 0,
+    NOLL_ATYP_BROOT,
+    NOLL_ATYP_IROOT,
+    NOLL_ATYP_LPENDING,
+    NOLL_ATYP_BPENDING,
+    NOLL_ATYP_IPENDING,
+    NOLL_ATYP_BORDER,
+    NOLL_ATYP_OTHER
+  } noll_atyp_e;
 
   /** Predicate typing infos
    */
@@ -82,6 +96,8 @@ extern "C"
     bool isUnaryLoc;            /* the predicate has only source */
     bool useNil;                /* the predicate use fields to nil */
     bool isTwoDir;              /* the predicate is a two direction */
+    noll_uid_array *argkind;    /* for each argument, kind of it */
+
     /* array of size @global preds_array
      * with values 1 for predicates called inside the definition of pred
      */

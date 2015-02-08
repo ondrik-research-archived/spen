@@ -109,7 +109,10 @@ bool noll_graph_is_diff (noll_graph_t * g, uint_t n1, uint_t n2);
 /* Return true if difference edge between nodes */
 
 bool noll_graph_is_node_data (noll_graph_t * g, uint_t n);
-/* Return true if @p is a node represeting some data var */
+/* Return true if @p n is a node represeting some data var */
+
+bool noll_graph_is_ptosrc (noll_graph_t * g, uint_t n);
+/* Return true if @p n is the source of a pto edge */
 
 /* ====================================================================== */
 /* Others */

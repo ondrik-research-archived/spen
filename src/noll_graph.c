@@ -438,13 +438,36 @@ noll_graph_is_diff (noll_graph_t * g, uint_t n1, uint_t n2)
 }
 
 /**
- * @brief Return true if @p is a node represeting some data var 
+ * @brief Return true if @p n is a node represeting some data var 
  */
 bool
 noll_graph_is_node_data (noll_graph_t * g, uint_t n)
 {
   noll_typ_t ty = noll_graph_get_node_type (g, n);
   return (ty == NOLL_TYP_RECORD) ? false : true;
+}
+
+/**
+ * @brief Return true if @p n is the source of a pto edge
+ */
+bool
+noll_graph_is_ptosrc (noll_graph_t * g, uint_t n)
+{
+  assert (g != NULL);
+  assert (n < g->nodes_size);
+
+  noll_uid_array *n_edges = g->mat[n];
+  if (n_edges == NULL)
+    return false;
+  for (uint i = 0; i < noll_vector_size (n_edges); i++)
+    {
+      uid_t eid = noll_vector_at (n_edges, i);
+      noll_edge_t *ei = noll_vector_at (g->edges, eid);
+      assert (ei != NULL);
+      if (ei->kind == NOLL_EDGE_PTO)
+        return true;
+    }
+  return false;
 }
 
 /** 

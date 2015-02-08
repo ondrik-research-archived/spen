@@ -37,6 +37,15 @@ extern "C"
 /* Datatypes */
 /* ====================================================================== */
 
+  typedef enum
+  {
+    NOLL_LEMMA_COMP_1 = 0,      /// P * P => P
+    NOLL_LEMMA_COMP_2,          /// P' * P => P
+    NOLL_LEMMA_INSTANCE,        /// P'(E,cst) => P (E)
+    NOLL_LEMMA_STRONGER,        /// P' => P
+    NOLL_LEMMA_OTHER
+  } noll_lemma_e;
+
 /**
  * Represents a lemma of the form
  * P1(args1) [* P2(args2)] [/\ pure] ==> P(args)
@@ -44,6 +53,7 @@ extern "C"
   typedef struct noll_lemma_s
   {
     uint_t pid;                 /// predicate identifier P
+    noll_lemma_e kind;
     noll_pred_rule_t rule;      /// remainder of the lemma stores as follows:
     /// rule->vars = args o (args1 U args2 \ args3)
     /// rule->pure = pure
@@ -76,6 +86,9 @@ extern "C"
   noll_space_t *noll_lemma_getspace (noll_lemma_t * l, uid_t n);
   /* Get the @p n-th space formula */
 
+  noll_lemma_e noll_lemma_get_kind (noll_lemma_t * l);
+  /* Get the kind of lemma */
+
   /* ====================================================================== */
   /* Printing */
   /* ====================================================================== */
@@ -85,6 +98,9 @@ extern "C"
 
   void noll_lemma_fprint (FILE * f, noll_lemma_t * l);
   /* Print the lemma. */
+
+  void noll_lemma_kind_fprint (FILE * f, noll_lemma_e kind);
+  /* Print the lemma kind. */
 
 #ifdef	__cplusplus
 }

@@ -2,12 +2,15 @@
 #
 
 TOOL=../../src/spen
-OPTION=
+# for ta
+OPTIONTA=
+# for syn-dp
+OPTIONSY=-v -d -syn
 
 .PHONY: clean purge
 
 clean:
-	rm -f *out.txt result.txt graph-*.txt form-*.txt *.dot gmon.out
+	rm -f *out.txt result.txt graph-*.txt form-*.txt *.dot gmon.out df-*.txt
 
 purge: clean
 	rm -f *.log
@@ -16,8 +19,12 @@ purge: clean
 # IMPLICIT RULES AND DEPENDENCIES
 #---------------------------------------
 
-.SUFFIXES: .smt .log 
+.SUFFIXES: .smt .log .slog
 
 
 %.smt.log: %.smt
-	$(TOOL) $(OPTION) $< > $@ 2>&1
+	$(TOOL) $(OPTIONTA) $< > $@ 2>&1
+
+%.smt.slog: %.smt
+	$(TOOL) $(OPTIONSY) $< > $@ 2>&1
+

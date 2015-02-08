@@ -417,13 +417,60 @@ noll_pred_type ()
       noll_uint_array_resize (p->typ->pfields,
                               noll_vector_size (fields_array));
 
-      /* only source = unary predicate */
-      p->typ->isUnaryLoc = (p->def->fargs == 1) ? true : false;
-      if ((p->def->fargs > 1)
-          && (noll_var_record (p->def->vars, 2) == UNDEFINED_ID))
-        p->typ->isUnaryLoc = true;
+      /* type of arguments */
+      p->typ->argkind = noll_uid_array_new ();
+      uint_t nbLoc = 0;         /// number of location args, to fill p->typ->isUnaryLoc
+      uint_t nbBag = 0;
+      uint_t nbInt = 0;
+      noll_uid_array_reserve (p->typ->argkind, p->def->fargs);
+      for (uint_t i = 0; i < p->def->fargs; i++)
+        {
+          noll_var_t *ai = noll_vector_at (p->def->vars, i + 1);        // shift for nil
+          switch (ai->vty->kind)
+            {
+            case NOLL_TYP_RECORD:
+              {
+                if (nbLoc == 0)
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_LROOT);
+                else if (nbLoc == 1)
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_LPENDING);
+                else
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
+                nbLoc++;
+                break;
+              }
+            case NOLL_TYP_BAGINT:
+              {
+                if (nbBag == 0)
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BROOT);
+                else if ((nbBag == 1) && (nbLoc > 1))
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BPENDING);
+                else
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
+                nbBag++;
+                break;
+              }
+            case NOLL_TYP_INT:
+              {
+                if (nbInt == 0)
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IROOT);
+                else if ((nbInt == 1) && (nbLoc > 1))
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IPENDING);
+                else
+                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
+                nbInt++;
+                break;
+              }
+            default:
+              break;
+            }
+        }
+      /// this first guess is confirmed by typing rules
 
-      /* used 'nil' */
+      /* only one location arg = unary predicate */
+      p->typ->isUnaryLoc = (nbLoc == 1) ? true : false;
+
+      /* uses 'nil' as target of some fields */
       p->typ->useNil = false;
 
       /* two direction predicate */
@@ -471,6 +518,87 @@ noll_pred_type ()
  * @param form   analyzed formula
  */
 int
+noll_pred_fill_type_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
+{
+  if (form == NULL)
+    return 1;
+
+  /// get indexes guessed for root and pending for location, bag and data
+  uid_t vidLRoot = UNDEFINED_ID;
+  uid_t vidLPend = UNDEFINED_ID;
+  uid_t vidBRoot = UNDEFINED_ID;
+  uid_t vidBPend = UNDEFINED_ID;
+  uid_t vidIRoot = UNDEFINED_ID;
+  uid_t vidIPend = UNDEFINED_ID;
+  for (uint i = 0; i < p->def->fargs; i++)
+    switch (noll_vector_at (p->typ->argkind, i))
+      {
+      case NOLL_ATYP_LROOT:
+        vidLRoot = i + 1;
+        break;
+      case NOLL_ATYP_LPENDING:
+        vidLPend = i + 1;
+        break;
+      case NOLL_ATYP_BROOT:
+        vidBRoot = i + 1;
+        break;
+      case NOLL_ATYP_BPENDING:
+        vidBPend = i + 1;
+        break;
+      case NOLL_ATYP_IROOT:
+        vidIRoot = i + 1;
+        break;
+      case NOLL_ATYP_IPENDING:
+        vidIPend = i + 1;
+        break;
+      default:
+        break;
+      }
+  if (vidLRoot == UNDEFINED_ID)
+    return 0;
+  if ((vidLPend == UNDEFINED_ID) &&
+      ((vidBPend != UNDEFINED_ID) || (vidIPend != UNDEFINED_ID)))
+    return 0;
+  if ((vidBRoot == UNDEFINED_ID) && (vidBPend != UNDEFINED_ID))
+    return 0;
+  if ((vidIRoot == UNDEFINED_ID) && (vidIPend != UNDEFINED_ID))
+    return 0;
+
+  /// check that pure includes (in-)equality between 
+  ///  - root with 'nil' or root with pending
+  noll_pure_op_t op = NOLL_PURE_EQ;
+  if (vidLPend == UNDEFINED_ID)
+    op = noll_pure_matrix_at (form, 0, vidLRoot);
+  else
+    op = noll_pure_matrix_at (form, vidLRoot, vidLPend);
+  if ((level == 0 && op != NOLL_PURE_EQ) ||
+      (level >= 1 && op == NOLL_PURE_EQ))
+    return 0;
+
+  if ((op != NOLL_PURE_EQ) || (level > 0))
+    return 1;
+
+  /// check that, if op is =,  
+  /// then form includes the same think for msets and data pending      
+  assert (level == 0 && op == NOLL_PURE_EQ);
+  if ((vidBPend != UNDEFINED_ID) &&
+      (noll_pure_matrix_at (form, vidBRoot, vidBPend) != op))
+    return 0;
+  if ((vidIPend != UNDEFINED_ID) &&
+      (noll_pure_matrix_at (form, vidIRoot, vidIPend) != op))
+    return 0;
+  // TODO: check also data constraints
+  return 1;
+}
+
+/**
+ * Fill the arguments flds and typs, if not null, with the
+ * fields resp. record ids, obtained from formula form.
+ * @param p      predicate 
+ * @param level  level (0 -- base or 1 -- rec) of the analyzed formulas 
+ * @param form   analyzed formula
+ */
+int
 noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
                           noll_var_array * lvars, uint_t fargs,
                           noll_space_t * form)
@@ -484,9 +612,11 @@ noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
       {
         //if (level == 1)  // TODO: check done at parsing?!
         //  return 0;             /* no pto in inner formulas! */
+        // TODO: allow for RBT 
         if (form->m.pto.sid != 1)
           /* only pto from first argument */
           return 0;             /* TODO: already checked? */
+
         for (uid_t i = 0; i < noll_vector_size (form->m.pto.fields); i++)
           {
             uid_t fid = noll_vector_at (form->m.pto.fields, i);
@@ -619,6 +749,10 @@ noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_pred_rule_t * rule)
     return 1;
 
   int res =
+    noll_pred_fill_type_pure (p, (rule->rec == NULL) ? 0 : 1, rule->pure);
+  if (res == 0)
+    return 0;
+  res =
     noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->pto);
   if (res == 0)
     return 0;
@@ -927,8 +1061,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->
-                                                     m.sep, i));
+                                     noll_vector_at (pred->def->sigma_1->m.
+                                                     sep, i));
               res_size++;
             }
         }
@@ -999,24 +1133,30 @@ noll_pred_get_matrix (uid_t pid)
 void
 noll_pred_type_fprint (FILE * f, noll_pred_typing_t * typ)
 {
-  if (typ != NULL)
+  if (typ == NULL)
     {
-      fprintf (f, " %s, ", noll_record_name (typ->ptype0));
-      fprintf (f, "\n\t\tall types [");
-      if (typ->ptypes != NULL)
-        for (uint_t ti = 0; ti < noll_vector_size (typ->ptypes); ti++)
-          if (noll_vector_at (typ->ptypes, ti) == 1)
-            fprintf (f, "%s, ", noll_record_name (ti));
-      fprintf (f, "], ");
-      fprintf (f, "\n\t\trec fields [");
-      if (typ->pfields != NULL)
-        for (uint_t fi = 0; fi < noll_vector_size (typ->pfields); fi++)
-          fprintf (f, "%s(kind-%d), ", noll_field_name (fi),
-                   noll_vector_at (typ->pfields, fi));
-      fprintf (f, "]\n");
+      fprintf (f, "NULL\n");
+      return;
     }
-  else
-    fprintf (f, "NULL\n");
+  fprintf (f, " argkind=[");
+  for (uint i = 0; i < noll_vector_size (typ->argkind); i++)
+    fprintf (f, "%d: %d,", i, noll_vector_at (typ->argkind, i));
+  fprintf (f, "]\n");
+
+  fprintf (f, " %s, ", noll_record_name (typ->ptype0));
+  fprintf (f, "\n\t\tall types [");
+  if (typ->ptypes != NULL)
+    for (uint_t ti = 0; ti < noll_vector_size (typ->ptypes); ti++)
+      if (noll_vector_at (typ->ptypes, ti) == 1)
+        fprintf (f, "%s, ", noll_record_name (ti));
+  fprintf (f, "], ");
+  fprintf (f, "\n\t\trec fields [");
+  if (typ->pfields != NULL)
+    for (uint_t fi = 0; fi < noll_vector_size (typ->pfields); fi++)
+      fprintf (f, "%s(kind-%d), ", noll_field_name (fi),
+               noll_vector_at (typ->pfields, fi));
+  fprintf (f, "]\n");
+
 }
 
 void

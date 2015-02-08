@@ -24,7 +24,7 @@
 	(exists ((?tl SL3_t) ) 
 	(and (distinct ?hd ?ex) 
 		(tobool (ssep 
-		(pto ?hd (sref (ref n2 nil) (ref n1 ?tl) ) ) 
+		(pto ?hd (sref (ref n3 nil) (ref n2 nil) (ref n1 ?tl) ) ) 
 		(skl1 ?tl ?ex )
 		) )
 
@@ -46,7 +46,7 @@
 	(exists ((?tl SL3_t) (?Z1 SL3_t) ) 
 	(and (distinct ?hd ?ex) 
 		(tobool (ssep 
-		(pto ?hd (sref (ref n2 ?tl) (ref n1 ?Z1) ) ) 
+		(pto ?hd (sref (ref n3 nil) (ref n2 ?tl) (ref n1 ?Z1) ) ) 
 		(skl1 ?Z1 ?tl )
 		(skl2 ?tl ?ex )
 		) )

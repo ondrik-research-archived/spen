@@ -64,6 +64,7 @@ noll_lemma_new (uint_t pid)
   const noll_pred_t *pred = noll_pred_getpred (pid);
   noll_lemma_t *lem = (noll_lemma_t *) malloc (sizeof (noll_lemma_t));
   lem->pid = pid;
+  lem->kind = NOLL_LEMMA_OTHER;
   lem->rule.vars = noll_var_array_new ();
   for (uint_t i = 0; i <= pred->def->fargs; i++)
     noll_var_array_push (lem->rule.vars, noll_vector_at (pred->def->vars, i));
@@ -139,29 +140,30 @@ noll_lemma_add_lvars (noll_lemma_t * lem,
  * @brief Adds to (a copy of) @p pvars, the destination vars in @p pvars.
  */
 void
-noll_lemma_clone_lvars (noll_lemma_t * lem, noll_var_array * pvars,
-                        uint_t pargs)
+noll_lemma_clone_pending (noll_lemma_t * lem, const noll_pred_t * pred)
 {
   assert (lem != NULL);
 
-  /// lem->rule.vars has already a copy of @p pvars
+  /// lem->rule.vars has already a copy of @p pred->def->vars
 
-  /// duplicate only "destination" parameters
-  for (uint_t pi = 2; pi <= pargs;)
+  /// duplicate only "pending" parameters
+  for (uint_t pi = 0; pi < pred->def->fargs; pi++)
     {
-      // push the variable at pi
-      noll_var_t *vi = noll_var_copy (noll_vector_at (pvars, pi));
+      uid_t kind = noll_vector_at (pred->typ->argkind, pi);
+      if ((kind < NOLL_ATYP_LPENDING) || (kind > NOLL_ATYP_IPENDING))
+        continue;
+
+      noll_var_t *vi = noll_var_copy (noll_vector_at (pred->def->vars, pi + 1));        // shift for 'nil'
       char *nname =
         (char *) malloc (sizeof (char) * (strlen (vi->vname) + 3));
       snprintf (nname, strlen (vi->vname) + 3, "%s_%d", vi->vname, pi); // TODO: be more robust
       free (vi->vname);
       vi->vname = nname;
       noll_var_array_push (lem->rule.vars, vi);
-      pi += 2;                  // TODO: does not work for predicates with border args
     }
 #ifndef NDEBUG
-  fprintf (stdout, "\nlemma_clone_lvars: (%d) ", pargs);
-  noll_var_array_fprint (stdout, pvars, "\n\tpvars");
+  fprintf (stdout, "\nlemma_clone_lvars: (%d) ", pred->def->fargs);
+  noll_var_array_fprint (stdout, pred->def->vars, "\n\tpvars");
   noll_var_array_fprint (stdout, lem->rule.vars, "\n\tlemma.vars");
 #endif
 }
@@ -183,18 +185,21 @@ noll_lemma_new_spec_nil (uid_t pid_base, uid_t pid_part)
   uint_t fargs_part = pred_part->def->fargs;
 
   noll_lemma_t *lem1 = noll_lemma_new (pid_base);
-  // adds to pred_base->def->vars the additional parameters of pred_part->def->vars
-  noll_lemma_add_lvars (lem1, pred_base->def->vars, fargs_base,
-                        pred_part->def->vars, fargs_part);
+  lem1->kind = NOLL_LEMMA_INSTANCE;
+  // add the pending parameters of pred_part
+  noll_lemma_clone_pending (lem1, pred_part);
   lem1->rule.pure = noll_pure_new (noll_vector_size (lem1->rule.vars));
   assert ((fargs_base + 1) <= fargs_part);
-  // push (always) r1 (id fargs_base) = nil (id 0)
-  noll_pure_add_eq (lem1->rule.pure, fargs_base + 1, 0);
   // push equalities for the other parameters
-  for (uint_t i = fargs_base + 2; i <= fargs_part; i++) // TODO: <=fargs_part for nil?
+  for (uint_t i = fargs_base + 1; i <= fargs_part; i++)
     {
       noll_type_t *typ_vi = noll_var_type (lem1->rule.vars, i);
       assert (typ_vi != NULL);
+      if (typ_vi->kind == NOLL_TYP_RECORD)
+        {                       // push (always) r1 (id fargs_base) = nil (id 0)
+          noll_pure_add_eq (lem1->rule.pure, i, 0);
+          continue;
+        }
       noll_dform_t *df = noll_dform_new ();
       if (typ_vi->kind == NOLL_TYP_BAGINT)
         {                       // push b1 = emptybag
@@ -248,7 +253,7 @@ noll_lemma_new_spec_nil (uid_t pid_base, uid_t pid_part)
   lem1->rule.rec->m.sep = noll_space_array_new ();
   noll_space_array_reserve (lem1->rule.rec->m.sep, 1);
 
-  /// build pred_part(E,r1,M,b1,...)
+  /// build @p pid_part(E,r1,B,M,b1,d1,d)
   noll_space_t *p1 = noll_space_new ();
   p1->kind = NOLL_SPACE_LS;
   p1->is_precise = true;
@@ -257,14 +262,22 @@ noll_lemma_new_spec_nil (uid_t pid_base, uid_t pid_part)
   p1->m.ls.is_loop = false;
   p1->m.ls.sid = UNDEFINED_ID;
   p1->m.ls.args = noll_uid_array_new ();
+  noll_uid_array_reserve (p1->m.ls.args, fargs_part);
   /// copy source and border but 
-  /// change the "destination" parameters, if any
-  for (uint_t pos = 1; pos <= fargs_part; pos++)
-    {                           // TODO: do not work when border refs are present
-      if ((pos % 2) == 0)
-        noll_uid_array_push (p1->m.ls.args, fargs_base + (pos / 2));
+  /// change the "pending" parameters, if any
+  for (uint_t posb = 0, posp = 0; (posb + posp) < fargs_part;)
+    {
+      uid_t kind = noll_vector_at (pred_part->typ->argkind, (posb + posp));
+      if ((kind >= NOLL_ATYP_LPENDING) && (kind <= NOLL_ATYP_IPENDING))
+        {
+          noll_uid_array_push (p1->m.ls.args, fargs_base + posp + 1);
+          posp++;
+        }
       else
-        noll_uid_array_push (p1->m.ls.args, (pos / 2) + 1);
+        {
+          noll_uid_array_push (p1->m.ls.args, posb + 1);
+          posb++;
+        }
     }
   noll_space_array_push (lem1->rule.rec->m.sep, p1);
 
@@ -286,8 +299,9 @@ noll_lemma_new_comp_1 (uid_t pid)
   uint_t fargs = pred->def->fargs;
 
   noll_lemma_t *lem2 = noll_lemma_new (pid);
-  // adds to pred->def->vars the copy of the "destination" parameters
-  noll_lemma_clone_lvars (lem2, pred->def->vars, pred->def->fargs);
+  lem2->kind = NOLL_LEMMA_COMP_1;
+  // adds to pred->def->vars the copy of the "pending" parameters
+  noll_lemma_clone_pending (lem2, pred);
   uint_t largs = noll_vector_size (lem2->rule.vars);
   lem2->rule.pure = NULL;       // no constraint
   lem2->rule.nst = NULL;        // no constraint
@@ -299,7 +313,7 @@ noll_lemma_new_comp_1 (uid_t pid)
 
   /// Warning: first push predicate from E, then the other
 
-  // push pred(E,E',B,M,M',d,d',dB) in the "recursive" part
+  /// push @p pid(E,E',B,M,M',d,d',dB) in the "recursive" part
   noll_space_t *call1 = noll_space_new ();
   call1->kind = NOLL_SPACE_LS;
   call1->is_precise = true;
@@ -309,17 +323,21 @@ noll_lemma_new_comp_1 (uid_t pid)
   call1->m.ls.sid = UNDEFINED_ID;
   call1->m.ls.args = noll_uid_array_new ();
   // copy source and border but 
-  // change the other "destination" parameters, if any
-  for (uint_t pos = 1; pos <= fargs; pos++)
-    {                           // TODO: do not work when border refs are present
-      if ((pos % 2) == 0)
-        noll_uid_array_push (call1->m.ls.args, fargs + (pos / 2));
+  // change the other "pending" parameters, if any
+  for (uint_t pos = 0, posp = 0; pos < fargs; pos++)
+    {
+      uid_t kind = noll_vector_at (pred->typ->argkind, pos);
+      if ((kind >= NOLL_ATYP_LPENDING) && (kind <= NOLL_ATYP_IPENDING))
+        {
+          noll_uid_array_push (call1->m.ls.args, fargs + posp + 1);
+          posp++;
+        }
       else
-        noll_uid_array_push (call1->m.ls.args, pos);
+        noll_uid_array_push (call1->m.ls.args, pos + 1);
     }
   noll_space_array_push (rec2->m.sep, call1);
 
-  // push pred(E',F,B,M',N,d',z,dB)) in the "recursive" part
+  /// push @p pid(E',F,B,M',N,d',z,dB) in the "recursive" part
   noll_space_t *call2 = noll_space_new ();
   call2->kind = NOLL_SPACE_LS;
   call2->is_precise = true;
@@ -330,12 +348,16 @@ noll_lemma_new_comp_1 (uid_t pid)
   call2->m.ls.args = noll_uid_array_new ();
   // copy destination and border but 
   // change the "source" parameters
-  for (uint_t pos = 1; pos <= fargs; pos++)
-    {                           // TODO: do not work when border refs are present
-      if ((pos % 2) == 0)
-        noll_uid_array_push (call2->m.ls.args, pos);
+  for (uint_t pos = 0, posp = 0; pos < fargs; pos++)
+    {
+      uid_t kind = noll_vector_at (pred->typ->argkind, pos);
+      if (kind <= NOLL_ATYP_IROOT)
+        {
+          noll_uid_array_push (call2->m.ls.args, fargs + posp + 1);
+          ++posp;
+        }
       else
-        noll_uid_array_push (call2->m.ls.args, fargs + 1 + (pos / 2));
+        noll_uid_array_push (call2->m.ls.args, pos + 1);
     }
   noll_space_array_push (rec2->m.sep, call2);
   lem2->rule.rec = rec2;
@@ -358,6 +380,7 @@ noll_lemma_new_comp_2 (uid_t pid_base, uid_t pid_part)
   const noll_pred_t *pred_part = noll_pred_getpred (pid_part);
 
   noll_lemma_t *lem2 = noll_lemma_new (pid_base);
+  lem2->kind = NOLL_LEMMA_COMP_1;
   // adds to pred_base->def->vars the additional parameters of pred_part->def->vars
   noll_lemma_add_lvars (lem2, pred_base->def->vars, pred_base->def->fargs,
                         pred_part->def->vars, pred_part->def->fargs);
@@ -375,7 +398,7 @@ noll_lemma_new_comp_2 (uid_t pid_base, uid_t pid_part)
 
   /// Warning: first push predicate from E, then the other
 
-  /// build pred_part(E,r1,M,b1) 
+  /// build @p pid_part(E,r1,B,M,b1,d1,d)  
   noll_space_t *p1 = noll_space_new ();
   p1->kind = NOLL_SPACE_LS;
   p1->is_precise = true;
@@ -385,18 +408,26 @@ noll_lemma_new_comp_2 (uid_t pid_base, uid_t pid_part)
   p1->m.ls.sid = UNDEFINED_ID;
   p1->m.ls.args = noll_uid_array_new ();
   // copy source and border but 
-  // change the other "destination" parameters, if any
-  for (uint_t pos = 1; pos <= fargs_part; pos++)
-    {                           // TODO: do not work when border refs are present
-      if ((pos % 2) == 0)
-        noll_uid_array_push (p1->m.ls.args, fargs_base + (pos / 2));
+  // change the "pending" parameters, if any
+  for (uint_t posb = 0, posp = 0; (posb + posp) < fargs_part;)
+    {
+      uint_t pos = posb + posp;
+      uid_t kind = noll_vector_at (pred_part->typ->argkind, posb + posp);
+      if ((kind >= NOLL_ATYP_LPENDING) && (kind <= NOLL_ATYP_IPENDING))
+        {
+          noll_uid_array_push (p1->m.ls.args, fargs_base + posp + 1);
+          ++posp;
+        }
       else
-        noll_uid_array_push (p1->m.ls.args, 1 + (pos / 2));
+        {
+          noll_uid_array_push (p1->m.ls.args, posb + 1);
+          posb++;
+        }
     }
   /// push it in the "recursive" part
   noll_space_array_push (rec2->m.sep, p1);
 
-  /// build pred(r1,b1) 
+  /// build @p pid_base (r1,b1,d1,d)
   noll_space_t *p2 = noll_space_new ();
   p2->kind = NOLL_SPACE_LS;
   p2->is_precise = true;
@@ -406,9 +437,13 @@ noll_lemma_new_comp_2 (uid_t pid_base, uid_t pid_part)
   p2->m.ls.sid = UNDEFINED_ID;
   p2->m.ls.args = noll_uid_array_new ();
   // change the source arguments
-  for (uint_t i = fargs_base + 1; i <= fargs_part; i++) // TODO: <=fargs_part for nil?
+  for (uint_t pos = 0; pos < fargs_base; pos++)
     {
-      noll_uid_array_push (p2->m.ls.args, i);
+      uid_t kind = noll_vector_at (pred_base->typ->argkind, pos);
+      if (kind <= NOLL_ATYP_IROOT)
+        noll_uid_array_push (p2->m.ls.args, fargs_base + pos + 1);
+      else
+        noll_uid_array_push (p2->m.ls.args, pos + 1);
     }
   /// push it in the "recursive" part
   noll_space_array_push (rec2->m.sep, p2);
@@ -431,6 +466,79 @@ noll_lemma_init_lseg (uint_t pid)
   noll_lemma_array_push (res, lem);
   return res;
 }
+
+/**
+ * @brief Return the set of lemma for the predicate list(E).
+ */
+noll_lemma_array *
+noll_lemma_init_list (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 2);
+
+  // TODO: find the "partial" RD of pid using typing
+  uid_t pid_lsh = noll_pred_array_find ("ls");
+  assert (pid_lsh != UNDEFINED_ID);
+
+  /// first lemma:
+  ///   lshole(E,r1) /\ r1=nil => list(E)
+  noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_lsh);
+  // push lemma
+  noll_lemma_array_push (res, lem1);
+
+  /// second lemma:
+  ///   lshole(E,r1) * list(r1) => list(E)
+  noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_lsh);
+  // push lemma
+  noll_lemma_array_push (res, lem2);
+
+  return res;
+}
+
+/**
+ * @brief Return the set of lemma for the predicate avl(E,M,H).
+ */
+noll_lemma_array *
+noll_lemma_init_avl (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 2);
+
+  // TODO: find the "partial" RD of pid using typing
+  uid_t pid_avlh = noll_pred_array_find ("avlhole");
+  assert (pid_avlh != UNDEFINED_ID);
+
+  /// first lemma:
+  ///   avlhole(E,r1,M,b1,H,h1) /\ r1=nil /\ b1=emptybag /\ h1=0 => avl(E,M,H)
+  noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_avlh);
+  // push lemma
+  noll_lemma_array_push (res, lem1);
+
+  /// second lemma:
+  ///   avlhole(E,r1,M,b1,H,h1) * bst(r1,b1,h1) => bst(E,M,H)
+  noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_avlh);
+  // push lemma
+  noll_lemma_array_push (res, lem2);
+
+  return res;
+}
+
+/**
+ * @brief Return the set of lemma for the predicate avlh(ole).
+ */
+noll_lemma_array *
+noll_lemma_init_avlhole (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 1);
+
+  /// generate composition lemma for avlhole
+  noll_lemma_t *lem = noll_lemma_new_comp_1 (pid);
+  // push lemma
+  noll_lemma_array_push (res, lem);
+  return res;
+}
+
 
 /**
  * @brief Return the set of lemma for the predicate bst.
@@ -476,6 +584,51 @@ noll_lemma_init_bsthole (uint_t pid)
   return res;
 }
 
+
+/**
+ * @brief Return the set of lemma for the predicate slist.
+ */
+noll_lemma_array *
+noll_lemma_init_slist (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 2);
+
+  // TODO: find the "partial" RD of pid using typing
+  uid_t pid_sls = noll_pred_array_find ("sls");
+  assert (pid_sls != UNDEFINED_ID);
+
+  /// first lemma:
+  ///   sls(E,r1,M,b1) /\ r1=nil /\ b1=emptybag => slist(E,M)
+  noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_sls);
+  // push lemma
+  noll_lemma_array_push (res, lem1);
+
+  /// second lemma:
+  ///   sls(E,r1,M,b1) * slist(r1,b1) => slist(E,M)
+  noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_sls);
+  // push lemma
+  noll_lemma_array_push (res, lem2);
+
+  return res;
+}
+
+/**
+ * @brief Return the set of lemma for the predicate sls(eg).
+ */
+noll_lemma_array *
+noll_lemma_init_slseg (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 1);
+
+  /// generate composition lemma for bsthole
+  noll_lemma_t *lem = noll_lemma_new_comp_1 (pid);
+  // push lemma
+  noll_lemma_array_push (res, lem);
+  return res;
+}
+
 /**
  * @brief Return the set of lemma for the predicate @p pid.
  */
@@ -492,20 +645,38 @@ noll_lemma_init_pred (uid_t pid)
   if (lemma_pid != NULL)
     return lemma_pid;
 
-  const char *pname = noll_pred_name (pid);
+  const noll_pred_t *pred = noll_pred_getpred (pid);
 
-  // TODO: test some condition computed by typing instead of the below one
-  if (strncmp (pname, "bsth", 4) == 0)
-    return noll_lemma_init_bsthole (pid);
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 2);
 
-  if (strncmp (pname, "bst", 3) == 0)
-    return noll_lemma_init_bst (pid);
+  // WARNING: we suppose that RD set is compositional
+  // for a full RD, the compositional RD is pid + 1
+  if (pred->typ->isUnaryLoc == true)
+    {
+      /// if unary then generate comp_2 and spec_nil
+      // TODO: find the "partial" RD of pid using typing
+      uid_t pid_hole = pid + 1;
+      assert (pid_hole < noll_vector_size (preds_array));
 
-  if (strncmp (pname, "ls", 2) == 0)
-    return noll_lemma_init_lseg (pid);
+      /// first lemma:
+      ///   phole(E,r1,M,b1,H,h1) /\ r1=nil /\ b1=emptybag /\ h1=0 => p(E,M,H)
+      noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_hole);
+      noll_lemma_array_push (res, lem1);
 
-  // TODO: fill with lemma for other predicates
-  return NULL;
+      /// second lemma:
+      ///   phole(E,r1,M,b1,H,h1) * p(r1,b1,h1) => p(E,M,H)
+      noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_hole);
+      noll_lemma_array_push (res, lem2);
+    }
+  else
+    {
+      /// otherwise generate comp_1
+      noll_lemma_t *lem = noll_lemma_new_comp_1 (pid);
+      noll_lemma_array_push (res, lem);
+    }
+
+  return res;
 }
 
 /* ====================================================================== */
@@ -531,6 +702,17 @@ noll_lemma_getspace (noll_lemma_t * l, uid_t n)
   if (2 <= n || n >= noll_vector_size (l->rule.rec->m.sep))
     return NULL;
   return noll_vector_at (l->rule.rec->m.sep, n);
+}
+
+/**
+ * @brief Get the kind of lemma 
+ */
+noll_lemma_e
+noll_lemma_get_kind (noll_lemma_t * l)
+{
+  if (l == NULL)
+    return NOLL_LEMMA_OTHER;
+  return l->kind;
 }
 
 /* ====================================================================== */
@@ -595,5 +777,32 @@ noll_lemma_fprint (FILE * f, noll_lemma_t * l)
   if (l->rule.rec != NULL)
     {
       noll_space_fprint (f, l->rule.vars, NULL, l->rule.rec);
+    }
+}
+
+/**
+ * @brief Print the lemma kind.
+ */
+void
+noll_lemma_kind_fprint (FILE * f, noll_lemma_e kind)
+{
+  assert (f != NULL);
+  switch (kind)
+    {
+    case NOLL_LEMMA_COMP_1:
+      fprintf (f, "COMPOSITION");
+      break;
+    case NOLL_LEMMA_COMP_2:
+      fprintf (f, "COMPLETION");
+      break;
+    case NOLL_LEMMA_INSTANCE:
+      fprintf (f, "INSTANTIATION");
+      break;
+    case NOLL_LEMMA_STRONGER:
+      fprintf (f, "STRONGER");
+      break;
+    default:
+      fprintf (f, "UNKNOWN");
+      break;
     }
 }
