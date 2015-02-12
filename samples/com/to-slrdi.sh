@@ -9,7 +9,7 @@ FILE=$1
 SED="sed -i "
 
 # replace 'QF_S' by 'QF_SLRDI'
-${SED} 's/QF_S /SF_SLRDI /g' ${FILE}
+${SED} 's/QF_S /QF_SLRDI /g' ${FILE}
 ${SED} 's/QF_S)/QF_SLRDI)/g' ${FILE}
 
 # replace 'singleton' by 'bag'

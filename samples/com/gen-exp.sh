@@ -9,7 +9,7 @@ do
 		echo "${BNAME}.smt exists"
         else
 		cp ${i} ${BNAME}.smt
-		./to-slrdi.sh ${BNAME}.smt
+		to-slrdi.sh ${BNAME}.smt
 	fi
 done
 
