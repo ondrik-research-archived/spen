@@ -137,17 +137,15 @@
 (declare-fun alpha7 () SetLoc)
 (declare-fun alpha8 () SetLoc)
 (declare-fun alpha9 () SetLoc)
+(declare-fun alpha10 () SetLoc)
 
-;; VC22: bsthole(root0, parent, M1, M2) * parent |-> ((left, X), (right, keynode), (data, d1)) * bst(Y,M5) * 
-;; bsthole(rgt, nxtparent, M8, M10) * nxtparent |-> ((left, W), (right, U), (data, d2)) * 
-;; cur |->((left,Y),(right,rgt), (data,d3)) * bst(V,M15) * bst(W,M16) * bst(Z, M12) & M11 = {d3} cup M15 cup M16 & 
-;; M15 < d3 < M16 & M5 < key < M8 cup {keymin} & M10 = ({d2} cup M11 cup M12) \ {keymin} & M11 < d2 < M12 & 
-;; M4 = {key} cup M5 cup M8 cup {keymin} & key in M0 & M1 = M0 \ {key} & M2 = ({d1} cup M3 cup M4) \ {key} & 
-;; M3 < d1 < M4 & !(parent = nil) & d1 < key & ! cur = nil & keymin in M11 & keymin <= M11 & V = nil & subroot = cur & 
-;; M14 = {d3} cup M5 cup M8 |-
-;; bsthole(root0, parent, M1, M2) * parent |-> ((left, X), (right,keynode), (data, d1)) * bst(X,M3) * bst(subroot, M14) &
-;; M14 = M4 \ {key} & M2 = {d1} cup M3 cup M14 & M3 < d1 < M4 & d1 < key & key in M4 & key in M0 & M1 = M0 \ {key} & 
-;; ! parent = nil
+;; VC22: bsthole(root0, parent, M1, M2) * parent |-> ((left, X), (right, keynode), (data, d1)) * bst(X,M3) * bst(Y,M5) * 
+;; bsthole(rgt, nxtparent, M8, M10) * nxtparent |-> ((left, W), (right, Z), (data, d2)) * cur |->((left,Y),(right,rgt), (data,d3)) * bst(V,M15) * 
+;; bst(W,M16) * bst(Z, M12) & M11 = {d3} cup M15 cup M16 & M15 < d3 < M16 & M5 < key < M8 cup {keymin} & M10 = ({d2} cup M11 cup M12) \ {keymin} &
+;; M11 < d2 < M12 & M4 = {key} cup M5 cup M8 cup {keymin} & key in M0 & M1 = M0 \ {key} & M2 = ({d1} cup M3 cup M4) \ {key} & M3 < d1 < M4 & 
+;; !(parent = nil) & d1 < key & ! cur = nil & keymin in M11 & keymin <= M11 & V = nil & subroot = cur & M14 = {d3} cup M5 cup M8 |-
+;; bsthole(root0, parent, M1, M2) * parent |-> ((left, X), (right,keynode), (data, d1)) * bst(X,M3) * bst(subroot, M14) & M14 = M4 \ {key} & 
+;; M2 = {d1} cup M3 cup M14 & M3 < d1 < M4 & d1 < key & key in M4 & key in M0 & M1 = M0 \ {key} & ! parent = nil
 
 (assert 
 	(and
@@ -155,22 +153,25 @@
 	(ssep 
 		(index alpha1 (bsthole root0 parent M1 M2) )
 		(pto parent (sref (ref left X) (ref right keynode) (ref data d1) ) )
-		(index alpha2 (bst Y M5)) 
-		(index alpha3 (bsthole rgt nxtparent M8 M10)) 
-		(pto nxtparent (sref (ref left W) (ref right U) (ref data d2) ) )
+		(index alpha2 (bst X M3)) 
+		(index alpha3 (bst Y M5)) 
+		(index alpha4 (bsthole rgt nxtparent M8 M10)) 
+		(pto nxtparent (sref (ref left W) (ref right Z) (ref data d2) ) )
 		(pto cur (sref (ref left Y) (ref right rgt) (ref data d3) ) )
-		(index alpha4 (bst V M15) )
-		(index alpha5 (bst W M16) )
-		(index alpha6 (bst Z M12) )
+		(index alpha5 (bst V M15) )
+		(index alpha6 (bst W M16) )
+		(index alpha7 (bst Z M12) )
 	))
 	(= M11 (bagunion (bag d3) M15 M16))
 	(< M15 (bag d3) )
 	(< (bag d3) M16)
-	(< M5 (bag d3) )
-	(< (bag d3) (bagunion M8 (bag keymin)) )
+	(< M5 (bag key) )
+	(< (bag key) (bagunion M8 (bag keymin)) )
 	(= M10 (bagminus (bagunion (bag d2) M11 M12) (bag keymin)) )
 	(< M11 (bag d2) )
 	(< (bag d2) M12)
+	(= M4 (bagunion (bag key) M5 M8 (bag keymin)) )(subset (bag key) M0) (= M1 (bagminus M0 (bag key)) ) 
+	(= M2 (bagminus (bagunion (bag d1) M3 M4) (bag key) ) ) 
 	(< M3 (bag d1) )
 	(< (bag d1) M4)
 	(distinct parent nil)
@@ -192,10 +193,10 @@
 	(and
 	(tobool 
 	(ssep 
-		(index alpha7 (bsthole root0 parent M1 M2))
+		(index alpha8 (bsthole root0 parent M1 M2))
 		(pto parent (sref (ref left X) (ref right keynode) (ref data d1)))
-		(index alpha8 (bst X M13) )
-		(index alpha9 (bst subroot M14) )		
+		(index alpha9 (bst X M13) )
+		(index alpha10 (bst subroot M14) )		
 	)
 	)
 	(= M14 (bagminus M4 (bag key)) )

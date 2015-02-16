@@ -160,6 +160,8 @@
 	(= M6 (bagminus (bagunion (bag d2) M3 M4) (bag keymin)) )
 	(< M3 (bag d2) )
 	(< (bag d2) M4 )
+	(= M0 (bagunion (bag key) M1 M5 (bag keymin) ) ) (< M1 (bag key))  (< (bag key) (bagunion M5 (bag keymin)) )
+	(= parent nil) (distinct cur1 nil) (subset (bag keymin) M3) (<= (bag keymin) M3) 
 	(distinct U nil)
 	(= nxtparent2 cur1)
 	(= cur2 U)

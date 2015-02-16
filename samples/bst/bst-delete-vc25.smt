@@ -110,8 +110,10 @@
 (declare-fun alpha3 () SetLoc)
 (declare-fun alpha4 () SetLoc)
 
-VC25: bsthole(root0, parent, M1, M2) * parent |-> ((left, X), (right, subroot), (data, d1)) * bst(X,M3) * bst(subroot, M5) & M1 = M0 \ {key} & M5 = M4 \ {key} & M2 = {d1} cup M3 cup M5 & M3 < d1 < M5 & d1 < key & key in M4 & key in M0 & !(parent = nil) & ret = root0 |-
-bst(ret, M1) & M1 = M0 \ {key} & key in M0
+;; VC25: bsthole(root0, parent, M1, M2) * parent |-> ((left, X), (right, subroot), (data, d1)) * bst(X,M3) * bst(subroot, M5) & 
+;; M1 = M0 \ {key} & M5 = M4 \ {key} & M2 = {d1} cup M3 cup M5 & M3 < d1 < M5 & d1 < key & key in M4 & key in M0 & !(parent = nil) & ret = root0 
+;; |-
+;; bst(ret, M1) & M1 = M0 \ {key} & key in M0
 
 (assert 
 	(and

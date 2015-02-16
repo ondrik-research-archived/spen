@@ -110,10 +110,10 @@ noll_atom_of_form (noll_space_t * phi, bool isMatrix,
         }
       else
         {
-          uint_t src = noll_vector_at (phi->m.ls.args, 0);
-          uint_t dst = noll_vector_at (phi->m.ls.args, 1);
           /// remove ls edges between equal variables
           /// because only acyclic predicates are allowed
+    	  uint_t src = noll_vector_at (phi->m.ls.args, 0);
+          uint_t dst = noll_vector_at (phi->m.ls.args, 1);
           return (src == dst) ? 0 : 1;
         }
     }

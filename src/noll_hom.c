@@ -1942,6 +1942,12 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
         }
       noll_uid_array_set (res, eidE, eid1);
     }
+  // zhilin: if there is only one predicate in the body of the lemma
+  else
+  {
+	 res = noll_uid_map_new (noll_vector_size (g2->edges));
+     noll_uid_array_set (res, eidE, eid1);
+  }
 
   /**
    * Step 5: check the pure part, if any
@@ -1966,6 +1972,8 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
 #ifndef NDEBUG
   NOLL_DEBUG ("\nshom_match_lemma: succeds!\n");
 #endif
+
+
   /// push all constraints generated
   noll_dform_array_cup_all (df, dfnew);
   noll_dform_array_delete (dfnew);

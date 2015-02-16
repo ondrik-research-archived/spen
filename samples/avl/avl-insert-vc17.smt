@@ -1,11 +1,9 @@
-
-; Extending QF_S:
 ; constant emptybag, 
 ; the function bag, 
 ; the multiset comparison operator bag-lt, bag-le, bag-gt, bag-ge
 ; bagunion, bag-diff, bag-sub
 
-(set-logic QF_S)
+(set-logic QF_SLRDI)
 
 ;; declare sorts
 (declare-sort Avl_t 0)
@@ -24,7 +22,7 @@
 
 (define-fun avl ((?E Avl_t) (?M BagInt) (?H Int)) Space (tospace 
 	(or 
-	(and (= ?E nil) 
+	(and 	(= ?E nil) 
 		(tobool emp
 		)
 		(= ?M emptybag)
@@ -32,19 +30,21 @@
 	)
  
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M1 BagInt) (?M2 BagInt) (?H1 Int) (?H2 Int) (?d Int) (?b Int) ) 
-	(and (distinct ?E nil) 
-		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(avl ?X ?M1 ?H1)
-		(avl ?Y ?M2 ?H2)
+	(and 
+		(distinct ?E nil) 
+		(tobool 
+		(ssep 
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(avl ?X ?M1 ?H1)
+			(avl ?Y ?M2 ?H2)
 		)
 		)
 		(= ?M (bagunion (bag ?d) ?M1  ?M2) )
 		(< ?M1 (bag ?d))
 		(< (bag ?d) ?M2)
-		ite((> ?H2 ?H1) (= ?H ?H2+1) (= ?H ?H1+1))
-		(= ?b (- ?H2 ?H1))
-		(<= -1 ?b) (<= ?b 1)
+		(= ?H (ite (> ?H2 ?H1) (+ ?H2 1 ) (+ ?H1 1 ) ) )
+		(= ?b (- ?H2 ?H1) )
+		(<= (- 0 1) ?b) (<= ?b 1 )
 	)
 	)
 	)
@@ -66,41 +66,44 @@
 	)
  
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M3 BagInt) (?M4 BagInt) (?H3 Int) (?H4 Int) (?d Int) (?b Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(avlhole ?X ?M3 ?H3 ?M2 ?H2)
-		(avl ?Y ?M4 ?H4)
+	(and 
+		(distinct ?E ?F) 
+		(tobool 
+		(ssep 
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(avlhole ?X ?F ?M3 ?H3 ?M2 ?H2)
+			(avl ?Y ?M4 ?H4)
 		)
 		)
 		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		ite((> ?H4 ?H3) (= ?H1 ?H4+1) (= ?H1 ?H3+1))
+		(= ?H1 (ite (> ?H4 ?H3) (+ ?H4 1 ) (+ ?H3 1 ) ) )
 		(= ?b (- ?H4 ?H3))
-		(<= -1 ?b) (<= ?b 1)
+		(<= (- 0 1)  ?b) (<= ?b 1 )
 	)
 	)
 
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M3 BagInt) (?M4 BagInt) (?H3 Int) (?H4 Int) (?d Int) (?b Int) ) 
-	(and (distinct ?E ?F) 
+	(and 
+		(distinct ?E ?F) 
 		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(avl ?Y ?M3 ?H3)
-		(avlhole ?X ?M4 ?H4 ?M2 ?H2)
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(avl ?X ?M3 ?H3)
+			(avlhole ?Y ?F ?M4 ?H4 ?M2 ?H2)
 		)
 		)
 		(= ?M1 (bagunion (bag ?d) ?M3 ?M4 ) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		ite((> ?H4 ?H3) (= ?H1 ?H4+1) (= ?H1 ?H3+1))
-		(= ?b (- ?H4 ?H3))
-		(<= -1 ?b) (<= ?b 1)
+		(= ?H1 (ite (> ?H4 ?H3) (+ ?H4 1 ) (+ ?H3 1 ) ) )
+		(= ?b (- ?H4 ?H3) )
+		(<= (- 0 1)  ?b) (<= ?b 1 )
 	)
 	)
-
 	)
 ))
+
 
 
 ;; avlhole with the property that each node on the path from E to F is balanced
@@ -122,16 +125,17 @@
  
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M3 BagInt) (?M4 BagInt) (?H3 Int) (?H4 Int) (?d Int) (?b Int) ) 
 	(and (distinct ?E ?F) 
-		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(bavlhole ?X ?M3 ?H3 ?M2 ?H2)
-		(avl ?Y ?M4 ?H4)
+		(tobool 
+		(ssep 
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(bavlhole ?X ?F ?M3 ?H3 ?M2 ?H2)
+			(avl ?Y ?M4 ?H4)
 		)
 		)
 		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		ite((> ?H4 ?H3) (= ?H1 ?H4+1) (= ?H1 ?H3+1))
+		(= ?H1 (ite (> ?H4 ?H3) (+ ?H4 1 ) (+ ?H3 1 )) )
 		(= ?b (- ?H4 ?H3))
 		(= ?b 0)
 	)
@@ -140,16 +144,16 @@
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M3 BagInt) (?M4 BagInt) (?H3 Int) (?H4 Int) (?d Int) (?b Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(avl ?Y ?M3 ?H3)
-		(bavlhole ?X ?M4 ?H4 ?M2 ?H2)
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(avl ?X ?M3 ?H3)
+			(bavlhole ?Y ?F ?M4 ?H4 ?M2 ?H2)
 		)
 		)
 		(= ?M1 (bagunion (bag ?d) ?M3 ?M4) )
-		(< ?M3 (bag ?d))
-		(< (bag ?d) ?M4)
-		ite((> ?H4 ?H3) (= ?H1 ?H4+1) (= ?H1 ?H3+1))
-		(= ?b (- ?H4 ?H3))
+		(< ?M3 (bag ?d) )
+		(< (bag ?d) ?M4 )
+		(= ?H4 (ite (> ?H4 ?H3) (+ ?H4 1 ) (+ ?H3 1 )) )
+		(= ?b (- ?H4 ?H3) )
 		(= ?b 0)
 	)
 	)
@@ -177,17 +181,17 @@
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M3 BagInt) (?M4 BagInt) (?H3 Int) (?H4 Int) (?d Int) (?b Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(ubavlhole ?X ?M3 ?H3 ?M2 ?H2)
-		(avl ?Y ?M4 ?H4)
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(ubavlhole ?X ?F ?M3 ?H3 ?M2 ?H2)
+			(avl ?Y ?M4 ?H4)
 		)
 		)
 		(= ?M1 (bagunion (bag ?d) ?M3 ?M4 ) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		ite((> ?H4 ?H3) (= ?H1 ?H4+1) (= ?H1 ?H3+1))
-		(= ?b (- ?H4 ?H3))
-		(<= -1 ?b) (<= ?b 1)
+		(= ?H1 (ite (> ?H4 ?H3) (+ ?H4 1 ) (+ ?H3 1 ) ) )
+		(= ?b (- ?H4 ?H3) )
+		(<= (-  0 1 ) ?b) (<= ?b 1 )
 		(distinct ?b 0)
 	)
 	)
@@ -195,27 +199,27 @@
 	(exists ( (?X Avl_t) (?Y Avl_t) (?M3 BagInt) (?M4 BagInt) (?H3 Int) (?H4 Int) (?d Int) (?b Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool (ssep 
-		(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
-		(avl ?Y ?M3 ?H3)
-		(ubavlhole ?X ?M4 ?H4 ?M2 ?H2)
+			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d) (ref balance ?b)) ) 
+			(avl ?X ?M3 ?H3)
+			(ubavlhole ?Y ?F ?M4 ?H4 ?M2 ?H2)
 		)
 		)
 		(= ?M1 (bagunion (bag ?d) ?M3 ?M4 ) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		ite((> ?H4 ?H3) (= ?H1 ?H4+1) (= ?H1 ?H3+1))
+		(= ?H1 (ite (> ?H4 ?H3) (+ ?H4 1 ) (+ ?H3 1 )) )
 		(= ?b (- ?H4 ?H3))
-		(= ?b 0)
+		(<= (-  0 1 ) ?b) (<= ?b 1 )
+		(distinct ?b 0)
 	)
 	)
 
 	)
 ))
 
+
 ;; declare variables
-(declare-fun root0 () Avl_t)
 (declare-fun root () Avl_t)
-(declare-fun root1 () Avl_t)
 (declare-fun cur () Avl_t)
 (declare-fun cur1 () Avl_t)
 (declare-fun cur2 () Avl_t)
@@ -244,6 +248,7 @@
 (declare-fun M5 () BagInt)
 (declare-fun M6 () BagInt)
 (declare-fun M7 () BagInt)
+(declare-fun M8 () BagInt)
 (declare-fun M9 () BagInt)
 (declare-fun M10 () BagInt)
 (declare-fun M11 () BagInt)
@@ -265,11 +270,12 @@
 (declare-fun d2 () Int)
 (declare-fun d3 () Int)
 (declare-fun d4 () Int)
+(declare-fun d5 () Int)
 (declare-fun b1 () Int)
 (declare-fun b2 () Int)
 (declare-fun b3 () Int)
 (declare-fun b4 () Int)
-
+(declare-fun b5 () Int)
 (declare-fun key () Int)
 
 ;; declare set of locations
@@ -288,6 +294,8 @@
 (declare-fun alpha12 () SetLoc)
 (declare-fun alpha13 () SetLoc)
 (declare-fun alpha14 () SetLoc)
+
+
 
 ;; VC17: avlhole(root, unbparent, M1,H1,M2,H2) * unbparent |-> ((left,unbalance),(right,X),(data,d1),(balance,b1)) * 
 ;; unbalance |-> ((left,Y),(right,Z),(data,d2),(balance,b4)) * bavlhole(Y,parent,M4,H4,M6,H6) * parent |-> ((left,x),(right,nil),
@@ -310,20 +318,20 @@
 	(ssep 
 		(index alpha1 (avlhole root unbparent M1 H1 M2 H2))
 		(pto unbparent (sref (ref left unbalance) (ref right X) (ref data d1) (ref balance b1)) ) 
-		(pto unbalance (sref (ref left Y) (ref right Z) (ref data d2) (ref balance b4)))
+		(pto unbalance (sref (ref left Y) (ref right Z) (ref data d2) (ref balance b4)) )
 		(index alpha2 (bavlhole Y parent M4 H4 M6 H6))
-		(pto parent (sref (ref left x) (ref right nil) (ref data d3) (ref balance b3)))
-		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref balance 0)))
+		(pto parent (sref (ref left x) (ref right nil) (ref data d3) (ref balance b3)) )
+		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref balance b5)) )
 		(index alpha3 (avl Z M5 H5))
 		(index alpha4 (avl X M3 H3))	
 	))
-	(= M6 (bagunion (bag d3) (bag key))) (= H6 1) (< M4 (bag d2)) (< (bag d2) M5) 
-	(= b2 (- H5 H4)) (<= -1 b2) (<= b2 1) (= M2 (bagunion (bag d1) (bag d2) M4 M5 M3)) 
+	(= M6 (bagunion (bag d3) (bag key)) ) (= H6 1) (< M4 (bag d2)) (< (bag d2) M5) 
+	(= b2 (- H5 H4)) (<= (- 0 1) b2) (<= b2 1) (= M2 (bagunion (bag d1) (bag d2) M4 M5 M3) ) 
 	(< (bagunion (bag d2) M4 M5) (bag d1)) (< (bag d1) M3) 
-	(ite (> H5 H4) (= h (+ H5 1)) (= h (+ H4 1)) ) 
-	(= b1 (- H3 h)) (<= -1 b1) (<= b1 1) (= M1 (bagunion M0 (bag key))) (not (subset (bag key) M0))	
+	(= h (ite (> H5 H4) (+ H5 1) (+ H4 1) ) ) 
+	(= b1 (- H3 h)) (<= (- 0 1) b1) (<= b1 1) (= M1 (bagunion M0 (bag key)) ) (= M0 (bagminus M0 (bag key)) )	
 	(distinct parent nil) (distinct unbparent nil) (> d1 key) (> d2 key) (> d3 key) 
-	(distinct b2 0) (= b3 0) (= cur1 unbalance) (= b4 (- b2 1)) (= cur2 Y) (= H7 (+ H4 1))
+	(distinct b2 0) (= b3 0) (= cur1 unbalance) (= b4 (- b2 1)) (= cur2 Y) (= H7 (+ H4 1)) (= b5 0)
 	)
 )
 
@@ -340,23 +348,23 @@
 	(tobool 
 	(ssep 
 		(index alpha5 (avlhole root unbparent M1 H1 M2 H2))
-		(pto unbparent (sref (ref left unbalance) (ref right X) (ref data d1) (ref balance b1)))
-		(pto unbalance (sref (ref left cur2) (ref right Z) (ref data d2) (ref balance b4))) 
+		(pto unbparent (sref (ref left unbalance) (ref right X) (ref data d1) (ref balance b1)) )
+		(pto unbalance (sref (ref left cur2) (ref right Z) (ref data d2) (ref balance b4)) ) 
 		(index alpha6 (ubavlhole cur2 cur2 M4 H7 M4 H7))	
 		(index alpha7 (bavlhole cur2 parent M4 H4 M6 H6)) 
-		(pto parent (sref (ref left x) (ref right nil) (ref data d3) (ref balance b3)))
-		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref balance 0)))
+		(pto parent (sref (ref left x) (ref right nil) (ref data d3) (ref balance b3)) )
+		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref balance b5)) )
 		(index alpha8 (avl Z M5 H5))
 		(index alpha9 (avl X M3 H3))
 	))
-	(= M6 (bagunion (bag d3) (bag key))) (= H6 1)
-	(< M4 (bag d2)) (< (bag d2) M5)(= b4  (- H5 H7)) (<= -2 b4) (<= b4 0) 
-	(= M2 (bagunion (bag d1) (bag d2) M4 M5 M3)) (< (bagunion (bag d2) M4 M5) (bag d1)) (< (bag d1) M3)
-	(ite (> H5 H4) (= h  (+ H5 1)) (= h (+ H4 1)) ) 
-	(= b1 (- H3 h)) (<= -1 b1) (<= b1 1)
-	(= M1 (bagunion M0 (bag key))) (not (subset (bag key) M0)) (distinct parent nil)	
+	(= M6 (bagunion (bag d3) (bag key)) ) (= H6 1)
+	(< M4 (bag d2)) (< (bag d2) M5)(= b4  (- H5 H7)) (<= (- 0 2) b4) (<= b4 0) 
+	(= M2 (bagunion (bag d1) (bag d2) M4 M5 M3) ) (< (bagunion (bag d2) M4 M5) (bag d1)) (< (bag d1) M3)
+	(= h (ite (> H5 H4) (+ H5 1) (+ H4 1)) ) 
+	(= b1 (- H3 h)) (<= (- 0 1) b1) (<= b1 1)
+	(= M1 (bagunion M0 (bag key)) ) (= M0 (bagminus M0 (bag key)) ) (distinct parent nil)	
 	(distinct unbparent nil) (> d1 key) (> d2 key) (> d3 key)
-	(distinct b2 0) (= b3 0)  (= H7 (+ H4 1))
+	(distinct b2 0) (= b3 0)  (= H7 (+ H4 1)) (= b5 0)
 	)
 ))
 
