@@ -441,20 +441,22 @@ noll_pred_type ()
               }
             case NOLL_TYP_BAGINT:
               {
-                if (nbBag == 0)
+                if ((nbBag == 0) || (nbLoc == 1))
+                  /// no bag seen before or still in the root part
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BROOT);
-                else if ((nbBag == 1) && (nbLoc > 1))
+                else if ((nbBag >= 1) && (nbLoc == 2))
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BPENDING);
-                else
+                else 
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
                 nbBag++;
                 break;
               }
             case NOLL_TYP_INT:
               {
-                if (nbInt == 0)
+                if ((nbInt == 0) || (nbLoc == 1) || (nbBag == 1))
+                  /// no int seen before or still in the root part
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IROOT);
-                else if ((nbInt == 1) && (nbLoc > 1))
+                else if ((nbInt >= 1) && (nbLoc == 2))
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IPENDING);
                 else
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
