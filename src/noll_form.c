@@ -853,29 +853,44 @@ noll_pure_check_entl (bool ** diff, uint_t dsize, noll_pure_t * f,
           uint_t nv2 = noll_vector_at (map, v2);
           if (rhs_op == NOLL_PURE_EQ)
             {
-              if (nv1 < dsize && nv2 < dsize)
-                res = (nv1 == nv2) ? 1 : 0;
+              if (ty1->kind != ty2->kind)
+                {
+#ifndef NDEBUG
+                  fprintf (stdout,
+                           "\n**** pure_check_entl: fails (typing) to prove (n%d == n%d)\n",
+                           nv1, nv2);
+#endif
+                  res = 0;
+                }
+              else
+                /// one or both of variables is not yet bounded to a node, 
+                /// update m if the other is bounded
+              if (nv1 < dsize && nv2 >= dsize)
+                noll_uid_array_set (map, v2, nv1);
+              else if (nv2 < dsize && nv1 >= dsize)
+                noll_uid_array_set (map, v1, nv2);
+              else if (ty1->kind == NOLL_TYP_RECORD)
+                {
+                  /// shall be equal and less than dsize
+                  res = ((nv1 < dsize) && (nv2 < dsize)
+                         && (nv1 == nv2)) ? 1 : 0;
+#ifndef NDEBUG
+                  if (res == 0)
+                    fprintf (stdout,
+                             "\n**** pure_check_entl: fails (record) to prove (n%d == n%d)\n",
+                             nv1, nv2);
+#endif
+
+                }
               else
                 {
-                  /// one or both of variables is not yet bounded to a node, 
-                  /// update m if the other is bounded
-                  if (nv1 < dsize)
-                    noll_uid_array_set (map, v2, nv1);
-                  else if (nv2 < dsize)
-                    noll_uid_array_set (map, v1, nv2);
-                  else
-                    if ((ty1->kind == ty2->kind) &&
-                        (ty1->kind != NOLL_TYP_RECORD))
-                    /// generate an equality constraint for data vars
-                    {
-                      noll_dform_t *df_eq =
-                        noll_dform_new_eq (noll_dterm_new_var (v1, ty1->kind),
-                                           noll_dterm_new_var (v2,
-                                                               ty2->kind));
-                      noll_dform_array_push (dfn, df_eq);
-                    }
-                  else
-                    res = 0;
+                  /// there are nodes for data variables, generate a data constraint
+
+                  noll_dform_t *df_eq =
+                    noll_dform_new_eq (noll_dterm_new_var (v1, ty1->kind),
+                                       noll_dterm_new_var (v2,
+                                                           ty2->kind));
+                  noll_dform_array_push (dfn, df_eq);
                 }
             }
           else if ((nv1 < dsize) && (nv2 < dsize))
