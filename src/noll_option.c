@@ -226,5 +226,6 @@ noll_option_print (FILE * f)
   fprintf (f, "  -sll   use special procedure for sll predicates\n");
   fprintf (f, "  -syn   use procedure based on unfolding and lemma\n");
   fprintf (f, "  -ta    use procedure based on tree automata\n");
+  fprintf (f, "  -v     verbose messages\n");
 
 }

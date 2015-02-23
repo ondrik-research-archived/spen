@@ -517,9 +517,13 @@ noll_shom_build_pto (noll_graph_t * g1, noll_graph_t * g2,
               fprintf (stdout, "\nDiagnosis of failure: ");
               fprintf (stdout,
                        "\n\tConstraint not entailed: %s |--> { .. (%s,%s) .. }\n",
-                       noll_var_name (g2->lvars, nsrc_e1, NOLL_TYP_RECORD),
-                       noll_field_name (e1->label), noll_var_name (g2->lvars,
-                                                                   ndst_e1,
+                       noll_var_name (g1->lvars,
+                                      noll_graph_get_var (g1, nsrc_e1),
+                                      NOLL_TYP_RECORD),
+                       noll_field_name (e1->label), noll_var_name (g1->lvars,
+                                                                   noll_graph_get_var
+                                                                   (g1,
+                                                                    ndst_e1),
                                                                    NOLL_TYP_RECORD));
             }
         }
@@ -1944,10 +1948,10 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
     }
   // zhilin: if there is only one predicate in the body of the lemma
   else
-  {
-	 res = noll_uid_map_new (noll_vector_size (g2->edges));
-     noll_uid_array_set (res, eidE, eid1);
-  }
+    {
+      res = noll_uid_map_new (noll_vector_size (g2->edges));
+      noll_uid_array_set (res, eidE, eid1);
+    }
 
   /**
    * Step 5: check the pure part, if any
