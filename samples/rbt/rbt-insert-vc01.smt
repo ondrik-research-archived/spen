@@ -48,7 +48,7 @@
 		(= ?M (bagunion ?M1 (bag ?d) ?M2) )
 		(< ?M1 (bag ?d))
 		(< (bag ?d) ?M2)
-		(= ?N (ite (= ?C 0) ?N1 (+ ?N1 1) ) )
+		(= ?N  ?N1 )
 		(= ?N1 ?N2)
 		(= ?c ?C)	
 		(= ?C 0) (= ?C1 1) (= ?C2 1)
@@ -67,7 +67,7 @@
 		(= ?M (bagunion ?M1 (bag ?d) ?M2) )
 		(< ?M1 (bag ?d))
 		(< (bag ?d) ?M2)
-		(= ?N (ite (= ?C 0) ?N1 (+ ?N1 1) ) )
+		(= ?N (+ ?N1 1) )
 		(= ?N1 ?N2)
 		(= ?c ?C)	
 		(= ?C 1) (<= 0 ?C1) (<= ?C1 1) (<= 0 ?C2) (<= ?C2 1)
@@ -106,7 +106,7 @@
 		(= ?M1 (bagunion ?M3 (bag ?d) ?M4) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		(= ?N1 (ite (= ?C1 0) ?N3 (+ ?N3 1) ) )
+		(= ?N1 ?N3 )
 		(= ?N3 ?N4)
 		(= ?c ?C1)	
 		(= ?C1 0) (= ?C3 1) (= ?C4 1)
@@ -125,7 +125,7 @@
 		(= ?M1 (bagunion ?M3 (bag ?d) ?M4) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		(= ?N1 (ite (= ?C1 0) ?N3 (+ ?N3 1) ) )
+		(= ?N1 (+ ?N3 1) )
 		(= ?N3 ?N4)
 		(= ?c ?C1)	
 		(= ?C1 1) (<= 0 ?C3) (<= ?C3 1) (<= 0 ?C4) (<= ?C4 1)
@@ -144,7 +144,7 @@
 		(= ?M1 (bagunion ?M3 (bag ?d) ?M4) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		(= ?N1 (ite (= ?C1 0) ?N3 (+ ?N3 1) ) )
+		(= ?N1 ?N3 )
 		(= ?N3 ?N4)
 		(= ?c ?C1)	
 		(= ?C1 0) (= ?C3 1)(= ?C4 1)
@@ -163,7 +163,7 @@
 		(= ?M1 (bagunion ?M3 (bag ?d) ?M4) )
 		(< ?M3 (bag ?d))
 		(< (bag ?d) ?M4)
-		(= ?N1 (ite (= ?C1 0) ?N3 (+ ?N3 1) ) )
+		(= ?N1 (+ ?N3 1) )
 		(= ?N3 ?N4)
 		(= ?c ?C1)	
 		(= ?C1 1) (<= 0 ?C3) (<= ?C3 1) (<= 0 ?C4) (<= ?C4 1)
@@ -173,237 +173,6 @@
 ))
 
 
-;; rbthole with the property that the nodes on the path from E to F alternate between red and black, 
-;; with the root black, and all the children of black nodes are red nodes
-
-;; brrbthole(E,F, M1, N1, C1, M2, N2, C2)::= E = F & emp & M1 = M2 & N1 = N2 & C1 = C2 | 
-;; exists X,Y,U,V,M3,M4,M5,N3,N4,N5,C3,C4,C5. E |-> ((left,X), (right,Y)) * Y |->((left,U),(right,V)) * rbt(X,M3,N3,C3) * 
-;; brrbthole(U,F,M4,N4,C4,M2,N2,C2) * rbt(V,M5,N5,C5) & M1 = {E.data} cup M3 cup {Y.data} cup M4 cup M5 & 
-;; M3 < E.data < {Y.data} cup M4 cup M5 & M4 < Y.data < M5 & C1 = E.color & C1 = 1 & C3 = 0 & Y.color = 0 & C4 = 1 & N4 = N5 & 
-;; N3 = N4 & N1 = N3 +1 | 
-;; exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * Y |->((left,U),(right,V)) * rbt(X,M3,N3,C3) * 
-;; rbt(U,M4,N4,C4) * brrbthole(V,F,M5,N5,C5,M2,N2,C2) & M1 = {E.data} cup M3 cup {Y.data} cup M4 cup M5 & M3 < E.data < 
-;; {Y.data} cup M4 cup M5 & M4 < Y.data < M5 & C1 = E.color & C1 = 1 & C3 = 0 & Y.color = 0 & C5 = 1 & N4 = N5 & N3 = N4 & N1 = N3 +1
-;; | exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * X |->((left,U),(right,V)) * rbt(U,M3,N3,C3) * 
-;; brrbthole(V,F,M4,N4,C4,M2,N2,C2) * rbt(Y,M5,N5,C5) & M1 = {E.data} cup {X.data} cup M3 cup M4 cup M5 & {X.data} cup M3 cup M4 <
-;; E.data < M5 & M3 < X.data < M4 & C1 = E.color & C1 = 1 & X.color = 0 & C5 = 0 & C4 = 1 & N3 = N4 & N3 = N5 & N1 = N5 +1 |
-;; exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * X |->((left,U),(right,V)) * 
-;; brrbthole(U,F,M3,N3,C3, M2, N2, C2) * rbt(V,M4,N4,C4) * rbt(Y,M5,N5,C5) & M1 = {E.data} cup {X.data} cup M3 cup M4 cup M5 &
-;; {X.data} cup M3 cup M4 < E.data < M5 & M3 < X.data < M4 & C1 = E.color & C1 = 1 & X.color = 0 & C5 = 0 & C3 = 1 & N3 = N4 & 
-;; N3 = N5 & N1 = N5 +1
-
-(define-fun brrbthole ((?E Rbt_t) (?F Rbt_t) (?M1 BagInt) (?N1 Int) (?C1 Int) (?M2 BagInt) (?N2 Int) (?C2 Int)) Space (tospace 
-	(or 
-	(and (= ?E ?F) 
-		(tobool emp
-		)
-		(= ?M1 ?M2)
-		(= ?N1 ?N2)
-		(= ?C1 ?C2)
-	)
- 
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int) (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?d2 Int) (?c1 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(pto ?X (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(brrbthole ?U ?F ?M3 ?N3 ?C3 ?M2 ?N2 ?C2)
-			(rbt ?V ?M4 ?N4 ?C4) 
-			(rbt ?Y ?M5 ?N5 ?C5)
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d2) ?M4 (bag ?d1) ?M5) )
-		(< ?M3 (bag ?d2)) (< (bag ?d2) ?M4)
-		(< (bagunion ?M3 (bag ?d2) ?M4) (bag ?d1)) (< (bag ?d1) ?M5) 
-		(= ?N1 (+ ?N5 1))
-		(= ?N3 ?N4) (= ?N3 ?N5) 
-		(= ?C1 1) (= ?C3 1) (= ?C4 1) (= ?C5 0) (= ?c1 1) (= ?c2 0)
-	)
-	)
-
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(pto ?X (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(rbt ?U ?M3 ?N3 ?C3) 
-			(brrbthole ?V ?F ?M4 ?N4 ?C4 ?M2 ?N2 ?C2)
-			(rbt ?Y ?M5 ?N5 ?C5)
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d2) ?M4 (bag ?d1) ?M5) )
-		(< ?M3 (bag ?d2)) (< (bag ?d2) ?M4)
-		(< (bagunion ?M3 (bag ?d2) ?M4) (bag ?d1)) (< (bag ?d1) ?M5) 
-		(= ?N1 (+ ?N5 1))
-		(= ?N3 ?N4) (= ?N3 ?N5)
-		(= ?C1 1)  (= ?C3 1) (= ?C4 1) (= ?C5 0) (= ?c1 1) (= ?c2 0)
-	)
-	)
-
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(rbt ?X ?M3 ?N3 ?C3)
-			(pto ?Y (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(brrbthole ?U ?F ?M4 ?N4 ?C4 ?M2 ?N2 ?C2)
-			(rbt ?V ?M5 ?N5 ?C5) 
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
-		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
-		(= ?N1 (+ ?N3 1))
-		(= ?N4 ?N5) (= ?N3 ?N5)
-		(= ?C1 1)  (= ?C3 0) (= ?C4 1) (= ?C5 1) (= ?c1 1) (= ?c2 0)
-	)
-	)
-
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(rbt ?X ?M3 ?N3 ?C3)
-			(pto ?Y (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(rbt ?U ?M4 ?N4 ?C4) 
-			(brrbthole ?V ?F ?M5 ?N5 ?C5 ?M2 ?N2 ?C2)
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
-		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
-		(= ?N1 (+ ?N3 1))
-		(= ?N4 ?N5) (= ?N3 ?N4)
-		(= ?C1 1)  (= ?C3 0) (= ?C4 1) (= ?C5 1) (= ?c1 1) (= ?c2 0)
-	)
-	)
-	)
-))
-
-
-;; the dual predicate of brrbthole, with red and black exchanged
-
-;; rbrbthole(E,F, M1, N1, C1, M2, N2, C2)::= E = F & emp & M1 = M2 & H1 = H2 & C1 = C2 | 
-;; exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * Y |->((left,U),(right,V)) * rbt(X,M3,N3,C3) * 
-;; rbrbthole(U,F,M4,N4,C4,M2,N2,C2) * rbt(V,M5,N5,C5) & M1 = {E.data} cup M3 cup {Y.data} cup M4 cup M5 & M3 < E.data < 
-;; {Y.data} cup M4 cup M5 & M4 < Y.data < M5 & C1 = E.color & C1 = 0 & C3 = 1 & Y.color = 1 & C4 = 0 & N4 = N5 & N3 = N4 + 1 & 
-;; N1 = N3 |
-;; exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * Y |->((left,U),(right,V)) * rbt(X,M3,N3,C3) * 
-;; rbt(U,M4,N4,C4) * rbrbthole(V,F,M5,N5,C5,M2,N2,C2) & M1 = {E.data} cup M3 cup {Y.data} cup M4 cup M5 & M3 < E.data < 
-;; {Y.data} cup M4 cup M5 & M4 < Y.data < M5 & C1 = E.color & C1 = 0 & C3 = 1 & Y.color = 1 & C5 = 0 & N4 = N5 & N3 = N4 + 1 & 
-;; N1 = N3 |
-;; exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * X |->((left,U),(right,V)) * rbt(U,M3,N3,C3) * 
-;; rbrbthole(V,F,M4,N4,C4,M2,N2,C2) * rbt(Y,M5,N5,C5) & M1 = {E.data} cup {X.data} cup M3 cup M4 cup M5 & {X.data} cup M3 cup M4 <
-;; E.data < M5 & M3 < X.data < M4 & C1 = E.color & C1 = 0 & X.color = 1 & C5 = 1 & C4 = 0 & N3 = N4 & N5 = N3+1 & N1 = N5 |
-;; exists X,Y,U,V,M3,M4,M5,H3,H4,H5,C3,C4,C5. E |-> ((left,X), (right,Y)) * X |->((left,U),(right,V)) * 
-;; rbrbthole(U,F,M3,N3,C3, M2, N2, C2) * rbt(V,M4,N4,C4) * rbt(Y,M5,N5,C5) & M1 = {E.data} cup {X.data} cup M3 cup M4 cup M5 &
-;; {X.data} cup M3 cup M4 < E.data < M5 & M3 < X.data < M4 & C1 = E.color & C1 = 0 & X.color = 1 & C5 = 1 & C3 = 0 & N3 = N4 & 
-;; N5 = N3+1 & N1 = N5
-
-
-(define-fun rbrbthole ((?E Rbt_t) (?F Rbt_t) (?M1 BagInt) (?N1 Int) (?C1 Int) (?M2 BagInt) (?N2 Int) (?C2 Int)) Space (tospace 
-	(or 
-	(and (= ?E ?F) 
-		(tobool emp
-		)
-		(= ?M1 ?M2)
-		(= ?N1 ?N2)
-		(= ?C1 ?C2)
-	)
- 
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int) (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?d2 Int) (?c1 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(pto ?X (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(rbrbthole ?U ?F ?M3 ?N3 ?C3 ?M2 ?N2 ?C2)
-			(rbt ?V ?M4 ?N4 ?C4) 
-			(rbt ?Y ?M5 ?N5 ?C5)
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d2) ?M4 (bag ?d1) ?M5) )
-		(< ?M3 (bag ?d2)) (< (bag ?d2) ?M4)
-		(< (bagunion ?M3 (bag ?d2) ?M4) (bag ?d1)) (< (bag ?d1) ?M5) 
-		(= ?N1 (+ ?N5 1))
-		(= ?N3 ?N4) (= ?N3 ?N5) 
-		(= ?C1 0) (= ?C3 0) (= ?C4 0) (= ?C5 1) (= ?c1 0) (= ?c2 1)
-	)
-	)
-
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(pto ?X (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(rbt ?U ?M3 ?N3 ?C3) 
-			(rbrbthole ?V ?F ?M4 ?N4 ?C4 ?M2 ?N2 ?C2)
-			(rbt ?Y ?M5 ?N5 ?C5)
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d2) ?M4 (bag ?d1) ?M5) )
-		(< ?M3 (bag ?d2)) (< (bag ?d2) ?M4)
-		(< (bagunion ?M3 (bag ?d2) ?M4) (bag ?d1)) (< (bag ?d1) ?M5) 
-		(= ?N1 (+ ?N5 1))
-		(= ?N3 ?N4) (= ?N3 ?N5)
-		(= ?C1 0)  (= ?C3 0) (= ?C4 0) (= ?C5 1) (= ?c1 0) (= ?c2 1)
-	)
-	)
-
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(rbt ?X ?M3 ?N3 ?C3)
-			(pto ?Y (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(rbrbthole ?U ?F ?M4 ?N4 ?C4 ?M2 ?N2 ?C2)
-			(rbt ?V ?M5 ?N5 ?C5) 
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
-		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
-		(= ?N1 (+ ?N3 1))
-		(= ?N4 ?N5) (= ?N3 ?N5)
-		(= ?C1 0)  (= ?C3 1) (= ?C4 0) (= ?C5 0) (= ?c1 0) (= ?c2 1)
-	)
-	)
-
-	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
-	(and (distinct ?E ?F) 
-		(tobool 
-		(ssep 
-			(pto ?E (sref (ref left ?X) (ref right ?Y) (ref data ?d1) (ref color ?c1)) ) 
-			(rbt ?X ?M3 ?N3 ?C3)
-			(pto ?Y (sref (ref left ?U) (ref right ?V) (ref data ?d2) (ref color ?c2)) )
-			(rbt ?U ?M4 ?N4 ?C4) 
-			(rbrbthole ?V ?F ?M5 ?N5 ?C5 ?M2 ?N2 ?C2)
-		)
-		)
-		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
-		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
-		(= ?N1 (+ ?N3 1))
-		(= ?N4 ?N5) (= ?N3 ?N4)
-		(= ?C1 0)  (= ?C3 1) (= ?C4 0) (= ?C5 0) (= ?c1 0) (= ?c2 1)
-	)
-	)
-	)
-))
 
 ;; declare variables
 (declare-fun root () Rbt_t)
@@ -478,7 +247,7 @@
 
 (declare-fun n1 () Int)
 (declare-fun n2 () Int)
-(declare-fun n3 () Int)
+(declare-fun n () Int)
 (declare-fun n4 () Int)
 (declare-fun n5 () Int)
 (declare-fun n6 () Int)
@@ -545,7 +314,7 @@
 ;; N6=N7 & 0<=c2<=1 & (c2=0 => C6=1 & C7=1) & M3 = M6 cup {d2} cup M7 & N3=ite(c2=0,N6,N6+1) & C3=c2 & M3 < d1 < M4 & N3=N4 & 
 ;; 0 <= C2 <=1 & M2=ite(key in M3, {d1} cup M3 cup M4, {d1} cup M3 cup M4 cup {key}) & N2 = ite(C2=0, N3, N3+1) & (C2 = 0 => C3 = 1 &
 ;; C4 =1) & M1=ite(key in M0, M0, M0 cup {key}) & C1 = 1 & key in M0 <=> key in M3 & d1 > key & ! parent1 = nil & is_even = 0 & 
-;; d2 > key & cur2 = Y & M5 = ite(key in M0, M3, M3 cup {key}) & N5 = N3 & C5 = C3 
+;; d2 > key & cur2 = Y & M5 = ite(key in M0, M3, M3 cup {key}) & N5 = N3 & C5 = C3  & parent2 = cur1
 ;; |-
 ;; rbthole(root,parent2,M1,N1,C1,M5,N5,C5) * parent2 |-> ((left,cur2),(right,Y),(data,d2),(color,C5)) * rbt(cur2,M6,N6,C6) * 
 ;; rbt(Y,M7,N7,C7) & M6 < d2 < M7 & N6 = N7 & N5 = ite(C5=0, N6, N6+1) & (C5 = 0 => C6 = 1 & C7 =1) & 
@@ -556,23 +325,23 @@
 	(and
 	(tobool 
 	(ssep 
-		(index alpha1 (rbthole root parent1 M1 N1 C1 M2 N2 C2))
-		(pto parent1 (sref (ref left cur1) (ref right X) (ref data d1) (ref color C2)))
-		(pto cur1 (sref (ref left Z) (ref right Y) (ref data d2) (ref color c2)))
-		(index alpha2 (rbt Z M6 N6 C6))
-		(index alpha3 (rbt Y M7 N7 C7))
-		(index alpha4 (rbt X M4 N4 C4))
+		(index alpha1 (rbthole root parent1 M1 N1 C1 M2 N2 C2) )
+		(pto parent1 (sref (ref left cur1) (ref right X) (ref data d1) (ref color C2)) )
+		(pto cur1 (sref (ref left Z) (ref right Y) (ref data d2) (ref color c2)) )
+		(index alpha2 (rbt Z M6 N6 C6) )
+		(index alpha3 (rbt Y M7 N7 C7) )
+		(index alpha4 (rbt X M4 N4 C4) )
 	))
 	(< M6 (bag d2)) (< (bag d2) M7)
 	(= N6 N7)
-	(<= 0 c2) (<= c2 1) (=> (= c2 0) (and (= C6 1) (= C7 1)) ) (= M3 (bagunion M6 (bag d2) M7)) 
-	(= N3 (ite (= c2 0) N6 (+ N6 1))) (= C3 c2) (< M3 d1) (< d1 M4) (= N3 N4)
+	(<= 0 c2) (<= c2 1) (=> (= c2 0) (= C6 1) ) (=> (= c2 0) (= C7 1)) (= M3 (bagunion M6 (bag d2) M7)) 
+	(= N3 (ite (= c2 0) N6 (+ N6 1)) ) (= C3 c2) (< M3 (bag d1) ) (< (bag d1) M4) (= N3 N4)
 	(<= 0 C2) (<= C2 1) (= M2 (ite (subset (bag key) M3) (bagunion (bag d1) M3 M4) (bagunion (bag d1) M3 M4 (bag key)) ) ) 
-	(= N2 (ite (= C2 0) N3 (+ N3 1)) ) (=> (= C2 0) (and (= C3 1) (= C4 1)) ) 
+	(= N2 (ite (= C2 0) N3 (+ N3 1)) ) (=> (= C2 0) (= C3 1) ) (=> (= C2 0) (= C4 1) ) 
 	(= M1 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ) ) (= C1 1) 
 	(=> (subset (bag key) M0) (subset (bag key) M3) ) (=> (subset (bag key) M3) (subset (bag key) M0) )
 	(> d1 key) (distinct parent1 nil) 
-	(= iseven 0) (> d2 key) (= cur2 Y) (= M5 (ite (subset (bag key) M0) M3 (bagunion M3 (bag key)) ) ) 
+	(= iseven 0) (> d2 key) (= cur2 Z) (= parent2 cur1) (= M5 (ite (subset (bag key) M0) M3 (bagunion M3 (bag key)) ) ) 
 	(= N5 N3) (= C5 C3) 
 	)
 )
@@ -586,18 +355,19 @@
 	(and 
 	(tobool 
 	(ssep 
-		(index alpha5 (rbthole root parent2 M1 N1 C1 M5 N5 C5)) 
-		(pto parent2 (sref (ref left cur2) (ref right Y) (ref data d2) (ref color C5)))
+		(index alpha5 (rbthole root parent2 M1 N1 C1 M5 N5 C5) ) 
+		(pto parent2 (sref (ref left cur2) (ref right Y) (ref data d2) (ref color C5)) )
 		(index alpha6 (rbt cur2 M6 N6 C6))
 		(index alpha7 (rbt Y M7 N7 C7))
 	))
 	(< M6 (bag d2)) (< (bag d2) M7) (= N6 N7) (= N5 (ite (= C5 0) N6 (+ N6 1))) 
-	(=> (= C5 0) (and (= C6 1) (= C7 1)) )
-	(= M5 (ite (subset (bag key) M6) (bagunion M6 (bag d2) M7) (bagunion M6 (bag d2) M7 (bag key)))) 
-	(= M1  (ite (subset (bag key) M0) M0 (bagunion M0 (bag key))) ) (= C1 1)
-	(=> (subset (bag key) M0) (subset (bag key) M6) ) (=> (subset (bag key) M0) (subset (bag key) M6) )
+	(=> (= C5 0) (= C6 1) ) (=> (= C5 0) (= C7 1) )
+	(= M5 (ite (subset (bag key) M6) (bagunion M6 (bag d2) M7) (bagunion M6 (bag d2) M7 (bag key)) ) ) 
+	(= M1  (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ) ) (= C1 1)
+	(=> (subset (bag key) M0) (subset (bag key) M6) ) (=> (subset (bag key) M6) (subset (bag key) M0) )
 	(> d2 key) (distinct parent2 nil) (= iseven 0)
 	)
 ))
 
 (check-sat)
+
