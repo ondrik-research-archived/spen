@@ -2258,8 +2258,8 @@ noll_exp_printf (FILE * f, noll_context_t * ctx, noll_exp_t * e)
           {
             noll_var_t *vi = noll_vector_at (e->p.quant.lvars, i);
             fprintf (f, " (%s %s) ", vi->vname, noll_record_name (noll_var_record       // NEW: could be replaces by type
-                                                                  (e->p.quant.
-                                                                   lvars,
+                                                                  (e->p.
+                                                                   quant.lvars,
                                                                    i)));
           }
         for (uint_t i = e->p.quant.sstart; i < e->p.quant.send; i++)
@@ -2909,7 +2909,13 @@ noll_mk_form_pto (noll_context_t * ctx, noll_exp_t * f)
       if (fv[i]->args[1]->discr == NOLL_F_LVAR)
         dest = fv[i]->args[1]->p.sid;
       else
-        assert (0);
+        {
+          noll_error (1,
+                      "Building points-to formula: bad destination, not a variable",
+                      "");
+          noll_space_free (sigma);
+          return NULL;
+        }
       assert (fv[i]->args[0]->discr == NOLL_F_FIELD);
       uint_t fld = fv[i]->args[0]->p.sid;
       // because the term has been built

@@ -462,7 +462,7 @@ noll_lemma_new_comp_3 (uid_t pid_part_str, uid_t pid_part)
   const noll_pred_t *pred_part_str = noll_pred_getpred (pid_part_str);
   const noll_pred_t *pred_part = noll_pred_getpred (pid_part);
 
-  noll_lemma_t *lem2 = noll_lemma_new(pid_part);
+  noll_lemma_t *lem2 = noll_lemma_new (pid_part);
   lem2->kind = NOLL_LEMMA_STRONGER;
   lem2->rule.pure = NULL;       // no constraint
   lem2->rule.nst = NULL;        // no constraint
@@ -489,10 +489,10 @@ noll_lemma_new_comp_3 (uid_t pid_part_str, uid_t pid_part)
 
   // copy the parameters of P, which are already in lem2, to P'
   for (uint_t pos = 0; pos < fargs_part;)
-  {
-     noll_uid_array_push (p1->m.ls.args, pos + 1);
-     pos++;
-  }
+    {
+      noll_uid_array_push (p1->m.ls.args, pos + 1);
+      pos++;
+    }
 
   noll_space_array_push (rec2->m.sep, p1);
   lem2->rule.rec = rec2;
@@ -599,7 +599,7 @@ noll_lemma_init_avlhole (uint_t pid)
   ///   bavlhole(...) => avlhole(...)
   uid_t pid_bavlh = noll_pred_array_find ("bavlhole");
   assert (pid_bavlh != UNDEFINED_ID);
-  noll_lemma_t *lem2 = noll_lemma_new_comp_3(pid_bavlh, pid);
+  noll_lemma_t *lem2 = noll_lemma_new_comp_3 (pid_bavlh, pid);
   // push lemma
   noll_lemma_array_push (res, lem2);
 
@@ -607,7 +607,7 @@ noll_lemma_init_avlhole (uint_t pid)
   ///   ubavlhole(...) => avlhole(...)
   uid_t pid_ubavlh = noll_pred_array_find ("ubavlhole");
   assert (pid_ubavlh != UNDEFINED_ID);
-  noll_lemma_t *lem3 = noll_lemma_new_comp_3(pid_ubavlh, pid);
+  noll_lemma_t *lem3 = noll_lemma_new_comp_3 (pid_ubavlh, pid);
   // push lemma
   noll_lemma_array_push (res, lem3);
 
@@ -725,45 +725,45 @@ noll_lemma_init_pred (uid_t pid)
   noll_lemma_array *res;
 
   // zhilin: add stronger lemma for avl and avlhole
-  if(!strcmp("avl", noll_pred_getpred (pid)->pname))
-  {
-	 res = noll_lemma_init_avl (pid);
-  }
-  else if(!strcmp("avlhole", noll_pred_getpred (pid)->pname))
-  {
-	 res = noll_lemma_init_avlhole (pid);
-  }
+  if (!strcmp ("avl", noll_pred_getpred (pid)->pname))
+    {
+      res = noll_lemma_init_avl (pid);
+    }
+  else if (!strcmp ("avlhole", noll_pred_getpred (pid)->pname))
+    {
+      res = noll_lemma_init_avlhole (pid);
+    }
   else
-  {
-	  res = noll_lemma_array_new ();
-	  noll_lemma_array_reserve (res, 2);
+    {
+      res = noll_lemma_array_new ();
+      noll_lemma_array_reserve (res, 2);
 
-	  // WARNING: we suppose that RD set is compositional
-	  // for a full RD, the compositional RD is pid + 1
-	  if (pred->typ->isUnaryLoc == true)
-	  {
-		  /// if unary then generate comp_2 and spec_nil
-		  // TODO: find the "partial" RD of pid using typing
-		  uid_t pid_hole = pid + 1;
-		  assert (pid_hole < noll_vector_size (preds_array));
+      // WARNING: we suppose that RD set is compositional
+      // for a full RD, the compositional RD is pid + 1
+      if (pred->typ->isUnaryLoc == true)
+        {
+          /// if unary then generate comp_2 and spec_nil
+          // TODO: find the "partial" RD of pid using typing
+          uid_t pid_hole = pid + 1;
+          assert (pid_hole < noll_vector_size (preds_array));
 
-		  /// first lemma:
-		  ///   phole(E,r1,M,b1,H,h1) /\ r1=nil /\ b1=emptybag /\ h1=0 => p(E,M,H)
-		  noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_hole);
-		  noll_lemma_array_push (res, lem1);
+          /// first lemma:
+          ///   phole(E,r1,M,b1,H,h1) /\ r1=nil /\ b1=emptybag /\ h1=0 => p(E,M,H)
+          noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_hole);
+          noll_lemma_array_push (res, lem1);
 
-		  /// second lemma:
-		  ///   phole(E,r1,M,b1,H,h1) * p(r1,b1,h1) => p(E,M,H)
-		  noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_hole);
-		  noll_lemma_array_push (res, lem2);
-	  }
-	  else
-	  {
-		  /// otherwise generate comp_1
-		  noll_lemma_t *lem1 = noll_lemma_new_comp_1 (pid);
-		  noll_lemma_array_push (res, lem1);
-	  }
-  }
+          /// second lemma:
+          ///   phole(E,r1,M,b1,H,h1) * p(r1,b1,h1) => p(E,M,H)
+          noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_hole);
+          noll_lemma_array_push (res, lem2);
+        }
+      else
+        {
+          /// otherwise generate comp_1
+          noll_lemma_t *lem1 = noll_lemma_new_comp_1 (pid);
+          noll_lemma_array_push (res, lem1);
+        }
+    }
   return res;
 }
 

@@ -446,7 +446,7 @@ noll_pred_type ()
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BROOT);
                 else if ((nbBag >= 1) && (nbLoc == 2))
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BPENDING);
-                else 
+                else
                   noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
                 nbBag++;
                 break;
@@ -614,10 +614,10 @@ noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
       {
         //if (level == 1)  // TODO: check done at parsing?!
         //  return 0;             /* no pto in inner formulas! */
-        // TODO: allow for RBT 
-        if (form->m.pto.sid != 1)
-          /* only pto from first argument */
-          return 0;             /* TODO: already checked? */
+
+        //if (form->m.pto.sid != 1)  // TODO: allow for RBT
+        /* only pto from first argument */
+        //  return 0;             /* TODO: already checked? */
 
         for (uid_t i = 0; i < noll_vector_size (form->m.pto.fields); i++)
           {
@@ -1063,8 +1063,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->m.
-                                                     sep, i));
+                                     noll_vector_at (pred->def->sigma_1->
+                                                     m.sep, i));
               res_size++;
             }
         }

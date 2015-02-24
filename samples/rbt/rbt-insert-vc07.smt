@@ -224,7 +224,7 @@
 	)
 
 	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
+		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool 
 		(ssep 
@@ -245,7 +245,7 @@
 	)
 
 	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
+		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool 
 		(ssep 
@@ -258,7 +258,7 @@
 		)
 		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
 		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
+		(< ?M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
 		(= ?N1 (+ ?N3 1))
 		(= ?N4 ?N5) (= ?N3 ?N5)
 		(= ?C1 1)  (= ?C3 0) (= ?C4 1) (= ?C5 1) (= ?c1 1) (= ?c2 0)
@@ -266,7 +266,7 @@
 	)
 
 	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
+		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool 
 		(ssep 
@@ -279,7 +279,7 @@
 		)
 		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
 		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
+		(< ?M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
 		(= ?N1 (+ ?N3 1))
 		(= ?N4 ?N5) (= ?N3 ?N4)
 		(= ?C1 1)  (= ?C3 0) (= ?C4 1) (= ?C5 1) (= ?c1 1) (= ?c2 0)
@@ -341,7 +341,7 @@
 	)
 
 	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
+		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool 
 		(ssep 
@@ -362,7 +362,7 @@
 	)
 
 	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
+		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool 
 		(ssep 
@@ -375,7 +375,7 @@
 		)
 		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
 		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
+		(< ?M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
 		(= ?N1 (+ ?N3 1))
 		(= ?N4 ?N5) (= ?N3 ?N5)
 		(= ?C1 0)  (= ?C3 1) (= ?C4 0) (= ?C5 0) (= ?c1 0) (= ?c2 1)
@@ -383,7 +383,7 @@
 	)
 
 	(exists ( (?X Rbt_t) (?Y Rbt_t) (?U Rbt_t) (?V Rbt_t) (?M3 BagInt) (?N3 Int) (?C3 Int) (?M4 BagInt) (?N4 Int)  (?C4 Int)
-		(?M5 BagInt) (?N5 Int) (?C5 int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
+		(?M5 BagInt) (?N5 Int) (?C5 Int) (?d1 Int) (?c1 Int) (?d2 Int) (?c2 Int) ) 
 	(and (distinct ?E ?F) 
 		(tobool 
 		(ssep 
@@ -396,7 +396,7 @@
 		)
 		(= ?M1 (bagunion ?M3 (bag ?d1) ?M4 (bag ?d2) ?M5 ) )
 		(< ?M4 (bag ?d2)) (< (bag ?d2) ?M5)
-		(< M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
+		(< ?M3 (bag ?d1)) (< (bag ?d1) (bagunion ?M4 (bag ?d2) ?M5))  
 		(= ?N1 (+ ?N3 1))
 		(= ?N4 ?N5) (= ?N3 ?N4)
 		(= ?C1 0)  (= ?C3 1) (= ?C4 0) (= ?C5 0) (= ?c1 0) (= ?c2 1)
@@ -464,6 +464,8 @@
 (declare-fun M13 () BagInt)
 (declare-fun M14 () BagInt)
 (declare-fun M15 () BagInt)
+(declare-fun M16 () BagInt)
+(declare-fun M17 () BagInt)
 
 (declare-fun N1 () Int)
 (declare-fun N2 () Int)
@@ -480,10 +482,12 @@
 (declare-fun N13 () Int)
 (declare-fun N14 () Int)
 (declare-fun N15 () Int)
+(declare-fun N16 () Int)
+(declare-fun N17 () Int)
 
 (declare-fun n1 () Int)
 (declare-fun n2 () Int)
-(declare-fun n2 () Int)
+(declare-fun n3 () Int)
 (declare-fun n4 () Int)
 (declare-fun n5 () Int)
 (declare-fun n6 () Int)
@@ -508,6 +512,8 @@
 (declare-fun C13 () Int)
 (declare-fun C14 () Int)
 (declare-fun C15 () Int)
+(declare-fun C16 () Int)
+(declare-fun C17 () Int)
 
 (declare-fun d1 () Int)
 (declare-fun d2 () Int)
@@ -517,6 +523,8 @@
 (declare-fun d6 () Int)
 (declare-fun d7 () Int)
 (declare-fun d8 () Int)
+(declare-fun d9 () Int)
+(declare-fun cz () Int)
 (declare-fun c1 () Int)
 (declare-fun c2 () Int)
 (declare-fun c3 () Int)
@@ -547,6 +555,7 @@
 (declare-fun alpha15 () SetLoc)
 (declare-fun alpha16 () SetLoc)
 (declare-fun alpha17 () SetLoc)
+(declare-fun alpha18 () SetLoc)
 
 ;; VC07:
 ;; rbthole(root,cusparent1,M1,N1,C1,M2,N2,C2) * cusparent1 |-> ((left,cusnode1),(right,X),(data,d1),(color,c1)) * 
@@ -613,9 +622,10 @@
 		(index alpha9 (rbthole U1 parent0 M16 N16 C16 M13 N13 C13))
 		(index alpha10 (rbt V1 M17 N17 C17))
 		(pto parent0 (sref (ref left x) (ref right Z) (ref data d8) (ref color c8)))
-		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref color 0)))
+		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref color cz)))
 		(index alpha11 (rbt Z M14 N14 C14)) 
 	))
+        (= cz 0)
 	(< M16 (bag d9) ) (< (bag d9) M17) (= N16 N17) (<= 0 C12) (<= C12 1)
 	(=> (= C12 0) (= C16 1) ) (=> (= C12 0) (= C17 1) ) (= M12 (bagunion M16 (bag d9) M17) ) 
 	(= N12 (ite (= C12 0) N17 (+ N17 1) ) ) (< key d8) (< (bag d8) M14) (= N14 1)
@@ -623,7 +633,7 @@
 	(= M13 (bagunion (bag d8) (bag key) M14) ) (= N13 (ite (= c8 0) N14 (+ N14 1)) )  
 	(= C13 c8) (< M12 (bag d7)) (< (bag d7) M11) (= N12 N11) (<= 0 c7) (<= c7 1) 
 	(=> (= c7 0) (= C12 1) ) (=> (= c7 0) (= C11 1) ) (< (bagunion M12 (bag d7) M11) (bag d6)) (< (bag d6) M10) 
-	(= N10 (ite (= c7 0) N11 (+ N11 1)) ) (<= 0 c6) (<=c6 1) (=> (= c6 0) (= c7 1) ) (=> (= c6 0) (= C10 1) )
+	(= N10 (ite (= c7 0) N11 (+ N11 1)) ) (<= 0 c6) (<= c6 1) (=> (= c6 0) (= c7 1) ) (=> (= c6 0) (= C10 1) )
 	(< (bagunion M12 (bag d7) M11 (bag d6) M10) (bag d5)) (< (bag d5) M9) 
 	(= N9 (ite (= c6 0) N10 (+ N10 1)) ) (<= 0 c5) (<= c5 1)
 	(=> (= c5 0) (= c6 1) ) (=> (= c5 0) (= C9 1) ) (< (bagunion M12 (bag d7) M11 (bag d6) M10 (bag d5) M9) (bag d4)) 
@@ -674,18 +684,19 @@
 		(index alpha16 (rbthole cur2 parent0 M16 N16 C16 M13 N13 C13))
 		(index alpha17 (rbt V1 M17 N17 C17))
 		(pto parent0 (sref (ref left x) (ref right Z) (ref data d8) (ref color c8)) ) 
-		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref color 0)))
+		(pto x (sref (ref left nil) (ref right nil) (ref data key) (ref color cz)))
 		(index alpha18 (rbt Z M14 N14 C14))
 	))
+        (= cz 0)
 	(< M16 (bag d9)) (< (bag d9) M17) (= N16 N17) (<= 0 C12) (<= C12 1)
 	(=> (= C12 0) (= C16 1) ) (=> (= C12 0) (= C17 1) ) (< key d8) (< (bag d8) M14)
-	(= N14 1) (<= 0 c8) (<=c8 1) (=> (= c8 0) (= C14 1) ) (= M13 (bagunion (bag d8) (bag key) M14) ) 
-	(= N13 (ite (= c8 0) N14 (+ N14 1)) ) (= C13 c8) (< (bagunion (M16 (bag d9) M17) (bag d7) ) 
+	(= N14 1) (<= 0 c8) (<= c8 1) (=> (= c8 0) (= C14 1) ) (= M13 (bagunion (bag d8) (bag key) M14) ) 
+	(= N13 (ite (= c8 0) N14 (+ N14 1)) ) (= C13 c8) (< (bagunion M16 (bag d9) M17) (bag d7) ) 
 	(< (bag d7) M11) (= N11 (ite (= C12 0) N17 (+ N17 1)) ) (<= 0 c7) (<= c7 1) 
 	(=> (= c7 0) (= C12 1) ) (=> (= c7 0) (= C11 1)) (< (bagunion M16 (bag d9) M17 (bag d7) M11) (bag d6)) 
 	(< (bag d6) M10) (= N10 (ite (= c7 0) N11 (+ N11 1)) ) (<= 0 c6) (<= c6 1)
 	(=> (= c6 0) (= c7 1) ) (=> (= c6 0) (= C10 1) ) (< (bagunion M16  (bag d9) M17 (bag d7) M11 (bag d6) M10) (bag d5))
-	(< (bag d5) M9) (= N9 (ite (= c6 0) N10 (+ N10 1)) ) (<= 0 c5) (<=c5 1)
+	(< (bag d5) M9) (= N9 (ite (= c6 0) N10 (+ N10 1)) ) (<= 0 c5) (<= c5 1)
 	(=> (= c5 0) (= c6 1) ) ( => (= c5 0) (= C9 1) ) 
 	(= M15 (bagunion M16 (bag d9) M17 (bag d7) M11 (bag d6) M10 (bag d5) M9) ) 
 	(= N15 (ite (= c5 0) N9 (+ N9 1)) ) (= C15 c5) (= M1 (bagunion M0 (bag key)) )  
