@@ -499,6 +499,95 @@ noll_lemma_new_comp_3 (uid_t pid_part_str, uid_t pid_part)
   return lem2;
 }
 
+
+
+/** zhilin:
+ * @brief Build the lemma for
+ *  @p pid_hole_strong(E,E',B,M,M',d,d',dB) * @p pid_hole(E',F,B,M',N,d',z,dB)
+ *        => @p pid_hole(E,F,B,M,N,d,z,dB)
+ */
+
+noll_lemma_t *
+noll_lemma_new_comp_4 (uid_t pid_hole_strong, uid_t pid_hole)
+{
+  assert (pid_hole != UNDEFINED_ID);
+  assert (pid_hole_strong != UNDEFINED_ID);
+
+  const noll_pred_t *pred_hole = noll_pred_getpred (pid_hole);
+  uint_t fargs_hole = pred_hole->def->fargs;
+
+  const noll_pred_t *pred_hole_strong = noll_pred_getpred (pid_hole_strong);
+  uint_t fargs_hole_strong = pred_hole_strong->def->fargs;
+
+  assert(fargs_hole == fargs_hole_strong);
+
+  noll_lemma_t *lem2 = noll_lemma_new (pid_hole);
+  lem2->kind = NOLL_LEMMA_COMP_1;
+  // adds to pred_hole->def->vars the copy of the "pending" parameters
+  noll_lemma_clone_pending (lem2, pred_hole);
+  uint_t largs = noll_vector_size (lem2->rule.vars);
+  lem2->rule.pure = NULL;       // no constraint
+  lem2->rule.nst = NULL;        // no constraint
+  noll_space_t *rec2 = noll_space_new ();
+  rec2->kind = NOLL_SPACE_SSEP;
+  rec2->is_precise = true;
+  rec2->m.sep = noll_space_array_new ();
+  noll_space_array_reserve (rec2->m.sep, 2);
+
+  /// Warning: first push predicate from E, then the other
+
+  /// push @p pid_hole_strong(E,E',B,M,M',d,d',dB) in the "recursive" part
+  noll_space_t *call1 = noll_space_new ();
+  call1->kind = NOLL_SPACE_LS;
+  call1->is_precise = true;
+  call1->m.ls.pid = pid_hole_strong;
+  assert (call1->m.ls.pid != UNDEFINED_ID);
+  call1->m.ls.is_loop = false;
+  call1->m.ls.sid = UNDEFINED_ID;
+  call1->m.ls.args = noll_uid_array_new ();
+  // copy source and border but
+  // change the other "pending" parameters, if any
+  for (uint_t pos = 0, posp = 0; pos < fargs_hole; pos++)
+    {
+      uid_t kind = noll_vector_at (pred_hole->typ->argkind, pos);
+      if ((kind >= NOLL_ATYP_LPENDING) && (kind <= NOLL_ATYP_IPENDING))
+        {
+          noll_uid_array_push (call1->m.ls.args, fargs_hole + posp + 1);
+          posp++;
+        }
+      else
+        noll_uid_array_push (call1->m.ls.args, pos + 1);
+    }
+  noll_space_array_push (rec2->m.sep, call1);
+
+  /// push @p pid_hole(E',F,B,M',N,d',z,dB) in the "recursive" part
+  noll_space_t *call2 = noll_space_new ();
+  call2->kind = NOLL_SPACE_LS;
+  call2->is_precise = true;
+  call2->m.ls.pid = pid_hole;
+  assert (call2->m.ls.pid != UNDEFINED_ID);
+  call2->m.ls.is_loop = false;
+  call2->m.ls.sid = UNDEFINED_ID;
+  call2->m.ls.args = noll_uid_array_new ();
+  // copy destination and border but
+  // change the "source" parameters
+  for (uint_t pos = 0, posp = 0; pos < fargs_hole; pos++)
+    {
+      uid_t kind = noll_vector_at (pred_hole->typ->argkind, pos);
+      if (kind <= NOLL_ATYP_IROOT)
+        {
+          noll_uid_array_push (call2->m.ls.args, fargs_hole + posp + 1);
+          ++posp;
+        }
+      else
+        noll_uid_array_push (call2->m.ls.args, pos + 1);
+    }
+  noll_space_array_push (rec2->m.sep, call2);
+  lem2->rule.rec = rec2;
+
+  return lem2;
+}
+
 /**
  * @brief Return the set of lemma for the predicate ls(eg).
  */
@@ -551,7 +640,7 @@ noll_lemma_array *
 noll_lemma_init_avl (uint_t pid)
 {
   noll_lemma_array *res = noll_lemma_array_new ();
-  noll_lemma_array_reserve (res, 3);
+  noll_lemma_array_reserve (res, 4);
 
   // TODO: find the "partial" RD of pid using typing
   uid_t pid_avlh = noll_pred_array_find ("avlhole");
@@ -570,12 +659,20 @@ noll_lemma_init_avl (uint_t pid)
   noll_lemma_array_push (res, lem2);
 
   /// zhilin: third lemma:
+  ///   bavlhole(E,r1,M,b1,H,h1) * avl(r1,b1,h1) => avl(E,M,H)
+  uid_t pid_bavlh = noll_pred_array_find ("bavlhole");
+  assert (pid_bavlh != UNDEFINED_ID);
+  noll_lemma_t *lem3 = noll_lemma_new_comp_2 (pid, pid_bavlh);
+  // push lemma
+  noll_lemma_array_push (res, lem3);
+
+  /// zhilin: third lemma:
   ///   ubavlhole(E,r1,M,b1,H,h1) * avl(r1,b1,h1) => avl(E,M,H)
   uid_t pid_ubavlh = noll_pred_array_find ("ubavlhole");
   assert (pid_ubavlh != UNDEFINED_ID);
-  noll_lemma_t *lem3 = noll_lemma_new_comp_2 (pid, pid_ubavlh);
+  noll_lemma_t *lem4 = noll_lemma_new_comp_2 (pid, pid_ubavlh);
   // push lemma
-  noll_lemma_array_push (res, lem3);
+  noll_lemma_array_push (res, lem4);
 
   return res;
 }
@@ -588,7 +685,7 @@ noll_lemma_array *
 noll_lemma_init_avlhole (uint_t pid)
 {
   noll_lemma_array *res = noll_lemma_array_new ();
-  noll_lemma_array_reserve (res, 2);
+  noll_lemma_array_reserve (res, 3);
 
   /// first lemma: generate composition lemma for avlhole
   noll_lemma_t *lem1 = noll_lemma_new_comp_1 (pid);
@@ -610,6 +707,100 @@ noll_lemma_init_avlhole (uint_t pid)
   noll_lemma_t *lem3 = noll_lemma_new_comp_3 (pid_ubavlh, pid);
   // push lemma
   noll_lemma_array_push (res, lem3);
+
+  return res;
+}
+
+
+/**
+ * @brief Return the set of lemma for the predicate rbt(E,M,H).
+ * zhilin: add the lemma brrbtlhole * rbt => rbt and rbrbtlhole * rbt => rbt
+ */
+noll_lemma_array *
+noll_lemma_init_rbt (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 4);
+
+  // TODO: find the "partial" RD of pid using typing
+  uid_t pid_rbth = noll_pred_array_find ("rbthole");
+  assert (pid_rbth != UNDEFINED_ID);
+
+  /// first lemma:
+  ///   rbthole(E,r1,M,b1,H,h1) /\ r1=nil /\ b1=emptybag /\ h1=0 => rbt(E,M,H)
+  noll_lemma_t *lem1 = noll_lemma_new_spec_nil (pid, pid_rbth);
+  // push lemma
+  noll_lemma_array_push (res, lem1);
+
+  /// second lemma:
+  ///   rbthole(E,r1,M,b1,H,h1) * rbt(r1,b1,h1) => rbt(E,M,H)
+  noll_lemma_t *lem2 = noll_lemma_new_comp_2 (pid, pid_rbth);
+  // push lemma
+  noll_lemma_array_push (res, lem2);
+
+  /// zhilin: third lemma:
+  ///   brrbthole(E,r1,M,b1,H,h1) * rbt(r1,b1,h1) => rbt(E,M,H)
+  uid_t pid_brrbth = noll_pred_array_find ("brrbthole");
+  assert (pid_brrbth != UNDEFINED_ID);
+  noll_lemma_t *lem3 = noll_lemma_new_comp_2 (pid, pid_brrbth);
+  // push lemma
+  noll_lemma_array_push (res, lem3);
+
+  /// zhilin: fourth lemma:
+  ///   brrbthole(E,r1,M,b1,H,h1) * rbt(r1,b1,h1) => rbt(E,M,H)
+  uid_t pid_rbrbth = noll_pred_array_find ("rbrbthole");
+  assert (pid_rbrbth != UNDEFINED_ID);
+  noll_lemma_t *lem4 = noll_lemma_new_comp_2 (pid, pid_rbrbth);
+  // push lemma
+  noll_lemma_array_push (res, lem4);
+
+
+  return res;
+}
+
+/**
+ * @brief Return the set of lemma for the predicate rbth(ole).
+ * zhilin: add the stronger lemma for rbthole.
+ */
+noll_lemma_array *
+noll_lemma_init_rbthole (uint_t pid)
+{
+  noll_lemma_array *res = noll_lemma_array_new ();
+  noll_lemma_array_reserve (res, 5);
+
+  /// first lemma: generate composition lemma for bsthole
+  noll_lemma_t *lem1 = noll_lemma_new_comp_1 (pid);
+  // push lemma
+  noll_lemma_array_push (res, lem1);
+
+  uid_t pid_brrbth = noll_pred_array_find ("brrbthole");
+  assert (pid_brrbth != UNDEFINED_ID);
+  uid_t pid_rbrbth = noll_pred_array_find ("rbrbthole");
+  assert (pid_rbrbth != UNDEFINED_ID);
+
+  /// second lemma: stronger lemma:
+  ///   brrbthole(...) => rbthole(...)
+  noll_lemma_t *lem2 = noll_lemma_new_comp_3 (pid_brrbth, pid);
+  // push lemma
+  noll_lemma_array_push (res, lem2);
+
+  /// third lemma: stronger lemma:
+  ///   rbrbthole(...) => rbthole(...)
+  noll_lemma_t *lem3 = noll_lemma_new_comp_3 (pid_rbrbth, pid);
+  // push lemma
+  noll_lemma_array_push (res, lem3);
+
+  /// fourth lemma:
+  ///   rbrbthole(...) * rbthole => rbthole(...)
+  noll_lemma_t *lem4 = noll_lemma_new_comp_4 (pid_rbrbth, pid);
+  // push lemma
+  noll_lemma_array_push (res, lem4);
+
+  /// fifth lemma:
+  ///   brrbthole(...) * rbthole => rbthole(...)
+  noll_lemma_t *lem5 = noll_lemma_new_comp_4 (pid_brrbth, pid);
+  // push lemma
+  noll_lemma_array_push (res, lem5);
 
   return res;
 }
@@ -724,7 +915,7 @@ noll_lemma_init_pred (uid_t pid)
 
   noll_lemma_array *res;
 
-  // zhilin: add stronger lemma for avl and avlhole
+  // zhilin: add stronger lemma for avl and avlhole, rbt and rbthole
   if (!strcmp ("avl", noll_pred_getpred (pid)->pname))
     {
       res = noll_lemma_init_avl (pid);
@@ -732,6 +923,14 @@ noll_lemma_init_pred (uid_t pid)
   else if (!strcmp ("avlhole", noll_pred_getpred (pid)->pname))
     {
       res = noll_lemma_init_avlhole (pid);
+    }
+  if (!strcmp ("rbt", noll_pred_getpred (pid)->pname))
+    {
+      res = noll_lemma_init_rbt (pid);
+    }
+  else if (!strcmp ("rbthole", noll_pred_getpred (pid)->pname))
+    {
+      res = noll_lemma_init_rbthole (pid);
     }
   else
     {

@@ -1430,8 +1430,101 @@ noll_shom_match_form_rd (noll_graph_t * g2,
   return res;
 }
 
+
+// zhilin: extended to allow points-to atoms
 noll_uid_array *
 noll_shom_match_form_rd_list (noll_graph_t * g2,
+                              uid_t eid1,
+                              noll_space_t * f,
+                              noll_uid_array *
+                              lmap,
+                              uint_t level,
+                              noll_var_array *
+                              exvars,
+                              noll_uid_array * m, noll_dform_array * df,
+                              noll_uid_array * used)
+{
+  assert (g2 != NULL);
+  assert (f != NULL);
+  if (f->kind == NOLL_SPACE_LS)
+    return noll_shom_match_form_rd (g2, eid1, f, lmap, level, exvars, m, df,
+                                    used);
+  else if (f->kind == NOLL_SPACE_PTO)
+	  return noll_shom_match_form_pto (g2, eid1, f, lmap, exvars, m, df,
+              used);
+
+  /// a list of points-to or recursive calls
+  /// prepare result and new constraints
+  noll_uid_array *res = noll_uid_map_new (noll_vector_size (g2->edges));
+  noll_uid_array *used_res = noll_uid_array_new ();
+  noll_uid_array_copy (used_res, used);
+  noll_dform_array *dfnew = noll_dform_array_new ();
+  assert (f->kind == NOLL_SPACE_SSEP);
+  for (uint i = 0; i < noll_vector_size (f->m.sep); i++)
+    {
+      noll_space_t *si = noll_vector_at (f->m.sep, i);
+      assert(si->kind == NOLL_SPACE_LS || si->kind == NOLL_SPACE_PTO);
+      noll_uid_array *resr;
+      if(si->kind == NOLL_SPACE_LS)
+      {
+    	  resr =
+    			  noll_shom_match_form_rd (g2, eid1, si, lmap, level,
+    					  exvars, m,
+						  	  dfnew, used_res);
+      }
+      else if(si->kind == NOLL_SPACE_PTO)
+      {
+    	  resr =
+    			  noll_shom_match_form_pto (g2, eid1, si, lmap,
+    					  exvars, m,
+						  	  dfnew, used_res);
+      }
+      if (resr == NULL)
+        {
+#ifndef NDEBUG
+          NOLL_DEBUG
+            ("\nSyntactic matching recursive rule: call %d fails!\n", i);
+#endif
+          resr = NULL;
+        }
+      else if (noll_uid_array_compose (res, resr) == NULL)
+        {
+#ifndef NDEBUG
+          NOLL_DEBUG
+            ("\nSyntactic matching recursive rule: call %d use same edges!\n",
+             i);
+#endif
+          noll_uid_array_delete (resr);
+          resr = NULL;
+        }
+      if (resr == NULL)
+        {
+          noll_uid_array_delete (res);
+          noll_uid_array_delete (used_res);
+          noll_dform_array_delete (dfnew);
+          return NULL;
+        }
+      noll_uid_array_compose (used_res, resr);
+      noll_uid_array_delete (resr);
+    }
+#ifndef NDEBUG
+  NOLL_DEBUG ("\nSyntactic matching recursive rule: rec calls matched!\n");
+  fprintf (stdout, "\tmap computed: ");
+  noll_uid_map_fprint (stdout, res);
+  fprintf (stdout, "\n\tdf computed: ");
+  noll_dform_array_fprint (stdout, exvars, dfnew);
+#endif
+  /// push dfnew into df
+  noll_dform_array_cup_all (df, dfnew);
+  noll_dform_array_delete (dfnew);
+  noll_uid_array_delete (used_res);
+  return res;
+}
+
+// backup of noll_shom_match_form_rd_list
+
+noll_uid_array *
+noll_shom_match_form_rd_list_1 (noll_graph_t * g2,
                               uid_t eid1,
                               noll_space_t * f,
                               noll_uid_array *
