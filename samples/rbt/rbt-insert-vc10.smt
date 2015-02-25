@@ -634,7 +634,7 @@
 	(= M2 (bagunion M8 (bag d5) M7 (bag d4) M6 (bag d3) M5 (bag d2) M4 (bag d1) M3) ) 
 	(= N2 (ite (= c1 0) N3 (+ N3 1)) ) (= C2 c1) (= M1 (bagunion M0 (bag key)) ) 
 	(= M0 (bagminus M0 (bag key)) ) (distinct parent0 nil) (distinct parent0 root) 
-	(distinct cusparent1 nil) (= iseven 1) (= c5 0) (= C5 0) (= ggrandpa2 grandpa1) (= grandpa2 parent1)
+	(distinct cusparent1 nil) (= iseven 1) (= c5 0) (= C6 0) (= ggrandpa2 grandpa1) (= grandpa2 parent1)
 	(= uncle2 V) (= parent2 cur1) (= cur2 U1) (= c7 0) (= cusparent2 cusparent1) (= cusnode2 cusnode1)
 	)
 )
