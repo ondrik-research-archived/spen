@@ -6,7 +6,7 @@
 ; bagunion, intersection, difference of multisets
 ; an element is contained in a multiset
 
-(set-logic QF_S)
+(set-logic QF_SLRDI)
 
 ;; declare sorts
 (declare-sort Lst_t 0)
@@ -104,10 +104,10 @@
 (assert 
 	(and
 	(tobool 
-		(pto x (sref (ref next nil) (ref data key)) )
+		(pto X (sref (ref next nil) (ref data key)) )
 	)
 	(= root1 nil)
-	(= root2 x)
+	(= root2 X)
 	(= M1 (bag key)) 
 	)
 )

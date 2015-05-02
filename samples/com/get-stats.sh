@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in `ls *$1-vc*.slog`
+for i in `ls $1/$1-*-vc*.slog`
 do
 	BNAME=`basename -s .slog ${i}`
 	echo "---- file ${BNAME}"
@@ -16,11 +16,13 @@ do
 	echo "lemma CMPL: ${NLEMMACPL}"
 	NLEMMAINS=`grep "lemma INST" ${i} | wc -l`
 	echo "lemma INST: ${NLEMMAINS}"
+	NLEMMASTR=`grep "lemma STRO" ${i} | wc -l`
+	echo "lemma STR: ${NLEMMASTR}"
 done
 
 
 echo "===== Summary"
-FNAME=*.slog
+FNAME=$1/$1-*.slog
 
 NRULEB=`grep "spen: match the base rule" ${FNAME} | wc -l`
 echo "base-rule: ${NRULEB}"
@@ -34,4 +36,6 @@ NLEMMACPL=`grep "lemma COMPLETION" ${FNAME} | wc -l`
 echo "lemma CMPL: ${NLEMMACPL}"
 NLEMMAINS=`grep "lemma INST" ${FNAME} | wc -l`
 echo "lemma INST: ${NLEMMAINS}"
+NLEMMASTR=`grep "lemma STRO" ${FNAME} | wc -l`
+echo "lemma STR: ${NLEMMASTR}"
 

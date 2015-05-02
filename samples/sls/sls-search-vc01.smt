@@ -1,4 +1,3 @@
-
 ; Extending QF_S:
 ; constant emptybag, 
 ; the function bag, 
@@ -6,7 +5,7 @@
 ; bagunion, intersection, difference of multisets
 ; an element is contained in a multiset
 
-(set-logic QF_S)
+(set-logic QF_SLRDI)
 
 ;; declare sorts
 (declare-sort Lst_t 0)
@@ -78,6 +77,7 @@
 (declare-fun M2 () BagInt)
 (declare-fun M3 () BagInt)
 (declare-fun key () Int)
+(declare-fun d () Int)
 (declare-fun ret () Int)
 
 ;; declare set of locations
@@ -113,11 +113,11 @@
 	(and 
 	(tobool 
 		(index alpha3 (slist root M0 )) 
-		)
 	)
 	(= ret 1)
 	(subset (bag key) M0)
 	)
-))
+	)
+)
 
 (check-sat)

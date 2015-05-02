@@ -6,7 +6,7 @@
 ; bagunion, intersection, difference of multisets
 ; an element is contained in a multiset
 
-(set-logic QF_S)
+(set-logic QF_SLRDI)
 
 ;; declare sorts
 (declare-sort Lst_t 0)
@@ -71,6 +71,7 @@
 ;; declare variables
 (declare-fun root () Lst_t)
 (declare-fun cur1 () Lst_t)
+(declare-fun cur () Lst_t)
 (declare-fun X () Lst_t)
 (declare-fun Y () Lst_t)
 (declare-fun M0 () BagInt)
@@ -78,6 +79,7 @@
 (declare-fun M2 () BagInt)
 (declare-fun M3 () BagInt)
 (declare-fun key () Int)
+(declare-fun d () Int)
 (declare-fun ret () Int)
 
 ;; declare set of locations

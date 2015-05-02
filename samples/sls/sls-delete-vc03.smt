@@ -80,6 +80,7 @@
 (declare-fun parent2 () Lst_t)
 (declare-fun nxt () Lst_t)
 (declare-fun keynode () Lst_t)
+(declare-fun ret () Lst_t)
 
 (declare-fun X () Lst_t)
 (declare-fun Y () Lst_t)
@@ -91,7 +92,6 @@
 (declare-fun M4 () BagInt)
 
 (declare-fun key () Int)
-(declare-fun ret () Int)
 (declare-fun d () Int)
 (declare-fun d1 () Int)
 (declare-fun d2 () Int)
