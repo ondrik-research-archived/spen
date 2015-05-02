@@ -39,13 +39,13 @@ do
 		echo -e "result for ${i}:                                              \e[1;32mOK\e[0m       in time ${RUN_TIME} sec"
 	fi
 
-	echo "---- move data entailments to z3"
-        for df in `ls df-*.txt`
-        do
-		DENTL=${BN_FILE}-${df}
-		mv ${df} ../z3/${DENTL} 
-		echo "    generate z3/${DENTL}"
-	done
+ 	echo "---- move data entailments to z3"
+         for df in `ls df-*.txt`
+         do
+ 		DENTL=${BN_FILE}-${df}
+ 		mv ${df} ../z3/${DENTL} 
+ 		echo "    generate z3/${DENTL}"
+ 	done
 
 	${SHARED_MAKE} --quiet clean
 	rm ${RESULT_FILE}

@@ -380,7 +380,7 @@ noll_lemma_new_comp_2 (uid_t pid_base, uid_t pid_part)
   const noll_pred_t *pred_part = noll_pred_getpred (pid_part);
 
   noll_lemma_t *lem2 = noll_lemma_new (pid_base);
-  lem2->kind = NOLL_LEMMA_COMP_1;
+  lem2->kind = NOLL_LEMMA_COMP_2;
   // adds to pred_base->def->vars the additional parameters of pred_part->def->vars
   noll_lemma_add_lvars (lem2, pred_base->def->vars, pred_base->def->fargs,
                         pred_part->def->vars, pred_part->def->fargs);
@@ -519,10 +519,10 @@ noll_lemma_new_comp_4 (uid_t pid_hole_strong, uid_t pid_hole)
   const noll_pred_t *pred_hole_strong = noll_pred_getpred (pid_hole_strong);
   uint_t fargs_hole_strong = pred_hole_strong->def->fargs;
 
-  assert(fargs_hole == fargs_hole_strong);
+  assert (fargs_hole == fargs_hole_strong);
 
   noll_lemma_t *lem2 = noll_lemma_new (pid_hole);
-  lem2->kind = NOLL_LEMMA_COMP_1;
+  lem2->kind = NOLL_LEMMA_COMP_1S;
   // adds to pred_hole->def->vars the copy of the "pending" parameters
   noll_lemma_clone_pending (lem2, pred_hole);
   uint_t largs = noll_vector_size (lem2->rule.vars);
@@ -663,6 +663,7 @@ noll_lemma_init_avl (uint_t pid)
   uid_t pid_bavlh = noll_pred_array_find ("bavlhole");
   assert (pid_bavlh != UNDEFINED_ID);
   noll_lemma_t *lem3 = noll_lemma_new_comp_2 (pid, pid_bavlh);
+  lem3->kind = NOLL_LEMMA_COMP_2S;      /// ms: to identify stronger + comp
   // push lemma
   noll_lemma_array_push (res, lem3);
 
@@ -671,6 +672,7 @@ noll_lemma_init_avl (uint_t pid)
   uid_t pid_ubavlh = noll_pred_array_find ("ubavlhole");
   assert (pid_ubavlh != UNDEFINED_ID);
   noll_lemma_t *lem4 = noll_lemma_new_comp_2 (pid, pid_ubavlh);
+  lem4->kind = NOLL_LEMMA_COMP_2S;      /// ms: to identify stronger + comp
   // push lemma
   noll_lemma_array_push (res, lem4);
 
@@ -741,19 +743,24 @@ noll_lemma_init_rbt (uint_t pid)
   /// zhilin: third lemma:
   ///   brrbthole(E,r1,M,b1,H,h1) * rbt(r1,b1,h1) => rbt(E,M,H)
   uid_t pid_brrbth = noll_pred_array_find ("brrbthole");
-  assert (pid_brrbth != UNDEFINED_ID);
-  noll_lemma_t *lem3 = noll_lemma_new_comp_2 (pid, pid_brrbth);
-  // push lemma
-  noll_lemma_array_push (res, lem3);
+  if (pid_brrbth != UNDEFINED_ID)
+    {
+      noll_lemma_t *lem3 = noll_lemma_new_comp_2 (pid, pid_brrbth);
+      lem3->kind = NOLL_LEMMA_COMP_2S;
+      // push lemma
+      noll_lemma_array_push (res, lem3);
+    }
 
   /// zhilin: fourth lemma:
   ///   brrbthole(E,r1,M,b1,H,h1) * rbt(r1,b1,h1) => rbt(E,M,H)
   uid_t pid_rbrbth = noll_pred_array_find ("rbrbthole");
-  assert (pid_rbrbth != UNDEFINED_ID);
-  noll_lemma_t *lem4 = noll_lemma_new_comp_2 (pid, pid_rbrbth);
-  // push lemma
-  noll_lemma_array_push (res, lem4);
-
+  if (pid_rbrbth != UNDEFINED_ID)
+    {
+      noll_lemma_t *lem4 = noll_lemma_new_comp_2 (pid, pid_rbrbth);
+      lem4->kind = NOLL_LEMMA_COMP_2S;
+      // push lemma
+      noll_lemma_array_push (res, lem4);
+    }
 
   return res;
 }
@@ -774,33 +781,38 @@ noll_lemma_init_rbthole (uint_t pid)
   noll_lemma_array_push (res, lem1);
 
   uid_t pid_brrbth = noll_pred_array_find ("brrbthole");
-  assert (pid_brrbth != UNDEFINED_ID);
+  if (pid_brrbth != UNDEFINED_ID)
+    {
+      /// second lemma: stronger lemma:
+      ///   brrbthole(...) => rbthole(...)
+      noll_lemma_t *lem2 = noll_lemma_new_comp_3 (pid_brrbth, pid);
+      // push lemma
+      noll_lemma_array_push (res, lem2);
+
+      /// fifth lemma:
+      ///   brrbthole(...) * rbthole => rbthole(...)
+      noll_lemma_t *lem5 = noll_lemma_new_comp_4 (pid_brrbth, pid);
+      lem5->kind = NOLL_LEMMA_COMP_1S;
+      // push lemma
+      noll_lemma_array_push (res, lem5);
+    }
+
   uid_t pid_rbrbth = noll_pred_array_find ("rbrbthole");
-  assert (pid_rbrbth != UNDEFINED_ID);
+  if (pid_rbrbth != UNDEFINED_ID)
+    {
+      /// third lemma: stronger lemma:
+      ///   rbrbthole(...) => rbthole(...)
+      noll_lemma_t *lem3 = noll_lemma_new_comp_3 (pid_rbrbth, pid);
+      // push lemma
+      noll_lemma_array_push (res, lem3);
 
-  /// second lemma: stronger lemma:
-  ///   brrbthole(...) => rbthole(...)
-  noll_lemma_t *lem2 = noll_lemma_new_comp_3 (pid_brrbth, pid);
-  // push lemma
-  noll_lemma_array_push (res, lem2);
-
-  /// third lemma: stronger lemma:
-  ///   rbrbthole(...) => rbthole(...)
-  noll_lemma_t *lem3 = noll_lemma_new_comp_3 (pid_rbrbth, pid);
-  // push lemma
-  noll_lemma_array_push (res, lem3);
-
-  /// fourth lemma:
-  ///   rbrbthole(...) * rbthole => rbthole(...)
-  noll_lemma_t *lem4 = noll_lemma_new_comp_4 (pid_rbrbth, pid);
-  // push lemma
-  noll_lemma_array_push (res, lem4);
-
-  /// fifth lemma:
-  ///   brrbthole(...) * rbthole => rbthole(...)
-  noll_lemma_t *lem5 = noll_lemma_new_comp_4 (pid_brrbth, pid);
-  // push lemma
-  noll_lemma_array_push (res, lem5);
+      /// fourth lemma:
+      ///   rbrbthole(...) * rbthole => rbthole(...)
+      noll_lemma_t *lem4 = noll_lemma_new_comp_4 (pid_rbrbth, pid);
+      lem4->kind = NOLL_LEMMA_COMP_1S;
+      // push lemma
+      noll_lemma_array_push (res, lem4);
+    }
 
   return res;
 }
@@ -1079,8 +1091,14 @@ noll_lemma_kind_fprint (FILE * f, noll_lemma_e kind)
     case NOLL_LEMMA_COMP_1:
       fprintf (f, "COMPOSITION");
       break;
+    case NOLL_LEMMA_COMP_1S:
+      fprintf (f, "STRONGER + COMPOSITION");
+      break;
     case NOLL_LEMMA_COMP_2:
       fprintf (f, "COMPLETION");
+      break;
+    case NOLL_LEMMA_COMP_2S:
+      fprintf (f, "STRONGER + COMPLETION");
       break;
     case NOLL_LEMMA_INSTANCE:
       fprintf (f, "INSTANTIATION");

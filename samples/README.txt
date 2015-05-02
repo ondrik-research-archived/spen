@@ -3,6 +3,26 @@ This directory conatins the benchmarks of spen
 Files:
 
 com		shell script used to execute the benchmarks
+  do-syn.sh     execute the benchmark for a predicate set and a function
+                in order to do regresion testing
+
+                (once) ln -s com/do-syn.sh .
+                ./do-syn.sh sls -delete
+
+  do-syn-time.sh execute the benchmark for a predicate set and a function
+                 in order to obtain execution time (less msg than do-syn.sh)
+
+                (once) ln -s com/do-syn-time.sh .
+                ./do-syn-time.sh sls -delete
+                
+  get-lemma.sh  generate stats about the lemma use based on */*.slog files
+                output by the do-syn.sh call
+                
+		./com/get-lemma.sh sls -delete
+
+  get-stats.sh  generate the data needed for the experiments in the paper
+
+		./com/get-stats.sh
 
 Makefile	call spen and common tasks for one file
 

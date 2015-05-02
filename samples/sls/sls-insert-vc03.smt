@@ -114,10 +114,10 @@
 		(index alpha1 (slist X M1))
 	))
 	(= cur1 root)
-	(= parent1 nil) (= M0 (bagunion (bag d) M1)) (<= d M1)
+	(= parent1 nil) (= M0 (bagunion (bag d) M1)) (<= (bag d) M1)
 	(<= d key) (= parent2 cur1) (= cur2 X)
 	(= M2 M3) 
-	(= M2 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) )
+	(= M2 (ite (subset (bag key) M0) M0 (bagunion M0 (bag key)) ))
 	)
 )
 

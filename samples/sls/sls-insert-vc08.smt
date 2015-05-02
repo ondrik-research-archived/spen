@@ -114,13 +114,13 @@
 	(ssep
 		(pto root1 (sref (ref next X) (ref data d1)))
 		(index alpha1 (slist X M1))
-		(pto x (sref (ref next cur) (ref data key)))
+		(pto X (sref (ref next cur) (ref data key)))
 	))
 	(<= (bag d1) M1) 
 	(= M0 (bagunion (bag d1) M1) )
 	(> d1 key )
 	(= parent nil) (= cur root1) (distinct root nil)
-	(= root2 x) (= ret root2) (= M2 (bagunion M0 (bag key)) )
+	(= root2 X) (= ret root2) (= M2 (bagunion M0 (bag key)) )
 	)
 )
 

@@ -40,7 +40,9 @@ extern "C"
   typedef enum
   {
     NOLL_LEMMA_COMP_1 = 0,      /// P * P => P
+    NOLL_LEMMA_COMP_1S,         /// P' * P => P with P' stronger than P
     NOLL_LEMMA_COMP_2,          /// P' * P => P
+    NOLL_LEMMA_COMP_2S,         /// P'' * P => P with P' stronger than P'
     NOLL_LEMMA_INSTANCE,        /// P'(E,cst) => P (E)
     NOLL_LEMMA_STRONGER,        /// P' => P
     NOLL_LEMMA_OTHER
