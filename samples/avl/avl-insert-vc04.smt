@@ -286,9 +286,6 @@
 (declare-fun alpha9 () SetLoc)
 (declare-fun alpha10 () SetLoc)
 (declare-fun alpha11 () SetLoc)
-(declare-fun alpha12 () SetLoc)
-(declare-fun alpha13 () SetLoc)
-(declare-fun alpha14 () SetLoc)
 
 ;; VC04: avlhole(root, unbparent1, M1,H1,M2,H2) * unbparent1 |-> ((left,unbalance1),(right,X),(data,d1),(balance,b1)) * 
 ;; unbalance1 |-> ((left,Y),(right,Z),(data,d2),(balance,b2)) * bavlhole(Y,parent1,M4,H4,M6,H6) * parent1 |-> ((left,cur1),(right,U),(data,d3),

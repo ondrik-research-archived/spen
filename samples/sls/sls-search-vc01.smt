@@ -71,7 +71,6 @@
 (declare-fun root () Lst_t)
 (declare-fun cur1 () Lst_t)
 (declare-fun X () Lst_t)
-(declare-fun Y () Lst_t)
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
 (declare-fun M2 () BagInt)
@@ -85,7 +84,6 @@
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
-(declare-fun alpha4 () SetLoc)
 
 ;; VC1: slseg(root, cur1, M0, M1) * cur1 |->((next,X), (data, d)) * slist(X,M2) & M1 = {d} cup M2 & d <= M2 & (key in M0 <=> key in M1) & 
 ;; cur1 != nil & d = key & ret = 1 |- 

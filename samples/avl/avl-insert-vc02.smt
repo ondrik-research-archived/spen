@@ -245,8 +245,6 @@
 (declare-fun M7 () BagInt)
 (declare-fun M8 () BagInt)
 (declare-fun M9 () BagInt)
-(declare-fun M10 () BagInt)
-(declare-fun M11 () BagInt)
 
 (declare-fun H1 () Int)
 (declare-fun H2 () Int)
@@ -257,7 +255,6 @@
 (declare-fun H7 () Int)
 (declare-fun H8 () Int)
 (declare-fun H9 () Int)
-(declare-fun H10 () Int)
 
 (declare-fun d1 () Int)
 (declare-fun d2 () Int)
@@ -279,7 +276,6 @@
 (declare-fun alpha7 () SetLoc)
 (declare-fun alpha8 () SetLoc)
 (declare-fun alpha9 () SetLoc)
-(declare-fun alpha10 () SetLoc)
 
 ;; VC02: root |-> ((left,X),(right,Y),(data,d1),(balance,b1)) * bavlhole(X, parent1, M1, H1, M2, H2) * 
 ;; parent1|->((left,cur1), (right, Z), (data, d2), (balance, b2)) * cur1 |-> ((left,V),(right,U),(data,d3),(balance,b3)) * 

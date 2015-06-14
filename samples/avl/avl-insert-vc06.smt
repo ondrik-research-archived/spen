@@ -235,7 +235,6 @@
 (declare-fun Z () Avl_t)
 (declare-fun U () Avl_t)
 (declare-fun V () Avl_t)
-(declare-fun W () Avl_t)
 
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
@@ -246,9 +245,6 @@
 (declare-fun M6 () BagInt)
 (declare-fun M7 () BagInt)
 (declare-fun M8 () BagInt)
-(declare-fun M9 () BagInt)
-(declare-fun M10 () BagInt)
-(declare-fun M11 () BagInt)
 
 (declare-fun H1 () Int)
 (declare-fun H2 () Int)
@@ -258,19 +254,13 @@
 (declare-fun H6 () Int)
 (declare-fun H7 () Int)
 (declare-fun H8 () Int)
-(declare-fun H9 () Int)
-(declare-fun H10 () Int)
-(declare-fun H11 () Int)
-(declare-fun h () Int)
 
 (declare-fun d1 () Int)
 (declare-fun d2 () Int)
 (declare-fun d3 () Int)
-(declare-fun d4 () Int)
 (declare-fun b1 () Int)
 (declare-fun b2 () Int)
 (declare-fun b3 () Int)
-(declare-fun b4 () Int)
 (declare-fun key () Int)
 
 ;; declare set of locations
@@ -283,12 +273,6 @@
 (declare-fun alpha6 () SetLoc)
 (declare-fun alpha7 () SetLoc)
 (declare-fun alpha8 () SetLoc)
-(declare-fun alpha9 () SetLoc)
-(declare-fun alpha10 () SetLoc)
-(declare-fun alpha11 () SetLoc)
-(declare-fun alpha12 () SetLoc)
-(declare-fun alpha13 () SetLoc)
-(declare-fun alpha14 () SetLoc)
 
 ;; VC06: root |-> ((left,X),(right,Y),(data,d1),(balance,b1)) * bavlhole(X, parent1, M1, H1, M2, H2) * 
 ;; parent1|->((left,cur1), (right, Z), (data, d2), (balance, b2)) * cur1|->((left,V), (right, U), (data, d3), (balance, b3)) * 

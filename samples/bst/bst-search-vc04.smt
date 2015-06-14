@@ -91,7 +91,6 @@
 ;; declare variables
 (declare-fun root () Bst_t)
 (declare-fun cur () Bst_t)
-(declare-fun X () Bst_t)
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
 (declare-fun key () Int)

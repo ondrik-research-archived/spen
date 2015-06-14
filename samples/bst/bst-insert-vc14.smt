@@ -92,7 +92,7 @@
 (declare-fun cur () Bst_t)
 (declare-fun parent () Bst_t)
 (declare-fun ret () Bst_t)
-(declare-fun x () Bst_t)
+(declare-fun Y () Bst_t)
 (declare-fun X () Bst_t)
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
@@ -109,8 +109,8 @@
 (declare-fun alpha3 () SetLoc)
 (declare-fun alpha4 () SetLoc)
 
-;; VC14: bsthole(root,parent, M1, M2) * parent|->((left,X), (right, x), (data, d1)) * bst(X,M3) * bst(cur, M4) * 
-;; x|-> ((left, nil), (right, nil), key) & M3 < d1 < M4 & ite(key in M0, M1 = M0, M1 = M0 cup {key}) & 
+;; VC14: bsthole(root,parent, M1, M2) * parent|->((left,X), (right, Y), (data, d1)) * bst(X,M3) * bst(cur, M4) * 
+;; Y|-> ((left, nil), (right, nil), key) & M3 < d1 < M4 & ite(key in M0, M1 = M0, M1 = M0 cup {key}) & 
 ;; ite(key in M4, M2 = {d1} cup M3 cup M4, M2 = {d1} cup M3 cup M4 cup {key}) & key in M0 <=> key in M4 & d1 < key & 
 ;; ! parent = nil & cur = nil & ret = root |-
 ;; bst(ret, M1) & ! key in M0 & M1 = M0 cup {key} & ret = root
@@ -120,10 +120,10 @@
 	(tobool 
 	(ssep 
 		(index alpha1 (bsthole root parent M1 M2) )
-		(pto parent (sref (ref left X) (ref right x) (ref data d1) ) ) 
+		(pto parent (sref (ref left X) (ref right Y) (ref data d1) ) ) 
 		(index alpha2 (bst X M3) )
 		(index alpha3 (bst cur M4) )
-		(pto x (sref (ref left nil) (ref right nil) (ref data key) ) ) 
+		(pto Y (sref (ref left nil) (ref right nil) (ref data key) ) ) 
 	))
 	(< M3 (bag d1))
 	(< (bag d1) M4)

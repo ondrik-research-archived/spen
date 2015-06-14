@@ -105,8 +105,6 @@
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
-(declare-fun alpha4 () SetLoc)
-(declare-fun alpha5 () SetLoc)
 
 ;; VC02: root |-> ((left, X), (right, Y), (data, d)) * bst(X, M1) * bst(Y, M2) & M0 = {d} cup M1 cup M2 & M1 < d < M2 & 
 ;; cur = root & parent = nil & ! root = nil & d = key & ret = root |-

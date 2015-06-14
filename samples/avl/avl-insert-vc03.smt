@@ -245,9 +245,6 @@
 (declare-fun M6 () BagInt)
 (declare-fun M7 () BagInt)
 (declare-fun M8 () BagInt)
-(declare-fun M9 () BagInt)
-(declare-fun M10 () BagInt)
-(declare-fun M11 () BagInt)
 
 (declare-fun H1 () Int)
 (declare-fun H2 () Int)
@@ -257,8 +254,6 @@
 (declare-fun H6 () Int)
 (declare-fun H7 () Int)
 (declare-fun H8 () Int)
-(declare-fun H9 () Int)
-(declare-fun H10 () Int)
 (declare-fun h () Int)
 
 (declare-fun d1 () Int)
@@ -281,7 +276,6 @@
 (declare-fun alpha7 () SetLoc)
 (declare-fun alpha8 () SetLoc)
 (declare-fun alpha9 () SetLoc)
-(declare-fun alpha10 () SetLoc)
 
 ;; VC03: avlhole(root, unbparent1, M1,H1,M2,H2) * unbparent1 |-> ((left,unbalance1),(right,X),(data,d1),(balance,b1)) * parent1 |-> ((left,cur1),
 ;; (right,Y),(data,d2),(balance,b2)) * cur1 |-> ((left,U), (right,Z),(data,d3),(balance,b3)) * avl(U, M7,H7) * avl(Z,M8,H8) * avl(Y, M5,H5) * 

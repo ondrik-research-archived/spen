@@ -239,7 +239,6 @@
 (declare-fun M2 () BagInt)
 (declare-fun M3 () BagInt)
 (declare-fun M4 () BagInt)
-(declare-fun M5 () BagInt)
 (declare-fun M6 () BagInt)
 (declare-fun M7 () BagInt)
 
@@ -247,7 +246,6 @@
 (declare-fun H2 () Int)
 (declare-fun H3 () Int)
 (declare-fun H4 () Int)
-(declare-fun H5 () Int)
 (declare-fun H6 () Int)
 (declare-fun H7 () Int)
 

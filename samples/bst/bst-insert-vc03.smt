@@ -100,7 +100,6 @@
 (declare-fun M2 () BagInt)
 (declare-fun key () Int)
 (declare-fun d () Int)
-(declare-fun key () Int)
 
 ;; declare set of locations
 

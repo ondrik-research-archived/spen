@@ -223,24 +223,14 @@
 ;; declare variables
 (declare-fun root () Avl_t)
 (declare-fun cur () Avl_t)
-(declare-fun cur1 () Avl_t)
-(declare-fun cur2 () Avl_t)
 (declare-fun parent () Avl_t)
-(declare-fun parent1 () Avl_t)
-(declare-fun parent2 () Avl_t)
 (declare-fun unbalance () Avl_t)
-(declare-fun unbalance1 () Avl_t)
-(declare-fun unbalance2 () Avl_t)
 (declare-fun unbparent () Avl_t)
-(declare-fun unbparent1 () Avl_t)
-(declare-fun unbparent2 () Avl_t)
 (declare-fun x () Avl_t)
 (declare-fun X () Avl_t)
 (declare-fun Y () Avl_t)
 (declare-fun Z () Avl_t)
 (declare-fun U () Avl_t)
-(declare-fun V () Avl_t)
-(declare-fun W () Avl_t)
 
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
@@ -251,9 +241,6 @@
 (declare-fun M6 () BagInt)
 (declare-fun M7 () BagInt)
 (declare-fun M8 () BagInt)
-(declare-fun M9 () BagInt)
-(declare-fun M10 () BagInt)
-(declare-fun M11 () BagInt)
 
 (declare-fun H1 () Int)
 (declare-fun H2 () Int)
@@ -263,9 +250,6 @@
 (declare-fun H6 () Int)
 (declare-fun H7 () Int)
 (declare-fun H8 () Int)
-(declare-fun H9 () Int)
-(declare-fun H10 () Int)
-(declare-fun H11 () Int)
 (declare-fun h () Int)
 
 (declare-fun d1 () Int)
@@ -290,10 +274,6 @@
 (declare-fun alpha8 () SetLoc)
 (declare-fun alpha9 () SetLoc)
 (declare-fun alpha10 () SetLoc)
-(declare-fun alpha11 () SetLoc)
-(declare-fun alpha12 () SetLoc)
-(declare-fun alpha13 () SetLoc)
-(declare-fun alpha14 () SetLoc)
 
 
 ;; VC12: avlhole(root, unbparent, M1,H1,M2,H2) * unbparent |-> ((left,unbalance),(right,X),(data,d1),(balance,b1)) * 

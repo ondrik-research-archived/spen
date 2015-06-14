@@ -5,7 +5,8 @@ TOOL=../../src/spen
 # for ta
 OPTIONTA=
 # for syn-dp
-OPTIONSY=-v -d -syn
+#OPTIONSY=-v -d -syn
+OPTIONSY=-syn
 
 .PHONY: clean purge
 

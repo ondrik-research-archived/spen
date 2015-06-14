@@ -92,7 +92,7 @@
 (declare-fun cur () Bst_t)
 (declare-fun parent () Bst_t)
 (declare-fun ret () Bst_t)
-(declare-fun x () Bst_t)
+(declare-fun X () Bst_t)
 (declare-fun Y () Bst_t)
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
@@ -119,10 +119,10 @@
 	(tobool 
 	(ssep 
 		(index alpha1 (bsthole root parent M1 M2) )
-		(pto parent (sref (ref left x) (ref right Y) (ref data d1) ) ) 
+		(pto parent (sref (ref left X) (ref right Y) (ref data d1) ) ) 
 		(index alpha2 (bst cur M3) )
 		(index alpha3 (bst Y M4) )
-		(pto x (sref (ref left nil) (ref right nil) (ref data key) ) ) 
+		(pto X (sref (ref left nil) (ref right nil) (ref data key) ) ) 
 	))
 	(< M3 (bag d1))
 	(< (bag d1) M4)

@@ -70,14 +70,9 @@
 
 ;; declare variables
 (declare-fun root () Lst_t)
-(declare-fun cur1 () Lst_t)
 (declare-fun cur () Lst_t)
-(declare-fun X () Lst_t)
-(declare-fun Y () Lst_t)
 (declare-fun M0 () BagInt)
 (declare-fun M1 () BagInt)
-(declare-fun M2 () BagInt)
-(declare-fun M3 () BagInt)
 (declare-fun key () Int)
 (declare-fun d () Int)
 (declare-fun ret () Int)
@@ -87,7 +82,6 @@
 (declare-fun alpha1 () SetLoc)
 (declare-fun alpha2 () SetLoc)
 (declare-fun alpha3 () SetLoc)
-(declare-fun alpha4 () SetLoc)
 
 ;; VC4: slseg(root,cur,M0,M1) * slist(cur,M1) & (key in M0 <=> key in M1) & cur = nil & ret = 0 |-
 ;; slist(root, M0) & ! key in M0 & ret = 0

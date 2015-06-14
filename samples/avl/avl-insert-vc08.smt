@@ -288,7 +288,6 @@
 (declare-fun alpha11 () SetLoc)
 (declare-fun alpha12 () SetLoc)
 (declare-fun alpha13 () SetLoc)
-(declare-fun alpha14 () SetLoc)
 
 
 ;; VC08: avlhole(root, unbparent1, M1,H1,M2,H2) * unbparent1 |-> ((left,unbalance1),(right,X),(data,d1),(balance,b1)) * 
