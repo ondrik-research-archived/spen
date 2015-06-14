@@ -64,14 +64,29 @@ extern "C"
     noll_pred_rule_array *rec_rules;    // set of base rules
   } noll_pred_binding_t;
 
+  /** Kind of inductive definition
+   *  -- from most specific to more general
+   */
+  typedef enum 
+  {
+    NOLL_PRED_LST_PAR,          // list-like definition, with parent
+    NOLL_PRED_LST,              // list-like definition, one way
+    NOLL_PRED_COMP_PAR,         // compositional definition, with parent
+    NOLL_PRED_COMP,             // compositional definition, one way
+    NOLL_PRED_WS,               // well structured definition
+    NOLL_PRED_OTHER             // default
+  } noll_pred_kind_e;
+   
   /** Arguments typing infos
    */
   typedef enum
   {
     NOLL_ATYP_LROOT = 0,
+    NOLL_ATYP_LPAR,
     NOLL_ATYP_BROOT,
     NOLL_ATYP_IROOT,
     NOLL_ATYP_LPENDING,
+    NOLL_ATYP_LLST,
     NOLL_ATYP_BPENDING,
     NOLL_ATYP_IPENDING,
     NOLL_ATYP_BORDER,
@@ -93,6 +108,7 @@ extern "C"
      * with values of @type noll_field_e for each field used in pred
      */
     noll_uint_array *pfields;
+    noll_pred_kind_e pkind;     /* class of the inductive definition */
     bool isUnaryLoc;            /* the predicate has only source */
     bool useNil;                /* the predicate use fields to nil */
     bool isTwoDir;              /* the predicate is a two direction */

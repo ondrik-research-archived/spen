@@ -11,6 +11,11 @@ include ../Makefile.config
 # Use ICFLAGS to specify machine-independent compilation flags.
 ICFLAGS = -I. \
 -I$(SMTLIB2_PREFIX)
+ 
+# Use -DSPENEXT to compile the spen analyser
+#ICFLAGS = -I. \
+#-DSPENEXT \
+#-I$(SMTLIB2_PREFIX)
 
 ICXXFLAGS = \
 -I$(LIBVATA_INCLUDE)
@@ -19,7 +24,7 @@ LDFLAGS = \
 -L$(SMTLIB2_PREFIX) \
 -L$(LIBVATA_LIB)
 
-#DEBUG=_debug
+DEBUG=_debug
 
 #---------------------------------------
 # Files

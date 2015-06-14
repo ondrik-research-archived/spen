@@ -377,8 +377,17 @@ noll_pred_is_main_backbone_field (uid_t fid)
   return noll_pred_is_field (f->pid, fid, NOLL_PFLD_BCKBONE);
 }
 
-int noll_pred_fill_type (noll_pred_t * p, uint_t level,
+int noll_pred_type_init (noll_pred_t * p);
+
+int noll_pred_type_args (noll_pred_t * p);
+
+int noll_pred_type_rule (noll_pred_t * p, uint_t level,
                          noll_pred_rule_t * rule);
+
+int noll_pred_type_args_ext (noll_pred_t * p);
+
+int noll_pred_type_rule_ext (noll_pred_t * p, uint_t level,
+                             noll_pred_rule_t * rule);
 
 /**
  * Type the predicate definitions.
@@ -397,92 +406,20 @@ noll_pred_type ()
        pid < noll_vector_size (preds_array) && (res == 1); pid++)
     {
       noll_pred_t *p = noll_vector_at (preds_array, pid);
-      /* alloc typing info field */
-      p->typ =
-        (noll_pred_typing_t *) malloc (sizeof (struct noll_pred_typing_t));
 
-      /* predicate type = type of the first parameter */
-      p->typ->ptype0 = noll_var_record (p->def->vars, 1);
+      /* initialize the typing infos */
+      res = noll_pred_type_init (p);
+      if (res == 0)
+        return 0;
 
-      /* types covered */
-      p->typ->ptypes = noll_uint_array_new ();
-      /* resize the array to cover all the records, filled with 0 */
-      noll_uint_array_resize (p->typ->ptypes,
-                              noll_vector_size (records_array));
-      noll_vector_at (p->typ->ptypes, p->typ->ptype0) = 1;
-
-      /* fields used */
-      p->typ->pfields = noll_uint_array_new ();
-      /* resize the array to cover all the fields, filled with 0 = NOLL_PFLD_NONE */
-      noll_uint_array_resize (p->typ->pfields,
-                              noll_vector_size (fields_array));
-
-      /* type of arguments */
-      p->typ->argkind = noll_uid_array_new ();
-      uint_t nbLoc = 0;         /// number of location args, to fill p->typ->isUnaryLoc
-      uint_t nbBag = 0;
-      uint_t nbInt = 0;
-      noll_uid_array_reserve (p->typ->argkind, p->def->fargs);
-      for (uint_t i = 0; i < p->def->fargs; i++)
-        {
-          noll_var_t *ai = noll_vector_at (p->def->vars, i + 1);        // shift for nil
-          switch (ai->vty->kind)
-            {
-            case NOLL_TYP_RECORD:
-              {
-                if (nbLoc == 0)
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_LROOT);
-                else if (nbLoc == 1)
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_LPENDING);
-                else
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
-                nbLoc++;
-                break;
-              }
-            case NOLL_TYP_BAGINT:
-              {
-                if ((nbBag == 0) || (nbLoc == 1))
-                  /// no bag seen before or still in the root part
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BROOT);
-                else if ((nbBag >= 1) && (nbLoc == 2))
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BPENDING);
-                else
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
-                nbBag++;
-                break;
-              }
-            case NOLL_TYP_INT:
-              {
-                if ((nbInt == 0) || (nbLoc == 1) || (nbBag == 1))
-                  /// no int seen before or still in the root part
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IROOT);
-                else if ((nbInt >= 1) && (nbLoc == 2))
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IPENDING);
-                else
-                  noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
-                nbInt++;
-                break;
-              }
-            default:
-              break;
-            }
-        }
-      /// this first guess is confirmed by typing rules
-
-      /* only one location arg = unary predicate */
-      p->typ->isUnaryLoc = (nbLoc == 1) ? true : false;
-
-      /* uses 'nil' as target of some fields */
-      p->typ->useNil = false;
-
-      /* two direction predicate */
-      /* TODO: better test using the predicate definition */
-      p->typ->isTwoDir = (0 == strcmp (p->pname, "dll")) ? true : false;
-
-      /* predicates called */
-      p->typ->ppreds = noll_uint_array_new ();
-      /* resize the array to cover all the predicates called */
-      noll_uint_array_resize (p->typ->ppreds, noll_vector_size (preds_array));
+      /* type the arguments */
+#ifdef SPENEXT
+      res = noll_pred_type_args_ext (p);
+#else
+      res = noll_pred_type_args (p);
+#endif
+      if (res == 0)
+        return 0;
 
       /* go through the rules to fill the infos */
       uint_t size =
@@ -490,27 +427,161 @@ noll_pred_type ()
          NULL) ? 0 : noll_vector_size (p->def->base_rules);
       for (uint_t ri = 0; ri < size; ri++)
         {
+#ifdef SPENEXT
           res =
-            noll_pred_fill_type (p, 0,
+            noll_pred_type_rule_ext (p, 0,
+                                     noll_vector_at (p->def->base_rules, ri));
+#else
+          res =
+            noll_pred_type_rule (p, 0,
                                  noll_vector_at (p->def->base_rules, ri));
+#endif
           if (res == 0)
             return 0;
         }
-      /* TODO: no need to for level 1 formulas? */
+      /* TODO: no need for level 1 formulas? */
       size =
         (p->def->rec_rules ==
          NULL) ? 0 : noll_vector_size (p->def->rec_rules);
       for (uint_t ri = 0; ri < size; ri++)
         {
+#ifdef SPENEXT
           res =
-            noll_pred_fill_type (p, 1,
+            noll_pred_type_rule_ext (p, 1,
+                                     noll_vector_at (p->def->rec_rules, ri));
+#else
+          res =
+            noll_pred_type_rule (p, 1,
                                  noll_vector_at (p->def->rec_rules, ri));
+#endif
           if (res == 0)
             return 0;
         }
     }
   return res;
 }
+
+/**
+ * Alloc the type structure and fill the fields with the default values
+ * @param p     predicate
+ * @return      1 if ok, 0 otherwise
+ */
+int
+noll_pred_type_init (noll_pred_t * p)
+{
+  if (p == NULL)
+    return 0;
+
+  /* alloc typing info field */
+  p->typ = (noll_pred_typing_t *) malloc (sizeof (struct noll_pred_typing_t));
+
+  /* predicate type = type of the first parameter */
+  p->typ->ptype0 = noll_var_record (p->def->vars, 1);
+
+  /* types covered */
+  p->typ->ptypes = noll_uint_array_new ();
+  /* resize the array to cover all the records, filled with 0 */
+  noll_uint_array_resize (p->typ->ptypes, noll_vector_size (records_array));
+  noll_vector_at (p->typ->ptypes, p->typ->ptype0) = 1;
+
+  /* fields used */
+  p->typ->pfields = noll_uint_array_new ();
+  /* resize the array to cover all the fields, filled with 0 = NOLL_PFLD_NONE */
+  noll_uint_array_resize (p->typ->pfields, noll_vector_size (fields_array));
+
+  /* kind of inductive definition */
+  p->typ->pkind = NOLL_PRED_OTHER;
+
+  /* flags -- by default values, may be changed by the analysis */
+  p->typ->isUnaryLoc = false;
+  p->typ->useNil = false;
+  p->typ->isTwoDir = false;
+
+  /* type of arguments */
+  p->typ->argkind = noll_uid_array_new ();
+  noll_uid_array_reserve (p->typ->argkind, p->def->fargs);
+
+  /* predicates called */
+  p->typ->ppreds = noll_uint_array_new ();
+  /* resize the array to cover all the predicates called */
+  noll_uint_array_resize (p->typ->ppreds, noll_vector_size (preds_array));
+
+  return 1;
+}
+
+/**
+ * Fill the information about the predicate arguments
+ * @param p     predicate
+ * @return      1 if ok, 0 otherwise
+ */
+int
+noll_pred_type_args (noll_pred_t * p)
+{
+  if ((p == NULL) || (p->typ == NULL) || (p->typ->argkind == NULL))
+    return 0;
+
+  /* type of arguments */
+  uint_t nbLoc = 0;             /// number of location args, to fill p->typ->isUnaryLoc
+  uint_t nbBag = 0;
+  uint_t nbInt = 0;
+  for (uint_t i = 0; i < p->def->fargs; i++)
+    {
+      noll_var_t *ai = noll_vector_at (p->def->vars, i + 1);    // shift for nil
+      switch (ai->vty->kind)
+        {
+        case NOLL_TYP_RECORD:
+          {
+            if (nbLoc == 0)
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_LROOT);
+            else if (nbLoc == 1)
+              // TODO: deal correctly with parent arguments
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_LPENDING);
+            else
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
+            nbLoc++;
+            break;
+          }
+        case NOLL_TYP_BAGINT:
+          {
+            if ((nbBag == 0) || (nbLoc == 1))
+              /// no bag seen before or still in the root part
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BROOT);
+            else if ((nbBag >= 1) && (nbLoc == 2))
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BPENDING);
+            else
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
+            nbBag++;
+            break;
+          }
+        case NOLL_TYP_INT:
+          {
+            if ((nbInt == 0) || (nbLoc == 1) || (nbBag == 1))
+              /// no int seen before or still in the root part
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IROOT);
+            else if ((nbInt >= 1) && (nbLoc == 2))
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_IPENDING);
+            else
+              noll_uid_array_push (p->typ->argkind, NOLL_ATYP_BORDER);
+            nbInt++;
+            break;
+          }
+        default:
+          break;
+        }
+    }
+  /// this first guess is confirmed by typing rules
+
+  /* only one location arg = unary predicate */
+  if (nbLoc == 1)
+    p->typ->isUnaryLoc = true;
+
+  /* two direction predicate */
+  /* TODO: better test using the predicate definition */
+  p->typ->isTwoDir = (0 == strcmp (p->pname, "dll")) ? true : false;
+
+  return 1;
+}
+
 
 /**
  * Fill the arguments flds and typs, if not null, with the
@@ -520,7 +591,7 @@ noll_pred_type ()
  * @param form   analyzed formula
  */
 int
-noll_pred_fill_type_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
+noll_pred_type_rule_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
 {
   if (form == NULL)
     return 1;
@@ -556,8 +627,13 @@ noll_pred_fill_type_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
       default:
         break;
       }
+  /* compute class using argument types */
   if (vidLRoot == UNDEFINED_ID)
+    /* nothing to do, class NOLL_PRED_OTHER */
     return 0;
+  /* there is a root, guess class NOLL_PRED_WS */
+  p->typ->pkind = NOLL_PRED_WS;
+
   if ((vidLPend == UNDEFINED_ID) &&
       ((vidBPend != UNDEFINED_ID) || (vidIPend != UNDEFINED_ID)))
     return 0;
@@ -565,17 +641,23 @@ noll_pred_fill_type_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
     return 0;
   if ((vidIRoot == UNDEFINED_ID) && (vidIPend != UNDEFINED_ID))
     return 0;
+  /* all arguments are symmetric, guess class NOLL_PRED_COMP */
+  p->typ->pkind = NOLL_PRED_COMP;
+
 
   /// check that pure includes (in-)equality between 
-  ///  - root with 'nil' or root with pending
+  ///  - root with 'nil' or root with pending  
   noll_pure_op_t op = NOLL_PURE_EQ;
   if (vidLPend == UNDEFINED_ID)
-    op = noll_pure_matrix_at (form, 0, vidLRoot);
+    op = noll_pure_matrix_at (form, 0, vidLRoot);       // 0 is nil
   else
     op = noll_pure_matrix_at (form, vidLRoot, vidLPend);
   if ((level == 0 && op != NOLL_PURE_EQ) ||
       (level >= 1 && op == NOLL_PURE_EQ))
-    return 0;
+    {
+      p->typ->pkind = NOLL_PRED_WS;
+      return 0;
+    }
 
   if ((op != NOLL_PURE_EQ) || (level > 0))
     return 1;
@@ -585,10 +667,16 @@ noll_pred_fill_type_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
   assert (level == 0 && op == NOLL_PURE_EQ);
   if ((vidBPend != UNDEFINED_ID) &&
       (noll_pure_matrix_at (form, vidBRoot, vidBPend) != op))
-    return 0;
+    {
+      p->typ->pkind = NOLL_PRED_WS;
+      return 0;
+    }
   if ((vidIPend != UNDEFINED_ID) &&
       (noll_pure_matrix_at (form, vidIRoot, vidIPend) != op))
-    return 0;
+    {
+      p->typ->pkind = NOLL_PRED_WS;
+      return 0;
+    }
   // TODO: check also data constraints
   return 1;
 }
@@ -601,7 +689,7 @@ noll_pred_fill_type_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
  * @param form   analyzed formula
  */
 int
-noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
+noll_pred_type_rule_form (noll_pred_t * p, uint_t level,
                           noll_var_array * lvars, uint_t fargs,
                           noll_space_t * form)
 {
@@ -728,7 +816,7 @@ noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
         // separation formula
         for (uid_t i = 0; i < noll_vector_size (form->m.sep); i++)
           if (0 ==
-              noll_pred_fill_type_form (p, level, lvars, fargs,
+              noll_pred_type_rule_form (p, level, lvars, fargs,
                                         noll_vector_at (form->m.sep, i)))
             return 0;
         break;
@@ -745,25 +833,25 @@ noll_pred_fill_type_form (noll_pred_t * p, uint_t level,
  * @param rule   analyzed rule
  */
 int
-noll_pred_fill_type (noll_pred_t * p, uint_t level, noll_pred_rule_t * rule)
+noll_pred_type_rule (noll_pred_t * p, uint_t level, noll_pred_rule_t * rule)
 {
   if (rule == NULL)
     return 1;
 
   int res =
-    noll_pred_fill_type_pure (p, (rule->rec == NULL) ? 0 : 1, rule->pure);
+    noll_pred_type_rule_pure (p, (rule->rec == NULL) ? 0 : 1, rule->pure);
   if (res == 0)
     return 0;
   res =
-    noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->pto);
+    noll_pred_type_rule_form (p, level, rule->vars, rule->fargs, rule->pto);
   if (res == 0)
     return 0;
   res =
-    noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->nst);
+    noll_pred_type_rule_form (p, level, rule->vars, rule->fargs, rule->nst);
   if (res == 0)
     return 0;
   res =
-    noll_pred_fill_type_form (p, level, rule->vars, rule->fargs, rule->rec);
+    noll_pred_type_rule_form (p, level, rule->vars, rule->fargs, rule->rec);
   return res;
 }
 
@@ -1063,8 +1151,8 @@ noll_pred_get_matrix (uid_t pid)
                i < noll_vector_size (pred->def->sigma_1->m.sep); i++)
             {
               noll_space_array_push (res->space->m.sep,
-                                     noll_vector_at (pred->def->sigma_1->
-                                                     m.sep, i));
+                                     noll_vector_at (pred->def->sigma_1->m.
+                                                     sep, i));
               res_size++;
             }
         }
@@ -1139,6 +1227,28 @@ noll_pred_type_fprint (FILE * f, noll_pred_typing_t * typ)
     {
       fprintf (f, "NULL\n");
       return;
+    }
+  fprintf (f, " class=[");
+  switch (typ->pkind)
+    {
+    case NOLL_PRED_LST_PAR:
+      fprintf (f, "list-like, with parent");
+      break;
+    case NOLL_PRED_LST:
+      fprintf (f, "list-like, one dir");
+      break;
+    case NOLL_PRED_COMP_PAR:
+      fprintf (f, "compositional, with parent");
+      break;
+    case NOLL_PRED_COMP:
+      fprintf (f, "compositional, one dir");
+      break;
+    case NOLL_PRED_WS:
+      fprintf (f, "well structured");
+      break;
+    default:
+      fprintf (f, "default");
+      break;
     }
   fprintf (f, " argkind=[");
   for (uint i = 0; i < noll_vector_size (typ->argkind); i++)
