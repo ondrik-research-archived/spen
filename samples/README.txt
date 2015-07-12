@@ -2,7 +2,8 @@ This directory conatins the benchmarks of spen
 
 Files:
 
-com		shell script used to execute the benchmarks
+com		shell scripts used to execute the benchmarks
+
   do-syn.sh     execute the benchmark for a predicate set and a function
                 in order to do regresion testing
 

@@ -48,7 +48,13 @@ noll_lemma_init (void)
     (noll_lemma_array **) malloc (sizeof (noll_lemma_array *) * size);
   memset (lemma_array, 0, sizeof (noll_lemma_array *) * size);
   for (uint_t pid = 0; pid < size; pid++)
-    lemma_array[pid] = noll_lemma_init_pred (pid);
+    {
+      lemma_array[pid] = noll_lemma_init_pred (pid);
+#ifndef NDEBUG
+      fprintf (stdout, "\nLemma init pred-%d (%s): %d\n", pid,
+               noll_pred_name (pid), noll_vector_size (lemma_array[pid]));
+#endif
+    }
 }
 
 /* ====================================================================== */
@@ -923,24 +929,22 @@ noll_lemma_init_pred (uid_t pid)
   if (lemma_pid != NULL)
     return lemma_pid;
 
-  const noll_pred_t *pred = noll_pred_getpred (pid);
-
-  noll_lemma_array *res;
+  noll_lemma_array *res = NULL;
 
   // zhilin: add stronger lemma for avl and avlhole, rbt and rbthole
-  if (!strcmp ("avl", noll_pred_getpred (pid)->pname))
+  if (!strcmp ("avl", noll_pred_name (pid)))
     {
       res = noll_lemma_init_avl (pid);
     }
-  else if (!strcmp ("avlhole", noll_pred_getpred (pid)->pname))
+  else if (!strcmp ("avlhole", noll_pred_name (pid)))
     {
       res = noll_lemma_init_avlhole (pid);
     }
-  if (!strcmp ("rbt", noll_pred_getpred (pid)->pname))
+  else if (!strcmp ("rbt", noll_pred_name (pid)))
     {
       res = noll_lemma_init_rbt (pid);
     }
-  else if (!strcmp ("rbthole", noll_pred_getpred (pid)->pname))
+  else if (!strcmp ("rbthole", noll_pred_name (pid)))
     {
       res = noll_lemma_init_rbthole (pid);
     }
@@ -948,6 +952,7 @@ noll_lemma_init_pred (uid_t pid)
     {
       res = noll_lemma_array_new ();
       noll_lemma_array_reserve (res, 2);
+      const noll_pred_t *pred = noll_pred_getpred (pid);
 
       // WARNING: we suppose that RD set is compositional
       // for a full RD, the compositional RD is pid + 1
