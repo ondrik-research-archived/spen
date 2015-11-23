@@ -76,6 +76,12 @@ noll_option_is_preds_builtin (void)
 int check_proc = 1;
 
 
+/**
+ * Global option for determining whether to print TAs
+ */
+bool print_tas_opt = false;
+
+
 void
 noll_option_set_check (int version)
 {
@@ -120,6 +126,17 @@ noll_option_get_pred2ta_opt (void)
   return pred2ta_opt;
 }
 
+void
+noll_option_set_print_tas (bool print_tas)
+{
+  print_tas_opt = print_tas;
+}
+
+bool
+noll_option_is_print_tas (void)
+{
+  return print_tas_opt;
+}
 
 /* ====================================================================== */
 /* Verbosity. */
@@ -188,6 +205,11 @@ noll_option_set (char *option)
       noll_option_set_pred2ta_opt (1);  /* optimized check for predicate edges */
       return 1;
     }
+  if (strcmp (option, "-ta-p") == 0)
+    {
+      noll_option_set_print_tas (true); /* print tree automata (when used) */
+      return 1;
+    }
   if (strcmp (option, "-syn") == 0)
     {
       noll_option_set_check (2);        /* use syntactic check */
@@ -226,6 +248,7 @@ noll_option_print (FILE * f)
   fprintf (f, "  -sll   use special procedure for sll predicates\n");
   fprintf (f, "  -syn   use procedure based on unfolding and lemma\n");
   fprintf (f, "  -ta    use procedure based on tree automata\n");
+  fprintf (f, "  -ta-p  print tree automata (only useful for -ta)\n");
   fprintf (f, "  -v     verbose messages\n");
 
 }

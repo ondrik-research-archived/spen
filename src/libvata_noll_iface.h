@@ -123,6 +123,24 @@ extern "C"
 
 
 /**
+ * @brief  Prints the automaton to a file
+ *
+ * @param[in]      ta    The automaton to be printed
+ * @param[in,out]  pFile Target file
+ */
+  void vata_print_ta_file (const vata_ta_t * ta,
+                           FILE* pFile);
+
+/**
+ * @brief  Prints TAs passed to inclusion test
+ *
+ * @param[in]  smaller_ta   The included TA
+ * @param[in]  bigger_ta    The including TA
+ */
+  void vata_print_tas_for_incl(const vata_ta_t * smaller_ta,
+                               const vata_ta_t * bigger_ta);
+
+/**
  * @brief Checks whether L(smaller_ta) <= L(bigger_ta)
  *
  * This function checks whether the language of the TA @p

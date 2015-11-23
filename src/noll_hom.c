@@ -62,7 +62,7 @@ noll_uid_array *noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
 /* ====================================================================== */
 
 /**
- * @brief Allocate a homeomorphism for the crt problem. 
+ * @brief Allocate a homeomorphism for the crt problem.
  */
 noll_hom_t *
 noll_hom_alloc (void)
@@ -80,8 +80,8 @@ noll_hom_alloc (void)
   return h;
 }
 
-/** 
- * @brief Free the homeomorphism for the crt problem. 
+/**
+ * @brief Free the homeomorphism for the crt problem.
  */
 void
 noll_hom_delete (noll_hom_t * h)
@@ -283,7 +283,7 @@ noll_uid_map_apply (noll_uid_map * h, noll_uid_array * args, bool useNil)
 /**
  * Compose two mappings of the same length.
  * The mappings shall agree on defined values.
- * 
+ *
  * @param dst  the mapping where composition is done
  * @param src  the mapping used to update
  * @return     the @p dst if composition is correct, NULL otherwise
@@ -814,11 +814,11 @@ return_select_ls:
 }
 
 /**
- * @brief Check well-formedness condition 0 
+ * @brief Check well-formedness condition 0
  * for the graph selected @param sg2 wrt @param g2, i.e.,
- * if sg2 contains a pto, 
+ * if sg2 contains a pto,
  * then g2 ==> args2[0] != args2[1+isdll] [+ dll]
- * 
+ *
  * @param g2    the graph origin of the selection
  * @param sg2   the selected graph
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
@@ -925,10 +925,10 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
 }
 
 /**
- * Check well-formedness condition 1 
+ * Check well-formedness condition 1
  * for the graph selected @p sg2 wrt @p g2, i.e.,
- * for any predicate edge P(E,F,...) in sg2, 
- *   check that (g2 \ sg2) /\ E != F ==> args2[1] allocated or nil 
+ * for any predicate edge P(E,F,...) in sg2,
+ *   check that (g2 \ sg2) /\ E != F ==> args2[1] allocated or nil
  *          (for dll check args2[2] and args[3] allocated or nil)
  * @param g2    the origin of the selection
  * @param sg2   the selected graph
@@ -1018,9 +1018,9 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
 /**
  * Check well-formedness condition 2
  * for the graph selected, i.e., @param sg2 wrt @param g2, i.e.,
- * for any pto in sg2 from some V' 
+ * for any pto in sg2 from some V'
  *   check that g2 ==> V' != V
- * 
+ *
  * @param g2    the selection
  * @param sg2   the selection
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
@@ -1119,21 +1119,21 @@ noll_shom_select_wf (noll_graph_t * g2, noll_graph_t * sg2,
   assert (NULL != g2);
   assert (NULL != args2);
 
-  /* check wf condition 0: 
-   * if sg2 contains a pto, 
+  /* check wf condition 0:
+   * if sg2 contains a pto,
    * then g2 ==> args2[0] != args2[1+isdll] */
   int res = noll_shom_select_wf_0 (g2, sg2, args2, isdll);
   if (res == 0)
     return res;
   /* check wf condition 1:
-   * for any predicate edge P(E,F,...) in sg2, 
-   *   check that (g2 \ sg2) /\ E != F ==> args2[1+isdll] allocated or nil 
+   * for any predicate edge P(E,F,...) in sg2,
+   *   check that (g2 \ sg2) /\ E != F ==> args2[1+isdll] allocated or nil
    */
   res = noll_shom_select_wf_1 (g2, sg2, args2, isdll);
   if (res == 0)
     return res;
-  /* check wf condition 2: 
-   * for any pto in sg2 from some V' 
+  /* check wf condition 2:
+   * for any pto in sg2 from some V'
    *   check that g2 ==> V' != V
    */
   res = noll_shom_select_wf_2 (g2, sg2, args2, isdll);
@@ -1202,6 +1202,11 @@ noll_shom_check_TA (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
   NOLL_DEBUG ("\n");
 #endif
 
+  if (noll_option_is_print_tas())
+    {
+      vata_print_tas_for_incl (g2_ta, e1_ta);
+    }
+
   bool inclRes = vata_check_inclusion (g2_ta, e1_ta);
   vata_free_ta (g2_ta);
   vata_free_ta (e1_ta);
@@ -1215,9 +1220,9 @@ noll_shom_check_TA (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
 
 /**
  * @brief Check that @p g2 implies the pure part of @p rule updated with @p m.
- * 
- * @param g2     the graph 
- * @param fpure  the pure formula 
+ *
+ * @param g2     the graph
+ * @param fpure  the pure formula
  * @param lmap   the mapping of vars in @p fpure to vars in @p exvars
  * @param exvars the existential vars collected
  * @param m      [inout] the mapping of @p exvars to nodes in @p g2
@@ -1277,11 +1282,11 @@ noll_shom_match_form_pure (noll_graph_t * g2, noll_pure_t * fpure,
 /**
  * Match the formula @p fpto with edges in @p g2 using the mapping
  * of vars ids @p sigma.
- * 
- * @param g2     the graph 
+ *
+ * @param g2     the graph
  * @param fpto   the formula
  * @param sigma  the mapping of vars in @p fpto to nodes in @p g2
- * @param eid1   the edge unfolded here 
+ * @param eid1   the edge unfolded here
  * @return       the edges of @p g2 matched or NULL
  */
 noll_uid_array *
@@ -1385,18 +1390,18 @@ noll_shom_match_form_pto (noll_graph_t * g2, uid_t eid1,
 
 /**
  * Match the formula @p fpred with edges in @p g2 using the mapping
- * of vars ids @p sigma. It mainly prepares the aguments for 
+ * of vars ids @p sigma. It mainly prepares the aguments for
  * @see noll_shom_match_rd.
- * 
- * @param g2     the graph 
- * @param eid1   the original edge unfolded here 
- * @param fpred  the predicate atom 
+ *
+ * @param g2     the graph
+ * @param eid1   the original edge unfolded here
+ * @param fpred  the predicate atom
  * @param lmap   the mapping of var-ids in @p fpred to var-ids in @p exvars
  * @param exvars the environment of existentials vars mapped until now,
  *               it contains vars in addition to @p g2->lvars
- * @param level  the level of the unfolding to which belongs this formula 
+ * @param level  the level of the unfolding to which belongs this formula
  * @param m      the mapping of @p exvars to nodes in @p g2
- * @param df     the additional constraints generated by this matching 
+ * @param df     the additional constraints generated by this matching
  *               over vars mapping of @p exvars to nodes in @p g2
  * @return       the edges of @p g2 matched or NULL
  */
@@ -1599,8 +1604,8 @@ noll_shom_match_form_rd_list_1 (noll_graph_t * g2,
 
 /**
  * @brief Try to match the base rule @p rule.
- * 
- * Notice that @p args2 is exactly the mapping of arguments, 
+ *
+ * Notice that @p args2 is exactly the mapping of arguments,
  * the 'nil' as destination for unary predicates has been eliminated.
  */
 int
@@ -1628,10 +1633,10 @@ noll_shom_match_rule_base (noll_graph_t * g2,
 
 /**
  * @brief Try to match the recursive rule @p rule.
- * 
- * Notice that @p args2 contains 'nil' as destination (position 1), 
+ *
+ * Notice that @p args2 contains 'nil' as destination (position 1),
  * and it is not in the mapping of vars.
- * 
+ *
  * @return the mapping of edges in @p g2 matching eid1, NULL otherwise
  */
 noll_uid_array *
@@ -1660,7 +1665,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
    *         build mapping of X to nodes of @p g2 using e1_pto
    */
   // Warning: in the examples considered, this mapping maps all X
-  // TODO: change to consider partial mappings of X + 
+  // TODO: change to consider partial mappings of X +
   //       combinatorial choice for other vars
   /// keep the old size of exvars to resize if error
   uint_t exvars_size_old = noll_vector_size (exvars);
@@ -1700,7 +1705,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
   noll_uid_array *res = noll_shom_match_form_pto (g2, eid1, e1_pto, lmap,
                                                   exvars, m, dfnew, used);
   if (NULL == res)
-    {                           /// unsuccessfull matching 
+    {                           /// unsuccessfull matching
 #ifndef NDEBUG
       NOLL_DEBUG ("\nSyntactic matching recursive rule: pto fails!\n");
 #endif
@@ -1856,9 +1861,9 @@ shom_match_rule_rec:
 
 /**
  * @brief Try to match the @p lemma of @p pid.
- * 
+ *
  * Notice that @p args2 is using 'nil' as 2nd parameters for unary predicates.
- * 
+ *
  * @return the set of edges of @p g2 matched
  */
 noll_uid_map *
@@ -1892,7 +1897,7 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       return NULL;
     }
   assert (noll_vector_size (nE_edges) == 1);
-  /// that is a predicate edge 
+  /// that is a predicate edge
   uid_t eidE = noll_vector_at (nE_edges, 0);
   noll_edge_t *edgeE = noll_vector_at (g2->edges, eidE);
   if (edgeE == NULL || edgeE->kind != NOLL_EDGE_PRED)
@@ -2095,25 +2100,25 @@ shom_match_lemma:
 }
 
 /**
- * @brief Check that the graph @p g2 **includes** an unfolding of the 
+ * @brief Check that the graph @p g2 **includes** an unfolding of the
  * predicate @p pid.
- * 
+ *
  * The predicate @p pid has as arguments @p args2.
  * If the matching holds, the procedure computes a set of edges of
  * @p g2 used, in the form of an array of size @p g2->edges,
- * mapping each edge to UNDEFINED_ID or the @p eid1, the identifier 
+ * mapping each edge to UNDEFINED_ID or the @p eid1, the identifier
  * of the original edge in right hand side of the entailment.
- * 
+ *
  * @param g2     the full graph for searching the predicate unfolding
- * @param eid1   the original edge unfolded here 
+ * @param eid1   the original edge unfolded here
  * @param pid    the edge to be matched labeled by predicate @p e1->label
  * @param args   the mapping of @p pid parameters to ids in @p exvars
  * @param lmap   the mapping of var-ids in @p fpred to var-ids in @p exvars
- * @param level  the level of the unfolding to which belongs this matching 
+ * @param level  the level of the unfolding to which belongs this matching
  * @param exvars the environment of existentials vars mapped until now,
  *               it contains vars in addition to @p g2->lvars
  * @param m      the mapping of @p exvars to nodes in @p g2
- * @param df     the additional constraints generated by this matching 
+ * @param df     the additional constraints generated by this matching
  *               over vars mapping of @p exvars to nodes in @p g2
  * @return       the set of edges used by the predicate unfolding,
  *               NULL if the matching does not hold
@@ -2132,7 +2137,7 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
   noll_dform_array *dfnew = noll_dform_array_new ();
   const noll_pred_t *pred = noll_pred_getpred (pid);
 
-  /** 
+  /**
    * Step 0: analyse the kind of rule to be applied depending on the
    *         edges from the LROOT parameter of @p pid.
    */
@@ -2189,9 +2194,9 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
   assert (noll_vector_size (dfnew) == 0);
 
   /// From root starts an edge, match it exactly or using a lemma
-  /** 
+  /**
    * Step 2: search the edge labeled by @p pid in g2
-   *         at g2->mat[args2[0]] 
+   *         at g2->mat[args2[0]]
    */
 #ifndef NDEBUG
   NOLL_DEBUG ("\n******Syntactic matching: exact edge starts\n");
@@ -2289,7 +2294,7 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
 
   assert (noll_vector_size (dfnew) == 0);
   /**
-   * Step 2: check the base rules of P. 
+   * Step 2: check the base rules of P.
    * No new environment or matching is generated.
    */
 #ifndef NDEBUG
@@ -2355,8 +2360,8 @@ noll_shom_check_syn (noll_graph_t * g2,
   noll_lemma_init_pred (pid);
 
   /**
-   * Step 2: initialize the existentials env 
-   * = g2->lvars (i.e., all) 
+   * Step 2: initialize the existentials env
+   * = g2->lvars (i.e., all)
    */
   noll_var_array *exvars = noll_var_array_new ();
   noll_var_array_copy (exvars, g2->lvars);
@@ -2386,8 +2391,8 @@ noll_shom_check_syn (noll_graph_t * g2,
 #endif
 
   /**
-   * Step 3: Call the function matching the predicate call 
-   * 
+   * Step 3: Call the function matching the predicate call
+   *
    */
   /// it returns the mapped edges of g2 and the generated data constraints
   noll_dform_array *dfn = noll_dform_array_new ();
@@ -2398,7 +2403,7 @@ noll_shom_check_syn (noll_graph_t * g2,
 
   /**
    * Step 4: Check that all edges of g2 are used
-   * 
+   *
    */
   int res = 1;
   if (usedg2 == NULL)
@@ -2422,9 +2427,9 @@ noll_shom_check_syn (noll_graph_t * g2,
 
   /**
    * Step 5: Check the data constraints
-   * 
+   *
    */
-  /// i.e., g2->data (isDataComplete) 
+  /// i.e., g2->data (isDataComplete)
   ///         => exists exvars. [dfn /\ g1->data]m o g2->var2node-1
   /// build the mapping of vars in exvars to vars in g2->lvars
   noll_uid_array *mg2 = noll_uid_array_new ();

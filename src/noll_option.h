@@ -101,6 +101,15 @@ void noll_option_set_pred2ta_opt (int lelev);
  */
 int noll_option_get_pred2ta_opt (void);
 
+/**
+ * @brief  Set whether to print TAs
+ */
+void noll_option_set_print_tas (bool print_tas);
+
+/**
+ * @brief  Return true iff TAs should be printed
+ */
+bool noll_option_is_print_tas (void);
 
 /**
  * @brief Trigger verbosity level.

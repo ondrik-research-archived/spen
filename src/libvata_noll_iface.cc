@@ -169,15 +169,56 @@ void vata_add_transition(
 void vata_print_ta(
 	const vata_ta_t*        ta)
 {
-	// check that the input is sane
-	assert(nullptr != ta);
-
-	//std::cout << "\nTreeAutomaton:  <*(((><       <-- this is a fish, not a TA!\n\n";
-
-	VATA::Serialization::TimbukSerializer serializer;
-	std::cout << ta->ta.DumpToString(serializer);
+	vata_print_ta_file(ta, stdout);
 }
 
+void vata_print_ta_file (
+	const vata_ta_t * ta,
+	FILE*             pFile)
+{
+	// check that the input is sane
+	assert(nullptr != ta);
+	assert(nullptr != pfile);
+
+	VATA::Serialization::TimbukSerializer serializer;
+	std::string taStr = ta->ta.DumpToString(serializer);
+	const char* buf = taStr.c_str();
+	size_t cntWrit = fwrite(buf, sizeof(char), strlen(buf), pFile);
+	if (cntWrit != strlen(buf))
+	{
+		std::cerr << "Warning: problems writing TAs to stream";
+	}
+}
+
+void vata_write_ta_file(
+	const vata_ta_t * ta,
+	const char* filename)
+{
+	// sanity check
+	assert(nullptr != ta);
+	assert(nullptr != filename);
+
+	FILE* pFile;
+	if ((pFile = fopen(filename, "w")) == nullptr)
+	{
+		std::cerr << "Error opening file " << filename << " for writing!";
+	}
+
+	vata_print_ta_file(ta, pFile);
+	fclose(pFile);
+}
+
+void vata_print_tas_for_incl(
+	const vata_ta_t * smaller_ta,
+	const vata_ta_t * bigger_ta)
+{
+	// sanity check
+	assert(nullptr != smaller_ta);
+	assert(nullptr != bigger_ta);
+
+	vata_write_ta_file(smaller_ta, "incl_aut_smaller.txt");
+	vata_write_ta_file(bigger_ta, "incl_aut_bigger.txt");
+}
 
 bool vata_check_inclusion(
 	const vata_ta_t*        smaller_ta,
