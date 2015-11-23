@@ -129,21 +129,21 @@ NOLL_VECTOR_DEFINE (noll_ta_symbol_array, const noll_ta_symbol_t *)
         {
           assert (0 == i);
           assert (index < BUFFER_SIZE);
-          index += snprintf (&buffer[index], BUFFER_SIZE - index, "e, ");
+          index += snprintf (&buffer[index], BUFFER_SIZE - index, "e_");
         }
       else
         {
           assert (index < BUFFER_SIZE);
           index += snprintf (&buffer[index],
                              BUFFER_SIZE - index,
-                             "%s, ",
+                             "%s_",
                              noll_field_name (noll_vector_at (marking, i)));
         }
     }
 
   if (noll_vector_size (marking) > 0)
     {
-      index -= 2;               // move at the position of the last ','
+      index -= 1;               // move at the position of the last '_'
     }
 
   assert (index < BUFFER_SIZE);
@@ -178,12 +178,12 @@ noll_uid_array_tostring (const noll_uid_array * arr)
       assert (index < BUFFER_SIZE);
       index += snprintf (&buffer[index],
                          BUFFER_SIZE - index,
-                         "%d, ", noll_vector_at (arr, i));
+                         "%d_", noll_vector_at (arr, i));
     }
 
   if (noll_vector_size (arr) > 0)
     {
-      index -= 2;               // move at the position of the last ','
+      index -= 1;               // move at the position of the last '_'
     }
 
   assert (index < BUFFER_SIZE);
@@ -452,8 +452,7 @@ noll_sels_to_string_symbol (const noll_uid_array * sels)
     {
       if (0 != cnt)
         {                       // if we are not at the beginning
-          str_symbol[cnt++] = ',';
-          str_symbol[cnt++] = ' ';
+          str_symbol[cnt++] = '_';
         }
 
       const char *field_name = noll_field_name (noll_vector_at (sels, i));
@@ -641,12 +640,10 @@ noll_ta_symbol_alloc_str (const noll_ta_symbol_t * sym)
   size_t len_vars = strlen (str_vars);
 
   size_t total_len = 1 /* '[' */  +
-    1 /* '<' */  +
-    len_sels + 1 /* '>' */  +
-    1 /* ',' */  +
-    1 /* ' ' */  +
-    len_mark + 1 /* ',' */  +
-    1 /* ' ' */  +
+    1 /* '{' */  +
+    len_sels + 1 /* '}' */  +
+    1 /* '_' */  +
+    len_mark + 1 /* '_' */  +
     1 /* '{' */  +
     len_vars + 1 /* '}' */  +
     1 /* ']' */  +
@@ -655,16 +652,14 @@ noll_ta_symbol_alloc_str (const noll_ta_symbol_t * sym)
   char *str = malloc (total_len);
   size_t index = 0;
   str[index++] = '[';
-  str[index++] = '<';
+  str[index++] = '{';
   strcpy (&str[index], str_sels);
   index += len_sels;
-  str[index++] = '>';
-  str[index++] = ',';
-  str[index++] = ' ';
+  str[index++] = '}';
+  str[index++] = '_';
   strcpy (&str[index], str_mark);
   index += len_mark;
-  str[index++] = ',';
-  str[index++] = ' ';
+  str[index++] = '_';
   str[index++] = '{';
   strcpy (&str[index], str_vars);
   index += len_vars;
@@ -713,18 +708,16 @@ noll_ta_symbol_higher_pred_str (const noll_ta_symbol_t * sym)
   size_t len_vars = strlen (str_vars);
 
   size_t total_len = 1 /* '[' */  +
-    1 /* '<' */  +
+    1 /* '{' */  +
     1 /* '@' */  +
     1 /* '@' */  +
-    len_pred + 1 /* '(' */  +
-    1 /* ')' */  +
+    len_pred + 1 /* '[' */  +
+    1 /* ']' */  +
     1 /* '@' */  +
     1 /* '@' */  +
-    1 /* '>' */  +
-    1 /* ',' */  +
-    1 /* ' ' */  +
-    len_mark + 1 /* ',' */  +
-    1 /* ' ' */  +
+    1 /* '}' */  +
+    1 /* '_' */  +
+    len_mark + 1 /* '_' */  +
     1 /* '{' */  +
     len_vars + 1 /* '}' */  +
     1 /* ']' */  +
@@ -733,22 +726,20 @@ noll_ta_symbol_higher_pred_str (const noll_ta_symbol_t * sym)
   char *str = malloc (total_len);
   size_t index = 0;
   str[index++] = '[';
-  str[index++] = '<';
+  str[index++] = '{';
   str[index++] = '@';
   str[index++] = '@';
   strcpy (&str[index], str_pred);
   index += len_pred;
-  str[index++] = '(';
-  str[index++] = ')';
+  str[index++] = '[';
+  str[index++] = ']';
   str[index++] = '@';
   str[index++] = '@';
-  str[index++] = '>';
-  str[index++] = ',';
-  str[index++] = ' ';
+  str[index++] = '}';
+  str[index++] = '_';
   strcpy (&str[index], str_mark);
   index += len_mark;
-  str[index++] = ',';
-  str[index++] = ' ';
+  str[index++] = '_';
   str[index++] = '{';
   strcpy (&str[index], str_vars);
   index += len_vars;
@@ -786,7 +777,7 @@ noll_ta_symbol_alias_var_str (const noll_ta_symbol_t * sym)
 
   assert (index < BUFFER_SIZE);
   index += snprintf (&buffer[index],
-                     BUFFER_SIZE - index, "|var(%u)|", sym->alias_var);
+                     BUFFER_SIZE - index, "|var[%u]|", sym->alias_var);
 
   assert (index < BUFFER_SIZE);
   buffer[index] = '\0';
@@ -820,7 +811,7 @@ noll_ta_symbol_alias_marking_str (const noll_ta_symbol_t * sym)
   size_t index = 0;
 
   assert (index < BUFFER_SIZE);
-  index += snprintf (&buffer[index], BUFFER_SIZE - index, "alias<");
+  index += snprintf (&buffer[index], BUFFER_SIZE - index, "alias{");
 
   switch (sym->alias_marking.id_relation)
     {
@@ -834,7 +825,7 @@ noll_ta_symbol_alias_marking_str (const noll_ta_symbol_t * sym)
     case NOLL_ALIAS_MARKING_REL_UP_UP:
       {
         assert (index < BUFFER_SIZE);
-        index += snprintf (&buffer[index], BUFFER_SIZE - index, "UP UP");
+        index += snprintf (&buffer[index], BUFFER_SIZE - index, "UP_UP");
         break;
       }
 
@@ -842,7 +833,7 @@ noll_ta_symbol_alias_marking_str (const noll_ta_symbol_t * sym)
       {
         assert (index < BUFFER_SIZE);
         index += snprintf (&buffer[index],
-                           BUFFER_SIZE - index, "UP DOWN fst");
+                           BUFFER_SIZE - index, "UP_DOWN_fst");
         break;
       }
 
@@ -854,15 +845,17 @@ noll_ta_symbol_alias_marking_str (const noll_ta_symbol_t * sym)
     }
 
   assert (index < BUFFER_SIZE);
-  buffer[index++] = '>';
+  buffer[index++] = '}';
   assert (index < BUFFER_SIZE);
-  buffer[index++] = '(';
+  buffer[index++] = '[';
+  buffer[index++] = '{';
 
   assert (index < BUFFER_SIZE - len_mark);
   strcpy (&buffer[index], str_mark);
   index += len_mark;
   assert (index < BUFFER_SIZE);
-  buffer[index++] = ')';
+  buffer[index++] = '}';
+  buffer[index++] = ']';
   assert (index < BUFFER_SIZE);
   buffer[index++] = '\0';
 
@@ -1119,10 +1112,10 @@ noll_ta_symbol_get_unique_higher_pred (const noll_pred_t * pred,
 
 /*
  * @brief Renames components of a symbol
- * 
- * Translates the variables and the markings in the input symbol 
+ *
+ * Translates the variables and the markings in the input symbol
  * using the input mappings.
- * 
+ *
  * @param[in] sym     A symbol to be renamed
  * @param[in] vmap    The mapping used for vars
  * @param[in] mmap    The mapping used for markings
@@ -1161,7 +1154,7 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
                 assert (NULL != si);
                 // aliased vars in si
                 const noll_uid_array* si_vars = noll_ta_symbol_get_vars (si);
-                if ((NULL != si_vars) && 
+                if ((NULL != si_vars) &&
                     (noll_vector_size (si_vars) >= 1))
                    noll_uid_array_push (vars, noll_vector_at(si_vars,0));
               }
@@ -1255,7 +1248,7 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
 }
 
 /*
- * A sound? approximation of the desired result 
+ * A sound? approximation of the desired result
  */
 const noll_ta_symbol_t *
 noll_ta_symbol_get_unique_aliased_symbol (const noll_ta_symbol_t * sym,
@@ -1263,11 +1256,11 @@ noll_ta_symbol_get_unique_aliased_symbol (const noll_ta_symbol_t * sym,
 {
   const noll_ta_symbol_t *ren_sym =
     noll_ta_symbol_get_unique_renamed (sym, true, vmap, NULL);
-  if ((sym->label_type == NOLL_TREE_LABEL_ALLOCATED) || 
+  if ((sym->label_type == NOLL_TREE_LABEL_ALLOCATED) ||
       (sym->label_type == NOLL_TREE_LABEL_HIGHER_PRED))
     {
       const noll_uid_array* si_vars = noll_ta_symbol_get_vars (ren_sym);
-      if ((NULL != si_vars) && 
+      if ((NULL != si_vars) &&
           (noll_vector_size (si_vars) >= 1))
         {
           const noll_ta_symbol_t *ret_sym =
