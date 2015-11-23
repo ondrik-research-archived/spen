@@ -864,8 +864,6 @@ noll_ta_symbol_alias_marking_str (const noll_ta_symbol_t * sym)
   assert (index < BUFFER_SIZE);
   buffer[index++] = ')';
   assert (index < BUFFER_SIZE);
-  buffer[index++] = ']';
-  assert (index < BUFFER_SIZE);
   buffer[index++] = '\0';
 
   free (str_mark);
