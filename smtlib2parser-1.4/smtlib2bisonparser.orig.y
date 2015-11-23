@@ -62,9 +62,9 @@ smtlib2_term smtlib2_make_term_from_identifier(
 %}
 
 %locations
-%pure_parser
+%pure-parser
 %defines
-%name-prefix="smtlib2_parser_"
+%name-prefix "smtlib2_parser_"
 %debug
 %verbose
 
@@ -88,7 +88,7 @@ smtlib2_term smtlib2_make_term_from_identifier(
 };
 
 
-%token_table
+%token-table
 
 %token <string> BINCONSTANT
 %token <string> HEXCONSTANT
@@ -167,6 +167,10 @@ smtlib2_term smtlib2_make_term_from_identifier(
 %destructor { free($$[0]); free($$[1]); free($$); } term_attribute
 
 %start single_command
+
+%code requires {
+typedef void* yyscan_t;
+} 
 
 %%
 
