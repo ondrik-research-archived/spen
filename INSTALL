@@ -8,12 +8,13 @@ SPEN installation procedure:
 
 2. Compile libVATA:
   $ cd libvata
-  $ MAKE="make -j 4" make release'
+  $ MAKE="make -j 4" make release
   $ cd ..
 
 3. Compile SPEN & smtlib2parser
   $ mkdir build
-	$ cmake ..
-	$ make
+  $ cd build
+  $ cmake ..
+  $ make
 
 SPEN executable is now in spen/build/src/spen.
