@@ -1,6 +1,5 @@
 *.o
 *.a
-src/*.txt
 samples/**/*.log
 samples/**/*out.txt
 samples/**/*.dot
