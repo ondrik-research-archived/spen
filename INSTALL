@@ -1,0 +1,19 @@
+SPEN installation procedure:
+
+1. Download SPEN:
+  $ git clone 'https://github.com/mihasighi/spen.git'
+  $ cd spen
+  $ git submodule init
+  $ git submodule update
+
+2. Compile libVATA:
+  $ cd libvata
+  $ MAKE="make -j 4" make release'
+  $ cd ..
+
+3. Compile SPEN & smtlib2parser
+  $ mkdir build
+	$ cmake ..
+	$ make
+
+SPEN executable is now in spen/build/src/spen.
