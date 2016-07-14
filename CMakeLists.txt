@@ -71,6 +71,6 @@ find_package(BISON 2.4.1 REQUIRED)
 ##############################################################################
 
 # Process subdirectories
-add_subdirectory(libvata)
+# add_subdirectory(libvata)
 add_subdirectory(smtlib2parser-1.4)
 add_subdirectory(src)

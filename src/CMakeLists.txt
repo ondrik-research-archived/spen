@@ -38,5 +38,6 @@ add_executable(spen
 	smtlib2noll.c
 )
 
-target_link_libraries(spen libvata)
+find_library(LIBVATA NAMES libvata.a PATHS ../libvata/build/src)
+target_link_libraries(spen ${LIBVATA})
 target_link_libraries(spen smtlib2parser)
