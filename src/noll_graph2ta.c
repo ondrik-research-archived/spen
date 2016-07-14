@@ -50,7 +50,7 @@ NOLL_VECTOR_DEFINE (noll_nodes_to_paths, noll_marking_list *)
 
      static size_t noll_get_unique (void)
 {
-  assert (noll_unique_cnt < SSIZE_MAX);
+  assert (noll_unique_cnt < SIZE_MAX);
 
   return noll_unique_cnt++;
 }

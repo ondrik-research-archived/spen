@@ -554,7 +554,7 @@ noll_ta_symbol_destroy ()
     {
       const noll_ta_symbol_t *smb = noll_vector_at (g_ta_symbols, i);
       assert (NULL != smb);
-      noll_ta_symbol_kill (smb);
+      noll_ta_symbol_kill ((noll_ta_symbol_t*)smb);
     }
 
   noll_ta_symbol_array_delete (g_ta_symbols);
