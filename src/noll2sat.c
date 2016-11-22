@@ -269,25 +269,31 @@ void
 noll_sat_space_array_sort (noll_sat_space_array * a)
 {
 #ifndef NDEBUG
-  fprintf (stdout, "---- space array to be sorted: \n[");
-  for (uint_t i = 0; i < noll_vector_size (a); i++)
-    {
-      fprintf (stdout, "\n%d: ", i);
-      noll_space_fprint (stdout, NULL, NULL, (noll_vector_at (a, i))->forig);
-    }
-  fprintf (stdout, "\n]\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- space array to be sorted: \n[");
+    for (uint_t i = 0; i < noll_vector_size (a); i++)
+      {
+        fprintf (stdout, "\n%d: ", i);
+        noll_space_fprint (stdout, NULL, NULL, (noll_vector_at (a, i))->forig);
+      }
+    fprintf (stdout, "\n]\n");
+  }
 #endif
   /* use quicksort */
   noll_sat_space_array_quickSort (a, 0, noll_vector_size (a) - 1);
 
 #ifndef NDEBUG
-  fprintf (stdout, "---- space array sorted: \n[");
-  for (uint_t i = 0; i < noll_vector_size (a); i++)
-    {
-      fprintf (stdout, "\n%d: ", i);
-      noll_space_fprint (stdout, NULL, NULL, (noll_vector_at (a, i))->forig);
-    }
-  fprintf (stdout, "\n]\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- space array sorted: \n[");
+    for (uint_t i = 0; i < noll_vector_size (a); i++)
+      {
+        fprintf (stdout, "\n%d: ", i);
+        noll_space_fprint (stdout, NULL, NULL, (noll_vector_at (a, i))->forig);
+      }
+    fprintf (stdout, "\n]\n");
+  }
 #endif
 }
 
@@ -596,29 +602,32 @@ noll2sat_info (noll_form_t * form, noll_sat_t * res)
     res->finfo->used_lvar[0] = true;
 
 #ifndef NDEBUG1
-  fprintf (stdout, "\n=== Collected info for formula: ");
-  fprintf (stdout, "\n\t\t used vars: [");
-  for (uint_t i = 0; i < noll_vector_size (form->lvars); i++)
-    if (res->finfo->used_lvar[i] == true)
-      fprintf (stdout, "%d: %s, ", i,
-               ((noll_var_t *) noll_vector_at (form->lvars, i))->vname);
-  fprintf (stdout, "]\n\t\t used svars: [");
-  for (uint_t i = 0; i < noll_vector_size (form->svars); i++)
-    if (res->finfo->used_svar[i] == true)
-      fprintf (stdout, "%s, ",
-               ((noll_var_t *) noll_vector_at (form->svars, i))->vname);
-  fprintf (stdout, "]\n\t\t used preds: [");
-  for (uint_t i = 0; i < noll_vector_size (preds_array); i++)
-    if (res->finfo->used_pred[i] == true)
-      fprintf (stdout, "%s, ", (noll_pred_getpred (i))->pname);
-  fprintf (stdout, "]\n\t\t used fields: [");
-  for (uint_t i = 0; i < noll_vector_size (fields_array); i++)
-    if (res->finfo->used_flds[i] == true)
-      fprintf (stdout, "%s, ",
-               ((noll_field_t *) noll_vector_at (fields_array, i))->name);
-  fprintf (stdout, "]");
-  fprintf (stdout, "\n\t\t #pto atoms %d", res->finfo->pto_size);
-  fprintf (stdout, "\n\t\t #pred atoms %d\n", res->finfo->ls_size);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\n=== Collected info for formula: ");
+    fprintf (stdout, "\n\t\t used vars: [");
+    for (uint_t i = 0; i < noll_vector_size (form->lvars); i++)
+      if (res->finfo->used_lvar[i] == true)
+        fprintf (stdout, "%d: %s, ", i,
+                 ((noll_var_t *) noll_vector_at (form->lvars, i))->vname);
+    fprintf (stdout, "]\n\t\t used svars: [");
+    for (uint_t i = 0; i < noll_vector_size (form->svars); i++)
+      if (res->finfo->used_svar[i] == true)
+        fprintf (stdout, "%s, ",
+                 ((noll_var_t *) noll_vector_at (form->svars, i))->vname);
+    fprintf (stdout, "]\n\t\t used preds: [");
+    for (uint_t i = 0; i < noll_vector_size (preds_array); i++)
+      if (res->finfo->used_pred[i] == true)
+        fprintf (stdout, "%s, ", (noll_pred_getpred (i))->pname);
+    fprintf (stdout, "]\n\t\t used fields: [");
+    for (uint_t i = 0; i < noll_vector_size (fields_array); i++)
+      if (res->finfo->used_flds[i] == true)
+        fprintf (stdout, "%s, ",
+                 ((noll_field_t *) noll_vector_at (fields_array, i))->name);
+    fprintf (stdout, "]");
+    fprintf (stdout, "\n\t\t #pto atoms %d", res->finfo->pto_size);
+    fprintf (stdout, "\n\t\t #pred atoms %d\n", res->finfo->ls_size);
+  }
 #endif
 
 }
@@ -637,7 +646,10 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
   if (res->file == NULL)
     {
 #ifndef NDEBUG
+    if (noll_option_is_diag())
+    {
       fprintf (stdout, "\nError: while open file %s! quit.\n", fname);
+    }
 #endif
       free (res);
       return NULL;
@@ -707,7 +719,7 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
               ((noll_sat_space_t *)
                noll_vector_at (res->var_pred, lsi))->forig;
             uint_t ls_pid = ls->m.ls.pid;
-            // see all fields 
+            // see all fields
             /* MS: change of info on fields */
             for (uint_t fid = 0; fid < noll_vector_size (fields_array); fid++)
               {
@@ -764,17 +776,20 @@ noll2sat_fill_bvar (noll_form_t * form, char *fname)
   res->no_vars = res->start_inset + res->size_inset;
 
 #ifndef NDEBUG
-  fprintf (stdout, "===== Set of bvar generated: of size %d\n", res->no_vars);
-  fprintf (stdout, "\t - [x = y]: start %d number %d\n", res->start_pure,
-           res->size_pure);
-  fprintf (stdout, "\t - [x,f,y]: start %d number %d\n", res->start_pto,
-           res->size_pto);
-  fprintf (stdout, "\t - [P_alpha]: start %d number %d\n", res->start_pred,
-           res->size_pred);
-  fprintf (stdout, "\t - [x,f,P]: start %d number %d\n", res->start_apto,
-           res->size_apto);
-  fprintf (stdout, "\t - [x in alpha]: start %d number %d\n",
-           res->start_inset, res->size_inset);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "===== Set of bvar generated: of size %d\n", res->no_vars);
+    fprintf (stdout, "\t - [x = y]: start %d number %d\n", res->start_pure,
+             res->size_pure);
+    fprintf (stdout, "\t - [x,f,y]: start %d number %d\n", res->start_pto,
+             res->size_pto);
+    fprintf (stdout, "\t - [P_alpha]: start %d number %d\n", res->start_pred,
+             res->size_pred);
+    fprintf (stdout, "\t - [x,f,P]: start %d number %d\n", res->start_apto,
+             res->size_apto);
+    fprintf (stdout, "\t - [x in alpha]: start %d number %d\n",
+             res->start_inset, res->size_inset);
+  }
 #endif
 
   return res;
@@ -1002,32 +1017,50 @@ noll2sat (noll_form_t * form, char *fname)
   // print the boolean abstraction and update the number of clauses
   int nb_clauses = 0;
 #ifndef NDEBUG
-  fprintf (stdout, "---- F(Pi) and F_eq\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- F(Pi) and F_eq\n");
+  }
 #endif
   nb_clauses = noll2sat_pure (fsat);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F(Pi) and F_eq = %d\n", nb_clauses);
-  fprintf (stdout, "---- F(Sigma)\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F(Pi) and F_eq = %d\n", nb_clauses);
+    fprintf (stdout, "---- F(Sigma)\n");
+  }
 #endif
   nb_clauses = noll2sat_space (fsat);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F(Sigma) = %d\n", nb_clauses);
-  fprintf (stdout, "---- F_in\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F(Sigma) = %d\n", nb_clauses);
+    fprintf (stdout, "---- F_in\n");
+  }
 #endif
   nb_clauses = noll2sat_membership (fsat);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F_in = %d\n", nb_clauses);
-  fprintf (stdout, "---- F_det\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F_in = %d\n", nb_clauses);
+    fprintf (stdout, "---- F_det\n");
+  }
 #endif
   nb_clauses = noll2sat_det (fsat);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F_det = %d\n", nb_clauses);
-  fprintf (stdout, "---- F(Lambda)\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F_det = %d\n", nb_clauses);
+    fprintf (stdout, "---- F(Lambda)\n");
+  }
 #endif
   nb_clauses = noll2sat_share (fsat);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F(Lambda) = %d\n", nb_clauses);
-  fprintf (stdout, "Clauses for final formula = %d\n", fsat->no_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F(Lambda) = %d\n", nb_clauses);
+    fprintf (stdout, "Clauses for final formula = %d\n", fsat->no_clauses);
+  }
 #endif
   fclose (fsat->file);
   fsat->file = NULL;
@@ -1090,7 +1123,10 @@ noll2sat_pure (noll_sat_t * fsat)
                   if (op == NOLL_PURE_EQ)
                     {
 #ifndef NDEBUG
-                      fprintf (stdout, "---- pure: [x%d = x%d]\n", i, j);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "---- pure: [x%d = x%d]\n", i, j);
+                      }
 #endif
                       fprintf (fsat->file, "%d 0\n", eq_i_j);
                       nb_clauses++;
@@ -1098,7 +1134,10 @@ noll2sat_pure (noll_sat_t * fsat)
                   else if (op == NOLL_PURE_NEQ)
                     {
 #ifndef NDEBUG
-                      fprintf (stdout, "---- pure: [x%d <> x%d]\n", i, j);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "---- pure: [x%d <> x%d]\n", i, j);
+                      }
 #endif
                       fprintf (fsat->file, "-%d 0\n", eq_i_j);
                       nb_clauses++;
@@ -1125,9 +1164,12 @@ noll2sat_pure (noll_sat_t * fsat)
                           fprintf (fsat->file, "-%d -%d %d 0\n", eq_i_k,
                                    eq_j_k, eq_i_j);
 #ifndef NDEBUG
-                          fprintf (stdout,
-                                   "---- pure: trans[x%d=x%d] by x%d\n", i, j,
-                                   k);
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout,
+                                     "---- pure: trans[x%d=x%d] by x%d\n", i, j,
+                                     k);
+                          }
 #endif
                           nb_clauses++;
                         }
@@ -1170,8 +1212,11 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                 {
                   // F_*(pto bvari, pto bvarj) = ![src_i = src_j]
 #ifndef NDEBUG
-                  fprintf (stdout, "---- F_*(pto %d, pto %d)\n", bvari,
-                           bvarj);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "---- F_*(pto %d, pto %d)\n", bvari,
+                             bvarj);
+                  }
 #endif
                   uint_t src_i = atomi->forig->m.pto.sid;
                   uint_t src_j = atomj->forig->m.pto.sid;
@@ -1187,7 +1232,10 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                   // F_*(pto(src_i,...) bvari, ls(in_j,out_j) bvarj)
                   // = [src_i = in_j] ==> [in_j = out_j]
 #ifndef NDEBUG
-                  fprintf (stdout, "---- F_*(pto %d, ls %d)\n", bvari, bvarj);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "---- F_*(pto %d, ls %d)\n", bvari, bvarj);
+                  }
 #endif
                   uint_t src_i = atomi->forig->m.pto.sid;
                   uint_t in_j = noll_vector_at (atomj->forig->m.ls.args, 0);
@@ -1208,8 +1256,11 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                       // F_*(pto(src_i,dst_i) bvari, dll(in_j,out_j) bvarj)
                       // = [src_i = out_j] ==> ![dll(in_j,out_j)]
 #ifndef NDEBUG
-                      fprintf (stdout, "---- F_*(pto %d, ls %d)\n", bvari,
-                               bvarj);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "---- F_*(pto %d, ls %d)\n", bvari,
+                                 bvarj);
+                      }
 #endif
                       bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, src_i, out_j);
                       fprintf (fsat->file, "-%d -%d 0\n", bvar_eq_i_j, bvarj);
@@ -1225,8 +1276,11 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                   // F_*(ls(in_i,out_i) bvari, pto(src_j,...) bvarj)
                   // = [src_j = in_i] ==> [in_i = out_i]
 #ifndef NDEBUG
-                  fprintf (stdout, "---- F_*(ls %d (P%d), pto %d)\n",
-                           bvari, atomi->forig->m.ls.pid, bvarj);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "---- F_*(ls %d (P%d), pto %d)\n",
+                             bvari, atomi->forig->m.ls.pid, bvarj);
+                  }
 #endif
                   uint_t src_j = atomj->forig->m.pto.sid;
                   uint_t in_i = noll_vector_at (atomi->forig->m.ls.args, 0);
@@ -1247,8 +1301,11 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                       // F_*(dll(in_i,out_i) bvari, pto(src_j,dst_j) bvarj)
                       // = [src_j = out_i] ==> ![dll(in_i,out_i)]
 #ifndef NDEBUG
-                      fprintf (stdout, "---- F_*(dls %d (P%d), pto %d)\n",
-                               bvari, atomi->forig->m.ls.pid, bvarj);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "---- F_*(dls %d (P%d), pto %d)\n",
+                                 bvari, atomi->forig->m.ls.pid, bvarj);
+                      }
 #endif
                       bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, src_j, out_i);
                       fprintf (fsat->file, "-%d -%d 0\n", bvar_eq_i_j, bvari);
@@ -1260,7 +1317,10 @@ noll2sat_space_sep (noll_sat_t * fsat, noll_uint_array * bvars_subform,
                   // atomj->forig->kind == NOLL_SPACE_LS
                   // F_*(ls(in_i,out_i) bvari, ls(in_j,out_j) bvarj)
 #ifndef NDEBUG
-                  fprintf (stdout, "---- F_*(ls %d, ls %d)\n", bvari, bvarj);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "---- F_*(ls %d, ls %d)\n", bvari, bvarj);
+                  }
 #endif
 
                   // = for all used locations x, [x in sid_i] ==> ![x in sid_j]  and
@@ -1333,7 +1393,10 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
   if (subform == NULL)
     {
 #ifndef NDEBUG
-      fprintf (stdout, "==== NULL space formula!\n");
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "==== NULL space formula!\n");
+      }
 #endif
       return 0;
     }
@@ -1353,16 +1416,19 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
             uint_t vdsti = noll_vector_at (dests, i);
             uint_t ri = noll_var_record (fsat->form->lvars, vdsti);
             if (ri == UNDEFINED_ID)
-              continue;         // only location vars 
+              continue;         // only location vars
             uint_t bvar_pto = noll2sat_get_bvar_pto (fsat, subform, i);
 #ifndef NDEBUG
-            fprintf (stdout,
-                     "----- pto abstraction for [x%d,f%d,y%d] (bvar %d) from ",
-                     vsrc, fi, vdsti, bvar_pto);
-            noll_space_fprint (stdout, fsat->form->lvars, fsat->form->svars,
-                               subform);
-            fprintf (stdout, "\n");
-            fflush (stdout);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout,
+                       "----- pto abstraction for [x%d,f%d,y%d] (bvar %d) from ",
+                       vsrc, fi, vdsti, bvar_pto);
+              noll_space_fprint (stdout, fsat->form->lvars, fsat->form->svars,
+                                 subform);
+              fprintf (stdout, "\n");
+              fflush (stdout);
+            }
 #endif
             if (bvar_pto == 0)
               {
@@ -1391,18 +1457,21 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
         uint_t vin = noll_vector_at (subform->m.ls.args, 0);
         // TODO: refine the computation below depending on the base case
         uint_t vout = (noll_pred_isUnaryLoc (pid) == true) ?
-          // get the index of 'nil' in formula 
+          // get the index of 'nil' in formula
           0 : noll_vector_at (subform->m.ls.args, 1);
         uint_t bvar_ls =
           noll2sat_get_bvar_pred (fsat, subform, vin, pid, sid);
 #ifndef NDEBUG
-        fprintf (stdout,
-                 "----- ls abstraction for [P%d,alpha%d,x%d,x%d,...] (bvar %d) from ",
-                 pid, sid, vin, vout, bvar_ls);
-        noll_space_fprint (stdout, fsat->form->lvars, fsat->form->svars,
-                           subform);
-        fprintf (stdout, "\n");
-        fflush (stdout);
+        if (noll_option_is_diag())
+        {
+          fprintf (stdout,
+                   "----- ls abstraction for [P%d,alpha%d,x%d,x%d,...] (bvar %d) from ",
+                   pid, sid, vin, vout, bvar_ls);
+          noll_space_fprint (stdout, fsat->form->lvars, fsat->form->svars,
+                             subform);
+          fprintf (stdout, "\n");
+          fflush (stdout);
+        }
 #endif
         if (bvar_ls == 0)
           {
@@ -1461,8 +1530,11 @@ noll2sat_space_aux (noll_sat_t * fsat, noll_space_t * subform,
                                               noll_vector_at (subform->m.sep,
                                                               i), bvars_i);
 #ifndef NDEBUG
-            fprintf (stdout, "\n----- F_* abstraction \n");
-            fflush (stdout);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "\n----- F_* abstraction \n");
+              fflush (stdout);
+            }
 #endif
             // put F_* corresponding to
             // the bvars_subform (collected until i) and bvars_used_i atoms
@@ -1546,8 +1618,11 @@ noll2sat_membership (noll_sat_t * fsat)
                       || (type_in_pred_of_svar (fsat, rec_xi, alphaj) == 0))
                     {
 #ifndef NDEBUG
-                      fprintf (stdout, "---- var x%d is not in %s\n", xi,
-                               alpha->vname);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "---- var x%d is not in %s\n", xi,
+                                 alpha->vname);
+                      }
 #endif
                       uint_t bvar_i_in_j = noll2sat_get_bvar_in (fsat, xi,
                                                                  alphaj);
@@ -1585,12 +1660,15 @@ noll2sat_membership (noll_sat_t * fsat)
               uint_t bvar_j_in_i = noll2sat_get_bvar_in (fsat, xj, alpha_i);
               assert (bvar_j_in_i != 0);
 #ifndef NDEBUG
-              fprintf (stdout,
-                       "---- var %s in %s (bvar %d) implies %s (bvar %d)\n",
-                       noll_var_name (fsat->form->lvars, xj, NOLL_TYP_RECORD),
-                       noll_var_name (fsat->form->svars, alpha_i,
-                                      NOLL_TYP_SETLOC), bvar_j_in_i,
-                       noll_pred_name (p_i), fsat->start_pred + lsi);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout,
+                         "---- var %s in %s (bvar %d) implies %s (bvar %d)\n",
+                         noll_var_name (fsat->form->lvars, xj, NOLL_TYP_RECORD),
+                         noll_var_name (fsat->form->svars, alpha_i,
+                                        NOLL_TYP_SETLOC), bvar_j_in_i,
+                         noll_pred_name (p_i), fsat->start_pred + lsi);
+              }
 #endif
               fprintf (fsat->file, "-%d %d 0\n", bvar_j_in_i,
                        fsat->start_pred + (uint_t) lsi);
@@ -1636,13 +1714,16 @@ noll2sat_membership (noll_sat_t * fsat)
                       && type_in_pred_of_svar (fsat, rec_i, alpha_i)))
                 {
 #ifndef NDEBUG
-                  fprintf (stdout, "---- var %s, %s, %s\n",
-                           noll_var_name (fsat->form->lvars, x_i,
-                                          NOLL_TYP_RECORD),
-                           noll_var_name (fsat->form->lvars, x_j,
-                                          NOLL_TYP_RECORD),
-                           noll_var_name (fsat->form->svars, alpha_i,
-                                          NOLL_TYP_SETLOC));
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "---- var %s, %s, %s\n",
+                             noll_var_name (fsat->form->lvars, x_i,
+                                            NOLL_TYP_RECORD),
+                             noll_var_name (fsat->form->lvars, x_j,
+                                            NOLL_TYP_RECORD),
+                             noll_var_name (fsat->form->svars, alpha_i,
+                                            NOLL_TYP_SETLOC));
+                  }
 #endif
                   fprintf (fsat->file, "-%d -%d %d 0\n", bvar_eq_i_j,
                            bvar_in_i, bvar_in_j_i);
@@ -1664,10 +1745,13 @@ noll2sat_membership (noll_sat_t * fsat)
                                                    i)->forig->m.ls.args, 0);
       uint_t alpha_i = noll_vector_at (fsat->var_pred, i)->forig->m.ls.sid;
 #ifndef NDEBUG
-      fprintf (stdout, "---- predicate %s implies %s in %s\n",
-               noll_pred_getpred (pid_i)->pname,
-               noll_vector_at (fsat->form->lvars, x_i)->vname,
-               noll_vector_at (fsat->form->svars, alpha_i)->vname);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "---- predicate %s implies %s in %s\n",
+                 noll_pred_getpred (pid_i)->pname,
+                 noll_vector_at (fsat->form->lvars, x_i)->vname,
+                 noll_vector_at (fsat->form->svars, alpha_i)->vname);
+      }
 #endif
       uint_t bvar_pred_i = fsat->start_pred + i;
       uint_t bvar_in_i = noll2sat_get_bvar_in (fsat, x_i, alpha_i);
@@ -1727,22 +1811,28 @@ noll2sat_membership (noll_sat_t * fsat)
                           {
                             fprintf (fsat->file, "-%d ", bvar_j_in_i);
 #ifndef NDEBUG
-                            fprintf (stdout, "%s in %s implies ",
-                                     noll_vector_at (fsat->form->lvars,
-                                                     x_j)->vname,
-                                     noll_vector_at (fsat->form->svars,
-                                                     alpha_i)->vname);
+                            if (noll_option_is_diag())
+                            {
+                              fprintf (stdout, "%s in %s implies ",
+                                       noll_vector_at (fsat->form->lvars,
+                                                       x_j)->vname,
+                                       noll_vector_at (fsat->form->svars,
+                                                       alpha_i)->vname);
+                            }
 #endif
                             flag = 1;
                           }
                         fprintf (fsat->file, "%d ", bvar_apto_j_k);
 #ifndef NDEBUG
-                        fprintf (stdout, "%s src_of %s in %s or ",
-                                 noll_vector_at (fsat->form->lvars,
-                                                 x_j)->vname,
-                                 noll_vector_at (fields_array, f_k)->name,
-                                 noll_vector_at (fsat->form->svars,
-                                                 alpha_i)->vname);
+                        if (noll_option_is_diag())
+                        {
+                          fprintf (stdout, "%s src_of %s in %s or ",
+                                   noll_vector_at (fsat->form->lvars,
+                                                   x_j)->vname,
+                                   noll_vector_at (fields_array, f_k)->name,
+                                   noll_vector_at (fsat->form->svars,
+                                                   alpha_i)->vname);
+                        }
 #endif
                       }
                   }
@@ -1751,7 +1841,10 @@ noll2sat_membership (noll_sat_t * fsat)
               {
                 fprintf (fsat->file, "0\n");
 #ifndef NDEBUG
-                fprintf (stdout, "\n");
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "\n");
+                }
 #endif
                 nb_clauses++;
               }
@@ -1784,17 +1877,20 @@ noll2sat_det_pto_pto (noll_sat_t * fsat)
         if (f_i == f_j)
           {
 #ifndef NDEBUG
-            fprintf (stdout,
-                     "---- [%s = %s] ==> [1->%s,%s] xor [2->field,%s]\n",
-                     noll_vector_at (fsat->form->lvars, x_i)->vname,
-                     noll_vector_at (fsat->form->lvars, x_j)->vname,
-                     noll_vector_at (fields_array, f_i)->name,
-                     noll_vector_at (fsat->form->lvars,
-                                     noll_vector_at (sat_i->forig->m.pto.dest,
-                                                     sat_i->m.idx))->vname,
-                     noll_vector_at (fsat->form->lvars,
-                                     noll_vector_at (sat_j->forig->m.pto.dest,
-                                                     sat_j->m.idx))->vname);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout,
+                       "---- [%s = %s] ==> [1->%s,%s] xor [2->field,%s]\n",
+                       noll_vector_at (fsat->form->lvars, x_i)->vname,
+                       noll_vector_at (fsat->form->lvars, x_j)->vname,
+                       noll_vector_at (fields_array, f_i)->name,
+                       noll_vector_at (fsat->form->lvars,
+                                       noll_vector_at (sat_i->forig->m.pto.dest,
+                                                       sat_i->m.idx))->vname,
+                       noll_vector_at (fsat->form->lvars,
+                                       noll_vector_at (sat_j->forig->m.pto.dest,
+                                                       sat_j->m.idx))->vname);
+            }
 #endif
             uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_j);
             fprintf (fsat->file, "-%d %d %d 0\n", bvar_eq_i_j,
@@ -1829,14 +1925,17 @@ noll2sat_det_apto_apto (noll_sat_t * fsat)
         if ((f_i == f_j) && (sat_i->forig != sat_j->forig) && (x_i != x_j))
           {
 #ifndef NDEBUG
-            fprintf (stdout,
-                     "---- [%s = %s] ==> ![%s->%s,_] or ![%s->%s,_]\n",
-                     noll_vector_at (fsat->form->lvars, x_i)->vname,
-                     noll_vector_at (fsat->form->lvars, x_j)->vname,
-                     noll_vector_at (fsat->form->lvars, x_i)->vname,
-                     noll_vector_at (fields_array, f_i)->name,
-                     noll_vector_at (fsat->form->lvars, x_j)->vname,
-                     noll_vector_at (fields_array, f_i)->name);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout,
+                       "---- [%s = %s] ==> ![%s->%s,_] or ![%s->%s,_]\n",
+                       noll_vector_at (fsat->form->lvars, x_i)->vname,
+                       noll_vector_at (fsat->form->lvars, x_j)->vname,
+                       noll_vector_at (fsat->form->lvars, x_i)->vname,
+                       noll_vector_at (fields_array, f_i)->name,
+                       noll_vector_at (fsat->form->lvars, x_j)->vname,
+                       noll_vector_at (fields_array, f_i)->name);
+            }
 #endif
             uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_j);
             fprintf (fsat->file, "-%d -%d -%d 0\n", bvar_eq_i_j,
@@ -1862,12 +1961,15 @@ noll2sat_det_apto_nil (noll_sat_t * fsat)
       uint_t f_i = sat_i->m.p.fld;
       uint_t x_nil = 0;
 #ifndef NDEBUG
-      fprintf (stdout,
-               "---- [%s = %s] ==> ![%s->%s,_]\n",
-               noll_vector_at (fsat->form->lvars, x_i)->vname,
-               noll_vector_at (fsat->form->lvars, x_nil)->vname,
-               noll_vector_at (fsat->form->lvars, x_i)->vname,
-               noll_vector_at (fields_array, f_i)->name);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout,
+                 "---- [%s = %s] ==> ![%s->%s,_]\n",
+                 noll_vector_at (fsat->form->lvars, x_i)->vname,
+                 noll_vector_at (fsat->form->lvars, x_nil)->vname,
+                 noll_vector_at (fsat->form->lvars, x_i)->vname,
+                 noll_vector_at (fields_array, f_i)->name);
+      }
 #endif
       uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_nil);
       fprintf (fsat->file, "-%d -%d 0\n", bvar_eq_i_j, fsat->start_apto + i);
@@ -1878,7 +1980,7 @@ noll2sat_det_apto_nil (noll_sat_t * fsat)
 
 /*
  * write F_det ([x_i,f,y_i], [x_j,f,alpha]) = [x_i = x_j] & [x_i,f,y_i] ==> ![x_j,f,alpha]
- * or [x_i,f,y_i] & [x_j,f,alpha] => ![x_i = x_j] 
+ * or [x_i,f,y_i] & [x_j,f,alpha] => ![x_i = x_j]
  */
 int
 noll2sat_det_pto_apto (noll_sat_t * fsat)
@@ -1898,19 +2000,22 @@ noll2sat_det_pto_apto (noll_sat_t * fsat)
         if (f_i == f_j)
           {
 #ifndef NDEBUG
-            fprintf (stdout,
-                     "---- [%s = %s] & [%s,%s,%s] ==> ![%s,%s,%s]\n",
-                     noll_vector_at (fsat->form->lvars, x_i)->vname,
-                     noll_vector_at (fsat->form->lvars, x_j)->vname,
-                     noll_vector_at (fsat->form->lvars, x_i)->vname,
-                     noll_vector_at (fields_array, f_i)->name,
-                     noll_vector_at (fsat->form->lvars,
-                                     noll_vector_at (sat_i->forig->m.pto.dest,
-                                                     sat_i->m.idx))->vname,
-                     noll_vector_at (fsat->form->lvars, x_j)->vname,
-                     noll_vector_at (fields_array, f_i)->name,
-                     noll_var_name (fsat->form->svars, sat_j->forig->m.ls.sid,
-                                    NOLL_TYP_SETLOC));
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout,
+                       "---- [%s = %s] & [%s,%s,%s] ==> ![%s,%s,%s]\n",
+                       noll_vector_at (fsat->form->lvars, x_i)->vname,
+                       noll_vector_at (fsat->form->lvars, x_j)->vname,
+                       noll_vector_at (fsat->form->lvars, x_i)->vname,
+                       noll_vector_at (fields_array, f_i)->name,
+                       noll_vector_at (fsat->form->lvars,
+                                       noll_vector_at (sat_i->forig->m.pto.dest,
+                                                       sat_i->m.idx))->vname,
+                       noll_vector_at (fsat->form->lvars, x_j)->vname,
+                       noll_vector_at (fields_array, f_i)->name,
+                       noll_var_name (fsat->form->svars, sat_j->forig->m.ls.sid,
+                                      NOLL_TYP_SETLOC));
+            }
 #endif
             uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_j);
             fprintf (fsat->file, "-%d -%d -%d 0\n", bvar_eq_i_j,
@@ -1937,15 +2042,18 @@ noll2sat_det_pto_nil (noll_sat_t * fsat)
       uint_t f_i = noll_vector_at (sat_i->forig->m.pto.fields, sat_i->m.idx);
       uint_t x_nil = 0;
 #ifndef NDEBUG
-      fprintf (stdout,
-               "---- [%s,%s,%s] ==> ![%s = %s] & \n",
-               noll_vector_at (fsat->form->lvars, x_i)->vname,
-               noll_vector_at (fields_array, f_i)->name,
-               noll_vector_at (fsat->form->lvars,
-                               noll_vector_at (sat_i->forig->m.pto.dest,
-                                               sat_i->m.idx))->vname,
-               noll_vector_at (fsat->form->lvars, x_i)->vname,
-               noll_vector_at (fsat->form->lvars, x_nil)->vname);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout,
+                 "---- [%s,%s,%s] ==> ![%s = %s] & \n",
+                 noll_vector_at (fsat->form->lvars, x_i)->vname,
+                 noll_vector_at (fields_array, f_i)->name,
+                 noll_vector_at (fsat->form->lvars,
+                                 noll_vector_at (sat_i->forig->m.pto.dest,
+                                                 sat_i->m.idx))->vname,
+                 noll_vector_at (fsat->form->lvars, x_i)->vname,
+                 noll_vector_at (fsat->form->lvars, x_nil)->vname);
+      }
 #endif
       uint_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, x_i, x_nil);
       fprintf (fsat->file, "-%d -%d 0\n", fsat->start_pto + i, bvar_eq_i_j);
@@ -1991,12 +2099,15 @@ noll2sat_det_pto_pred (noll_sat_t * fsat)
               if (typ_x_i == typ_x_k)
                 {
 #ifndef NDEBUG
-                  fprintf (stdout,
-                           "---- var: %s, field: %s, Predicate: %s, SVar: %s\n",
-                           noll_vector_at (fsat->form->lvars, x_i)->vname,
-                           noll_vector_at (fields_array, f_i)->name,
-                           pred_j->pname, noll_vector_at (fsat->form->svars,
-                                                          alpha_j)->vname);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout,
+                             "---- var: %s, field: %s, Predicate: %s, SVar: %s\n",
+                             noll_vector_at (fsat->form->lvars, x_i)->vname,
+                             noll_vector_at (fields_array, f_i)->name,
+                             pred_j->pname, noll_vector_at (fsat->form->svars,
+                                                            alpha_j)->vname);
+                  }
 #endif
                   uid_t bvar_eq_i_k = noll2sat_get_bvar_eq (fsat, x_i,
                                                             x_k);
@@ -2075,11 +2186,14 @@ noll2sat_det_pred_pred (noll_sat_t * fsat)
                   {
                     // both variables used and of the same type, typ0_i
 #ifndef NDEBUG
-                    fprintf (stdout,
-                             "---- Pred1: %s, Pred2: %s, Var1: %s, Var2: %s\n",
-                             pred_i->pname, pred_j->pname,
-                             noll_vector_at (fsat->form->lvars, x1)->vname,
-                             noll_vector_at (fsat->form->lvars, x2)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout,
+                               "---- Pred1: %s, Pred2: %s, Var1: %s, Var2: %s\n",
+                               pred_i->pname, pred_j->pname,
+                               noll_vector_at (fsat->form->lvars, x1)->vname,
+                               noll_vector_at (fsat->form->lvars, x2)->vname);
+                    }
 #endif
                     uint_t bvar_eq_1_2 = noll2sat_get_bvar_eq (fsat, x1,
                                                                x2);
@@ -2111,49 +2225,67 @@ noll2sat_det (noll_sat_t * fsat)
   int nb_clauses = 0;
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************0th step of Det: (a)pto with nil (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************0th step of Det: (a)pto with nil (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   nb_clauses += noll2sat_det_apto_nil (fsat);
   nb_clauses += noll2sat_det_pto_nil (fsat);
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************1st step of Det: pto with pto (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************1st step of Det: pto with pto (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   //pairs of points-to
   nb_clauses += noll2sat_det_pto_pto (fsat);
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************2nd step of Det: apto with apto (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************2nd step of Det: apto with apto (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   //pairs of anonymous dest points-to
   nb_clauses += noll2sat_det_apto_apto (fsat);
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************3rd step of Det: pto with apto (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************3rd step of Det: pto with apto (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   //pairs of points-to and anonymous dest points-to
   nb_clauses += noll2sat_det_pto_apto (fsat);
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************4th step of Det: pto with pred (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************4th step of Det: pto with pred (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   //pairs of points-to and ls predicates
   nb_clauses += noll2sat_det_pto_pred (fsat);
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************5th step of Det: pred with pred (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************5th step of Det: pred with pred (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   //pairs of ls predicates
   nb_clauses += noll2sat_det_pred_pred (fsat);
@@ -2181,9 +2313,12 @@ noll2sat_share_in (noll_sat_t * fsat, uid_t x, noll_sterm_array * t)
           && (ty_x == noll_var_record (fsat->form->lvars, term->lvar)))
         {
 #ifndef NDEBUG
-          fprintf (stdout, "%s = %s ",
-                   noll_vector_at (fsat->form->lvars, x)->vname,
-                   noll_vector_at (fsat->form->lvars, term->lvar)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "%s = %s ",
+                     noll_vector_at (fsat->form->lvars, x)->vname,
+                     noll_vector_at (fsat->form->lvars, term->lvar)->vname);
+          }
 #endif
           uint_t bvar_eq_x_tj = noll2sat_get_bvar_eq (fsat, x, term->lvar);
           assert (bvar_eq_x_tj != 0);
@@ -2193,9 +2328,12 @@ noll2sat_share_in (noll_sat_t * fsat, uid_t x, noll_sterm_array * t)
                && (type_in_pred_of_svar (fsat, ty_x, term->svar) == 1))
         {
 #ifndef NDEBUG
-          fprintf (stdout, "%s in %s ",
-                   noll_vector_at (fsat->form->lvars, x)->vname,
-                   noll_vector_at (fsat->form->svars, term->svar)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "%s in %s ",
+                     noll_vector_at (fsat->form->lvars, x)->vname,
+                     noll_vector_at (fsat->form->svars, term->svar)->vname);
+          }
 #endif
           uint_t bvar_in_x_tj = noll2sat_get_bvar_in (fsat, x, term->svar);
           assert (bvar_in_x_tj != 0);
@@ -2206,9 +2344,12 @@ noll2sat_share_in (noll_sat_t * fsat, uid_t x, noll_sterm_array * t)
                && (ty_x == noll_var_record (fsat->form->lvars, term->lvar)))
         {
 #ifndef NDEBUG
-          fprintf (stdout, "%s in %s ",
-                   noll_vector_at (fsat->form->lvars, x)->vname,
-                   noll_vector_at (fsat->form->svars, term->svar)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "%s in %s ",
+                     noll_vector_at (fsat->form->lvars, x)->vname,
+                     noll_vector_at (fsat->form->svars, term->svar)->vname);
+          }
 #endif
           uint_t bvar_in_x_tj = noll2sat_get_bvar_in (fsat, x, term->svar);
           assert (bvar_in_x_tj != 0);
@@ -2218,13 +2359,19 @@ noll2sat_share_in (noll_sat_t * fsat, uid_t x, noll_sterm_array * t)
         {
           // this term is not useful, ignore it
 #ifndef NDEBUG
-          fprintf (stdout, "nothing ");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "nothing ");
+          }
 #endif
           continue;
         }
     }
 #ifndef NDEBUG
-  fprintf (stdout, "\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\n");
+  }
 #endif
 }
 
@@ -2271,10 +2418,13 @@ noll2sat_share (noll_sat_t * fsat)
                   {
                     // projection also dealt
 #ifndef NDEBUG
-                    fprintf (stdout, "++++++ %s not in %s\n ",
-                             noll_vector_at (fsat->form->lvars, x)->vname,
-                             noll_vector_at (fsat->form->svars,
-                                             ti->svar)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "++++++ %s not in %s\n ",
+                               noll_vector_at (fsat->form->lvars, x)->vname,
+                               noll_vector_at (fsat->form->svars,
+                                               ti->svar)->vname);
+                    }
 #endif
                     uint_t bvar_in_x_ti = noll2sat_get_bvar_in (fsat, x,
                                                                 ti->svar);
@@ -2285,10 +2435,13 @@ noll2sat_share (noll_sat_t * fsat)
                 else
                   {
 #ifndef NDEBUG
-                    fprintf (stdout, "++++++ %s != %s\n ",
-                             noll_vector_at (fsat->form->lvars, x)->vname,
-                             noll_vector_at (fsat->form->lvars,
-                                             ti->lvar)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "++++++ %s != %s\n ",
+                               noll_vector_at (fsat->form->lvars, x)->vname,
+                               noll_vector_at (fsat->form->lvars,
+                                               ti->lvar)->vname);
+                    }
 #endif
                     uint_t bvar_eq_x_ti = noll2sat_get_bvar_eq (fsat, x,
                                                                 ti->lvar);
@@ -2302,10 +2455,13 @@ noll2sat_share (noll_sat_t * fsat)
         default:
           {                     // alpha subsetof t
 #ifndef NDEBUG
-            fprintf (stdout, "noll2sat: share atom");
-            noll_share_atom_fprint (stdout, fsat->form->lvars,
-                                    fsat->form->svars, atom);
-            fprintf (stdout, "\n");
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "noll2sat: share atom");
+              noll_share_atom_fprint (stdout, fsat->form->lvars,
+                                      fsat->form->svars, atom);
+              fprintf (stdout, "\n");
+            }
 #endif
             assert (atom->t_left->kind >= NOLL_STERM_SVAR);
             uint_t left_svar = atom->t_left->svar;
@@ -2331,10 +2487,13 @@ noll2sat_share (noll_sat_t * fsat)
                     continue;
                   // here, vi and left_svar have compatible types
 #ifndef NDEBUG
-                  fprintf (stdout, "---- F (%s in %s) implies ",
-                           noll_vector_at (fsat->form->lvars, vi)->vname,
-                           noll_vector_at (fsat->form->svars,
-                                           left_svar)->vname);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "---- F (%s in %s) implies ",
+                             noll_vector_at (fsat->form->lvars, vi)->vname,
+                             noll_vector_at (fsat->form->svars,
+                                             left_svar)->vname);
+                  }
 #endif
                   uint_t bvar_vi_in_t = noll2sat_get_bvar_in (fsat, vi,
                                                               left_svar);
@@ -2375,7 +2534,10 @@ noll2sat_share (noll_sat_t * fsat)
                 // if [pi ...] true then
                 fprintf (fsat->file, "-%d ", fsat->start_pred + lsi);
 #ifndef NDEBUG
-                fprintf (stdout, "---- F(pred-%d) implies ", lsi);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "---- F(pred-%d) implies ", lsi);
+                }
 #endif
                 // print disjunction for each term of t_right
                 noll2sat_share_in (fsat, in_lsi, atom->t_right);
@@ -2411,8 +2573,11 @@ noll2sat_is_eq (noll_sat_t * fsat, uid_t x, uid_t y, noll_pure_op_t oper)
   FILE *out = fopen (pre_fname, "w");
   fprintf (out, "p cnf %d %d\n", fsat->no_vars - 1, fsat->no_clauses + 1);      // -1 on no_vars ?
 #ifndef NDEBUG
-  fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n",
-           fsat->no_vars - 1, fsat->no_clauses + 1);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n",
+             fsat->no_vars - 1, fsat->no_clauses + 1);
+  }
 #endif
   free (pre_fname);
   fclose (out);
@@ -2479,8 +2644,11 @@ noll2sat_is_sat (noll_sat_t * fsat)
 
   // print the prefix file for sat in file in the command
 #ifndef NDEBUG
-  fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n",
-           fsat->no_vars - 1, fsat->no_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n",
+             fsat->no_vars - 1, fsat->no_clauses);
+  }
 #endif
   // build the final file for sat using echo and cat
   size_t command_len = 100 + 2 * fname_len;
@@ -2510,14 +2678,20 @@ noll2sat_is_sat (noll_sat_t * fsat)
               if (line[0] != 's')
                 continue;
 #ifndef NDEBUG
-              fprintf (stdout, "*********************%s**************\n",
-                       line);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "*********************%s**************\n",
+                         line);
+              }
 #endif
               if (strncmp (line, "s UNSAT", 7) == 0)
                 {
 #ifndef NDEBUG
-                  fprintf (stdout,
-                           "*******************UNSAT*******************\n");
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout,
+                             "*******************UNSAT*******************\n");
+                  }
 #endif
                   result = 0;
                 }
@@ -2576,8 +2750,11 @@ noll2sat_is_in (noll_sat_t * fsat, uid_t x, uid_t alpha)
   FILE *out = fopen (pre_fname, "w");
   fprintf (out, "p cnf %d %d\n", fsat->no_vars - 1, fsat->no_clauses + 1);      // -1 on no_vars ?
 #ifndef NDEBUG
-  fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n",
-           fsat->no_vars - 1, fsat->no_clauses + 1);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n",
+             fsat->no_vars - 1, fsat->no_clauses + 1);
+  }
 #endif
   free (pre_fname);
   fclose (out);
