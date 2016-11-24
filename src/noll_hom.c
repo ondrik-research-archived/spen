@@ -62,7 +62,7 @@ noll_uid_array *noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
 /* ====================================================================== */
 
 /**
- * @brief Allocate a homeomorphism for the crt problem. 
+ * @brief Allocate a homeomorphism for the crt problem.
  */
 noll_hom_t *
 noll_hom_alloc (void)
@@ -80,8 +80,8 @@ noll_hom_alloc (void)
   return h;
 }
 
-/** 
- * @brief Free the homeomorphism for the crt problem. 
+/**
+ * @brief Free the homeomorphism for the crt problem.
  */
 void
 noll_hom_delete (noll_hom_t * h)
@@ -175,7 +175,10 @@ noll_hom_fprint (FILE * f, noll_hom_t * h)
       if (shi->node_hom == NULL)
         {
 #ifndef NDEBUG
-          fprintf (f, "NULL\n");
+          if (noll_option_is_diag())
+          {
+            fprintf (f, "NULL\n");
+          }
 #endif
           continue;
         }
@@ -283,7 +286,7 @@ noll_uid_map_apply (noll_uid_map * h, noll_uid_array * args, bool useNil)
 /**
  * Compose two mappings of the same length.
  * The mappings shall agree on defined values.
- * 
+ *
  * @param dst  the mapping where composition is done
  * @param src  the mapping used to update
  * @return     the @p dst if composition is correct, NULL otherwise
@@ -388,10 +391,13 @@ noll_shom_build_nodes (noll_graph_t * g1, noll_graph_t * g2)
       }
 
 #ifndef NDEBUG
-  fprintf (stdout,
-           "homeomorphism built from the labeling with program variables:\n\t");
-  noll_uid_map_fprint (stdout, n_hom);
-  fprintf (stdout, "\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "homeomorphism built from the labeling with program variables:\n\t");
+    noll_uid_map_fprint (stdout, n_hom);
+    fprintf (stdout, "\n");
+  }
 #endif
 
   /*
@@ -475,8 +481,11 @@ noll_shom_build_pto (noll_graph_t * g1, noll_graph_t * g2,
       uid_t nsrc_e1 = noll_vector_at (e1->args, 0);
       uid_t ndst_e1 = noll_vector_at (e1->args, 1);
 #ifndef NDEBUG
-      fprintf (stdout, "---- Search pto edge n%d ---label=%d)--> n%d:\n",
-               nsrc_e1, e1->label, ndst_e1);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "---- Search pto edge n%d ---label=%d)--> n%d:\n",
+                 nsrc_e1, e1->label, ndst_e1);
+      }
 #endif
       isHom = false;
       uint_t nsrc_e2 = noll_vector_at (n_hom, nsrc_e1);
@@ -495,8 +504,11 @@ noll_shom_build_pto (noll_graph_t * g1, noll_graph_t * g2,
                   (noll_vector_at (e2->args, 1) == ndst_e2))
                 {
 #ifndef NDEBUG
-                  fprintf (stdout, "\t found e%d, same label, same kind\n",
-                           ei2);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "\t found e%d, same label, same kind\n",
+                             ei2);
+                  }
 #endif
                   isHom = true;
                   /* mark edge e2 used */
@@ -509,7 +521,10 @@ noll_shom_build_pto (noll_graph_t * g1, noll_graph_t * g2,
       if (isHom == false)
         {
 #ifndef NDEBUG
-          fprintf (stdout, "\t not found!");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "\t not found!");
+          }
 #endif
           if (noll_option_is_diag () == true)
             {
@@ -582,7 +597,10 @@ noll_shom_select_rd (noll_graph_t * g, uint_t eid, uint_t label,
   assert (noll_vector_size (used) == noll_vector_size (g->edges));
 
 #ifndef NDEBUG
-  fprintf (stdout, "select_ls: for predicate %d\n", label);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "select_ls: for predicate %d\n", label);
+  }
 #endif
 
   /*
@@ -667,7 +685,10 @@ noll_shom_select_rd (noll_graph_t * g, uint_t eid, uint_t label,
   noll_uid_array_delete (vqueue);
 
 #ifndef NDEBUG
-  fprintf (stdout, "\t- exploration done, check arguments\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\t- exploration done, check arguments\n");
+  }
 #endif
 
   /* check that all arguments have been explored */
@@ -699,7 +720,10 @@ noll_shom_select_rd (noll_graph_t * g, uint_t eid, uint_t label,
       vg[noll_vector_at (args, i)] = 3;
 
 #ifndef NDEBUG
-  fprintf (stdout, "\t- mark used edges, build the graph\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\t- mark used edges, build the graph\n");
+  }
 #endif
 
   /*
@@ -752,7 +776,10 @@ noll_shom_select_rd (noll_graph_t * g, uint_t eid, uint_t label,
     }
 
 #ifndef NDEBUG
-  fprintf (stdout, "\t- insert difference edges inside the graph selected\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\t- insert difference edges inside the graph selected\n");
+  }
 #endif
 
   /*
@@ -792,7 +819,10 @@ return_select_ls_error:
   rg = NULL;
 
 #ifndef NDEBUG
-  fprintf (stdout, "\t- return NULL\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\t- return NULL\n");
+  }
 #endif
 
 return_select_ls:
@@ -806,19 +836,22 @@ return_select_ls:
   rg->isComplete = g->isComplete;
 
 #ifndef NDEBUG
-  fprintf (stdout, "\t- return graph\n");
-  noll_graph_fprint (stdout, rg);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\t- return graph\n");
+    noll_graph_fprint (stdout, rg);
+  }
 #endif
 
   return rg;
 }
 
 /**
- * @brief Check well-formedness condition 0 
+ * @brief Check well-formedness condition 0
  * for the graph selected @param sg2 wrt @param g2, i.e.,
- * if sg2 contains a pto, 
+ * if sg2 contains a pto,
  * then g2 ==> args2[0] != args2[1+isdll] [+ dll]
- * 
+ *
  * @param g2    the graph origin of the selection
  * @param sg2   the selected graph
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
@@ -848,9 +881,12 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
   if (found == false)
     return res;                 /* 1 */
 #ifndef NDEBUG
-  NOLL_DEBUG ("\n++++ select_wf_0 with isdll=%d, args2 = ", isdll);
-  noll_uid_map_fprint (stdout, args2);
-  NOLL_DEBUG ("\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\n++++ select_wf_0 with isdll=%d, args2 = ", isdll);
+    noll_uid_map_fprint (stdout, args2);
+    NOLL_DEBUG ("\n");
+  }
 #endif
 
   /* if found, then check that the non-empty case of the predicate
@@ -874,8 +910,11 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
       uid_t nj = (nv > nfst) ? nfst : nv;
       res = (g2->diff[ni][nj]) ? 1 : 0;
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", nv,
-                  nfst, res);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n++++ select_wf_0 for [n%d != n%d] returns %d\n", nv,
+                    nfst, res);
+      }
 #endif
       if (res != 1)
         {
@@ -902,8 +941,11 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
       uid_t nj = (bk > pr) ? pr : bk;
       res = (g2->diff[ni][nj]) ? 1 : 0;
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_0 for dll [n%d != n%d] returns %d\n", bk,
-                  pr, res);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n++++ select_wf_0 for dll [n%d != n%d] returns %d\n", bk,
+                    pr, res);
+      }
 #endif
       if (res != 1)
         {
@@ -925,10 +967,10 @@ noll_shom_select_wf_0 (noll_graph_t * g2, noll_graph_t * sg2,
 }
 
 /**
- * Check well-formedness condition 1 
+ * Check well-formedness condition 1
  * for the graph selected @p sg2 wrt @p g2, i.e.,
- * for any predicate edge P(E,F,...) in sg2, 
- *   check that (g2 \ sg2) /\ E != F ==> args2[1] allocated or nil 
+ * for any predicate edge P(E,F,...) in sg2,
+ *   check that (g2 \ sg2) /\ E != F ==> args2[1] allocated or nil
  *          (for dll check args2[2] and args[3] allocated or nil)
  * @param g2    the origin of the selection
  * @param sg2   the selected graph
@@ -948,7 +990,10 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
   if ((isdll == 0) && (noll_vector_at (args2, 1) == g2->var2node[0]))
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_1: not dll and nxt is nil\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n++++ select_wf_1: not dll and nxt is nil\n");
+      }
 #endif
       return 1;
     }
@@ -957,13 +1002,19 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
   uint_t vF = noll_graph_get_var (g2, nF);
   noll_type_t *ty_F = noll_var_type (sg2->lvars, vF);
 #ifndef NDEBUG
-  fprintf (stdout, "\n++++ select_wf_1: arg-%d of type %d\n",
-           1 + isdll, ty_F->kind);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\n++++ select_wf_1: arg-%d of type %d\n",
+             1 + isdll, ty_F->kind);
+  }
 #endif
   if (ty_F->kind != NOLL_TYP_RECORD)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_1: not a location arg\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n++++ select_wf_1: not a location arg\n");
+      }
 #endif
       return 1;
     }
@@ -973,7 +1024,10 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
       (noll_vector_at (args2, 3) == g2->var2node[0]))
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n++++ select_wf_1: dll and nxt+prv are nil\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n++++ select_wf_1: dll and nxt+prv are nil\n");
+      }
 #endif
       return 1;
     }
@@ -988,8 +1042,11 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
       uint_t vF = noll_graph_get_var (sg2, nF);
       noll_type_t *ty_F = noll_var_type (sg2->lvars, vF);
 #ifndef NDEBUG
-      fprintf (stdout, "\n++++ select_wf_1: arg-%d of type %d\n",
-               1 + isdll, ty_F->kind);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "\n++++ select_wf_1: arg-%d of type %d\n",
+                 1 + isdll, ty_F->kind);
+      }
 #endif
       if (ty_F->kind != NOLL_TYP_RECORD)
         continue;
@@ -1002,7 +1059,10 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
       else if (NOLL_VECTOR_SIZE (g2->edges) == NOLL_VECTOR_SIZE (sg2->edges))
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\n++++ select_wf_1: empty g2 \\ sg2!\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\n++++ select_wf_1: empty g2 \\ sg2!\n");
+          }
 #endif
           /* weaker condition: */
           /* not the same target, and empty remaining graph */
@@ -1010,7 +1070,10 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
         }
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\n++++ select_wf_1: NYI!\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\n++++ select_wf_1: NYI!\n");
+  }
 #endif
   return 1;
 }
@@ -1018,9 +1081,9 @@ noll_shom_select_wf_1 (noll_graph_t * g2, noll_graph_t * sg2,
 /**
  * Check well-formedness condition 2
  * for the graph selected, i.e., @param sg2 wrt @param g2, i.e.,
- * for any pto in sg2 from some V' 
+ * for any pto in sg2 from some V'
  *   check that g2 ==> V' != V
- * 
+ *
  * @param g2    the selection
  * @param sg2   the selection
  * @param args2 the arguments (nodes) of e1 maped with the homeomorphism
@@ -1078,8 +1141,11 @@ noll_shom_select_wf_2 (noll_graph_t * g2, noll_graph_t * sg2,
           uid_t nj = (nv > nvp) ? nvp : nv;
           res = (g2->diff[ni][nj]) ? 1 : 0;
 #ifndef NDEBUG
-          NOLL_DEBUG ("\n++++ select_wf_2 for [%d != %d] returns %d\n", nv,
-                      nvp, res);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\n++++ select_wf_2 for [%d != %d] returns %d\n", nv,
+                        nvp, res);
+          }
 #endif
           if (res == 0)
             {
@@ -1119,21 +1185,21 @@ noll_shom_select_wf (noll_graph_t * g2, noll_graph_t * sg2,
   assert (NULL != g2);
   assert (NULL != args2);
 
-  /* check wf condition 0: 
-   * if sg2 contains a pto, 
+  /* check wf condition 0:
+   * if sg2 contains a pto,
    * then g2 ==> args2[0] != args2[1+isdll] */
   int res = noll_shom_select_wf_0 (g2, sg2, args2, isdll);
   if (res == 0)
     return res;
   /* check wf condition 1:
-   * for any predicate edge P(E,F,...) in sg2, 
-   *   check that (g2 \ sg2) /\ E != F ==> args2[1+isdll] allocated or nil 
+   * for any predicate edge P(E,F,...) in sg2,
+   *   check that (g2 \ sg2) /\ E != F ==> args2[1+isdll] allocated or nil
    */
   res = noll_shom_select_wf_1 (g2, sg2, args2, isdll);
   if (res == 0)
     return res;
-  /* check wf condition 2: 
-   * for any pto in sg2 from some V' 
+  /* check wf condition 2:
+   * for any pto in sg2 from some V'
    *   check that g2 ==> V' != V
    */
   res = noll_shom_select_wf_2 (g2, sg2, args2, isdll);
@@ -1184,9 +1250,12 @@ noll_shom_check_TA (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
   assert (NULL != g2_ta);
   noll_tree_free (g2_tree);
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nGraph TA:\n");
-  vata_print_ta (g2_ta);
-  NOLL_DEBUG ("\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nGraph TA:\n");
+    vata_print_ta (g2_ta);
+    NOLL_DEBUG ("\n");
+  }
 #endif
 
   noll_ta_t *e1_ta = noll_edge2ta (e1);
@@ -1197,9 +1266,12 @@ noll_shom_check_TA (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
     }
 
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nEdge TA:\n");
-  vata_print_ta (e1_ta);
-  NOLL_DEBUG ("\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nEdge TA:\n");
+    vata_print_ta (e1_ta);
+    NOLL_DEBUG ("\n");
+  }
 #endif
 
   bool inclRes = vata_check_inclusion (g2_ta, e1_ta);
@@ -1207,7 +1279,10 @@ noll_shom_check_TA (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
   vata_free_ta (e1_ta);
 
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nResult of inclusion check: %d\n", inclRes);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nResult of inclusion check: %d\n", inclRes);
+  }
 #endif
 
   return (inclRes) ? 1 : 0;
@@ -1215,9 +1290,9 @@ noll_shom_check_TA (noll_graph_t * g2, noll_edge_t * e1, noll_uid_array * h)
 
 /**
  * @brief Check that @p g2 implies the pure part of @p rule updated with @p m.
- * 
- * @param g2     the graph 
- * @param fpure  the pure formula 
+ *
+ * @param g2     the graph
+ * @param fpure  the pure formula
  * @param lmap   the mapping of vars in @p fpure to vars in @p exvars
  * @param exvars the existential vars collected
  * @param m      [inout] the mapping of @p exvars to nodes in @p g2
@@ -1241,8 +1316,11 @@ noll_shom_match_form_pure (noll_graph_t * g2, noll_pure_t * fpure,
   assert (fpure->m != NULL);
 
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_match_pure(level=%d): pure size=%d, map size = %d\n",
-              level, fpure->size, noll_vector_size (m));
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_match_pure(level=%d): pure size=%d, map size = %d\n",
+                level, fpure->size, noll_vector_size (m));
+  }
 #endif
 
   noll_dform_array *dfnew = noll_dform_array_new ();
@@ -1255,7 +1333,10 @@ noll_shom_match_form_pure (noll_graph_t * g2, noll_pure_t * fpure,
       (fpure->data != NULL) && (noll_vector_size (fpure->data) > 0))
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nshom_match_pure: pure part check succeeded!\ndf = \n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nshom_match_pure: pure part check succeeded!\ndf = \n");
+      }
 #endif
       // push data constraints in fpure->data[m] to dfnew
       noll_dform_array *fpure_m = noll_dform_array_apply (fpure->data, lmap);
@@ -1267,7 +1348,10 @@ noll_shom_match_form_pure (noll_graph_t * g2, noll_pure_t * fpure,
       // copy dfnew in df
       noll_dform_array_cup_all (df, dfnew);
 #ifndef NDEBUG
-      noll_dform_array_fprint (stdout, exvars, df);
+      if (noll_option_is_diag())
+      {
+        noll_dform_array_fprint (stdout, exvars, df);
+      }
 #endif
     }
   noll_dform_array_clear (dfnew);
@@ -1277,11 +1361,11 @@ noll_shom_match_form_pure (noll_graph_t * g2, noll_pure_t * fpure,
 /**
  * Match the formula @p fpto with edges in @p g2 using the mapping
  * of vars ids @p sigma.
- * 
- * @param g2     the graph 
+ *
+ * @param g2     the graph
  * @param fpto   the formula
  * @param sigma  the mapping of vars in @p fpto to nodes in @p g2
- * @param eid1   the edge unfolded here 
+ * @param eid1   the edge unfolded here
  * @return       the edges of @p g2 matched or NULL
  */
 noll_uid_array *
@@ -1310,15 +1394,21 @@ noll_shom_match_form_pto (noll_graph_t * g2, uid_t eid1,
   assert (noll_vector_at (lmap, fpto->m.pto.sid) < noll_vector_size (m));
   uint_t nsrc = noll_vector_at (m, noll_vector_at (lmap, fpto->m.pto.sid));
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nStarting matching pto from n%d (v%d < %d)\n",
-              nsrc, noll_vector_at (lmap, fpto->m.pto.sid),
-              noll_vector_size (m));
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nStarting matching pto from n%d (v%d < %d)\n",
+                nsrc, noll_vector_at (lmap, fpto->m.pto.sid),
+                noll_vector_size (m));
+  }
 #endif
   noll_uid_array *edges_nsrc = g2->mat[nsrc];
   if (edges_nsrc == NULL)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nMatching pto fails : no edge from n%d\n", nsrc);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nMatching pto fails : no edge from n%d\n", nsrc);
+      }
 #endif
       noll_uid_array_delete (mp);
       noll_uid_array_delete (res);
@@ -1347,20 +1437,26 @@ noll_shom_match_form_pto (noll_graph_t * g2, uid_t eid1,
               // well-formedness check: ndst is not already mapped to another node in m
               noll_uid_array_set (mp, noll_vector_at (lmap, dst), ndst);
 #ifndef NDEBUG
-              NOLL_DEBUG
-                ("\nUnfolding e(1)%d: match pto edge e(2)%d: n%d(v%d) --f%d--> n%d(v%d) nsrc=%d\n",
-                 eid1, eid2, noll_vector_at (ei2->args, 0),
-                 noll_vector_at (lmap, fpto->m.pto.sid), fid,
-                 noll_vector_at (ei2->args, 1), noll_vector_at (lmap,
-                                                                dst), nsrc);
-              // getchar();
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG
+                  ("\nUnfolding e(1)%d: match pto edge e(2)%d: n%d(v%d) --f%d--> n%d(v%d) nsrc=%d\n",
+                   eid1, eid2, noll_vector_at (ei2->args, 0),
+                   noll_vector_at (lmap, fpto->m.pto.sid), fid,
+                   noll_vector_at (ei2->args, 1), noll_vector_at (lmap,
+                                                                  dst), nsrc);
+                // getchar();
+              }
 #endif
             }
         }
       if (found == false)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\nMatching pto fails for field %d\n", fid);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\nMatching pto fails for field %d\n", fid);
+          }
 #endif
           noll_uid_array_delete (mp);
           noll_uid_array_delete (res);
@@ -1377,26 +1473,29 @@ noll_shom_match_form_pto (noll_graph_t * g2, uid_t eid1,
     }
   noll_uid_array_delete (mp);
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nMatching pto result: [");
-  noll_uid_map_fprint (stdout, res);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nMatching pto result: [");
+    noll_uid_map_fprint (stdout, res);
+  }
 #endif
   return res;
 }
 
 /**
  * Match the formula @p fpred with edges in @p g2 using the mapping
- * of vars ids @p sigma. It mainly prepares the aguments for 
+ * of vars ids @p sigma. It mainly prepares the aguments for
  * @see noll_shom_match_rd.
- * 
- * @param g2     the graph 
- * @param eid1   the original edge unfolded here 
- * @param fpred  the predicate atom 
+ *
+ * @param g2     the graph
+ * @param eid1   the original edge unfolded here
+ * @param fpred  the predicate atom
  * @param lmap   the mapping of var-ids in @p fpred to var-ids in @p exvars
  * @param exvars the environment of existentials vars mapped until now,
  *               it contains vars in addition to @p g2->lvars
- * @param level  the level of the unfolding to which belongs this formula 
+ * @param level  the level of the unfolding to which belongs this formula
  * @param m      the mapping of @p exvars to nodes in @p g2
- * @param df     the additional constraints generated by this matching 
+ * @param df     the additional constraints generated by this matching
  *               over vars mapping of @p exvars to nodes in @p g2
  * @return       the edges of @p g2 matched or NULL
  */
@@ -1482,17 +1581,23 @@ noll_shom_match_form_rd_list (noll_graph_t * g2,
       if (resr == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: call %d fails!\n", i);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: call %d fails!\n", i);
+          }
 #endif
           resr = NULL;
         }
       else if (noll_uid_array_compose (res, resr) == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: call %d use same edges!\n",
-             i);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: call %d use same edges!\n",
+               i);
+          }
 #endif
           noll_uid_array_delete (resr);
           resr = NULL;
@@ -1508,11 +1613,14 @@ noll_shom_match_form_rd_list (noll_graph_t * g2,
       noll_uid_array_delete (resr);
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nSyntactic matching recursive rule: rec calls matched!\n");
-  fprintf (stdout, "\tmap computed: ");
-  noll_uid_map_fprint (stdout, res);
-  fprintf (stdout, "\n\tdf computed: ");
-  noll_dform_array_fprint (stdout, exvars, dfnew);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nSyntactic matching recursive rule: rec calls matched!\n");
+    fprintf (stdout, "\tmap computed: ");
+    noll_uid_map_fprint (stdout, res);
+    fprintf (stdout, "\n\tdf computed: ");
+    noll_dform_array_fprint (stdout, exvars, dfnew);
+  }
 #endif
   /// push dfnew into df
   noll_dform_array_cup_all (df, dfnew);
@@ -1558,17 +1666,23 @@ noll_shom_match_form_rd_list_1 (noll_graph_t * g2,
       if (resr == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: call %d fails!\n", i);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: call %d fails!\n", i);
+          }
 #endif
           resr = NULL;
         }
       else if (noll_uid_array_compose (res, resr) == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: call %d use same edges!\n",
-             i);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: call %d use same edges!\n",
+               i);
+          }
 #endif
           noll_uid_array_delete (resr);
           resr = NULL;
@@ -1584,11 +1698,14 @@ noll_shom_match_form_rd_list_1 (noll_graph_t * g2,
       noll_uid_array_delete (resr);
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nSyntactic matching recursive rule: rec calls matched!\n");
-  fprintf (stdout, "\tmap computed: ");
-  noll_uid_map_fprint (stdout, res);
-  fprintf (stdout, "\n\tdf computed: ");
-  noll_dform_array_fprint (stdout, exvars, dfnew);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nSyntactic matching recursive rule: rec calls matched!\n");
+    fprintf (stdout, "\tmap computed: ");
+    noll_uid_map_fprint (stdout, res);
+    fprintf (stdout, "\n\tdf computed: ");
+    noll_dform_array_fprint (stdout, exvars, dfnew);
+  }
 #endif
   /// push dfnew into df
   noll_dform_array_cup_all (df, dfnew);
@@ -1599,8 +1716,8 @@ noll_shom_match_form_rd_list_1 (noll_graph_t * g2,
 
 /**
  * @brief Try to match the base rule @p rule.
- * 
- * Notice that @p args2 is exactly the mapping of arguments, 
+ *
+ * Notice that @p args2 is exactly the mapping of arguments,
  * the 'nil' as destination for unary predicates has been eliminated.
  */
 int
@@ -1628,10 +1745,10 @@ noll_shom_match_rule_base (noll_graph_t * g2,
 
 /**
  * @brief Try to match the recursive rule @p rule.
- * 
- * Notice that @p args2 contains 'nil' as destination (position 1), 
+ *
+ * Notice that @p args2 contains 'nil' as destination (position 1),
  * and it is not in the mapping of vars.
- * 
+ *
  * @return the mapping of edges in @p g2 matching eid1, NULL otherwise
  */
 noll_uid_array *
@@ -1660,7 +1777,7 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
    *         build mapping of X to nodes of @p g2 using e1_pto
    */
   // Warning: in the examples considered, this mapping maps all X
-  // TODO: change to consider partial mappings of X + 
+  // TODO: change to consider partial mappings of X +
   //       combinatorial choice for other vars
   /// keep the old size of exvars to resize if error
   uint_t exvars_size_old = noll_vector_size (exvars);
@@ -1684,12 +1801,15 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       noll_uid_array_push (m, UNDEFINED_ID);
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_match_rule_rec: built env ");
-  noll_var_array_fprint (stdout, exvars, "\n\texvars = ");
-  fprintf (stdout, "\n\tvar2node = ");
-  noll_uid_map_fprint (stdout, m);
-  fprintf (stdout, "\n\tlvar2exvars = ");
-  noll_uid_map_fprint (stdout, lmap);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_match_rule_rec: built env ");
+    noll_var_array_fprint (stdout, exvars, "\n\texvars = ");
+    fprintf (stdout, "\n\tvar2node = ");
+    noll_uid_map_fprint (stdout, m);
+    fprintf (stdout, "\n\tlvar2exvars = ");
+    noll_uid_map_fprint (stdout, lmap);
+  }
 #endif
 
   /**
@@ -1700,9 +1820,12 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
   noll_uid_array *res = noll_shom_match_form_pto (g2, eid1, e1_pto, lmap,
                                                   exvars, m, dfnew, used);
   if (NULL == res)
-    {                           /// unsuccessfull matching 
+    {                           /// unsuccessfull matching
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nSyntactic matching recursive rule: pto fails!\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nSyntactic matching recursive rule: pto fails!\n");
+      }
 #endif
       // TODO: search another rule
       // Warning: works for only one rule
@@ -1710,13 +1833,16 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       goto shom_match_rule_rec;
     }
 #ifndef NDEBUG
-  NOLL_DEBUG
-    ("\nSyntactic matching recursive rule: pto succeeds!\nres found: ");
-  noll_uid_map_fprint (stdout, res);
-  NOLL_DEBUG ("\nlmap: ");
-  noll_uid_map_fprint (stdout, lmap);
-  NOLL_DEBUG ("\ndfnew: ");
-  noll_dform_array_fprint (stdout, exvars, dfnew);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG
+      ("\nSyntactic matching recursive rule: pto succeeds!\nres found: ");
+    noll_uid_map_fprint (stdout, res);
+    NOLL_DEBUG ("\nlmap: ");
+    noll_uid_map_fprint (stdout, lmap);
+    NOLL_DEBUG ("\ndfnew: ");
+    noll_dform_array_fprint (stdout, exvars, dfnew);
+  }
 #endif
 
   /**
@@ -1735,9 +1861,12 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       if (resr == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: nested call %d fails!\n",
-             eid1);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: nested call %d fails!\n",
+               eid1);
+          }
 #endif
           isErr = 1;
           noll_uid_array_delete (used_res);
@@ -1746,9 +1875,12 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       else if (noll_uid_array_compose (res, resr) == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: nested call %d use same edges!\n",
-             eid1);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: nested call %d use same edges!\n",
+               eid1);
+          }
 #endif
           noll_uid_array_delete (resr);
           noll_uid_array_delete (used_res);
@@ -1759,13 +1891,16 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       noll_uid_array_compose (used_res, resr);
     }
 #ifndef NDEBUG
-  NOLL_DEBUG
-    ("\nSyntactic matching recursive rule: nst succeeds!\nres found: ");
-  noll_uid_map_fprint (stdout, res);
-  NOLL_DEBUG ("\nlmap: ");
-  noll_uid_map_fprint (stdout, lmap);
-  NOLL_DEBUG ("\ndfnew: ");
-  noll_dform_array_fprint (stdout, exvars, dfnew);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG
+      ("\nSyntactic matching recursive rule: nst succeeds!\nres found: ");
+    noll_uid_map_fprint (stdout, res);
+    NOLL_DEBUG ("\nlmap: ");
+    noll_uid_map_fprint (stdout, lmap);
+    NOLL_DEBUG ("\ndfnew: ");
+    noll_dform_array_fprint (stdout, exvars, dfnew);
+  }
 #endif
 
   if (rule->rec != NULL)
@@ -1777,9 +1912,12 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       if (resr == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: rec call %d fails!\n",
-             eid1);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: rec call %d fails!\n",
+               eid1);
+          }
 #endif
           isErr = 1;
           goto shom_match_rule_rec;
@@ -1787,9 +1925,12 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
       else if (noll_uid_array_compose (res, resr) == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nSyntactic matching recursive rule: rec call %d use same edges!\n",
-             eid1);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nSyntactic matching recursive rule: rec call %d use same edges!\n",
+               eid1);
+          }
 #endif
           noll_uid_array_delete (resr);
           resr = NULL;
@@ -1798,13 +1939,16 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
         }
     }
 #ifndef NDEBUG
-  NOLL_DEBUG
-    ("\nSyntactic matching recursive rule: rec succeeds!\nres found: ");
-  noll_uid_map_fprint (stdout, res);
-  NOLL_DEBUG ("\nlmap: ");
-  noll_uid_map_fprint (stdout, lmap);
-  NOLL_DEBUG ("\ndfnew: ");
-  noll_dform_array_fprint (stdout, exvars, dfnew);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG
+      ("\nSyntactic matching recursive rule: rec succeeds!\nres found: ");
+    noll_uid_map_fprint (stdout, res);
+    NOLL_DEBUG ("\nlmap: ");
+    noll_uid_map_fprint (stdout, lmap);
+    NOLL_DEBUG ("\ndfnew: ");
+    noll_dform_array_fprint (stdout, exvars, dfnew);
+  }
 #endif
 
   /**
@@ -1816,7 +1960,10 @@ noll_shom_match_rule_rec (noll_graph_t * g2, uid_t eid1,
   if (pure_ok == 0)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nSyntactic matching recursive rule: pure fails!\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nSyntactic matching recursive rule: pure fails!\n");
+      }
 #endif
       isErr = 1;
     }
@@ -1841,10 +1988,13 @@ shom_match_rule_rec:
       noll_dform_array_cup_all (df, dfnew);
       noll_dform_array_delete (dfnew);
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nSyntactic matching recursive rule: returns: ");
-      noll_uid_map_fprint (stdout, res);
-      NOLL_DEBUG ("\ndf: ");
-      noll_dform_array_fprint (stdout, exvars, df);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nSyntactic matching recursive rule: returns: ");
+        noll_uid_map_fprint (stdout, res);
+        NOLL_DEBUG ("\ndf: ");
+        noll_dform_array_fprint (stdout, exvars, df);
+      }
 #endif
 
     }
@@ -1856,9 +2006,9 @@ shom_match_rule_rec:
 
 /**
  * @brief Try to match the @p lemma of @p pid.
- * 
+ *
  * Notice that @p args2 is using 'nil' as 2nd parameters for unary predicates.
- * 
+ *
  * @return the set of edges of @p g2 matched
  */
 noll_uid_map *
@@ -1872,8 +2022,11 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
   assert (lemma != NULL);
   assert (lemma->pid == pid);
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_match_lemma: start with lemma\n");
-  noll_lemma_fprint (stdout, lemma);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_match_lemma: start with lemma\n");
+    noll_lemma_fprint (stdout, lemma);
+  }
 #endif
 
   /**
@@ -1885,20 +2038,26 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
   if ((nE_edges == NULL) || (noll_vector_size (nE_edges) > 1))
     {                           /// no edge or more than one edge, i.e., a pto
 #ifndef NDEBUG
-      NOLL_DEBUG
-        ("\nshom_match_lemma: NYI case of 0 or more than one edge from n%d",
-         nE);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG
+          ("\nshom_match_lemma: NYI case of 0 or more than one edge from n%d",
+           nE);
+      }
 #endif
       return NULL;
     }
   assert (noll_vector_size (nE_edges) == 1);
-  /// that is a predicate edge 
+  /// that is a predicate edge
   uid_t eidE = noll_vector_at (nE_edges, 0);
   noll_edge_t *edgeE = noll_vector_at (g2->edges, eidE);
   if (edgeE == NULL || edgeE->kind != NOLL_EDGE_PRED)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nshom_match_lemma: NYI not predicate edge from n%d", nE);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nshom_match_lemma: NYI not predicate edge from n%d", nE);
+      }
 #endif
       return NULL;
     }
@@ -1945,7 +2104,10 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
   if (predE == NULL || predE->kind != NOLL_SPACE_LS)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nshom_match_lemma: no pred in lemma!\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nshom_match_lemma: no pred in lemma!\n");
+      }
 #endif
       isErr = 1;
       goto shom_match_lemma;
@@ -1954,8 +2116,11 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       (noll_vector_size (predE->m.ls.args) != noll_vector_size (edgeE->args)))
     {
 #ifndef NDEBUG
-      NOLL_DEBUG
-        ("\nshom_match_lemma: bad edge for the first pred in lemma!\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG
+          ("\nshom_match_lemma: bad edge for the first pred in lemma!\n");
+      }
 #endif
       isErr = 1;
       goto shom_match_lemma;
@@ -1976,8 +2141,11 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
   if (eid0 != eidE)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG
-        ("\nshom_match_lemma:  bad matching for first pred in lemma!\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG
+          ("\nshom_match_lemma:  bad matching for first pred in lemma!\n");
+      }
 #endif
       isErr = 1;
       goto shom_match_lemma;
@@ -1994,11 +2162,14 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
     }
   /// update res at end, if not err!
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_match_lemma: matching first pred in lemma!");
-  fprintf (stdout, "\nmap found:");
-  noll_uid_map_fprint (stdout, m);
-  fprintf (stdout, "\ndf found:");
-  noll_dform_array_fprint (stdout, exvars, dfnew);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_match_lemma: matching first pred in lemma!");
+    fprintf (stdout, "\nmap found:");
+    noll_uid_map_fprint (stdout, m);
+    fprintf (stdout, "\ndf found:");
+    noll_dform_array_fprint (stdout, exvars, dfnew);
+  }
 #endif
 
   /**
@@ -2010,7 +2181,10 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       if (predE->kind != NOLL_SPACE_LS)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\nshom_match_lemma: bad second part in lemma!\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\nshom_match_lemma: bad second part in lemma!\n");
+          }
 #endif
           isErr = 1;
           goto shom_match_lemma;
@@ -2022,8 +2196,11 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       if (res == NULL)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nshom_match_lemma: no matching for second part in lemma!\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nshom_match_lemma: no matching for second part in lemma!\n");
+          }
 #endif
           isErr = 1;
           goto shom_match_lemma;
@@ -2031,8 +2208,11 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       if (noll_vector_at (res, eidE) != UNDEFINED_ID)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nshom_match_lemma: matching of second part uses un already used edge!\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nshom_match_lemma: matching of second part uses un already used edge!\n");
+          }
 #endif
           isErr = 1;
           goto shom_match_lemma;
@@ -2059,15 +2239,21 @@ noll_shom_match_lemma (noll_graph_t * g2, uid_t eid1,
       if (r == 0)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG
-            ("\nshom_match_lemma: bad matching of pure constraint in lemma!\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("\nshom_match_lemma: bad matching of pure constraint in lemma!\n");
+          }
 #endif
           isErr = 1;
           goto shom_match_lemma;
         }
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_match_lemma: succeds!\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_match_lemma: succeds!\n");
+  }
 #endif
 
 
@@ -2095,25 +2281,25 @@ shom_match_lemma:
 }
 
 /**
- * @brief Check that the graph @p g2 **includes** an unfolding of the 
+ * @brief Check that the graph @p g2 **includes** an unfolding of the
  * predicate @p pid.
- * 
+ *
  * The predicate @p pid has as arguments @p args2.
  * If the matching holds, the procedure computes a set of edges of
  * @p g2 used, in the form of an array of size @p g2->edges,
- * mapping each edge to UNDEFINED_ID or the @p eid1, the identifier 
+ * mapping each edge to UNDEFINED_ID or the @p eid1, the identifier
  * of the original edge in right hand side of the entailment.
- * 
+ *
  * @param g2     the full graph for searching the predicate unfolding
- * @param eid1   the original edge unfolded here 
+ * @param eid1   the original edge unfolded here
  * @param pid    the edge to be matched labeled by predicate @p e1->label
  * @param args   the mapping of @p pid parameters to ids in @p exvars
  * @param lmap   the mapping of var-ids in @p fpred to var-ids in @p exvars
- * @param level  the level of the unfolding to which belongs this matching 
+ * @param level  the level of the unfolding to which belongs this matching
  * @param exvars the environment of existentials vars mapped until now,
  *               it contains vars in addition to @p g2->lvars
  * @param m      the mapping of @p exvars to nodes in @p g2
- * @param df     the additional constraints generated by this matching 
+ * @param df     the additional constraints generated by this matching
  *               over vars mapping of @p exvars to nodes in @p g2
  * @return       the set of edges used by the predicate unfolding,
  *               NULL if the matching does not hold
@@ -2132,7 +2318,7 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
   noll_dform_array *dfnew = noll_dform_array_new ();
   const noll_pred_t *pred = noll_pred_getpred (pid);
 
-  /** 
+  /**
    * Step 0: analyse the kind of rule to be applied depending on the
    *         edges from the LROOT parameter of @p pid.
    */
@@ -2145,8 +2331,11 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
        * The matching res is computed.
        */
 #ifndef NDEBUG
-      NOLL_DEBUG
-        ("\n******Syntactic matching: unfolding recursive rules starts\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG
+          ("\n******Syntactic matching: unfolding recursive rules starts\n");
+      }
 #endif
       assert (pred->def->rec_rules != NULL);
       for (uint_t ri = 0;
@@ -2154,7 +2343,10 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
            ri++)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\n\t\t = try rule %d\n", ri);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\n\t\t = try rule %d\n", ri);
+          }
 #endif
           noll_pred_rule_t *rule_i = noll_vector_at (pred->def->rec_rules,
                                                      ri);
@@ -2171,17 +2363,23 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
                      "\nspen: match the recursive rule of %s...",
                      noll_pred_name (pid));
 #ifndef NDEBUG
-          NOLL_DEBUG ("\n\t\tmap found: ");
-          noll_uid_map_fprint (stdout, res);
-          NOLL_DEBUG ("\n\t\tdf: ");
-          noll_dform_array_fprint (stdout, exvars, df);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\n\t\tmap found: ");
+            noll_uid_map_fprint (stdout, res);
+            NOLL_DEBUG ("\n\t\tdf: ");
+            noll_dform_array_fprint (stdout, exvars, df);
+          }
 #endif
           return res;
         }
       else
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\nrecursive rules from pto node fail!");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\nrecursive rules from pto node fail!");
+          }
 #endif
           ;
         }
@@ -2189,12 +2387,15 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
   assert (noll_vector_size (dfnew) == 0);
 
   /// From root starts an edge, match it exactly or using a lemma
-  /** 
+  /**
    * Step 2: search the edge labeled by @p pid in g2
-   *         at g2->mat[args2[0]] 
+   *         at g2->mat[args2[0]]
    */
 #ifndef NDEBUG
-  NOLL_DEBUG ("\n******Syntactic matching: exact edge starts\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\n******Syntactic matching: exact edge starts\n");
+  }
 #endif
   /// apply to @p args the maping @p m to obtain the edge constraints
   noll_uid_array *args2 = noll_uid_array_new ();
@@ -2226,15 +2427,21 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
             fprintf (stdout, "\nspen: match the atom %s...\n",
                      noll_pred_name (pid));
 #ifndef NDEBUG
-          NOLL_DEBUG ("\n\t\tmap found: ");
-          noll_uid_map_fprint (stdout, res);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\n\t\tmap found: ");
+            noll_uid_map_fprint (stdout, res);
+          }
 #endif
           return res;
         }
       else                      /// (noll_vector_at(used, eid2) != UNDEFINED_ID)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\nMatched an already matched atom: fails!\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\nMatched an already matched atom: fails!\n");
+          }
 #endif
           noll_uid_array_delete (args2);
           noll_dform_array_delete (dfnew);
@@ -2248,20 +2455,29 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
    * The matching res is computed.
    */
 #ifndef NDEBUG
-  NOLL_DEBUG ("\n******Syntactic matching: applying lemma starts\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\n******Syntactic matching: applying lemma starts\n");
+  }
 #endif
   noll_lemma_array *lemmas = noll_lemma_getpred (pid);
   if (lemmas == NULL)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nNo lemma for pred-%d, syntactic matching fails!\n", pid);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nNo lemma for pred-%d, syntactic matching fails!\n", pid);
+      }
 #endif
       return NULL;
     }
   for (uint_t li = 0; li < noll_vector_size (lemmas); li++)
     {
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n\t = try lemma %d\n", li);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n\t = try lemma %d\n", li);
+      }
 #endif
       noll_lemma_t *lemma_i = noll_vector_at (lemmas, li);
       res =
@@ -2276,10 +2492,13 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
               fprintf (stdout, " of %s...", noll_pred_name (pid));
             }
 #ifndef NDEBUG
-          NOLL_DEBUG ("\n\t\tmap found: ");
-          noll_uid_map_fprint (stdout, res);
-          NOLL_DEBUG ("\n\t\tdfnew generated: ");
-          noll_dform_array_fprint (stdout, exvars, dfnew);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\n\t\tmap found: ");
+            noll_uid_map_fprint (stdout, res);
+            NOLL_DEBUG ("\n\t\tdfnew generated: ");
+            noll_dform_array_fprint (stdout, exvars, dfnew);
+          }
 #endif
           noll_dform_array_cup_all (df, dfnew);
           noll_dform_array_delete (dfnew);
@@ -2289,11 +2508,14 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
 
   assert (noll_vector_size (dfnew) == 0);
   /**
-   * Step 2: check the base rules of P. 
+   * Step 2: check the base rules of P.
    * No new environment or matching is generated.
    */
 #ifndef NDEBUG
-  NOLL_DEBUG ("\n******Syntactic matching: unfolding base rules starts\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\n******Syntactic matching: unfolding base rules starts\n");
+  }
 #endif
   assert (pred->def->base_rules != NULL);
   int found = 0;
@@ -2314,8 +2536,11 @@ noll_shom_match_rd (noll_graph_t * g2, uid_t eid1,
                  "\nspen: match the base rule of %s...",
                  noll_pred_name (pid));
 #ifndef NDEBUG
-      NOLL_DEBUG ("\n\t\tmap found: ");
-      noll_uid_map_fprint (stdout, res);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\n\t\tmap found: ");
+        noll_uid_map_fprint (stdout, res);
+      }
 #endif
     }
   noll_dform_array_delete (dfnew);
@@ -2336,15 +2561,21 @@ noll_shom_check_syn (noll_graph_t * g2,
     {
       // special case of definitions with `previous' fields, NYI
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nFail to check entailment: definition NYI\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nFail to check entailment: definition NYI\n");
+      }
 #endif
       return 0;
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_check_syn: Call shom_match_rd for pid-%d with level 0",
-              e1->label);
-  fprintf (stdout, "\nargs2 =");
-  noll_uid_map_fprint (stdout, args2);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_check_syn: Call shom_match_rd for pid-%d with level 0",
+                e1->label);
+    fprintf (stdout, "\nargs2 =");
+    noll_uid_map_fprint (stdout, args2);
+  }
 #endif
 
   /**
@@ -2355,8 +2586,8 @@ noll_shom_check_syn (noll_graph_t * g2,
   noll_lemma_init_pred (pid);
 
   /**
-   * Step 2: initialize the existentials env 
-   * = g2->lvars (i.e., all) 
+   * Step 2: initialize the existentials env
+   * = g2->lvars (i.e., all)
    */
   noll_var_array *exvars = noll_var_array_new ();
   noll_var_array_copy (exvars, g2->lvars);
@@ -2375,19 +2606,22 @@ noll_shom_check_syn (noll_graph_t * g2,
       noll_uid_array_push (args, vi);
     }
 #ifndef NDEBUG
-  NOLL_DEBUG ("\nshom_check_syn: Call shom_match_rd for pid-%d with level 0",
-              e1->label);
-  fprintf (stdout, "\nargs =");
-  noll_uid_map_fprint (stdout, args);
-  fprintf (stdout, "\nexvars =");
-  noll_var_array_fprint (stdout, exvars, "exvars");
-  fprintf (stdout, "\nm =");
-  noll_uid_map_fprint (stdout, m);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("\nshom_check_syn: Call shom_match_rd for pid-%d with level 0",
+                e1->label);
+    fprintf (stdout, "\nargs =");
+    noll_uid_map_fprint (stdout, args);
+    fprintf (stdout, "\nexvars =");
+    noll_var_array_fprint (stdout, exvars, "exvars");
+    fprintf (stdout, "\nm =");
+    noll_uid_map_fprint (stdout, m);
+  }
 #endif
 
   /**
-   * Step 3: Call the function matching the predicate call 
-   * 
+   * Step 3: Call the function matching the predicate call
+   *
    */
   /// it returns the mapped edges of g2 and the generated data constraints
   noll_dform_array *dfn = noll_dform_array_new ();
@@ -2398,7 +2632,7 @@ noll_shom_check_syn (noll_graph_t * g2,
 
   /**
    * Step 4: Check that all edges of g2 are used
-   * 
+   *
    */
   int res = 1;
   if (usedg2 == NULL)
@@ -2413,7 +2647,10 @@ noll_shom_check_syn (noll_graph_t * g2,
       if (noll_vector_at (usedg2, ei2) == UNDEFINED_ID)
         {
 #ifndef NDEBUG
-          NOLL_DEBUG ("\nFailed check: edge %d not used\n", ei2);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("\nFailed check: edge %d not used\n", ei2);
+          }
 #endif
           res = 0;
           goto shom_check_syn_return;
@@ -2422,9 +2659,9 @@ noll_shom_check_syn (noll_graph_t * g2,
 
   /**
    * Step 5: Check the data constraints
-   * 
+   *
    */
-  /// i.e., g2->data (isDataComplete) 
+  /// i.e., g2->data (isDataComplete)
   ///         => exists exvars. [dfn /\ g1->data]m o g2->var2node-1
   /// build the mapping of vars in exvars to vars in g2->lvars
   noll_uid_array *mg2 = noll_uid_array_new ();
@@ -2439,15 +2676,21 @@ noll_shom_check_syn (noll_graph_t * g2,
       noll_uid_array_push (mg2, vi);
     }
 #ifndef NDEBUG
-  fprintf (stdout, "dfom_array_compose: \n\t f1: ");
-  noll_dform_array_fprint (stdout, exvars, dfn);
-  fprintf (stdout, "\n\t f2: ");
-  noll_dform_array_fprint (stdout, exvars, df1);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "dfom_array_compose: \n\t f1: ");
+    noll_dform_array_fprint (stdout, exvars, dfn);
+    fprintf (stdout, "\n\t f2: ");
+    noll_dform_array_fprint (stdout, exvars, df1);
+  }
 #endif
   noll_dform_array *df = noll_dform_array_compose (mg2, dfn, df1);
 #ifndef NDEBUG
-  fprintf (stdout, "dfom_array_compose: returns ");
-  noll_dform_array_fprint (stdout, exvars, df);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "dfom_array_compose: returns ");
+    noll_dform_array_fprint (stdout, exvars, df);
+  }
 #endif
   res = noll_dform_array_check_entl (g2->lvars, g2->data, exvars, mg2, df);
   noll_dform_array_delete (df);
@@ -2545,7 +2788,10 @@ noll_graph_array *noll_shom_build_rd
           ls_hom = NULL;
           *res = 0;
 #ifndef NDEBUG
-          fprintf (stdout, "\nshom_ls: fails (select)!\n");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "\nshom_ls: fails (select)!\n");
+          }
 #endif
           if (noll_option_is_diag () == true)
             {
@@ -2578,7 +2824,10 @@ noll_graph_array *noll_shom_build_rd
           ls_hom = NULL;
           *res = 0;
 #ifndef NDEBUG
-          fprintf (stdout, "\nshom_ls: fails (well-formedness)!\n");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "\nshom_ls: fails (well-formedness)!\n");
+          }
 #endif
           if (noll_option_is_diag () == true)
             {
@@ -2626,7 +2875,10 @@ noll_graph_array *noll_shom_build_rd
           ls_hom = NULL;
           // *res is set above
 #ifndef NDEBUG
-          fprintf (stdout, "\nshom_ls: fails (code %d)!\n", *res);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "\nshom_ls: fails (code %d)!\n", *res);
+          }
 #endif
           if (noll_option_is_diag () == true)
             {

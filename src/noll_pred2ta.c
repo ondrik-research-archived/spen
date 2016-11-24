@@ -18,7 +18,7 @@
 
 /**
  * Defines translation between heap graph to tree automata.
- * Special cases are dealt here, @see noll_pred2ta_gen.c for 
+ * Special cases are dealt here, @see noll_pred2ta_gen.c for
  * the general case.
  */
 
@@ -2613,12 +2613,15 @@ noll_edge2ta (const noll_edge_t * edge)
   assert (NULL != pred->def);
   assert (noll_vector_size (edge->args) == pred->def->fargs);
 
-  NOLL_DEBUG
-    ("********************************************************************************\n");
-  NOLL_DEBUG
-    ("*                                 EDGE -> TA                                   *\n");
-  NOLL_DEBUG
-    ("********************************************************************************\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG
+      ("********************************************************************************\n");
+    NOLL_DEBUG
+      ("*                                 EDGE -> TA                                   *\n");
+    NOLL_DEBUG
+      ("********************************************************************************\n");
+  }
 
   vata_ta_t *ta = NULL;
   if ((ta = vata_create_ta ()) == NULL)
@@ -2626,33 +2629,47 @@ noll_edge2ta (const noll_edge_t * edge)
       return NULL;
     }
 
-  NOLL_DEBUG ("Edge: args = %u\n", noll_vector_size (edge->args));
-  NOLL_DEBUG ("  args[0] = %u\n", noll_vector_at (edge->args, 0));
-  NOLL_DEBUG ("  args[1] = %u\n", noll_vector_at (edge->args, 1));
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Edge: args = %u\n", noll_vector_size (edge->args));
+    NOLL_DEBUG ("  args[0] = %u\n", noll_vector_at (edge->args, 0));
+    NOLL_DEBUG ("  args[1] = %u\n", noll_vector_at (edge->args, 1));
 
-  NOLL_DEBUG ("Exposing the predicate structure\n");
-  NOLL_DEBUG ("Name: %s\n", pred->pname);
+    NOLL_DEBUG ("Exposing the predicate structure\n");
+    NOLL_DEBUG ("Name: %s\n", pred->pname);
+  }
   const noll_pred_binding_t *def = pred->def;
   assert (NULL != def);
-  NOLL_DEBUG ("definition:\n");
-  NOLL_DEBUG ("  arguments: %zu\n", def->pargs);
-  NOLL_DEBUG ("  formal arguments: %u\n", def->fargs);
+
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("definition:\n");
+    NOLL_DEBUG ("  arguments: %zu\n", def->pargs);
+    NOLL_DEBUG ("  formal arguments: %u\n", def->fargs);
+  }
 
   assert (NULL != def->sigma_0);
-  NOLL_DEBUG ("Sigma_0 kind: %u\n", def->sigma_0->kind);
-  NOLL_DEBUG ("Sigma_0 is precise: %s\n",
-              def->sigma_0->is_precise ? "true" : "false");
 
-  //MS: changed to support nll!
-  if (NULL == def->sigma_1)
-    NOLL_DEBUG ("Sigma_1: empty\n");
-  else
-    {
-      NOLL_DEBUG ("Sigma_1: predicate with nesting\n");
-      NOLL_DEBUG ("Sigma_1 kind: %u\n", def->sigma_1->kind);
-      NOLL_DEBUG ("Sigma_1 is precise: %s\n",
-                  def->sigma_1->is_precise ? "true" : "false");
-    }
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Sigma_0 kind: %u\n", def->sigma_0->kind);
+    NOLL_DEBUG ("Sigma_0 is precise: %s\n",
+                def->sigma_0->is_precise ? "true" : "false");
+  }
+
+  if (noll_option_is_diag())
+  {
+    //MS: changed to support nll!
+    if (NULL == def->sigma_1)
+      NOLL_DEBUG ("Sigma_1: empty\n");
+    else
+      {
+        NOLL_DEBUG ("Sigma_1: predicate with nesting\n");
+        NOLL_DEBUG ("Sigma_1 kind: %u\n", def->sigma_1->kind);
+        NOLL_DEBUG ("Sigma_1 is precise: %s\n",
+                    def->sigma_1->is_precise ? "true" : "false");
+      }
+  }
 
   if ((0 == strcmp (pred->pname, "lso")) || (0 == strcmp (pred->pname, "ls")))
     {                           // this is the "ls" predicate
@@ -2688,18 +2705,23 @@ noll_edge2ta (const noll_edge_t * edge)
       ta = noll_edge2ta_gen (edge);
       if (NULL == ta)
         {
-          NOLL_DEBUG ("ERROR: translation for predicate %s failed!\n",
-                      pred->pname);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("ERROR: translation for predicate %s failed!\n",
+                        pred->pname);
+          }
           assert (false);
         }
     }
 
-  NOLL_DEBUG ("Generated TA for edge:\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Generated TA for edge:\n");
 #ifndef NDEBUG
-  vata_print_ta (ta);
+    vata_print_ta (ta);
 #endif
-  NOLL_DEBUG ("*** END EDGE -> TA\n");
-
+    NOLL_DEBUG ("*** END EDGE -> TA\n");
+  }
 
   return ta;
 }

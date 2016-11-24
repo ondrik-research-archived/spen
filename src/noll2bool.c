@@ -279,8 +279,11 @@ bool_abstr_space (noll_form_t * form, FILE * out)
   if (f->kind == NOLL_SPACE_PTO)
     {
 #ifndef NDEBUG
-      fprintf (stdout, "=================pto abstraction\n");
-      fflush (stdout);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "=================pto abstraction\n");
+        fflush (stdout);
+      }
 #endif
       uint_t source = f->m.pto.sid;
       noll_uid_array *flds = f->m.pto.fields;
@@ -288,9 +291,12 @@ bool_abstr_space (noll_form_t * form, FILE * out)
       for (uint_t i = 0; i < NOLL_VECTOR_SIZE (flds); i++)
         {
 #ifndef NDEBUG
-          fprintf (stdout, "=================pto abstraction %d din %d\n ",
-                   i, index_pto);
-          fflush (stdout);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "=================pto abstraction %d din %d\n ",
+                     i, index_pto);
+            fflush (stdout);
+          }
 #endif
           fprintf (out, "%d 0\n", encode_pto (source,
                                               NOLL_VECTOR_ARRAY (dests)[i],
@@ -310,9 +316,12 @@ bool_abstr_space (noll_form_t * form, FILE * out)
       uint_t pid = f->m.ls.pid;
       uint_t sid = f->m.ls.sid;
 #ifndef NDEBUG
-      fprintf (stdout, "=================pred abstraction P%d_alpha%d\n",
-               pid, sid);
-      fflush (stdout);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "=================pred abstraction P%d_alpha%d\n",
+                 pid, sid);
+        fflush (stdout);
+      }
 #endif
       int var = encode_ls (&(f->m.ls));
       uint_t source = noll_vector_at (f->m.ls.args, 0);
@@ -376,7 +385,10 @@ bool_abstr_space (noll_form_t * form, FILE * out)
           free (temp);
         }
 #ifndef NDEBUG
-      fprintf (stdout, "***********begin*************%d\n", nb_clauses);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "***********begin*************%d\n", nb_clauses);
+      }
 #endif
       for (uint_t i = 0; i < noll_vector_size (f->m.sep); i++)
         for (int j = 0; j < index_pto + index_ls; j++)
@@ -395,8 +407,11 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                         {
                           // ls with ls
 #ifndef NDEBUG
-                          fprintf (stdout, "ls %d with ls %d\n",
-                                   j - index_pto, t - index_pto);
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout, "ls %d with ls %d\n",
+                                     j - index_pto, t - index_pto);
+                          }
 #endif
                           struct noll_ls_t *atom1_ls = var_ls[j
                                                               -
@@ -407,13 +422,16 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                           uint_t sval1 = atom1_ls->sid;
                           uint_t sval2 = atom2_ls->sid;
 #ifndef NDEBUG
-                          /* printf("index %s with index %s\n",
-                             noll_vector_at(form->svars,sval1)->vname,
-                             noll_vector_at(form->svars,sval2)->vname); */
-                          printf ("index %d with index %d\n", sval1, sval2);
-                          noll_var_array_fprint (stdout, form->lvars,
-                                                 "lvars");
-                          fflush (stdout);
+                          if (noll_option_is_diag())
+                          {
+                            /* printf("index %s with index %s\n",
+                               noll_vector_at(form->svars,sval1)->vname,
+                               noll_vector_at(form->svars,sval2)->vname); */
+                            printf ("index %d with index %d\n", sval1, sval2);
+                            noll_var_array_fprint (stdout, form->lvars,
+                                                   "lvars");
+                            fflush (stdout);
+                          }
 #endif
                           // for two strongly separated predicates
                           //   there exists no location which belongs to both of them
@@ -437,17 +455,20 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                                    encode_eq (source1, dest1),
                                    encode_eq (source2, dest2));
 #ifndef NDEBUG
-                          printf ("if %s=%s then %s=%s or %s=%s\n",
-                                  noll_vector_at (form->lvars,
-                                                  source1)->vname,
-                                  noll_vector_at (form->lvars,
-                                                  source2)->vname,
-                                  noll_vector_at (form->lvars,
-                                                  source1)->vname,
-                                  noll_vector_at (form->lvars, dest1)->vname,
-                                  noll_vector_at (form->lvars,
-                                                  source2)->vname,
-                                  noll_vector_at (form->lvars, dest2)->vname);
+                          if (noll_option_is_diag())
+                          {
+                            printf ("if %s=%s then %s=%s or %s=%s\n",
+                                    noll_vector_at (form->lvars,
+                                                    source1)->vname,
+                                    noll_vector_at (form->lvars,
+                                                    source2)->vname,
+                                    noll_vector_at (form->lvars,
+                                                    source1)->vname,
+                                    noll_vector_at (form->lvars, dest1)->vname,
+                                    noll_vector_at (form->lvars,
+                                                    source2)->vname,
+                                    noll_vector_at (form->lvars, dest2)->vname);
+                          }
 #endif
 
                           nb_clauses++;
@@ -458,8 +479,11 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                         {
                           // ls with pto
 #ifndef NDEBUG
-                          fprintf (stdout, "ls %d with pto %d\n",
-                                   j - index_pto, t);
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout, "ls %d with pto %d\n",
+                                     j - index_pto, t);
+                          }
 #endif
                           struct noll_ls_t *atom1_ls = var_ls[j
                                                               -
@@ -481,8 +505,11 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                               // F_*(pto(src_2,dst_2) bvari, ls(in_1,out_1) bvarj)
                               // = [src_2 = out_1] ==> - [ls(in_1,out_1)]
 #ifndef NDEBUG
-                              fprintf (stdout, "ls %d with pto %d\n",
-                                       j - index_pto, t);
+                              if (noll_option_is_diag())
+                              {
+                                fprintf (stdout, "ls %d with pto %d\n",
+                                         j - index_pto, t);
+                              }
 #endif
                               uint_t var_eq_2_1 = encode_eq (source2, dest1);
                               uint_t prv1 =
@@ -508,7 +535,10 @@ bool_abstr_space (noll_form_t * form, FILE * out)
                       {
                         //pto with pto
 #ifndef NDEBUG
-                        fprintf (stdout, "pto %d with pto %d\n", j, t);
+                        if (noll_option_is_diag())
+                        {
+                          fprintf (stdout, "pto %d with pto %d\n", j, t);
+                        }
 #endif
                         struct noll_pto_t *atom1_pto = var_pto[j].points_to;
                         struct noll_pto_t *atom2_pto = var_pto[t].points_to;
@@ -521,13 +551,19 @@ bool_abstr_space (noll_form_t * form, FILE * out)
               }
           }
 #ifndef NDEBUG
-      fprintf (stdout, "************end************%d\n", nb_clauses);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "************end************%d\n", nb_clauses);
+      }
 #endif
     }
   else
     {
 #ifndef NDEBUG
-      printf ("Error: unknown type of space formula");
+      if (noll_option_is_diag())
+      {
+        printf ("Error: unknown type of space formula");
+      }
 #endif
     }
   return nb_clauses;
@@ -567,8 +603,11 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
             if (t3 != r3)
               {
 #ifndef NDEBUG
-                fprintf (stdout, "Var %s is not in %s\n", t1->vname,
-                         r1->vname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "Var %s is not in %s\n", t1->vname,
+                           r1->vname);
+                }
 #endif
                 fprintf (out, "-%d 0\n", encode_member (i, j));
                 nb_clauses++;
@@ -579,8 +618,11 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
             if (!type_in_predicate_of_svar (t3, j))
               {
 #ifndef NDEBUG
-                fprintf (stdout, "Var %s is not in %s\n", t1->vname,
-                         r1->vname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "Var %s is not in %s\n", t1->vname,
+                           r1->vname);
+                }
 #endif
                 fprintf (out, "-%d 0\n", encode_member (i, j));
                 nb_clauses++;
@@ -602,9 +644,12 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
           if (type_in_predicate_of_svar (t3, svar))
             {
 #ifndef NDEBUG
-              fprintf (stdout, "Var %s in %s implies %s\n", t1->vname,
-                       noll_vector_at (form->svars, svar)->vname,
-                       noll_pred_getpred (var_ls[i].predicate->pid)->pname);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "Var %s in %s implies %s\n", t1->vname,
+                         noll_vector_at (form->svars, svar)->vname,
+                         noll_pred_getpred (var_ls[i].predicate->pid)->pname);
+              }
 #endif
               fprintf (out, "-%d %d 0\n", encode_member (j, svar),
                        var_ls[i].index);
@@ -613,7 +658,10 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
         }
     }
 #ifndef NDEBUG
-  fprintf (stdout, "*************************\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "*************************\n");
+  }
 #endif
 
   /*
@@ -674,12 +722,15 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
   for (int i = 0; i < index_ls; i++)
     {
 #ifndef NDEBUG
-      fprintf (stdout, "predicate %s implies %s in %s\n",
-               noll_pred_getpred (var_ls[i].predicate->pid)->pname,
-               noll_vector_at (form->lvars,
-                               noll_vector_at (var_ls[i].predicate->args,
-                                               0))->vname,
-               noll_vector_at (form->svars, var_ls[i].predicate->sid)->vname);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "predicate %s implies %s in %s\n",
+                 noll_pred_getpred (var_ls[i].predicate->pid)->pname,
+                 noll_vector_at (form->lvars,
+                                 noll_vector_at (var_ls[i].predicate->args,
+                                                 0))->vname,
+                 noll_vector_at (form->svars, var_ls[i].predicate->sid)->vname);
+      }
 #endif
       fprintf (out, "-%d %d 0\n", var_ls[i].index,
                encode_member (NOLL_VECTOR_ARRAY (var_ls[i].predicate->args)
@@ -691,8 +742,11 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
    * membership implies a disjunction of points-to with no destination
    */
 #ifndef NDEBUG
-  fprintf (stdout,
-           "///////////////////// Third part of F_in  ///////////////////////\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "///////////////////// Third part of F_in  ///////////////////////\n");
+  }
 #endif
   for (uint_t i = 0; i < noll_vector_size (form->lvars); i++)
     for (uint_t j = 0; j < noll_vector_size (form->svars); j++)
@@ -745,18 +799,24 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
                           {
                             fprintf (out, "-%d ", encode_member (i, j));
 #ifndef NDEBUG
-                            fprintf (stdout, "%s in %s implies ",
-                                     noll_vector_at (form->lvars, i)->vname,
-                                     noll_vector_at (form->svars, j)->vname);
+                            if (noll_option_is_diag())
+                            {
+                              fprintf (stdout, "%s in %s implies ",
+                                       noll_vector_at (form->lvars, i)->vname,
+                                       noll_vector_at (form->svars, j)->vname);
+                            }
 #endif
                             flag = 0;
                           }
                         fprintf (out, "%d ", encode_pto_nodest (i, fid, j));
 #ifndef NDEBUG
-                        fprintf (stdout, "%s src_of %s in %s or ",
-                                 noll_vector_at (form->lvars, i)->vname,
-                                 noll_vector_at (fields_array, fid)->name,
-                                 noll_vector_at (form->svars, j)->vname);
+                        if (noll_option_is_diag())
+                        {
+                          fprintf (stdout, "%s src_of %s in %s or ",
+                                   noll_vector_at (form->lvars, i)->vname,
+                                   noll_vector_at (fields_array, fid)->name,
+                                   noll_vector_at (form->svars, j)->vname);
+                        }
 #endif
                       }
                   }
@@ -766,7 +826,10 @@ bool_abstr_membership (noll_form_t * form, FILE * out)
 
                 fprintf (out, "0\n");
 #ifndef NDEBUG
-                fprintf (stdout, "\n");
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "\n");
+                }
 #endif
                 nb_clauses++;
               }
@@ -861,9 +924,12 @@ bool_abstr_det (noll_form_t * form, FILE * out)
 
   //pairs of points-to
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************1st step of Det: pto with pto (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************1st step of Det: pto with pto (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   for (int i = 0; i < index_pto; i++)
     for (int j = i + 1; j < index_pto; j++)
@@ -873,23 +939,26 @@ bool_abstr_det (noll_form_t * form, FILE * out)
         if (f1 == f2)
           {
 #ifndef NDEBUG
-            fprintf (stdout, "Eq %s = %s implies 1->%s,%s xor 2->field,%s\n",
-                     noll_vector_at (form->lvars,
-                                     var_pto[i].points_to->sid)->vname,
-                     noll_vector_at (form->lvars,
-                                     var_pto[j].points_to->sid)->vname,
-                     noll_vector_at (fields_array,
-                                     noll_vector_at (var_pto[i].
-                                                     points_to->fields,
-                                                     0))->name,
-                     noll_vector_at (form->lvars,
-                                     noll_vector_at (var_pto[i].
-                                                     points_to->dest,
-                                                     0))->vname,
-                     noll_vector_at (form->lvars,
-                                     noll_vector_at (var_pto[j].
-                                                     points_to->dest,
-                                                     0))->vname);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "Eq %s = %s implies 1->%s,%s xor 2->field,%s\n",
+                       noll_vector_at (form->lvars,
+                                       var_pto[i].points_to->sid)->vname,
+                       noll_vector_at (form->lvars,
+                                       var_pto[j].points_to->sid)->vname,
+                       noll_vector_at (fields_array,
+                                       noll_vector_at (var_pto[i].
+                                                       points_to->fields,
+                                                       0))->name,
+                       noll_vector_at (form->lvars,
+                                       noll_vector_at (var_pto[i].
+                                                       points_to->dest,
+                                                       0))->vname,
+                       noll_vector_at (form->lvars,
+                                       noll_vector_at (var_pto[j].
+                                                       points_to->dest,
+                                                       0))->vname);
+            }
 #endif
             fprintf (out, "-%d %d %d 0\n",
                      encode_eq (var_pto[i].points_to->sid,
@@ -903,16 +972,22 @@ bool_abstr_det (noll_form_t * form, FILE * out)
           }
       }
 #ifndef NDEBUG
-  fprintf (stdout,
-           "******************************************************\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "******************************************************\n");
+  }
 #endif
   //printf("CCC %d\n",nb_clauses);
 
   //pairs of points-to with no destination
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************2nd step of Det: pto_nodest with pto_nodest (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************2nd step of Det: pto_nodest with pto_nodest (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   for (uint_t i1 = 0; i1 < noll_vector_size (form->lvars); i1++)
     for (uint_t i2 = i1 + 1; i2 < noll_vector_size (form->lvars); i2++)
@@ -935,14 +1010,17 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                         && type_in_predicate_of_svar (var1_type, s2) == 1)
                       {
 #ifndef NDEBUG
-                        fprintf (stdout,
-                                 "Eq %s=%s implica not(1,%s,%s) or not(2,%s,%s)\n",
-                                 noll_vector_at (form->lvars, i1)->vname,
-                                 noll_vector_at (form->lvars, i2)->vname,
-                                 noll_vector_at (fields_array, j)->name,
-                                 noll_vector_at (form->svars, s1)->vname,
-                                 noll_vector_at (fields_array, j)->name,
-                                 noll_vector_at (form->svars, s2)->vname);
+                        if (noll_option_is_diag())
+                        {
+                          fprintf (stdout,
+                                   "Eq %s=%s implica not(1,%s,%s) or not(2,%s,%s)\n",
+                                   noll_vector_at (form->lvars, i1)->vname,
+                                   noll_vector_at (form->lvars, i2)->vname,
+                                   noll_vector_at (fields_array, j)->name,
+                                   noll_vector_at (form->svars, s1)->vname,
+                                   noll_vector_at (fields_array, j)->name,
+                                   noll_vector_at (form->svars, s2)->vname);
+                        }
 #endif
 
                         fprintf (out, "-%d -%d -%d 0\n", encode_eq (i1,
@@ -955,15 +1033,21 @@ bool_abstr_det (noll_form_t * form, FILE * out)
             }
         }
 #ifndef NDEBUG
-  fprintf (stdout,
-           "******************************************************\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "******************************************************\n");
+  }
 #endif
 
   //pairs of points-to and points-to with no destination
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************3rd step of Det: pto with pto_nodest (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************3rd step of Det: pto with pto_nodest (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   for (int i1 = 0; i1 < index_pto; i1++)
     for (uint_t i2 = 0; i2 < form->pure->size; i2++)
@@ -983,21 +1067,24 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                 && (noll_vector_at (var_pto[i1].points_to->fields, 0) == j))
               {                 //maybe:var_pto[i1].points_to->sid != i2 &&
 #ifndef NDEBUG
-                fprintf (stdout,
-                         "Eq %s=%s and 1->%s,%s implica not (2,%s,%s)\n",
-                         noll_vector_at (form->lvars,
-                                         var_pto[i1].points_to->sid)->vname,
-                         noll_vector_at (form->lvars, i2)->vname,
-                         noll_vector_at (fields_array,
-                                         noll_vector_at (var_pto
-                                                         [i1].points_to->
-                                                         fields, 0))->name,
-                         noll_vector_at (form->lvars,
-                                         noll_vector_at (var_pto
-                                                         [i1].points_to->dest,
-                                                         0))->vname,
-                         noll_vector_at (fields_array, j)->name,
-                         noll_vector_at (form->svars, si)->vname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout,
+                           "Eq %s=%s and 1->%s,%s implica not (2,%s,%s)\n",
+                           noll_vector_at (form->lvars,
+                                           var_pto[i1].points_to->sid)->vname,
+                           noll_vector_at (form->lvars, i2)->vname,
+                           noll_vector_at (fields_array,
+                                           noll_vector_at (var_pto
+                                                           [i1].points_to->
+                                                           fields, 0))->name,
+                           noll_vector_at (form->lvars,
+                                           noll_vector_at (var_pto
+                                                           [i1].points_to->dest,
+                                                           0))->vname,
+                           noll_vector_at (fields_array, j)->name,
+                           noll_vector_at (form->svars, si)->vname);
+                }
 #endif
                 fprintf (out, "-%d -%d -%d 0\n",
                          encode_eq (var_pto[i1].points_to->sid, i2),
@@ -1007,15 +1094,21 @@ bool_abstr_det (noll_form_t * form, FILE * out)
               }
           }
 #ifndef NDEBUG
-  fprintf (stdout,
-           "******************************************************\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "******************************************************\n");
+  }
 #endif
 
   //pairs of points-to and ls predicates (maybe a problem)
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************4th step of Det: pto with pred (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************4th step of Det: pto with pred (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   for (int i = 0; i < index_pto; i++)
     for (int j = 0; j < index_ls; j++)
@@ -1040,12 +1133,15 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                 if (type_lvar == type_k)
                   {
 #ifndef NDEBUG
-                    fprintf (stdout,
-                             "Var: %s, Field: %s, Predicate: %s, SVar: %s\n",
-                             noll_vector_at (form->lvars, lvar)->vname,
-                             noll_vector_at (fields_array, field)->name,
-                             noll_pred_getpred (pid)->pname,
-                             noll_vector_at (form->svars, svar)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout,
+                               "Var: %s, Field: %s, Predicate: %s, SVar: %s\n",
+                               noll_vector_at (form->lvars, lvar)->vname,
+                               noll_vector_at (fields_array, field)->name,
+                               noll_pred_getpred (pid)->pname,
+                               noll_vector_at (form->svars, svar)->vname);
+                    }
 #endif
                     fprintf (out, "-%d -%d %d %d 0\n", encode_eq (lvar, k),
                              encode_member (k, svar), var_ls[j].index,
@@ -1135,8 +1231,11 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                 common_fields[i][j] = 1;
                 common_fields[j][i] = 1;
 #ifndef NDEBUG
-                fprintf (stdout, "%s has common fields with %s\n",
-                         pi->pname, pj->pname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "%s has common fields with %s\n",
+                           pi->pname, pj->pname);
+                }
 #endif
                 break;
               }
@@ -1145,9 +1244,12 @@ bool_abstr_det (noll_form_t * form, FILE * out)
 
   //pairs of ls predicates
 #ifndef NDEBUG
-  fprintf (stdout,
-           "*******************5th step of Det: pred with pred (last %d)*******************\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "*******************5th step of Det: pred with pred (last %d)*******************\n",
+             nb_clauses);
+  }
 #endif
   for (int i = 0; i < index_ls; i++)
     for (int j = i + 1; j < index_ls; j++)
@@ -1179,12 +1281,15 @@ bool_abstr_det (noll_form_t * form, FILE * out)
                                         vty->args, 0)))
                   {
 #ifndef NDEBUG
-                    fprintf (stdout,
-                             "Pred1: %s, Pred2: %s, Var1: %s, Var2: %s\n",
-                             noll_pred_getpred (pred1)->pname,
-                             noll_pred_getpred (pred2)->pname,
-                             noll_vector_at (form->lvars, k)->vname,
-                             noll_vector_at (form->lvars, t)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout,
+                               "Pred1: %s, Pred2: %s, Var1: %s, Var2: %s\n",
+                               noll_pred_getpred (pred1)->pname,
+                               noll_pred_getpred (pred2)->pname,
+                               noll_vector_at (form->lvars, k)->vname,
+                               noll_vector_at (form->lvars, t)->vname);
+                    }
 #endif
                     /*fprintf(out, "-%d -%d -%d %d %d 0\n",
                        encode_member(k, svar1), encode_member(t,
@@ -1223,9 +1328,12 @@ bool_abstr_share_var_in_sterm (FILE * out, noll_form_t * form, uint_t vi,
           && (ty_vi == noll_var_record (form->lvars, term->lvar)))
         {
 #ifndef NDEBUG
-          fprintf (stdout, "%s = %s ",
-                   noll_vector_at (form->lvars, vi)->vname,
-                   noll_vector_at (form->lvars, term->lvar)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "%s = %s ",
+                     noll_vector_at (form->lvars, vi)->vname,
+                     noll_vector_at (form->lvars, term->lvar)->vname);
+          }
 #endif
           fprintf (out, "%d ", encode_eq (vi, term->lvar));
         }
@@ -1233,9 +1341,12 @@ bool_abstr_share_var_in_sterm (FILE * out, noll_form_t * form, uint_t vi,
                && type_in_predicate_of_svar (ty_vi, term->svar))
         {
 #ifndef NDEBUG
-          fprintf (stdout, "%s in %s ",
-                   noll_vector_at (form->lvars, vi)->vname,
-                   noll_vector_at (form->svars, term->svar)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "%s in %s ",
+                     noll_vector_at (form->lvars, vi)->vname,
+                     noll_vector_at (form->svars, term->svar)->vname);
+          }
 #endif
           fprintf (out, "%d ", encode_member (vi, term->svar));
         }
@@ -1244,9 +1355,12 @@ bool_abstr_share_var_in_sterm (FILE * out, noll_form_t * form, uint_t vi,
                && (ty_vi == noll_var_record (form->lvars, term->lvar)))
         {
 #ifndef NDEBUG
-          fprintf (stdout, "%s in %s ",
-                   noll_vector_at (form->lvars, vi)->vname,
-                   noll_vector_at (form->svars, term->svar)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "%s in %s ",
+                     noll_vector_at (form->lvars, vi)->vname,
+                     noll_vector_at (form->svars, term->svar)->vname);
+          }
 #endif
           fprintf (out, "%d ", encode_member (vi, term->svar));
         }
@@ -1254,7 +1368,10 @@ bool_abstr_share_var_in_sterm (FILE * out, noll_form_t * form, uint_t vi,
         {
           // this term is not useful, ignore it
 #ifndef NDEBUG
-          fprintf (stdout, "nothing ");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "nothing ");
+          }
 #endif
           continue;
         }
@@ -1325,9 +1442,12 @@ bool_abstr_share (noll_form_t * form, FILE * out)
                   {
                     // projection also dealt
 #ifndef NDEBUG
-                    fprintf (stdout, "++++++ %s not in %s\n ",
-                             noll_vector_at (form->lvars, lvar)->vname,
-                             noll_vector_at (form->svars, ti->svar)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "++++++ %s not in %s\n ",
+                               noll_vector_at (form->lvars, lvar)->vname,
+                               noll_vector_at (form->svars, ti->svar)->vname);
+                    }
 #endif
                     fprintf (out, "-%d 0\n", encode_member (lvar, ti->svar));
                     nb_clauses++;
@@ -1335,9 +1455,12 @@ bool_abstr_share (noll_form_t * form, FILE * out)
                 else
                   {
 #ifndef NDEBUG
-                    fprintf (stdout, "++++++ %s != %s\n ",
-                             noll_vector_at (form->lvars, lvar)->vname,
-                             noll_vector_at (form->lvars, ti->lvar)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "++++++ %s != %s\n ",
+                               noll_vector_at (form->lvars, lvar)->vname,
+                               noll_vector_at (form->lvars, ti->lvar)->vname);
+                    }
 #endif
                     fprintf (out, "-%d 0\n", encode_eq (lvar, ti->lvar));
                     nb_clauses++;
@@ -1348,9 +1471,12 @@ bool_abstr_share (noll_form_t * form, FILE * out)
         default:
           {                     // case inclusion
 #ifndef NDEBUG
-            fprintf (stdout, "noll2bool: share atom");
-            noll_share_atom_fprint (stdout, form->lvars, form->svars, atom);
-            fprintf (stdout, "\n");
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "noll2bool: share atom");
+              noll_share_atom_fprint (stdout, form->lvars, form->svars, atom);
+              fprintf (stdout, "\n");
+            }
 #endif
             assert (atom->t_left->kind >= NOLL_STERM_SVAR);
             uint_t left_svar = atom->t_left->svar;
@@ -1373,9 +1499,12 @@ bool_abstr_share (noll_form_t * form, FILE * out)
                   continue;
                 // here, vi and left_svar have compatible types
 #ifndef NDEBUG
-                fprintf (stdout, "++++++ %s in %s implies ",
-                         noll_vector_at (form->lvars, vi)->vname,
-                         noll_vector_at (form->svars, left_svar)->vname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "++++++ %s in %s implies ",
+                           noll_vector_at (form->lvars, vi)->vname,
+                           noll_vector_at (form->svars, left_svar)->vname);
+                }
 #endif
                 // print \neg x \in \alpha_1
                 fprintf (out, "-%d ", encode_member (vi, left_svar));
@@ -1384,7 +1513,10 @@ bool_abstr_share (noll_form_t * form, FILE * out)
                 // end clause
                 fprintf (out, "0\n");
 #ifndef NDEBUG
-                fprintf (stdout, " +++++++++++++++++++\n");
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, " +++++++++++++++++++\n");
+                }
 #endif
                 nb_clauses++;
               }
@@ -1411,7 +1543,10 @@ bool_abstr_share (noll_form_t * form, FILE * out)
                 // if [pi ...] true then
                 fprintf (out, "-%d ", var_ls[pi].index);
 #ifndef NDEBUG
-                fprintf (stdout, "++++++ pred-%d implies ", pi);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "++++++ pred-%d implies ", pi);
+                }
 #endif
                 // print disjunction for each term of t_right
                 bool_abstr_share_var_in_sterm (out, form, source,
@@ -1419,7 +1554,10 @@ bool_abstr_share (noll_form_t * form, FILE * out)
                 // end clause
                 fprintf (out, "0\n");
 #ifndef NDEBUG
-                fprintf (stdout, " +++++++++++++++++++\n");
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, " +++++++++++++++++++\n");
+                }
 #endif
                 nb_clauses++;
               }
@@ -1522,27 +1660,42 @@ write_bool_abstr (noll_form_t * form, char *fname, int *nbvar, int *nbclauses)
   int nb_clauses = 0;
   nb_clauses += bool_abstr_pure (form, out);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F(Pi) and F_eq = %d\n", nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F(Pi) and F_eq = %d\n", nb_clauses);
+  }
 #endif
   nb_clauses += bool_abstr_space (form, out);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F(Pi) and F_eq and F(Sigma) = %d\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F(Pi) and F_eq and F(Sigma) = %d\n",
+             nb_clauses);
+  }
 #endif
   nb_clauses += bool_abstr_membership (form, out);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for F(Pi) and F_eq and F(Sigma) and F_in = %d\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for F(Pi) and F_eq and F(Sigma) and F_in = %d\n",
+             nb_clauses);
+  }
 #endif
   nb_clauses += bool_abstr_det (form, out);
 #ifndef NDEBUG
-  fprintf (stdout,
-           "Clauses for F(Pi) and F_eq and F(Sigma) and F_in and F_det = %d\n",
-           nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "Clauses for F(Pi) and F_eq and F(Sigma) and F_in and F_det = %d\n",
+             nb_clauses);
+  }
 #endif
   nb_clauses += bool_abstr_share (form, out);
 #ifndef NDEBUG
-  fprintf (stdout, "Clauses for the final formulae = %d\n", nb_clauses);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Clauses for the final formulae = %d\n", nb_clauses);
+  }
 #endif
   fclose (out);
 
@@ -1584,8 +1737,11 @@ test_in_equality (uint_t x, uint_t y, noll_pure_op_t oper, int nbv, int nbc,
   out = fopen (pre_fname, "w");
   fprintf (out, "p cnf %d %d\n", max - 1, nbc + 1);
 #ifndef NDEBUG
-  fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n", max - 1,
-           nbc + 1);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n", max - 1,
+             nbc + 1);
+  }
 #endif
   free (pre_fname);
   fclose (out);
@@ -1670,7 +1826,10 @@ test_satisfiability (int nbv, int nbc, char *fname)
   FILE *out = fopen (fname_pre, "w");
   fprintf (out, "p cnf %d %d\n", nbv, nbc);
 #ifndef NDEBUG
-  fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n", nbv, nbc);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "---- minisat query prefix: p cnf %d %d\n", nbv, nbc);
+  }
 #endif
   fclose (out);
   free (fname_pre);
@@ -1766,8 +1925,11 @@ normalize (noll_form_t * form, char *fname)
     for (uint_t j = i + 1; j < form->pure->size; j++)
       {
 #ifndef NDEBUG
-        fprintf (stdout, "Iteration %d %d\n", i, j);
-        fflush (stdout);
+        if (noll_option_is_diag())
+        {
+          fprintf (stdout, "Iteration %d %d\n", i, j);
+          fflush (stdout);
+        }
 #endif
         if ((form->pure->m[i][j - i] != NOLL_PURE_EQ)
             && (form->pure->m[i][j - i] != NOLL_PURE_NEQ))
@@ -1783,57 +1945,78 @@ normalize (noll_form_t * form, char *fname)
             else
               {                 //variables of the same type
 #ifndef NDEBUG
-                fprintf (stdout, "**************TESTING %s and %s\n",
-                         noll_vector_at (form->lvars, i)->vname,
-                         noll_vector_at (form->lvars, j)->vname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "**************TESTING %s and %s\n",
+                           noll_vector_at (form->lvars, i)->vname,
+                           noll_vector_at (form->lvars, j)->vname);
+                }
 #endif
                 c++;
 
                 // Test entailment of equality
 #ifndef NDEBUG
-                fprintf (inc, "a -%d 0\n", encode_eq (i, j));
-                fprintf (stdout, "Bound %d is ", counter);
-                counter++;
+                if (noll_option_is_diag())
+                {
+                  fprintf (inc, "a -%d 0\n", encode_eq (i, j));
+                  fprintf (stdout, "Bound %d is ", counter);
+                  counter++;
+                }
 #endif
                 if (test_in_equality (i, j, NOLL_PURE_EQ, nbv, nbc, fname)
                     == 1)
                   {
 #ifndef NDEBUG
-                    fprintf (stdout, "UNSATISFIABLE\n");
-                    fprintf (stdout, "New equality between %s and %s\n",
-                             noll_vector_at (form->lvars, i)->vname,
-                             noll_vector_at (form->lvars, j)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "UNSATISFIABLE\n");
+                      fprintf (stdout, "New equality between %s and %s\n",
+                               noll_vector_at (form->lvars, i)->vname,
+                               noll_vector_at (form->lvars, j)->vname);
+                    }
 #endif
                     form->pure->m[i][j - i] = NOLL_PURE_EQ;
                   }
 #ifndef NDEBUG
                 else
                   {
-                    fprintf (stdout, "SATISFIABLE\n");
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "SATISFIABLE\n");
+                    }
                   }
 #endif
 
                 // Test entailment of inequality
 #ifndef NDEBUG
-                fprintf (inc, "a %d 0\n", encode_eq (i, j));
-                fprintf (stdout, "Bound %d is ", counter);
-                counter++;
+                if (noll_option_is_diag())
+                {
+                  fprintf (inc, "a %d 0\n", encode_eq (i, j));
+                  fprintf (stdout, "Bound %d is ", counter);
+                  counter++;
+                }
 #endif
                 if (test_in_equality (i, j, NOLL_PURE_NEQ, nbv, nbc, fname)
                     == 1)
                   {
 #ifndef NDEBUG
-                    fprintf (stdout, "UNSATISFIABLE\n");
-                    fprintf (stdout, "New inequality between %s and %s\n",
-                             noll_vector_at (form->lvars, i)->vname,
-                             noll_vector_at (form->lvars, j)->vname);
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "UNSATISFIABLE\n");
+                      fprintf (stdout, "New inequality between %s and %s\n",
+                               noll_vector_at (form->lvars, i)->vname,
+                               noll_vector_at (form->lvars, j)->vname);
+                    }
 #endif
                     form->pure->m[i][j - i] = NOLL_PURE_NEQ;
                   }
 #ifndef NDEBUG
                 else
                   {
-                    fprintf (stdout, "SATISFIABLE\n");
+                    if (noll_option_is_diag())
+                    {
+                      fprintf (stdout, "SATISFIABLE\n");
+                    }
                   }
 #endif
               }
@@ -1900,8 +2083,11 @@ normalize_incremental (noll_form_t * form, char *fname)
     for (uint_t j = i + 1; j < form->pure->size; j++)
       {
 #ifndef NDEBUG
-        fprintf (stdout, "Iteration %d %d\n", i, j);
-        fflush (stdout);
+        if (noll_option_is_diag())
+        {
+          fprintf (stdout, "Iteration %d %d\n", i, j);
+          fflush (stdout);
+        }
 #endif
         if ((form->pure->m[i][j - i] != NOLL_PURE_EQ)
             && (form->pure->m[i][j - i] != NOLL_PURE_NEQ))
@@ -1917,9 +2103,12 @@ normalize_incremental (noll_form_t * form, char *fname)
             else
               {                 //variables of the same type
 #ifndef NDEBUG
-                fprintf (stdout, "**************TESTING %s and %s\n",
-                         noll_vector_at (form->lvars, i)->vname,
-                         noll_vector_at (form->lvars, j)->vname);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "**************TESTING %s and %s\n",
+                           noll_vector_at (form->lvars, i)->vname,
+                           noll_vector_at (form->lvars, j)->vname);
+                }
 #endif
                 c++;
 
@@ -1987,8 +2176,11 @@ normalize_incremental (noll_form_t * form, char *fname)
   for (int k = 0; k < counter; k++)
     {
 #ifndef NDEBUG
-      printf ("Iteration %d \n", k);
-      fflush (stdout);
+      if (noll_option_is_diag())
+      {
+        printf ("Iteration %d \n", k);
+        fflush (stdout);
+      }
 #endif
       fscanf (res, "%s", temp);
       fscanf (res, "%s", temp);
@@ -2001,7 +2193,10 @@ normalize_incremental (noll_form_t * form, char *fname)
       if (temp == NULL)
         {
 #ifndef NDEBUG
-          printf ("Passed\n");
+          if (noll_option_is_diag())
+          {
+            printf ("Passed\n");
+          }
 #endif
           continue;
         }
@@ -2009,10 +2204,13 @@ normalize_incremental (noll_form_t * form, char *fname)
       if (strcmp (temp, "UNSATISFIABLE") == 0)
         {
 #ifndef NDEBUG
-          fprintf (stdout, "New %s between %s and %s\n",
-                   atoms_array[k].sign == NOLL_PURE_EQ ? eq : neq,
-                   noll_vector_at (form->lvars, atoms_array[k].x)->vname,
-                   noll_vector_at (form->lvars, atoms_array[k].y)->vname);
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "New %s between %s and %s\n",
+                     atoms_array[k].sign == NOLL_PURE_EQ ? eq : neq,
+                     noll_vector_at (form->lvars, atoms_array[k].x)->vname,
+                     noll_vector_at (form->lvars, atoms_array[k].y)->vname);
+          }
 #endif
           if (atoms_array[k].x <= atoms_array[k].y)
             form->pure->m[atoms_array[k].x][atoms_array[k].y
