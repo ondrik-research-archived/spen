@@ -74,3 +74,30 @@ find_package(BISON 2.4.1 REQUIRED)
 # add_subdirectory(libvata)
 add_subdirectory(smtlib2parser-1.4)
 add_subdirectory(src)
+
+##############################################################################
+#                                  TESTS
+##############################################################################
+
+set(cost 1)
+
+file(GLOB tests "samples/*/*.smt")
+
+foreach (test ${tests})
+	set(cmd "${CMAKE_BINARY_DIR}/src/spen")
+	set(cmd "${cmd} ${test}")
+	set(cmd "${cmd} 2>/dev/null")
+	# set(cmd "${cmd} 2>&1")
+	set(cmd "${cmd} | tail -1")
+
+	# ... and finally diff with the expected output
+	set(cmd "${cmd} | diff -up ${test}.exp -")
+
+	message(${cmd})
+
+	set(test_name "${test}")
+	add_test(${test_name} bash -o pipefail -c "${cmd}")
+
+	SET_TESTS_PROPERTIES(${test_name} PROPERTIES COST ${cost})
+	MATH(EXPR cost "${cost} + 1")
+endforeach()

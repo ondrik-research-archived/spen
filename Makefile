@@ -26,9 +26,9 @@ clean:
 submodules-release:
 	git submodule init
 	git submodule update
-	cd libvata && $(MAKE) release
+	cd libvata && $(MAKE) $(MAKE_FLAGS) release
 
 submodules-debug:
 	git submodule init
 	git submodule update
-	cd libvata && $(MAKE) debug
+	cd libvata && $(MAKE) $(MAKE_FLAGS) debug
