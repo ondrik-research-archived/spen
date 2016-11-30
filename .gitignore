@@ -3,3 +3,4 @@
 samples/**/*.log
 samples/**/*out.txt
 samples/**/*.dot
+build/
