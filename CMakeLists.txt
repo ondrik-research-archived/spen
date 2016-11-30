@@ -93,7 +93,7 @@ foreach (test ${tests})
 	# ... and finally diff with the expected output
 	set(cmd "${cmd} | diff -up ${test}.exp -")
 
-	message(${cmd})
+	# message(${cmd})
 
 	set(test_name "${test}")
 	add_test(${test_name} bash -o pipefail -c "${cmd}")
