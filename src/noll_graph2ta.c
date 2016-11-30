@@ -277,15 +277,21 @@ noll_marking_order_lt (const noll_uid_array * lhs, const noll_uid_array * rhs)
   assert (NOLL_MARKINGS_EPSILON == noll_vector_first (lhs));
   assert (NOLL_MARKINGS_EPSILON == noll_vector_first (rhs));
 
-  NOLL_DEBUG ("Checking whether ");
-  noll_debug_print_one_mark (lhs);
-  NOLL_DEBUG (" < ");
-  noll_debug_print_one_mark (rhs);
-  NOLL_DEBUG (": ");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Checking whether ");
+    noll_debug_print_one_mark (lhs);
+    NOLL_DEBUG (" < ");
+    noll_debug_print_one_mark (rhs);
+    NOLL_DEBUG (": ");
+  }
 
   if ((1 == noll_vector_size (lhs)) && (2 <= noll_vector_size (rhs)))
     {                           // lhs = e != rhs
-      NOLL_DEBUG ("true 1\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("true 1\n");
+      }
       return true;
     }
 
@@ -294,18 +300,27 @@ noll_marking_order_lt (const noll_uid_array * lhs, const noll_uid_array * rhs)
       if (noll_fields_order_lt
           (noll_vector_last (lhs), noll_vector_last (rhs)))
         {                       // last(lhs) < last(rhs)
-          NOLL_DEBUG ("true 2\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("true 2\n");
+          }
           return true;
         }
 
       if (noll_marking_lexico_lt (lhs, rhs))
         {                       // lhs < rhs (lexicographically)
-          NOLL_DEBUG ("true 3\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("true 3\n");
+          }
           return true;
         }
     }
 
-  NOLL_DEBUG ("false\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("false\n");
+  }
   return false;
 }
 
@@ -372,27 +387,30 @@ update_marking_from (uint_t node,
 
   bool changed = false;
 
-  NOLL_DEBUG ("Updating the marking of %u \"", node);
-  NOLL_DEBUG ("{");
-  for (size_t j = 0;
-       j < noll_vector_size (noll_vector_at (markings_list, node)); ++j)
-    {
-      noll_debug_print_one_mark (noll_vector_at
-                                 (noll_vector_at (markings_list, node), j));
-      NOLL_DEBUG (", ");
-    }
-  NOLL_DEBUG ("}");
-  NOLL_DEBUG ("\" from the marking of %u \"", src);
-  NOLL_DEBUG ("{");
-  for (size_t j = 0;
-       j < noll_vector_size (noll_vector_at (markings_list, src)); ++j)
-    {
-      noll_debug_print_one_mark (noll_vector_at
-                                 (noll_vector_at (markings_list, src), j));
-      NOLL_DEBUG (", ");
-    }
-  NOLL_DEBUG ("}");
-  NOLL_DEBUG ("\" over %s.\n", noll_field_name (edge_lab));
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Updating the marking of %u \"", node);
+    NOLL_DEBUG ("{");
+    for (size_t j = 0;
+         j < noll_vector_size (noll_vector_at (markings_list, node)); ++j)
+      {
+        noll_debug_print_one_mark (noll_vector_at
+                                   (noll_vector_at (markings_list, node), j));
+        NOLL_DEBUG (", ");
+      }
+    NOLL_DEBUG ("}");
+    NOLL_DEBUG ("\" from the marking of %u \"", src);
+    NOLL_DEBUG ("{");
+    for (size_t j = 0;
+         j < noll_vector_size (noll_vector_at (markings_list, src)); ++j)
+      {
+        noll_debug_print_one_mark (noll_vector_at
+                                   (noll_vector_at (markings_list, src), j));
+        NOLL_DEBUG (", ");
+      }
+    NOLL_DEBUG ("}");
+    NOLL_DEBUG ("\" over %s.\n", noll_field_name (edge_lab));
+  }
 
   // get markings of the source and destination nodes
   const noll_marking_list *src_markings = noll_vector_at (markings_list, src);
@@ -445,20 +463,23 @@ update_marking_from (uint_t node,
 
   if (changed)
     {
-      NOLL_DEBUG ("Changed markings to\n");
-      // print the computed markings
-      for (size_t i = 0; i < noll_vector_size (markings_list); ++i)
-        {
-          const noll_marking_list *list = noll_vector_at (markings_list, i);
-          assert (NULL != list);
-          NOLL_DEBUG ("Node %zu: {", i);
-          for (size_t j = 0; j < noll_vector_size (list); ++j)
-            {
-              noll_debug_print_one_mark (noll_vector_at (list, j));
-              NOLL_DEBUG (", ");
-            }
-          NOLL_DEBUG ("}\n");
-        }
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Changed markings to\n");
+        // print the computed markings
+        for (size_t i = 0; i < noll_vector_size (markings_list); ++i)
+          {
+            const noll_marking_list *list = noll_vector_at (markings_list, i);
+            assert (NULL != list);
+            NOLL_DEBUG ("Node %zu: {", i);
+            for (size_t j = 0; j < noll_vector_size (list); ++j)
+              {
+                noll_debug_print_one_mark (noll_vector_at (list, j));
+                NOLL_DEBUG (", ");
+              }
+            NOLL_DEBUG ("}\n");
+          }
+      }
     }
 
   return changed;
@@ -488,13 +509,19 @@ rec_compute_paths (uint_t node,
   for (size_t i = 0; i < noll_vector_size (edges_from_node); ++i)
     {
       uid_t edge_id = noll_vector_at (edges_from_node, i);
-      NOLL_DEBUG ("Found edge %u\n", edge_id);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Found edge %u\n", edge_id);
+      }
 
       const noll_edge_t *ed = noll_vector_at (graph->edges, edge_id);
       assert (NULL != ed);
       assert (2 <= noll_vector_size (ed->args));
-      NOLL_DEBUG ("  src = %u\n", noll_vector_at (ed->args, 0));
-      NOLL_DEBUG ("  dst = %u\n", noll_vector_at (ed->args, 1));
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("  src = %u\n", noll_vector_at (ed->args, 0));
+        NOLL_DEBUG ("  dst = %u\n", noll_vector_at (ed->args, 1));
+      }
       assert (noll_vector_at (ed->args, 0) == node);
       uid_t post_node = noll_vector_at (ed->args, 1);
       assert (post_node < graph->nodes_size);
@@ -551,7 +578,10 @@ compute_simple_paths (const noll_graph_t * graph,
       assert (NULL != noll_vector_at (nodes_to_paths, i));
     }
 
-  NOLL_DEBUG ("Computing simple paths of nodes of the graph\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Computing simple paths of nodes of the graph\n");
+  }
 
   // initialize the marking of the initial node to be 'epsilon'
   // TODO: the NOLL_MARKINGS_EPSILON symbol is useless here, but it makes some
@@ -598,27 +628,33 @@ compute_markings (const noll_graph_t * graph,
   assert (0 < num_nodes);
   noll_marking_list_resize (markings, num_nodes);
 
-  NOLL_DEBUG ("Paths of nodes of the graph computed\n");
-  NOLL_DEBUG ("Paths:\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Paths of nodes of the graph computed\n");
+    NOLL_DEBUG ("Paths:\n");
 
-  // print the computed markings
-  for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
-    {
-      const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
-      assert (NULL != list);
-      NOLL_DEBUG ("Node %zu: {", i);
-      for (size_t j = 0; j < noll_vector_size (list); ++j)
-        {
-          noll_debug_print_one_mark (noll_vector_at (list, j));
-          NOLL_DEBUG (", ");
-        }
-      NOLL_DEBUG ("}\n");
-    }
+    // print the computed markings
+    for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
+      {
+        const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
+        assert (NULL != list);
+        NOLL_DEBUG ("Node %zu: {", i);
+        for (size_t j = 0; j < noll_vector_size (list); ++j)
+          {
+            noll_debug_print_one_mark (noll_vector_at (list, j));
+            NOLL_DEBUG (", ");
+          }
+        NOLL_DEBUG ("}\n");
+      }
+  }
 
   // compute the least marking for every node
   for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
     {
-      NOLL_DEBUG ("Going over node %zu\n", i);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Going over node %zu\n", i);
+      }
       const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
       assert (NULL != list);
       if (0 == noll_vector_size (list))
@@ -646,20 +682,23 @@ compute_markings (const noll_graph_t * graph,
       *ptr_least_marking = NULL;
     }
 
-  NOLL_DEBUG ("Before killing\n");
-  // print the computed markings
-  for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
-    {
-      const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
-      assert (NULL != list);
-      NOLL_DEBUG ("Node %zu: {", i);
-      for (size_t j = 0; j < noll_vector_size (list); ++j)
-        {
-          noll_debug_print_one_mark (noll_vector_at (list, j));
-          NOLL_DEBUG (", ");
-        }
-      NOLL_DEBUG ("}\n");
-    }
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Before killing\n");
+    // print the computed markings
+    for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
+      {
+        const noll_marking_list *list = noll_vector_at (nodes_to_paths, i);
+        assert (NULL != list);
+        NOLL_DEBUG ("Node %zu: {", i);
+        for (size_t j = 0; j < noll_vector_size (list); ++j)
+          {
+            noll_debug_print_one_mark (noll_vector_at (list, j));
+            NOLL_DEBUG (", ");
+          }
+        NOLL_DEBUG ("}\n");
+      }
+  }
 
   // delete markings
   for (size_t i = 0; i < noll_vector_size (nodes_to_paths); ++i)
@@ -725,15 +764,21 @@ noll_marking_is_succ_of_via (const noll_uid_array * node_marking,
   assert (0 != noll_vector_size (node_marking));
   assert (0 != noll_vector_size (pred_marking));
 
-  NOLL_DEBUG ("Testing whether marking ");
-  noll_debug_print_one_mark (node_marking);
-  NOLL_DEBUG (" is a successor of ");
-  noll_debug_print_one_mark (pred_marking);
-  NOLL_DEBUG (" via %s: ", noll_field_name (symbol));
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Testing whether marking ");
+    noll_debug_print_one_mark (node_marking);
+    NOLL_DEBUG (" is a successor of ");
+    noll_debug_print_one_mark (pred_marking);
+    NOLL_DEBUG (" via %s: ", noll_field_name (symbol));
+  }
 
   if (noll_vector_last (node_marking) != symbol)
     {                           // in the case the last symbol of the marking is not the checked symbol
-      NOLL_DEBUG ("false\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("false\n");
+      }
       return false;
     }
 
@@ -741,7 +786,10 @@ noll_marking_is_succ_of_via (const noll_uid_array * node_marking,
     noll_vector_size (node_marking) - noll_vector_size (pred_marking);
   if ((0 != diff) && (1 != diff))
     {                           // if the backboneness is impossible
-      NOLL_DEBUG ("false\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("false\n");
+      }
       return false;
     }
 
@@ -750,12 +798,18 @@ noll_marking_is_succ_of_via (const noll_uid_array * node_marking,
       if (noll_vector_at (pred_marking, i) !=
           noll_vector_at (node_marking, i))
         {                       // in the case there is a mismatch
-          NOLL_DEBUG ("false\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("false\n");
+          }
           return false;
         }
     }
 
-  NOLL_DEBUG ("true\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("true\n");
+  }
   return true;
 }
 
@@ -814,13 +868,19 @@ reachable_from_through_path_wo_marker (const noll_graph_t * graph,
       for (size_t i = 0; i < noll_vector_size (edges_from_node); ++i)
         {
           uid_t edge_id = noll_vector_at (edges_from_node, i);
-          NOLL_DEBUG ("Found edge %u\n", edge_id);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("Found edge %u\n", edge_id);
+          }
 
           const noll_edge_t *ed = noll_vector_at (graph->edges, edge_id);
           assert (NULL != ed);
           assert (2 <= noll_vector_size (ed->args));
-          NOLL_DEBUG ("  src = %u\n", noll_vector_at (ed->args, 0));
-          NOLL_DEBUG ("  dst = %u\n", noll_vector_at (ed->args, 1));
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("  src = %u\n", noll_vector_at (ed->args, 0));
+            NOLL_DEBUG ("  dst = %u\n", noll_vector_at (ed->args, 1));
+          }
           assert (noll_vector_at (ed->args, 0) == node);
           uid_t post_node = noll_vector_at (ed->args, 1);
 
@@ -980,23 +1040,29 @@ is_the_first_successor_of_with_marking (uid_t dst,
   const noll_uid_array *src_marking = noll_vector_at (marking_list, src);
   assert (NULL != src_marking);
 
-  NOLL_DEBUG
-    ("Checking whether %d is the first successor of %d with the marking ",
-     dst, src);
-  noll_debug_print_one_mark (marking);
-  NOLL_DEBUG ("\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG
+      ("Checking whether %d is the first successor of %d with the marking ",
+       dst, src);
+    noll_debug_print_one_mark (marking);
+    NOLL_DEBUG ("\n");
 
-  NOLL_DEBUG (__func__);
-  NOLL_DEBUG (": approximating the result for depth 1\n");
+    NOLL_DEBUG (__func__);
+    NOLL_DEBUG (": approximating the result for depth 1\n");
+  }
 
   // TODO: this is only temporary, and checks that 'next_child' is the
   // successor of 'proc_node' over some field
   if ((noll_vector_size (src_marking) + 1 < noll_vector_size (marking)) ||
       (noll_vector_size (src_marking) > noll_vector_size (marking)))
     {
-      NOLL_DEBUG ("WARNING: ");
-      NOLL_DEBUG (__func__);
-      NOLL_DEBUG (": soundly approximating to FALSE for a strange marking\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("WARNING: ");
+        NOLL_DEBUG (__func__);
+        NOLL_DEBUG (": soundly approximating to FALSE for a strange marking\n");
+      }
       return false;
     }
 
@@ -1101,7 +1167,10 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
 
   if (noll_uid_array_contains (vars, node))
     {                           // if next_child is pointed by a variable
-      NOLL_DEBUG ("Detected aliasing of variable (node) %u\n", node);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Detected aliasing of variable (node) %u\n", node);
+      }
 
       // now, we create the corresponding symbol
       const noll_ta_symbol_t *leaf_symbol =
@@ -1119,27 +1188,36 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
   if (noll_marking_is_prefix_or_equal (mark_node, mark_base))
     {                           // in the case the source is a predecessor of the target (this is the
       // case e.g. for a doubly-linked segment)
-      NOLL_DEBUG ("The source ");
-      noll_debug_print_one_mark (mark_node);
-      NOLL_DEBUG (" is a PREFIX of the target ");
-      noll_debug_print_one_mark (mark_base);
-      NOLL_DEBUG ("\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("The source ");
+        noll_debug_print_one_mark (mark_node);
+        NOLL_DEBUG (" is a PREFIX of the target ");
+        noll_debug_print_one_mark (mark_base);
+        NOLL_DEBUG ("\n");
 
-      NOLL_DEBUG
-        ("Now, we check whether node %u is reachable from node %u on a path that does not use the marking ",
-         base_node, node);
-      noll_debug_print_one_mark (mark_node);
-      NOLL_DEBUG ("\n");
+        NOLL_DEBUG
+          ("Now, we check whether node %u is reachable from node %u on a path that does not use the marking ",
+           base_node, node);
+        noll_debug_print_one_mark (mark_node);
+        NOLL_DEBUG ("\n");
+      }
 
       // TODO: first test marking, then the reachability
       if (reachable_from_through_path_wo_marker
           (graph, markings, base_node, node, mark_node))
         {                       // in case 'base_node' is reachable from 'node' via a path where the
           // marker '\mu(n)' is not used
-          NOLL_DEBUG ("  reachable\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("  reachable\n");
+          }
           if (!noll_uid_array_equal (mark_node, mark_base))
             {                   // in case $\mu(n') != \mu(n)$, mark the leaf with 's1(\mu(n))'
-              NOLL_DEBUG ("Detected an s1() marker\n");
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("Detected an s1() marker\n");
+              }
 
               // now, we create the corresponding symbol
               const noll_ta_symbol_t *leaf_symbol =
@@ -1150,7 +1228,10 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
             }
           else
             {                   // in case $\mu(n') = \mu(n)$, mark the leaf with 's2(\mu(n))'
-              NOLL_DEBUG ("Detected an s2() marker\n");
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("Detected an s2() marker\n");
+              }
 
               // now, we create the corresponding symbol
               const noll_ta_symbol_t *leaf_symbol =
@@ -1161,24 +1242,33 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
         }
       else
         {
-          NOLL_DEBUG ("  unreachable\n");
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("  unreachable\n");
+          }
         }
     }
 
-  NOLL_DEBUG ("The source ");
-  noll_debug_print_one_mark (mark_node);
-  NOLL_DEBUG (" is NOT a PREFIX of the target ");
-  noll_debug_print_one_mark (mark_base);
-  NOLL_DEBUG ("\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("The source ");
+    noll_debug_print_one_mark (mark_node);
+    NOLL_DEBUG (" is NOT a PREFIX of the target ");
+    noll_debug_print_one_mark (mark_base);
+    NOLL_DEBUG ("\n");
+  }
 
   // get the longest prefix
   noll_uid_array *lcp = noll_longest_common_prefix (mark_node, mark_base);
   assert (NULL != lcp);
   assert (!noll_vector_empty (lcp));
 
-  NOLL_DEBUG ("Their longest common prefix is ");
-  noll_debug_print_one_mark (lcp);
-  NOLL_DEBUG ("\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Their longest common prefix is ");
+    noll_debug_print_one_mark (lcp);
+    NOLL_DEBUG ("\n");
+  }
 
   // here, we find the first parent of 'i' that has the marking 'lcp'
   uid_t parent_node = find_first_ancestor_with_marking (
@@ -1197,7 +1287,10 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
                                               parent_node,
                                               mark_node, graph, markings))
     {
-      NOLL_DEBUG ("Detected an s3() marker\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Detected an s3() marker\n");
+      }
 
       // now, we create the corresponding symbol
       const noll_ta_symbol_t *leaf_symbol =
@@ -1209,13 +1302,19 @@ get_marking_symbol_of_node_wrt_base (uint_t node,
                                                   parent_node,
                                                   mark_node, graph, markings))
     {
-      NOLL_DEBUG ("Detected an s4() marker\n");
-      NOLL_DEBUG ("ERROR: Unimplemented\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Detected an s4() marker\n");
+        NOLL_DEBUG ("ERROR: Unimplemented\n");
+      }
       assert (false);
     }
   else
     {
-      NOLL_DEBUG ("Could not find a marking!!!\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Could not find a marking!!!\n");
+      }
     }
   return NULL;
 }
@@ -1241,54 +1340,57 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   assert (NULL != homo);
   assert (2 <= noll_vector_size (homo));
 
-  NOLL_DEBUG
-    ("********************************************************************************\n");
-  NOLL_DEBUG
-    ("*                                 GRAPH -> TA                                  *\n");
-  NOLL_DEBUG
-    ("********************************************************************************\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG
+      ("********************************************************************************\n");
+    NOLL_DEBUG
+      ("*                                 GRAPH -> TA                                  *\n");
+    NOLL_DEBUG
+      ("********************************************************************************\n");
 
-  NOLL_DEBUG ("graph = %p\n", graph);
-  NOLL_DEBUG ("number of nodes in graph = %d\n", graph->nodes_size);
-  NOLL_DEBUG ("LVars:\n");
-  for (size_t i = 0; i < noll_vector_size (graph->lvars); ++i)
-    {
-      NOLL_DEBUG ("  (*graph->lvars)[%zu] = %p, ", i,
-                  noll_vector_at (graph->lvars, i));
-      const noll_var_t *var = noll_vector_at (graph->lvars, i);
-      assert (NULL != var);
-      NOLL_DEBUG ("name = %s, vid = %u, ", var->vname, var->vid);
-      NOLL_DEBUG ("points to node -> %u\n", graph->var2node[i]);
-    }
-  NOLL_DEBUG ("SVars:\n");
-  for (size_t i = 0; i < noll_vector_size (graph->svars); ++i)
-    {
-      NOLL_DEBUG ("  (*graph->svars)[%zu] = %p, ", i,
-                  noll_vector_at (graph->svars, i));
-      const noll_var_t *var = noll_vector_at (graph->svars, i);
-      assert (NULL != var);
-      NOLL_DEBUG ("name = %s, vid = %u, \n", var->vname, var->vid);
-    }
-  NOLL_DEBUG ("Edges:\n");
-  for (size_t i = 0; i < noll_vector_size (graph->edges); ++i)
-    {
-      NOLL_DEBUG ("  (*graph->edges)[%zu] = %p, ", i,
-                  noll_vector_at (graph->edges, i));
-      const noll_edge_t *edge = noll_vector_at (graph->edges, i);
-      assert (NULL != edge);
-      NOLL_DEBUG ("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
-                  noll_vector_at (edge->args, 0),
-                  noll_vector_at (edge->args, 1),
-                  edge->id, edge->kind, edge->label);
-    }
+    NOLL_DEBUG ("graph = %p\n", graph);
+    NOLL_DEBUG ("number of nodes in graph = %d\n", graph->nodes_size);
+    NOLL_DEBUG ("LVars:\n");
+    for (size_t i = 0; i < noll_vector_size (graph->lvars); ++i)
+      {
+        NOLL_DEBUG ("  (*graph->lvars)[%zu] = %p, ", i,
+                    noll_vector_at (graph->lvars, i));
+        const noll_var_t *var = noll_vector_at (graph->lvars, i);
+        assert (NULL != var);
+        NOLL_DEBUG ("name = %s, vid = %u, ", var->vname, var->vid);
+        NOLL_DEBUG ("points to node -> %u\n", graph->var2node[i]);
+      }
+    NOLL_DEBUG ("SVars:\n");
+    for (size_t i = 0; i < noll_vector_size (graph->svars); ++i)
+      {
+        NOLL_DEBUG ("  (*graph->svars)[%zu] = %p, ", i,
+                    noll_vector_at (graph->svars, i));
+        const noll_var_t *var = noll_vector_at (graph->svars, i);
+        assert (NULL != var);
+        NOLL_DEBUG ("name = %s, vid = %u, \n", var->vname, var->vid);
+      }
+    NOLL_DEBUG ("Edges:\n");
+    for (size_t i = 0; i < noll_vector_size (graph->edges); ++i)
+      {
+        NOLL_DEBUG ("  (*graph->edges)[%zu] = %p, ", i,
+                    noll_vector_at (graph->edges, i));
+        const noll_edge_t *edge = noll_vector_at (graph->edges, i);
+        assert (NULL != edge);
+        NOLL_DEBUG ("from = %u, to = %u, id = %u, kind = %u, label = %u\n",
+                    noll_vector_at (edge->args, 0),
+                    noll_vector_at (edge->args, 1),
+                    edge->id, edge->kind, edge->label);
+      }
 
-  NOLL_DEBUG ("The homo morphism:\n");
-  NOLL_DEBUG ("  src -> %u\n", noll_vector_at (homo, 0));
-  NOLL_DEBUG ("  dst -> %u\n", noll_vector_at (homo, 1));
-  for (size_t i = 2; i < noll_vector_size (homo); ++i)
-    {
-      NOLL_DEBUG ("  param_%zu -> %u\n", i, noll_vector_at (homo, i));
-    }
+    NOLL_DEBUG ("The homo morphism:\n");
+    NOLL_DEBUG ("  src -> %u\n", noll_vector_at (homo, 0));
+    NOLL_DEBUG ("  dst -> %u\n", noll_vector_at (homo, 1));
+    for (size_t i = 2; i < noll_vector_size (homo); ++i)
+      {
+        NOLL_DEBUG ("  param_%zu -> %u\n", i, noll_vector_at (homo, i));
+      }
+  }
 
 
   // Now, we compute for every node 'n' a set of markings 'pi(n)'. These is a
@@ -1300,12 +1402,15 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
   assert (NULL != markings);
   compute_markings (graph, initial_node, markings);
 
-  NOLL_DEBUG ("Least markings:\n");
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Least markings:\n");
 
-  // print the computed markings
-  noll_debug_print_markings (markings);
+    // print the computed markings
+    noll_debug_print_markings (markings);
 
-  NOLL_DEBUG ("Generating the tree for the graph\n");
+    NOLL_DEBUG ("Generating the tree for the graph\n");
+  }
   noll_tree_t* tree = noll_tree_new();
   assert(NULL != tree);
 
@@ -1324,7 +1429,10 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
         {                       // if there are no edges leaving 'i'
           if (noll_uid_array_contains (homo, i))
             {                   // in the case 'i' is a boundary node on some tree branch
-              NOLL_DEBUG ("Found a boundary node %zu\n", i);
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("Found a boundary node %zu\n", i);
+              }
 
               const noll_ta_symbol_t *symbol =
                 noll_ta_symbol_get_unique_aliased_var (noll_graph_get_var(graph,i));
@@ -1336,9 +1444,12 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
             }
           else
             {
-              NOLL_DEBUG
-                ("WARNING: found a non-boundary node %zu without output edges\n",
-                 i);
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG
+                  ("WARNING: found a non-boundary node %zu without output edges\n",
+                   i);
+              }
             }
 
           continue;
@@ -1353,7 +1464,10 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
       if (noll_uid_array_contains (homo, i))
         {                       // in the case 'i' is pointed by a variable
-          NOLL_DEBUG ("  adding variable ref %zu\n", i);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("  adding variable ref %zu\n", i);
+          }
           noll_uid_array_push (vars, i);
         }
 
@@ -1408,7 +1522,10 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
             }
           else
             {
-              NOLL_DEBUG ("ERROR: Unsupported predicate type.\n");
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("ERROR: Unsupported predicate type.\n");
+              }
               assert (false);
             }
 
@@ -1416,8 +1533,11 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
           assert ((uid_t) - 1 != field_symbol);
           assert (noll_vector_at (ed->args, 0) == i);
           uid_t next_child = noll_vector_at (ed->args, 1);
-          NOLL_DEBUG ("An edge from the node %lu to the node %u over %s\n", i,
-                      next_child, field_name);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG ("An edge from the node %lu to the node %u over %s\n", i,
+                        next_child, field_name);
+          }
 
           bool is_border_var = noll_uid_array_contains (homo, next_child);
           // marking of the child
@@ -1428,13 +1548,19 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
           // adding the selector
           noll_uid_array_push (selectors, field_symbol);
 
-          NOLL_DEBUG
-            ("Now, we check whether the edge %s is a backbone edge from %lu to %u\n",
-             field_name, i, next_child);
+          if (noll_option_is_diag())
+          {
+            NOLL_DEBUG
+              ("Now, we check whether the edge %s is a backbone edge from %lu to %u\n",
+               field_name, i, next_child);
+          }
           if (noll_marking_is_succ_of_via
               (mark_next_child, mark_i, field_symbol))
             {                   // if 'ed' is a backbone edge
-              NOLL_DEBUG ("We are on the backbone!\n");
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("We are on the backbone!\n");
+              }
               noll_uid_array_push (children, next_child);
             }
           else
@@ -1443,7 +1569,10 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
               // path that traverses the backbone in an indirect way. So we need to
               // classify the type of the needed path (there are only some
               // considered) and use a node labelled by this in the transition
-              NOLL_DEBUG ("We are NOT on the backbone...\n");
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("We are NOT on the backbone...\n");
+              }
 
               const noll_ta_symbol_t *alias_symb =
                 get_marking_symbol_of_node_wrt_base (next_child,
@@ -1456,9 +1585,12 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
                 {               // in the case the marking could not be deduced, we are out of power
                   noll_tree_free (tree);
 
-                  NOLL_DEBUG ("WARNING: leaving ");
-                  NOLL_DEBUG (__func__);
-                  NOLL_DEBUG ("() without cleaning up!\n");
+                  if (noll_option_is_diag())
+                  {
+                    NOLL_DEBUG ("WARNING: leaving ");
+                    NOLL_DEBUG (__func__);
+                    NOLL_DEBUG ("() without cleaning up!\n");
+                  }
 
                   return NULL;
                 }
@@ -1511,7 +1643,10 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
                 {
                   assert (noll_vector_at (children, 1) ==
                           noll_vector_at (pred_edge->args, 1));
-                  NOLL_DEBUG ("Sorting children of predicate edge!\n");
+                  if (noll_option_is_diag())
+                  {
+                    NOLL_DEBUG ("Sorting children of predicate edge!\n");
+                  }
                   noll_vector_at (children, 1) = noll_vector_at (children, 0);
                   noll_vector_at (children, 0) =
                     noll_vector_at (pred_edge->args, 1);
@@ -1521,15 +1656,21 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
           for (; it_param < noll_vector_size (pred_edge->args); ++it_param)
             {
               uint_t param_node = noll_vector_at (pred_edge->args, it_param);
-              NOLL_DEBUG
-                ("Processing border variable of a predicate edge %s: %u\n",
-                 noll_pred_name (pred_id), param_node);
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG
+                  ("Processing border variable of a predicate edge %s: %u\n",
+                   noll_pred_name (pred_id), param_node);
+              }
               const noll_ta_symbol_t *param_symb =
                 get_marking_symbol_of_node_wrt_base (param_node, i, graph,
                                                      homo, markings);
 
-              NOLL_DEBUG ("  This node is marked as %s\n",
-                          noll_ta_symbol_get_str (param_symb));
+              if (noll_option_is_diag())
+              {
+                NOLL_DEBUG ("  This node is marked as %s\n",
+                            noll_ta_symbol_get_str (param_symb));
+              }
               size_t leaf_node = last_leaf++; // noll_get_unique ();
               noll_tree_create_node(
                 tree,        // the tree
@@ -1551,17 +1692,20 @@ noll_graph2ta (const noll_graph_t * graph, const noll_uid_array * homo)
 
       assert (NULL != symbol);
 
-      NOLL_DEBUG ("Inserting transition q%lu -> %s", i,
-                  noll_ta_symbol_get_str (symbol));
-      NOLL_DEBUG ("(");
-      for (size_t j = 0; j < noll_vector_size (children); ++j)
-        {
-          NOLL_DEBUG ("q%u, ", noll_vector_at (children, j));
-        }
-      NOLL_DEBUG (")\n");
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Inserting transition q%lu -> %s", i,
+                    noll_ta_symbol_get_str (symbol));
+        NOLL_DEBUG ("(");
+        for (size_t j = 0; j < noll_vector_size (children); ++j)
+          {
+            NOLL_DEBUG ("q%u, ", noll_vector_at (children, j));
+          }
+        NOLL_DEBUG (")\n");
 
-      NOLL_DEBUG ("Adding transition over %s\n",
-                  noll_ta_symbol_get_str (symbol));
+        NOLL_DEBUG ("Adding transition over %s\n",
+                    noll_ta_symbol_get_str (symbol));
+      }
 
       noll_tree_create_node(
         tree,        // the tree

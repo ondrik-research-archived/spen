@@ -66,8 +66,11 @@ noll_normalize_incr (noll_sat_t * fsat)
           if (fsat->finfo->used_lvar[j] == true)
             {
 #ifndef NDEBUG
-              fprintf (stdout, "Iteration %d %d\n", i, j);
-              fflush (stdout);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "Iteration %d %d\n", i, j);
+                fflush (stdout);
+              }
 #endif
               if (noll_pure_matrix_at (fsat->form->pure, i, j)
                   == NOLL_PURE_OTHER)
@@ -89,10 +92,13 @@ noll_normalize_incr (noll_sat_t * fsat)
                     {
                       //variables of the same type or void
 #ifndef NDEBUG
-                      fprintf (stdout, "**************TESTING %s and %s\n",
-                               noll_vector_at (fsat->form->lvars, i)->vname,
-                               noll_vector_at (fsat->form->lvars, j)->vname);
-                      fflush (stdout);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "**************TESTING %s and %s\n",
+                                 noll_vector_at (fsat->form->lvars, i)->vname,
+                                 noll_vector_at (fsat->form->lvars, j)->vname);
+                        fflush (stdout);
+                      }
 #endif
 
                       uid_t bvar_eq_i_j = noll2sat_get_bvar_eq (fsat, i,
@@ -160,11 +166,14 @@ noll_normalize_incr (noll_sat_t * fsat)
           if (strncmp (res, "UNSAT", 5) == 0)
             {
 #ifndef NDEBUG
-              fprintf (stdout, "New eq between %s and %s\n",
-                       noll_var_name (fsat->form->lvars, atom->x,
-                                      NOLL_TYP_RECORD),
-                       noll_var_name (fsat->form->lvars, atom->y,
-                                      NOLL_TYP_RECORD));
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "New eq between %s and %s\n",
+                         noll_var_name (fsat->form->lvars, atom->x,
+                                        NOLL_TYP_RECORD),
+                         noll_var_name (fsat->form->lvars, atom->y,
+                                        NOLL_TYP_RECORD));
+              }
 #endif
               noll_form_add_eq (fsat->form, atom->x, atom->y);
               if (fsat->form->kind == NOLL_FORM_UNSAT)
@@ -173,18 +182,24 @@ noll_normalize_incr (noll_sat_t * fsat)
           else
             {
 #ifndef NDEBUG
-              fprintf (stdout, "Testing eq between %s and %s gives %s\n",
-                       noll_var_name (fsat->form->lvars, atom->x,
-                                      NOLL_TYP_RECORD),
-                       noll_var_name (fsat->form->lvars, atom->y,
-                                      NOLL_TYP_RECORD), res);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "Testing eq between %s and %s gives %s\n",
+                         noll_var_name (fsat->form->lvars, atom->x,
+                                        NOLL_TYP_RECORD),
+                         noll_var_name (fsat->form->lvars, atom->y,
+                                        NOLL_TYP_RECORD), res);
+              }
 #endif
             }
         }
       else
         {
 #ifndef NDEBUG
-          fprintf (stdout, "---- inc: Passed\n");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "---- inc: Passed\n");
+          }
 #endif
           continue;
         }
@@ -195,11 +210,14 @@ noll_normalize_incr (noll_sat_t * fsat)
           if (strncmp (res, "UNSAT", 5) == 0)
             {
 #ifndef NDEBUG
-              fprintf (stdout, "New ineq between %s and %s\n",
-                       noll_var_name (fsat->form->lvars, atom->x,
-                                      NOLL_TYP_RECORD),
-                       noll_var_name (fsat->form->lvars, atom->y,
-                                      NOLL_TYP_RECORD));
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "New ineq between %s and %s\n",
+                         noll_var_name (fsat->form->lvars, atom->x,
+                                        NOLL_TYP_RECORD),
+                         noll_var_name (fsat->form->lvars, atom->y,
+                                        NOLL_TYP_RECORD));
+              }
 #endif
               noll_form_add_neq (fsat->form, atom->x, atom->y);
               if (fsat->form->kind == NOLL_FORM_UNSAT)
@@ -208,18 +226,24 @@ noll_normalize_incr (noll_sat_t * fsat)
           else
             {
 #ifndef NDEBUG
-              fprintf (stdout, "Testing ineq between %s and %s gives %s\n",
-                       noll_var_name (fsat->form->lvars, atom->x,
-                                      NOLL_TYP_RECORD),
-                       noll_var_name (fsat->form->lvars, atom->y,
-                                      NOLL_TYP_RECORD), res);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "Testing ineq between %s and %s gives %s\n",
+                         noll_var_name (fsat->form->lvars, atom->x,
+                                        NOLL_TYP_RECORD),
+                         noll_var_name (fsat->form->lvars, atom->y,
+                                        NOLL_TYP_RECORD), res);
+              }
 #endif
             }
         }
       else
         {
 #ifndef NDEBUG
-          fprintf (stdout, "---- inc: Passed\n");
+          if (noll_option_is_diag())
+          {
+            fprintf (stdout, "---- inc: Passed\n");
+          }
 #endif
           continue;
         }
@@ -264,8 +288,11 @@ noll_normalize_iter (noll_sat_t * fsat)
           if (fsat->finfo->used_lvar[j] == true)
             {
 #ifndef NDEBUG
-              fprintf (stdout, "Iteration %d %d\n", i, j);
-              fflush (stdout);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "Iteration %d %d\n", i, j);
+                fflush (stdout);
+              }
 #endif
               if (noll_pure_matrix_at (fsat->form->pure, i, j)
                   == NOLL_PURE_OTHER)
@@ -287,21 +314,27 @@ noll_normalize_iter (noll_sat_t * fsat)
                     {
                       //variables of the same type
 #ifndef NDEBUG
-                      fprintf (stdout, "**************TESTING %s and %s\n",
-                               noll_vector_at (fsat->form->lvars, i)->vname,
-                               noll_vector_at (fsat->form->lvars, j)->vname);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "**************TESTING %s and %s\n",
+                                 noll_vector_at (fsat->form->lvars, i)->vname,
+                                 noll_vector_at (fsat->form->lvars, j)->vname);
+                      }
 #endif
 
                       // test entailment of equality
                       if (noll2sat_is_eq (fsat, i, j, NOLL_PURE_EQ) == 1)
                         {
 #ifndef NDEBUG
-                          fprintf (stdout, "UNSATISFIABLE\n");
-                          fprintf (stdout, "New equality between %s and %s\n",
-                                   noll_vector_at (fsat->form->lvars,
-                                                   i)->vname,
-                                   noll_vector_at (fsat->form->lvars,
-                                                   j)->vname);
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout, "UNSATISFIABLE\n");
+                            fprintf (stdout, "New equality between %s and %s\n",
+                                     noll_vector_at (fsat->form->lvars,
+                                                     i)->vname,
+                                     noll_vector_at (fsat->form->lvars,
+                                                     j)->vname);
+                          }
 #endif
                           noll_pure_matrix_at (fsat->form->pure, i, j) =
                             NOLL_PURE_EQ;
@@ -309,7 +342,10 @@ noll_normalize_iter (noll_sat_t * fsat)
 #ifndef NDEBUG
                       else
                         {
-                          fprintf (stdout, "SATISFIABLE\n");
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout, "SATISFIABLE\n");
+                          }
                         }
 #endif
 
@@ -317,13 +353,16 @@ noll_normalize_iter (noll_sat_t * fsat)
                       if (noll2sat_is_eq (fsat, i, j, NOLL_PURE_NEQ) == 1)
                         {
 #ifndef NDEBUG
-                          fprintf (stdout, "UNSATISFIABLE\n");
-                          fprintf (stdout,
-                                   "New inequality between %s and %s\n",
-                                   noll_vector_at (fsat->form->lvars,
-                                                   i)->vname,
-                                   noll_vector_at (fsat->form->lvars,
-                                                   j)->vname);
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout, "UNSATISFIABLE\n");
+                            fprintf (stdout,
+                                     "New inequality between %s and %s\n",
+                                     noll_vector_at (fsat->form->lvars,
+                                                     i)->vname,
+                                     noll_vector_at (fsat->form->lvars,
+                                                     j)->vname);
+                          }
 #endif
                           noll_pure_matrix_at (fsat->form->pure, i, j) =
                             NOLL_PURE_NEQ;
@@ -331,7 +370,10 @@ noll_normalize_iter (noll_sat_t * fsat)
 #ifndef NDEBUG
                       else
                         {
-                          fprintf (stdout, "SATISFIABLE\n");
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout, "SATISFIABLE\n");
+                          }
                         }
 #endif
                     }

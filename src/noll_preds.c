@@ -211,7 +211,7 @@ noll_pred_typecheck_call (uid_t pid, noll_type_array * actuals_ty)
          p->pname, noll_vector_size (actuals_ty), p->def->fargs);
       return UNDEFINED_ID;
     }
-  /// p->def->vars includes nil in position 0, 
+  /// p->def->vars includes nil in position 0,
   /// while actuals_ty does not
   for (uint_t i = 1; i < p->def->fargs; i++)
     {
@@ -267,8 +267,8 @@ noll_pred_gettype (uid_t pid)
   return fp1->vty;
 }
 
-/** 
- * Total ordering of predicates using their call. 
+/**
+ * Total ordering of predicates using their call.
  * Used the reverse ordering of identifiers, due
  * to the parsing.
  * @return true if not (rhs calls lhs)
@@ -320,7 +320,7 @@ noll_pred_is_one_dir (uid_t pid)
 /**
  * Search @p fid inside the fields of predicate @p pid with a role of
  * at most kind.
- * 
+ *
  * @param pid  procedd identifier in preds_array
  * @param fid  field identifier in fields_array
  * @param kind max kind to be found for @p fid
@@ -586,8 +586,8 @@ noll_pred_type_args (noll_pred_t * p)
 /**
  * Fill the arguments flds and typs, if not null, with the
  * fields resp. record ids, obtained from formula form.
- * @param p      predicate 
- * @param level  level (0 -- base or 1 -- rec) of the analyzed formulas 
+ * @param p      predicate
+ * @param level  level (0 -- base or 1 -- rec) of the analyzed formulas
  * @param form   analyzed formula
  */
 int
@@ -645,8 +645,8 @@ noll_pred_type_rule_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
   p->typ->pkind = NOLL_PRED_COMP;
 
 
-  /// check that pure includes (in-)equality between 
-  ///  - root with 'nil' or root with pending  
+  /// check that pure includes (in-)equality between
+  ///  - root with 'nil' or root with pending
   noll_pure_op_t op = NOLL_PURE_EQ;
   if (vidLPend == UNDEFINED_ID)
     op = noll_pure_matrix_at (form, 0, vidLRoot);       // 0 is nil
@@ -662,8 +662,8 @@ noll_pred_type_rule_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
   if ((op != NOLL_PURE_EQ) || (level > 0))
     return 1;
 
-  /// check that, if op is =,  
-  /// then form includes the same think for msets and data pending      
+  /// check that, if op is =,
+  /// then form includes the same think for msets and data pending
   assert (level == 0 && op == NOLL_PURE_EQ);
   if ((vidBPend != UNDEFINED_ID) &&
       (noll_pure_matrix_at (form, vidBRoot, vidBPend) != op))
@@ -684,8 +684,8 @@ noll_pred_type_rule_pure (noll_pred_t * p, uint_t level, noll_pure_t * form)
 /**
  * Fill the arguments flds and typs, if not null, with the
  * fields resp. record ids, obtained from formula form.
- * @param p      predicate 
- * @param level  level (0 -- base or 1 -- rec) of the analyzed formulas 
+ * @param p      predicate
+ * @param level  level (0 -- base or 1 -- rec) of the analyzed formulas
  * @param form   analyzed formula
  */
 int
@@ -777,7 +777,7 @@ noll_pred_type_rule_form (noll_pred_t * p, uint_t level,
                   noll_field_e pfkind = noll_vector_at (p->typ->pfields, fid);
                   if (cpfkind != NOLL_PFLD_NONE && cpfkind != NOLL_PFLD_NULL)
                     {
-                      /* the field is used in cpid and 
+                      /* the field is used in cpid and
                        * it shall not be reused as backbone (level 0) in caller pids */
                       if ((pfkind == NOLL_PFLD_BCKBONE) &&
                           (noll_option_is_checkTA () == true))
@@ -828,8 +828,8 @@ noll_pred_type_rule_form (noll_pred_t * p, uint_t level,
 /**
  * Fill the arguments flds and typs, if not null, with the
  * fields resp. record ids, obtained from the rule.
- * @param p      predicate 
- * @param level  level (0 -- base or 1 -- rec) of the analyzed rule 
+ * @param p      predicate
+ * @param level  level (0 -- base or 1 -- rec) of the analyzed rule
  * @param rule   analyzed rule
  */
 int
@@ -863,8 +863,8 @@ int
 noll_field_order ()
 {
 
-  /* pre-analysis: 
-   * go through the predicates and 
+  /* pre-analysis:
+   * go through the predicates and
    * set owner for backbone fields */
   for (uint_t pid = 0; pid < noll_vector_size (preds_array); pid++)
     {
@@ -879,7 +879,10 @@ noll_field_order ()
             else if (noll_option_is_checkTA () == true)
               {
 #ifndef NDEBUG
-                fprintf (stdout, "Error: shared backbone field %d!\n", fid);
+                if (noll_option_is_diag())
+                {
+                  fprintf (stdout, "Error: shared backbone field %d!\n", fid);
+                }
 #endif
                 assert (false);
               }
@@ -904,9 +907,12 @@ noll_field_order ()
                 f->pid = pid;
               }
 #ifndef NDEBUG
-            fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
-                     f->name, pid,
-                     noll_vector_at (p->typ->pfields, fid), f->order);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
+                       f->name, pid,
+                       noll_vector_at (p->typ->pfields, fid), f->order);
+            }
 #endif
           }
       /* search for inner fields */
@@ -921,9 +927,12 @@ noll_field_order ()
                 f->kind = NOLL_PFLD_INNER;
               }
 #ifndef NDEBUG
-            fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
-                     f->name, pid,
-                     noll_vector_at (p->typ->pfields, fid), f->order);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
+                       f->name, pid,
+                       noll_vector_at (p->typ->pfields, fid), f->order);
+            }
 #endif
           }
       /* search for NULL fields */
@@ -939,9 +948,12 @@ noll_field_order ()
                 f->kind = NOLL_PFLD_NULL;
               }
 #ifndef NDEBUG
-            fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
-                     f->name, pid,
-                     noll_vector_at (p->typ->pfields, fid), f->order);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
+                       f->name, pid,
+                       noll_vector_at (p->typ->pfields, fid), f->order);
+            }
 #endif
           }
       /* search for to border fields */
@@ -957,9 +969,12 @@ noll_field_order ()
                 f->kind = NOLL_PFLD_BORDER;
               }
 #ifndef NDEBUG
-            fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
-                     f->name, pid,
-                     noll_vector_at (p->typ->pfields, fid), f->order);
+            if (noll_option_is_diag())
+            {
+              fprintf (stdout, "Field %s @(pid = %d, kind = %d) order=%d\n",
+                       f->name, pid,
+                       noll_vector_at (p->typ->pfields, fid), f->order);
+            }
 #endif
           }
     }
@@ -1015,7 +1030,7 @@ noll_pred_get_matrix1 (uid_t pid)
   /* pred->def->vars is an array built from
    * - nil (at entry 0 of the array)
    * - args (starting at entry 1 until pred->def->fargs
-   * - existentially quantified variables 
+   * - existentially quantified variables
    */
 
   /* Build and empty formula */
@@ -1055,9 +1070,12 @@ noll_pred_get_matrix1 (uid_t pid)
     }
   /* substitute formal arguments with actual arguments */
 #ifndef NDEBUG
-  fprintf (stderr, "\n- matrix formula \n");
-  noll_form_fprint (stderr, res);
-  fflush (stderr);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "\n- matrix formula \n");
+    noll_form_fprint (stderr, res);
+    fflush (stderr);
+  }
 #endif
 
   return res;
@@ -1082,7 +1100,7 @@ noll_pred_get_matrix (uid_t pid)
   /* pred->def->vars is an array built from
    * - nil (at entry 0 of the array)
    * - args (starting at entry 1 until pred->def->fargs
-   * - existentially quantified variables 
+   * - existentially quantified variables
    */
 
   /* Build and empty formula */
@@ -1105,19 +1123,22 @@ noll_pred_get_matrix (uid_t pid)
       noll_var_array_push (res->lvars, vip);
     }
 #ifndef NDEBUG
-  fprintf (stderr, "\n- new list of variables \n");
-  noll_var_array_fprint (stderr, res->lvars, ", ");
-  fflush (stderr);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "\n- new list of variables \n");
+    noll_var_array_fprint (stderr, res->lvars, ", ");
+    fflush (stderr);
+  }
 #endif
 
   /* TODO: use svars for nested predicate calls */
   res->svars = noll_var_array_new ();   // Warning: do not use NULL
   res->share = noll_share_array_new (); // Warning: do not use NULL
 
-  /* - build the pure part 
-   *     E != {NULL, F} U B 
+  /* - build the pure part
+   *     E != {NULL, F} U B
    *     X_tl != {NULL, F} U B
-   *     TODO: E != X_tl is computed by normalisation 
+   *     TODO: E != X_tl is computed by normalisation
    */
   res->pure = noll_pure_new (noll_vector_size (res->lvars));
   uid_t id_in = 1;
@@ -1181,14 +1202,17 @@ noll_pred_get_matrix (uid_t pid)
                            + i - pred->def->fargs - 2);
     }
 #ifndef NDEBUG
-  fprintf (stderr, "\n- substitution: ");
-  for (uid_t i = 0; i < noll_vector_size (alpha); i++)
-    fprintf (stderr, "%s -> %s, ",
-             noll_var_name (res->lvars, i, NOLL_TYP_RECORD),
-             noll_var_name (res->lvars, noll_vector_at (alpha, i),
-                            NOLL_TYP_RECORD));
-  fprintf (stderr, "\n");
-  fflush (stderr);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "\n- substitution: ");
+    for (uid_t i = 0; i < noll_vector_size (alpha); i++)
+      fprintf (stderr, "%s -> %s, ",
+               noll_var_name (res->lvars, i, NOLL_TYP_RECORD),
+               noll_var_name (res->lvars, noll_vector_at (alpha, i),
+                              NOLL_TYP_RECORD));
+    fprintf (stderr, "\n");
+    fflush (stderr);
+  }
 #endif
 
   for (uint_t j = 0; j < res_size; j++)
@@ -1196,9 +1220,12 @@ noll_pred_get_matrix (uid_t pid)
       noll_space_t *sj = noll_vector_at (res->space->m.sep, j);
       noll_space_t *sj_sub = noll_space_sub (sj, alpha);
 #ifndef NDEBUG
-      fprintf (stderr, "\n\tsub-%d formula \n", j);
-      noll_space_fprint (stderr, res->lvars, NULL, sj_sub);
-      fflush (stderr);
+      if (noll_option_is_diag())
+      {
+        fprintf (stderr, "\n\tsub-%d formula \n", j);
+        noll_space_fprint (stderr, res->lvars, NULL, sj_sub);
+        fflush (stderr);
+      }
 #endif
       noll_space_array_push (res->space->m.sep, sj_sub);
     }
@@ -1207,9 +1234,12 @@ noll_pred_get_matrix (uid_t pid)
   noll_uid_array_delete (alpha);
 
 #ifndef NDEBUG
-  fprintf (stderr, "\n- matrix formula \n");
-  noll_form_fprint (stderr, res);
-  fflush (stderr);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "\n- matrix formula \n");
+    noll_form_fprint (stderr, res);
+    fflush (stderr);
+  }
 #endif
 
   return res;

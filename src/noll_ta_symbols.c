@@ -335,7 +335,10 @@ noll_ta_symbol_match (const noll_ta_symbol_t * lhs,
 
     default:
       {
-        NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        if (noll_option_is_diag())
+        {
+          NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        }
         assert (false);
       }
     }
@@ -437,8 +440,11 @@ noll_sels_to_string_symbol (const noll_uid_array * sels)
     {
       const char *field_name = noll_field_name (noll_vector_at (sels, i));
       assert (NULL != field_name);
-      NOLL_DEBUG ("Processing field %u with the name %s\n",
-                  noll_vector_at (sels, i), field_name);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("Processing field %u with the name %s\n",
+                    noll_vector_at (sels, i), field_name);
+      }
 
       str_len += strlen (field_name);
     }
@@ -531,7 +537,10 @@ noll_ta_symbol_kill (noll_ta_symbol_t * sym)
 
     default:
       {
-        NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        if (noll_option_is_diag())
+        {
+          NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        }
         assert (false);
       }
     }
@@ -848,7 +857,10 @@ noll_ta_symbol_alias_marking_str (const noll_ta_symbol_t * sym)
 
     default:
       {
-        NOLL_DEBUG ("Error: invalid alias marking relation\n");
+        if (noll_option_is_diag())
+        {
+          NOLL_DEBUG ("Error: invalid alias marking relation\n");
+        }
         assert (false);
       }
     }
@@ -915,7 +927,10 @@ noll_ta_symbol_fill_str (noll_ta_symbol_t * sym)
 
     default:
       {
-        NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        if (noll_option_is_diag())
+        {
+          NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        }
         assert (false);
       }
     }
@@ -968,7 +983,10 @@ noll_symbol_spawn (noll_ta_symbol_t * symb)
   noll_ta_symbol_fill_str (symb);       // compute the string
   assert (NULL != symb->str);
 
-  NOLL_DEBUG ("Inserting new symbol: %s\n", symb->str);
+  if (noll_option_is_diag())
+  {
+    NOLL_DEBUG ("Inserting new symbol: %s\n", symb->str);
+  }
 
   noll_ta_symbol_array_push (g_ta_symbols, symb);
 
@@ -1121,10 +1139,10 @@ noll_ta_symbol_get_unique_higher_pred (const noll_pred_t * pred,
 
 /*
  * @brief Renames components of a symbol
- * 
- * Translates the variables and the markings in the input symbol 
+ *
+ * Translates the variables and the markings in the input symbol
  * using the input mappings.
- * 
+ *
  * @param[in] sym     A symbol to be renamed
  * @param[in] vmap    The mapping used for vars
  * @param[in] mmap    The mapping used for markings
@@ -1163,7 +1181,7 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
                 assert (NULL != si);
                 // aliased vars in si
                 const noll_uid_array* si_vars = noll_ta_symbol_get_vars (si);
-                if ((NULL != si_vars) && 
+                if ((NULL != si_vars) &&
                     (noll_vector_size (si_vars) >= 1))
                    noll_uid_array_push (vars, noll_vector_at(si_vars,0));
               }
@@ -1248,7 +1266,10 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
 
     default:
       {
-        NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        if (noll_option_is_diag())
+        {
+          NOLL_DEBUG ("ERROR: invalid symbol label type!\n");
+        }
         assert (false);
       }
     }
@@ -1257,7 +1278,7 @@ noll_ta_symbol_get_unique_renamed (const noll_ta_symbol_t * sym,
 }
 
 /*
- * A sound? approximation of the desired result 
+ * A sound? approximation of the desired result
  */
 const noll_ta_symbol_t *
 noll_ta_symbol_get_unique_aliased_symbol (const noll_ta_symbol_t * sym,
@@ -1265,11 +1286,11 @@ noll_ta_symbol_get_unique_aliased_symbol (const noll_ta_symbol_t * sym,
 {
   const noll_ta_symbol_t *ren_sym =
     noll_ta_symbol_get_unique_renamed (sym, true, vmap, NULL);
-  if ((sym->label_type == NOLL_TREE_LABEL_ALLOCATED) || 
+  if ((sym->label_type == NOLL_TREE_LABEL_ALLOCATED) ||
       (sym->label_type == NOLL_TREE_LABEL_HIGHER_PRED))
     {
       const noll_uid_array* si_vars = noll_ta_symbol_get_vars (ren_sym);
-      if ((NULL != si_vars) && 
+      if ((NULL != si_vars) &&
           (noll_vector_size (si_vars) >= 1))
         {
           const noll_ta_symbol_t *ret_sym =

@@ -16,11 +16,12 @@
  *
  **************************************************************************/
 
-/** 
+/**
  * Type system for NOLL.
  */
 
 #include "noll_types.h"
+#include "noll_option.h"
 
 NOLL_VECTOR_DEFINE (noll_uid_array, uid_t);
 
@@ -337,8 +338,11 @@ noll_type_match (noll_type_t * fty, noll_type_t * aty)
 {
   assert (fty != NULL);
 #ifndef NDEBUG
-  printf ("noll_type_match: fty=%d, atyp=%d\n",
-          fty->kind, (aty == NULL) ? NOLL_TYP_VOID : aty->kind);
+  if (noll_option_is_diag())
+  {
+    printf ("noll_type_match: fty=%d, atyp=%d\n",
+            fty->kind, (aty == NULL) ? NOLL_TYP_VOID : aty->kind);
+  }
 #endif
   bool res = true;
   if (aty == NULL)              /// void
@@ -348,7 +352,10 @@ noll_type_match (noll_type_t * fty, noll_type_t * aty)
       uid_t fty_r = noll_vector_at (fty->args, 0);
       uid_t aty_r = noll_vector_at (aty->args, 0);
 #ifndef NDEBUG
-      printf ("noll_type_match: fty=rec-%d, atyp=rec-%d\n", fty_r, aty_r);
+      if (noll_option_is_diag())
+      {
+        printf ("noll_type_match: fty=rec-%d, atyp=rec-%d\n", fty_r, aty_r);
+      }
 #endif
       /// void is also encoded by aty_r == 0
       res = ((aty_r == NOLL_TYP_VOID) || (aty_r == fty_r)) ? true : false;

@@ -539,7 +539,7 @@ noll_entl_type ()
 {
   /*
    * Type predicate definitions,
-   * it has side effects on the typing infos on preds_array 
+   * it has side effects on the typing infos on preds_array
    */
   if (noll_pred_type () == 0)
     return 0;
@@ -561,8 +561,11 @@ noll_entl_type ()
     if (noll_form_type (noll_vector_at (noll_prob->nform, i)) == 0)
       {
 #ifndef NDEBUG
-        fprintf (stdout, "*** noll_entl_type: type error in %d nform.\n", i);
-        fflush (stdout);
+        if (noll_option_is_diag())
+        {
+          fprintf (stdout, "*** noll_entl_type: type error in %d nform.\n", i);
+          fflush (stdout);
+        }
 #endif
         return 0;
       }
@@ -586,8 +589,11 @@ noll_entl_normalize ()
       if (noll_option_get_verb () > 0)
         fprintf (stdout, "    o normalize positive formula\n");
 #ifndef NDEBUG
-      NOLL_DEBUG ("\nnoll_entl_normalize: before ");
-      noll_form_fprint (stdout, pform);
+      if (noll_option_is_diag())
+      {
+        NOLL_DEBUG ("\nnoll_entl_normalize: before ");
+        noll_form_fprint (stdout, pform);
+      }
 #endif
       noll_prob->pabstr = NULL;
       if (noll_option_is_tosat (0) == true)
@@ -638,9 +644,12 @@ noll_entl_normalize ()
     }
 
 #ifndef NDEBUG
-  fprintf (stdout, "*** check-sat: END normalized formulae \n");
-  noll_entl_fprint (stdout);
-  fflush (stdout);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "*** check-sat: END normalized formulae \n");
+    noll_entl_fprint (stdout);
+    fflush (stdout);
+  }
 #endif
   return 1;
 }
@@ -657,13 +666,16 @@ noll_entl_to_graph (void)
   noll_form_array *nform = noll_entl_get_nform ();
 
 #ifndef NDEBUG
-  fprintf (stdout, "*** check-sat: translate to graphs ...\n");
-  for (uint_t i = 0; i < pform->pure->size; i++)
-    for (uint_t j = i + 1; j < pform->pure->size; j++)
-      if (noll_pure_matrix_at (pform->pure, i, j) == NOLL_PURE_EQ)
-        printf ("Variable %s equals %s\n",
-                noll_vector_at (pform->lvars, i)->vname,
-                noll_vector_at (pform->lvars, j)->vname);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "*** check-sat: translate to graphs ...\n");
+    for (uint_t i = 0; i < pform->pure->size; i++)
+      for (uint_t j = i + 1; j < pform->pure->size; j++)
+        if (noll_pure_matrix_at (pform->pure, i, j) == NOLL_PURE_EQ)
+          printf ("Variable %s equals %s\n",
+                  noll_vector_at (pform->lvars, i)->vname,
+                  noll_vector_at (pform->lvars, j)->vname);
+  }
 #endif
 
   if (noll_option_get_verb () > 0)
@@ -759,9 +771,9 @@ noll_entl_to_hom (void)
 }
 
 /**
- * Check special cases for satisfiability of 
+ * Check special cases for satisfiability of
  *        pform /\ ! nform.
- * @param isSyn if true, check syntactic special case, 
+ * @param isSyn if true, check syntactic special case,
  *              otherwise, check semantic
  * @return 1 if satisfiable, 0 if unsat, -1 if not known
  */
@@ -817,7 +829,7 @@ noll_entl_solve_special (bool isSyn)
  *
  * @return 1 if satisfiable, (i.e. invalid entailment)
  *         0 if not satisfiable (i.e., valid entailment)
- *         
+ *
  */
 int
 noll_entl_solve (void)
@@ -825,8 +837,11 @@ noll_entl_solve (void)
   int res = 0;
 
 #ifndef NDEBUG
-  noll_entl_fprint (stdout);
-  fflush (stdout);
+  if (noll_option_is_diag())
+  {
+    noll_entl_fprint (stdout);
+    fflush (stdout);
+  }
 #endif
 
   /*
@@ -836,7 +851,7 @@ noll_entl_solve (void)
     return noll_sat_solve (noll_prob->pform);
 
   /*
-   * Test special (syntactic) cases of entailment, 
+   * Test special (syntactic) cases of entailment,
    * before normalizing the formulas
    */
   if (noll_option_get_verb () > 0)
@@ -866,11 +881,14 @@ noll_entl_solve (void)
   noll_entl_type ();
 
 #ifndef NDEBUG
-  fprintf (stdout, "\n*** noll_entl_solve: after typing problem:\n");
-  noll_records_array_fprint (stdout, "records:");
-  noll_fields_array_fprint (stdout, "fields:");
-  noll_pred_array_fprint (stdout, preds_array, "predicates:");
-  fflush (stdout);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\n*** noll_entl_solve: after typing problem:\n");
+    noll_records_array_fprint (stdout, "records:");
+    noll_fields_array_fprint (stdout, "fields:");
+    noll_pred_array_fprint (stdout, preds_array, "predicates:");
+    fflush (stdout);
+  }
 #endif
 
   /*
@@ -918,8 +936,8 @@ noll_entl_solve (void)
     {
     case 0:
       {
-        // homeomorphism not found, 
-        // so entailment invalid, 
+        // homeomorphism not found,
+        // so entailment invalid,
         // so sat problem
         res = 1;
         break;

@@ -101,7 +101,10 @@ noll_graph_alloc (noll_var_array * lvars, noll_var_array * svars,
 
   noll_graph_t *res = (noll_graph_t *) malloc (sizeof (noll_graph_t));
 #ifndef NDEBUG
-  noll_var_array_fprint (stdout, lvars, "Vars of the graph: ");
+  if (noll_option_is_diag())
+  {
+    noll_var_array_fprint (stdout, lvars, "Vars of the graph: ");
+  }
 #endif
   res->lvars = noll_var_array_new ();
   noll_var_array_copy (res->lvars, lvars);
@@ -258,10 +261,10 @@ noll_graph_get_node_type (noll_graph_t * g, uint_t n)
 
 /**
  * Return the edge of @p g2 having label @p label between nodes @p args.
- * 
- * @param args [inout] contains the mapping of arguments of the edge 
+ *
+ * @param args [inout] contains the mapping of arguments of the edge
  *                     on nodes of @p g or UNDEFINED_ID
- * @param df   [inout] collect the equality constraints between data 
+ * @param df   [inout] collect the equality constraints between data
  *                     required by the mapping found
  * @return the identifier of the edge matched or UNDEFINED_ID
  */
@@ -269,7 +272,7 @@ uint_t
 noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
                      noll_uid_array * args, noll_dform_array * df)
 {
-  // store of edge identifier matching the searched edge 
+  // store of edge identifier matching the searched edge
   uint_t uid_res = UNDEFINED_ID;
   // source and destination nodes for edge searched
   uint_t nroot = noll_vector_at (args, 0);
@@ -284,9 +287,12 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
       shift_j++;
     }
 #ifndef NDEBUG
-  fprintf (stdout,
-           "\n---- Search for edge n%d---(kind=%d, label=%d)-->n%d:\n",
-           nroot, kind, label, nend);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout,
+             "\n---- Search for edge n%d---(kind=%d, label=%d)-->n%d:\n",
+             nroot, kind, label, nend);
+  }
 #endif
 
   if (g->mat[nroot] != NULL)
@@ -301,8 +307,11 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
               && (noll_vector_size (edge_i->args) == fargs))
             {
 #ifndef NDEBUG
-              fprintf (stdout, "\t found e%d, same kind, label and root\n",
-                       ei);
+              if (noll_option_is_diag())
+              {
+                fprintf (stdout, "\t found e%d, same kind, label and root\n",
+                         ei);
+              }
 #endif
               // edge found with the same kind, label and root,
               // check the other arguments than source are equal
@@ -315,7 +324,10 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
                   if (naj == UNDEFINED_ID)
                     {
 #ifndef NDEBUG
-                      fprintf (stdout, "\t\t update arg %d to n%d\n", j, nej);
+                      if (noll_option_is_diag())
+                      {
+                        fprintf (stdout, "\t\t update arg %d to n%d\n", j, nej);
+                      }
 #endif
                       noll_uid_array_set (args, j, nej);
                     }
@@ -324,7 +336,7 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
                       noll_typ_t ty = noll_graph_get_node_type (g, naj);
                       if ((ty == NOLL_TYP_INT) || (ty == NOLL_TYP_BAGINT))
                         {
-                          // generate an equality constraint 
+                          // generate an equality constraint
                           uid_t vaj = noll_graph_get_var (g, naj);
                           uid_t vej = noll_graph_get_var (g, naj);
                           noll_dform_t *df_eq =
@@ -336,9 +348,12 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
                         {
                           // if it is a location node, then error
 #ifndef NDEBUG
-                          fprintf (stdout,
-                                   "\t\t but different arg %d (n%d != n%d)\n",
-                                   j, naj, nej);
+                          if (noll_option_is_diag())
+                          {
+                            fprintf (stdout,
+                                     "\t\t but different arg %d (n%d != n%d)\n",
+                                     j, naj, nej);
+                          }
 #endif
                           ishom = false;
                         }
@@ -347,8 +362,11 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
               if (ishom == true)
                 {
 #ifndef NDEBUG
-                  fprintf (stdout, "\t\t , the same args, and the df = ");
-                  noll_dform_array_fprint (stdout, g->lvars, df);
+                  if (noll_option_is_diag())
+                  {
+                    fprintf (stdout, "\t\t , the same args, and the df = ");
+                    noll_dform_array_fprint (stdout, g->lvars, df);
+                  }
 #endif
                   uid_res = ei;
                 }
@@ -357,7 +375,10 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
     }
 
 #ifndef NDEBUG
-  fprintf (stdout, "\t edge-%d matches!\n", uid_res);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\t edge-%d matches!\n", uid_res);
+  }
 #endif
   if (uid_res == UNDEFINED_ID)
     noll_dform_array_clear (df);        // TODO: free also the pointers inside
@@ -366,7 +387,7 @@ noll_graph_get_edge (noll_graph_t * g, noll_edge_e kind, uint_t label,
 
 /**
  * @brief Update the data constraints in @g with eq constraints.
- * 
+ *
  * The (in-)equality constraints on data are pushed.
  */
 void
@@ -378,7 +399,7 @@ noll_graph_sat_dform (noll_graph_t * g)
     g->data = noll_dform_array_new ();
   noll_dform_array *res = g->data;
   // go through all equality constraints and push them for data
-  for (uint_t vi = 1;           // ignore 'nil' 
+  for (uint_t vi = 1;           // ignore 'nil'
        vi < noll_vector_size (g->lvars); vi++)
     {
       noll_type_t *ty_vi = noll_var_type (g->lvars, vi);
@@ -386,7 +407,7 @@ noll_graph_sat_dform (noll_graph_t * g)
         continue;
       // it is a data variable
       // see relation of vi with all other data variables vj
-      for (uint_t vj = vi + 1;  // ignore 'nil' 
+      for (uint_t vj = vi + 1;  // ignore 'nil'
            vj < noll_vector_size (g->lvars); vj++)
         {
           noll_type_t *ty_vj = noll_var_type (g->lvars, vj);
@@ -438,7 +459,7 @@ noll_graph_is_diff (noll_graph_t * g, uint_t n1, uint_t n2)
 }
 
 /**
- * @brief Return true if @p n is a node represeting some data var 
+ * @brief Return true if @p n is a node represeting some data var
  */
 bool
 noll_graph_is_node_data (noll_graph_t * g, uint_t n)
@@ -470,9 +491,9 @@ noll_graph_is_ptosrc (noll_graph_t * g, uint_t n)
   return false;
 }
 
-/** 
- * Test if the edge @p e has its label in the set of labels 
- * of the predicate @p pid. 
+/**
+ * Test if the edge @p e has its label in the set of labels
+ * of the predicate @p pid.
  * @param e     edge to be tested
  * @param pid   index of a predicate in preds_array
  * @return      1 if test successful, 0 otherwise
@@ -533,8 +554,11 @@ noll_edge_in_label (noll_edge_t * e, uint_t pid)
           else
             {
 #ifndef NDEBUG
-              fprintf (stderr,
-                       "noll_edge_in_label: predcate edge not in ppreds null\n");
+              if (noll_option_is_diag())
+              {
+                fprintf (stderr,
+                         "noll_edge_in_label: predcate edge not in ppreds null\n");
+              }
 #endif
               res = 0;
             }
@@ -549,7 +573,7 @@ noll_edge_in_label (noll_edge_t * e, uint_t pid)
 
 /**
  * @brief Add explicit edges for dll rd.
- * 
+ *
  * For the dll edges (labeled by @p pid) in the graph @p g,
  * add a next edge between the target of the edge and the forward argument.
  */
@@ -742,23 +766,26 @@ noll_graph_fprint (FILE * f, noll_graph_t * g)
       fprintf (f, "\n");
     }
 #ifndef NDEBUG
-  fprintf (f, "Matrices: mat = [");
-  for (uint_t vi = 0; vi < g->nodes_size; vi++)
-    {
-      if (g->mat[vi] != NULL)
-        {
-          fprintf (f, "\n\tn%d --> ", vi);
-          for (uint_t i = 0; i < noll_vector_size (g->mat[vi]); i++)
-            fprintf (f, "e%d, ", noll_vector_at (g->mat[vi], i));
-        }
-      if (g->rmat[vi] != NULL)
-        {
-          fprintf (f, "\n\tn%d <-- ", vi);
-          for (uint_t i = 0; i < noll_vector_size (g->rmat[vi]); i++)
-            fprintf (f, "e%d, ", noll_vector_at (g->rmat[vi], i));
-        }
-    }
-  fprintf (f, "\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (f, "Matrices: mat = [");
+    for (uint_t vi = 0; vi < g->nodes_size; vi++)
+      {
+        if (g->mat[vi] != NULL)
+          {
+            fprintf (f, "\n\tn%d --> ", vi);
+            for (uint_t i = 0; i < noll_vector_size (g->mat[vi]); i++)
+              fprintf (f, "e%d, ", noll_vector_at (g->mat[vi], i));
+          }
+        if (g->rmat[vi] != NULL)
+          {
+            fprintf (f, "\n\tn%d <-- ", vi);
+            for (uint_t i = 0; i < noll_vector_size (g->rmat[vi]); i++)
+              fprintf (f, "e%d, ", noll_vector_at (g->rmat[vi], i));
+          }
+      }
+    fprintf (f, "\n");
+  }
 #endif
   fprintf (f, "Graph sharing constraints: \n");
   if (g->share)
@@ -923,7 +950,7 @@ noll_graph_fprint_sl (char *fname, noll_graph_t * g)
         fprintf (f, "} * ");
     }
   fprintf (f, "emp\n");
-  // free allocated memory 
+  // free allocated memory
   for (uint_t i = 0; i < g->nodes_size; i++)
     node2var[i] = NULL;
   free (node2var);

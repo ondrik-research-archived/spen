@@ -103,7 +103,10 @@ noll_mk_context (void)
   noll_init ();
 
 #ifndef NDEBUG
-  printf ("noll_mk_context reset qstack\n");
+  if (noll_option_is_diag())
+  {
+    printf ("noll_mk_context reset qstack\n");
+  }
 #endif
   /* initialize the stack of location variables to store
    * one global variable (nil) */
@@ -159,10 +162,13 @@ noll_context_restore_global (noll_context_t * ctx)
   assert (ctx->svar_stack != NULL);
 
 #ifndef NDEBUG
-  fprintf (stderr,
-           "noll_context_restore_global: (begin) %d lvars, %d svars\n",
-           noll_vector_at (ctx->lvar_stack, 0),
-           noll_vector_at (ctx->svar_stack, 0));
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr,
+             "noll_context_restore_global: (begin) %d lvars, %d svars\n",
+             noll_vector_at (ctx->lvar_stack, 0),
+             noll_vector_at (ctx->svar_stack, 0));
+  }
 #endif
   // ctx->* vars have been copied in  the formulae
   // refill the context with the global variables
@@ -189,9 +195,12 @@ noll_context_restore_global (noll_context_t * ctx)
                          noll_var_copy (noll_vector_at (arr, i)));
 
 #ifndef NDEBUG
-  fprintf (stderr, "noll_context_restore_global: (end) %d lvars, %d svars\n",
-           noll_vector_size (ctx->lvar_env),
-           noll_vector_size (ctx->svar_env));
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "noll_context_restore_global: (end) %d lvars, %d svars\n",
+             noll_vector_size (ctx->lvar_env),
+             noll_vector_size (ctx->svar_env));
+  }
 #endif
   return;
 }
@@ -288,7 +297,7 @@ noll_set_logic (noll_context_t * ctx, const char *logic)
  * @param ctx    context of the declaration, only globals
  * @param name   identifier declared
  * @param rty    (optionnal) record type
- * @return       @p rty if correct declaration, NULL otherwise 
+ * @return       @p rty if correct declaration, NULL otherwise
  */
 noll_type_t *
 noll_mk_fun_decl (noll_context_t * ctx, const char *name, noll_type_t * rty)
@@ -332,10 +341,10 @@ noll_mk_fun_decl (noll_context_t * ctx, const char *name, noll_type_t * rty)
 }
 
 /**
- * @brief Built the pure constraints from the expression @p exp and, 
+ * @brief Built the pure constraints from the expression @p exp and,
  *        if correct syntax, push in @p pdef
  * No typechecking is done here! @see noll_mk_pred_rule_check_pure
- * 
+ *
  * @return 1 if correct, 0 otherwise
  */
 int
@@ -352,10 +361,10 @@ noll_mk_pred_exp2rule_pure (noll_context_t * ctx, const char *name,
 
 
 /**
- * @brief Built the space constraints from the expression @p exp and, 
+ * @brief Built the space constraints from the expression @p exp and,
  *        if correct syntax, push in @p pdef
  * Typechecking is done in @see noll_mk_pred_rule_check_*
- * 
+ *
  * @return 1 if correct, 0 otherwise
  */
 int
@@ -425,8 +434,11 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
       {
         noll_space_t *pcall = noll_mk_form_pred (ctx, prule->vars, name, exp);
 #ifndef NDEBUG
-        fprintf (stderr, "\nmk_exp2rule_space: new call: ");
-        noll_space_fprint (stderr, prule->vars, NULL, pcall);
+        if (noll_option_is_diag())
+        {
+          fprintf (stderr, "\nmk_exp2rule_space: new call: ");
+          noll_space_fprint (stderr, prule->vars, NULL, pcall);
+        }
 #endif
         if (pcall == NULL)
           {
@@ -450,9 +462,12 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
             noll_space_array_push (nrec->m.sep, pcall);
             prule->rec = nrec;
 #ifndef NDEBUG
-            fprintf (stderr,
-                     "\nmk_pred_exp2rule_space: added rec call in rule:");
-            noll_pred_rule_fprint (stderr, prule);
+            if (noll_option_is_diag())
+            {
+              fprintf (stderr,
+                       "\nmk_pred_exp2rule_space: added rec call in rule:");
+              noll_pred_rule_fprint (stderr, prule);
+            }
 #endif
           }
         else
@@ -468,9 +483,12 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
             assert (prule->nst->kind == NOLL_SPACE_SSEP);
             noll_space_array_push (prule->nst->m.sep, pcall);
 #ifndef NDEBUG
-            fprintf (stderr,
-                     "\nmk_pred_exp2rule_space: added nst call in rule:");
-            noll_pred_rule_fprint (stderr, prule);
+            if (noll_option_is_diag())
+            {
+              fprintf (stderr,
+                       "\nmk_pred_exp2rule_space: added nst call in rule:");
+              noll_pred_rule_fprint (stderr, prule);
+            }
 #endif
           }
         return 1;
@@ -508,7 +526,7 @@ noll_mk_pred_exp2rule_space (noll_context_t * ctx, const char *name,
 
 
 /**
- * @brief Built the rule from the expression @p exp and, 
+ * @brief Built the rule from the expression @p exp and,
  *        if correct, push in @p pdef
  * Called inside both base and recursive case, the set of vars is already
  * in @p prule->vars
@@ -594,8 +612,11 @@ noll_mk_pred_exp2rule (noll_context_t * ctx, const char *name,
       return 0;
     }
 #ifndef NDEBUG
-  fprintf (stderr, "\nmk_pred_exp2rule: rule built for %s = ", name);
-  noll_pred_rule_fprint (stderr, prule);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "\nmk_pred_exp2rule: rule built for %s = ", name);
+    noll_pred_rule_fprint (stderr, prule);
+  }
 #endif
   return res;
 }
@@ -747,12 +768,15 @@ noll_mk_pred_rule_base (noll_context_t * ctx, const char *name,
   assert (fequals != NULL);
 
   int res = 1;
-  /// the syntax is (and (equalities) (data?) (tobool emp)) 
+  /// the syntax is (and (equalities) (data?) (tobool emp))
   /// over variables in ctx->lvar_env
 
 #ifndef NDEBUG
-  fprintf (stdout, "pred_rule_base ctx: ");
-  noll_context_fprint (stdout, ctx);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "pred_rule_base ctx: ");
+    noll_context_fprint (stdout, ctx);
+  }
 #endif
 
   /// create a new rule
@@ -762,7 +786,7 @@ noll_mk_pred_rule_base (noll_context_t * ctx, const char *name,
   prule->fargs = noll_vector_at (ctx->lvar_stack, 1);
   prule->pure = noll_pure_new (noll_vector_size (prule->vars));
 
-  /// transform any expression with pure operators into 
+  /// transform any expression with pure operators into
   /// a pure or data formula in prule->pure
   res = noll_mk_pred_exp2rule (ctx, name, fequals, pid, prule, nrec_p, false);
   if (res == 0)
@@ -831,8 +855,11 @@ noll_mk_pred_typecheck_par_SL (noll_context_t * ctx, const char *name,
          && (noll_var_record (pdef->vars, nrec_p + 1) == pred_ty))
     nrec_p++;
 #ifndef NDEBUG
-  fprintf (stderr, "noll_mk_fun_def: Number of recursive parameters %d.\n",
-           nrec_p);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "noll_mk_fun_def: Number of recursive parameters %d.\n",
+             nrec_p);
+  }
 #endif
   if (nrec_p < 2)
     {
@@ -860,7 +887,7 @@ noll_mk_pred_typecheck_par_SL (noll_context_t * ctx, const char *name,
 }
 
 /**
- * @brief Check the parameters of the predicate definition 
+ * @brief Check the parameters of the predicate definition
  *        for logic NOLL_LOGIC_SLRDI
  * @return number of recursive parameters if no error, 0 otherwise
  */
@@ -925,8 +952,11 @@ noll_mk_pred_typecheck_par_SLRDI (noll_context_t * ctx, const char *name,
          && (noll_var_record (pdef->vars, nrec_p + 1) == pred_ty))
     nrec_p++;
 #ifndef NDEBUG
-  fprintf (stderr, "noll_mk_fun_def: Number of recursive parameters %d.\n",
-           nrec_p);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "noll_mk_fun_def: Number of recursive parameters %d.\n",
+             nrec_p);
+  }
 #endif
 
   return nrec_p;
@@ -1047,14 +1077,17 @@ noll_mk_pred_rule_rec (noll_context_t * ctx, const char *name,
   assert (def->discr == NOLL_F_EXISTS);
 
   int res = 1;
-  // the form is (and (equalities) (data?) (tobool space)) 
+  // the form is (and (equalities) (data?) (tobool space))
   // over variables in def->p.quant.lvars
 #ifndef NDEBUG
-  fprintf (stdout, "pred_rule_rec ctx: ");
-  noll_context_fprint (stdout, ctx);
-  fprintf (stdout, "pred_rule_rec quant.lvars: ");
-  noll_var_array_fprint (stdout, def->p.quant.lvars, "local vars");
-  fprintf (stdout, "\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "pred_rule_rec ctx: ");
+    noll_context_fprint (stdout, ctx);
+    fprintf (stdout, "pred_rule_rec quant.lvars: ");
+    noll_var_array_fprint (stdout, def->p.quant.lvars, "local vars");
+    fprintf (stdout, "\n");
+  }
 #endif
   noll_pred_rule_t *prule = noll_pred_rule_new ();
   prule->vars = def->p.quant.lvars;
@@ -1073,7 +1106,7 @@ noll_mk_pred_rule_rec (noll_context_t * ctx, const char *name,
   if (res == 0)
     return 0;
 
-  /// check the pto of the spatial part 
+  /// check the pto of the spatial part
   res = noll_mk_pred_rule_check_pto (name, prule, nrec_p);
   if (res == 0)
     return 0;
@@ -1088,7 +1121,7 @@ noll_mk_pred_rule_rec (noll_context_t * ctx, const char *name,
   if (res == 0)
     return 0;
 
-  /// push the rule; it also fills the simple rule case 
+  /// push the rule; it also fills the simple rule case
   noll_pred_binding_push_rule (pdef, prule, true);
 
   return 1;
@@ -1242,8 +1275,11 @@ noll_mk_fun_def (noll_context_t * ctx, const char *name, uint_t npar,
   ctx->pname = NULL;
 
 #ifndef NDEBUG
-  fprintf (stderr, "Predicate built: ");
-  noll_pred_fprint (stderr, pid);
+  if (noll_option_is_diag())
+  {
+    fprintf (stderr, "Predicate built: ");
+    noll_pred_fprint (stderr, pid);
+  }
 #endif
   return pid;
 }
@@ -1352,8 +1388,11 @@ int
 noll_push_quant (noll_context_t * ctx)
 {
 #ifndef NDEBUG
-  fprintf (stdout, "push_quant start: ");
-  noll_context_fprint (stdout, ctx);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "push_quant start: ");
+    noll_context_fprint (stdout, ctx);
+  }
 #endif
   //the NOLL supports only 2 levels of nesting and only inside define - fun
   if (noll_vector_size (ctx->lvar_stack) >= 3)
@@ -1370,8 +1409,11 @@ int
 noll_pop_quant (noll_context_t * ctx)
 {
 #ifndef NDEBUG
-  fprintf (stdout, "pop_quant start: ");
-  noll_context_fprint (stdout, ctx);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "pop_quant start: ");
+    noll_context_fprint (stdout, ctx);
+  }
 #endif
   if (noll_vector_size (ctx->lvar_stack) <= 1)
     {
@@ -1389,8 +1431,11 @@ noll_pop_quant (noll_context_t * ctx)
   noll_uint_array_pop (ctx->lvar_stack);
   noll_uint_array_pop (ctx->svar_stack);
 #ifndef NDEBUG
-  fprintf (stdout, "pop_quant end: ");
-  noll_context_fprint (stdout, ctx);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "pop_quant end: ");
+    noll_context_fprint (stdout, ctx);
+  }
 #endif
   return 1;
 }
@@ -1443,30 +1488,33 @@ noll_mk_exists (noll_context_t * ctx, noll_exp_t * term)
   uint_t nb_exists_lvar = noll_vector_last (ctx->lvar_stack);
   uint_t nb_exists_svar = noll_vector_last (ctx->svar_stack);
 #ifndef NDEBUG
-  fprintf (stdout, "mk_exists start lvar_stack=[");
-  for (uint_t i = 0; i < noll_vector_size (ctx->lvar_stack); i++)
-    fprintf (stdout, "%d,", noll_vector_at (ctx->lvar_stack, i));
-  fprintf (stdout, "]\n");
-  fprintf (stdout, "mk_exists exists lvar=[");
-  for (uint_t i = nb_exists_lvar; i > 0; i--)
-    {
-      noll_var_t *vi = noll_vector_at (ctx->lvar_env,
-                                       noll_vector_size (ctx->lvar_env) - i);
-      fprintf (stdout, "%s,", vi->vname);
-    }
-  fprintf (stdout, "]\n");
-  fprintf (stdout, "mk_exists start svar_stack=[");
-  for (uint_t i = 0; i < noll_vector_size (ctx->svar_stack); i++)
-    fprintf (stdout, "%d,", noll_vector_at (ctx->svar_stack, i));
-  fprintf (stdout, "]\n");
-  fprintf (stdout, "mk_exists exists svar=[");
-  for (uint_t i = nb_exists_svar; i > 0; i--)
-    {
-      noll_var_t *vi = noll_vector_at (ctx->svar_env,
-                                       noll_vector_size (ctx->svar_env) - i);
-      fprintf (stdout, "%s,", vi->vname);
-    }
-  fprintf (stdout, "]\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "mk_exists start lvar_stack=[");
+    for (uint_t i = 0; i < noll_vector_size (ctx->lvar_stack); i++)
+      fprintf (stdout, "%d,", noll_vector_at (ctx->lvar_stack, i));
+    fprintf (stdout, "]\n");
+    fprintf (stdout, "mk_exists exists lvar=[");
+    for (uint_t i = nb_exists_lvar; i > 0; i--)
+      {
+        noll_var_t *vi = noll_vector_at (ctx->lvar_env,
+                                         noll_vector_size (ctx->lvar_env) - i);
+        fprintf (stdout, "%s,", vi->vname);
+      }
+    fprintf (stdout, "]\n");
+    fprintf (stdout, "mk_exists start svar_stack=[");
+    for (uint_t i = 0; i < noll_vector_size (ctx->svar_stack); i++)
+      fprintf (stdout, "%d,", noll_vector_at (ctx->svar_stack, i));
+    fprintf (stdout, "]\n");
+    fprintf (stdout, "mk_exists exists svar=[");
+    for (uint_t i = nb_exists_svar; i > 0; i--)
+      {
+        noll_var_t *vi = noll_vector_at (ctx->svar_env,
+                                         noll_vector_size (ctx->svar_env) - i);
+        fprintf (stdout, "%s,", vi->vname);
+      }
+    fprintf (stdout, "]\n");
+  }
 #endif
   noll_exp_t *res = noll_mk_op (NOLL_F_EXISTS, &term, 1);
   res->p.quant.lvars = noll_var_array_new ();   // NEW: keep the context of variables
@@ -1550,8 +1598,11 @@ noll_mk_symbol (noll_context_t * ctx, const char *name)
   uint_t sid = UNDEFINED_ID;
   noll_type_t *typ = NULL;
 #ifndef NDEBUG
-  fprintf (stdout, "mk_symbol: start %s\n", name);
-  fflush (stdout);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "mk_symbol: start %s\n", name);
+    fflush (stdout);
+  }
 #endif
   /* special case of 'emptybag' */
   if (strcmp (name, "emptybag") == 0)
@@ -1587,7 +1638,10 @@ noll_mk_symbol (noll_context_t * ctx, const char *name)
           ret->p.sid = sid;
         }
 #ifndef NDEBUG
-      fprintf (stdout, "mk_symbol: local %s (id %d)\n", name, ret->p.sid);
+      if (noll_option_is_diag())
+      {
+        fprintf (stdout, "mk_symbol: local %s (id %d)\n", name, ret->p.sid);
+      }
 #endif
       return ret;
     }
@@ -1630,7 +1684,7 @@ noll_mk_pred (noll_context_t * ctx, const char *name,
       //it is maybe a recursive definition
       if ((noll_vector_size (ctx->lvar_stack) < 3) ||
           ((ctx->pname != NULL) && (strcmp (ctx->pname, name) > 0)))
-        {                       // not inside a recursive rule 
+        {                       // not inside a recursive rule
           // or not a recursive call
           noll_error_id (1, "noll_mk_pred", name);
           return NULL;
@@ -2555,7 +2609,10 @@ noll_exp_push_dterm (noll_exp_t * e, noll_var_array * lenv)
   assert (NULL != e);
 
 #ifndef NDEBUG
-  fprintf (stdout, "push_dterm: discr=%d, size=%d\n", e->discr, e->size);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "push_dterm: discr=%d, size=%d\n", e->discr, e->size);
+  }
 #endif
 
   noll_dterm_t *dt = noll_dterm_new ();
@@ -3262,11 +3319,14 @@ noll_exp_push_top (noll_context_t * ctx, noll_exp_t * e, noll_form_t * form)
     noll_var_array_delete (form->svars);
   form->svars = ctx->svar_env;
 #ifndef NDEBUG
-  fprintf (stdout, "\nnoll_exp_push_top:\n\t");
-  noll_var_array_fprint (stdout, form->lvars, "lvars");
-  fprintf (stdout, "\n\t");
-  noll_var_array_fprint (stdout, form->svars, "svars");
-  fprintf (stdout, "\n");
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "\nnoll_exp_push_top:\n\t");
+    noll_var_array_fprint (stdout, form->lvars, "lvars");
+    fprintf (stdout, "\n\t");
+    noll_var_array_fprint (stdout, form->svars, "svars");
+    fprintf (stdout, "\n");
+  }
 #endif
   //fill other parts of the formula
   switch (e->discr)
@@ -3315,9 +3375,12 @@ noll_exp_push_top (noll_context_t * ctx, noll_exp_t * e, noll_form_t * form)
     case NOLL_F_IMPLIES:
       {
 #ifndef NDEBUG
-        fprintf (stdout, "Push pure:");
-        noll_exp_printf (stdout, ctx, e);
-        fflush (stdout);
+        if (noll_option_is_diag())
+        {
+          fprintf (stdout, "Push pure:");
+          noll_exp_printf (stdout, ctx, e);
+          fflush (stdout);
+        }
 #endif
         if (form->pure == NULL)
           form->pure = noll_pure_new (noll_vector_size (form->lvars));
@@ -3386,11 +3449,14 @@ noll_exp_push (noll_context_t * ctx, noll_exp_t * e, int ispos)
 {
 #ifndef NDEBUG
   //printing now:
-  fprintf (stdout, "Push %stive formula:\n", (ispos) ? "posi" : "nega");
-  noll_exp_printf (stdout, ctx, e);
-  fprintf (stdout, "\nwith context: ");
-  noll_var_array_fprint (stdout, ctx->lvar_env, "lvars");
-  fflush (stdout);
+  if (noll_option_is_diag())
+  {
+    fprintf (stdout, "Push %stive formula:\n", (ispos) ? "posi" : "nega");
+    noll_exp_printf (stdout, ctx, e);
+    fprintf (stdout, "\nwith context: ");
+    noll_var_array_fprint (stdout, ctx->lvar_env, "lvars");
+    fflush (stdout);
+  }
 #endif
   if (!e)
     return;
