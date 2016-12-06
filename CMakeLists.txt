@@ -81,23 +81,38 @@ add_subdirectory(src)
 
 set(cost 1)
 
-file(GLOB tests "samples/*/*.smt")
+set(test_list_dirs dll gen ls lss nlcl nll skl2 skl3 smt-PLDI2011)
+# set(test_list_dirs ls)
+set(test_data_dirs ls lss avl bst rbt sls)
 
-foreach (test ${tests})
-	set(cmd "${CMAKE_BINARY_DIR}/src/spen")
-	set(cmd "${cmd} ${test}")
-	set(cmd "${cmd} 2>/dev/null")
-	# set(cmd "${cmd} 2>&1")
-	set(cmd "${cmd} | tail -1")
 
-	# ... and finally diff with the expected output
-	set(cmd "${cmd} | diff -up ${test}.exp -")
+# macro that creates tests
+#   dirs - directories where to get tests from
+#   spenargs - arguments of spen
+macro(test_spen dirs spenargs)
+	foreach(dir ${dirs})
+		file(GLOB tests "samples/${dir}/*.smt")
+		foreach (test ${tests})
+			set(cmd "${CMAKE_BINARY_DIR}/src/spen")
+			set(cmd "${cmd} ${spenargs}")
+			set(cmd "${cmd} ${test}")
+			set(cmd "${cmd} 2>/dev/null")
+			# set(cmd "${cmd} 2>&1")
+			set(cmd "${cmd} | tail -1")
 
-	# message(${cmd})
+			# ... and finally diff with the expected output
+			set(cmd "${cmd} | diff -up ${test}.exp -")
 
-	set(test_name "${test}")
-	add_test(${test_name} bash -o pipefail -c "${cmd}")
+			# message(${cmd})
 
-	SET_TESTS_PROPERTIES(${test_name} PROPERTIES COST ${cost})
-	MATH(EXPR cost "${cost} + 1")
-endforeach()
+			set(test_name "test${spenargs}-${test}")
+			add_test(${test_name} bash -o pipefail -c "${cmd}")
+
+			SET_TESTS_PROPERTIES(${test_name} PROPERTIES COST ${cost})
+			MATH(EXPR cost "${cost} + 1")
+		endforeach()
+	endforeach()
+endmacro(test_spen)
+
+test_spen("${test_list_dirs}" "-ta")
+test_spen("${test_data_dirs}" "-syn")

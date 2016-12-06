@@ -1,6 +1,7 @@
 BUILD_DIR=build
 MAKE_FLAGS=-j 4
-TEST_FLAGS=-j 50
+# no parallel CTest because of incremental minisat
+# TEST_FLAGS=-j 50
 
 .PHONY: all debug release doc clean test submodules-release submodules-debug
 
