@@ -1,6 +1,7 @@
 *.o
 *.a
 samples/**/*.log
+samples/**/*.slog
 samples/**/*out.txt
 samples/**/*.dot
 build/
