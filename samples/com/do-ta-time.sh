@@ -10,7 +10,8 @@ SHARED_MAKE="make -f ../Makefile"
 
 cd ${PRED}
 
-for i in `ls ${PRED}${PROC}*-vc??.smt`
+# for i in `ls ${PRED}${PROC}*-vc??.smt`
+for i in `ls *.smt`
 do
         BN_FILE=`basename -s .smt ${i}`
 	LOG_FILE="${i}.log"
