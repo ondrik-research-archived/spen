@@ -1,7 +1,7 @@
 # Makefile
 #
 
-TOOL=../build/src/spen
+TOOL=../../build/src/spen
 # for ta
 OPTIONTA=
 # for syn-dp
